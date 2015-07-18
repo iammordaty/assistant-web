@@ -1,0 +1,9 @@
+$ docker run --name assistant.mongo -p "27017:27017" -d mongo
+
+$ docker build -t php.nginx .
+
+(cd do katalogu projektu)
+
+$ docker run -it -p 8080:80 --name assistant.web --hostname $(hostname) --link "assistant.mongo:assistant.mongo" -v $PWD:/data -v /media/krzysiek/Dane/music/:/collection -w /data -d php.nginx
+
+$ docker exec -it assistant.web supervisorctl restart nginx

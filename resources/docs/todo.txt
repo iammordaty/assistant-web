@@ -1,0 +1,74 @@
+[ok] przenieść szablony do modułów
+[ok] przenieść routing do modułów
+[ok] dwa tryby wykluczenia - całkowity (bez dodawania do kolekcji), i "cichy" (w kolekcji, ale z ignored=true)
+[ok] SimpleSearch - jeśli wyszukiwanie zwróci jeden wynik - przejdź do niego
+[ok] Search\Controller.php dodać abstract getType(), i na tej podstawie ogarniać routing i szablon
+[ok] routing: moduł.kontroler.akcja
+[ok] sprawdzać, czy initial_key istnieje (TrackController rzuca wyjątkiem)
+[ok] odpalić na synology
+[ok] nie działa paginacja wynikach wyszukiwania
+[ok] Similarity - przekazać Repo i pobierać utwory (to co teraz jest w kontrolerze)
+[ok] Similarity - wyciągać utwory, które mają cokolwiek wspólnego (provider->getMap(), ..., ...) oraz je limitować
+[ok] Similarity - dodać obsługę odrzucania utworów wg określonych kryteriów (np. starszych niż x lat)
+[ok] przeglądanie kolekcji
+
+Przekminić rozkład modeli / klas:
+    - Collection\Model\Track, Collection\Model\Directory
+    - może RawTrack, RawDirectory (lub Raw\...)? Wówczas uprościłoby się nazewnictwo procesorów i writerów
+
+- dla porządku wszystkie providery, parsery, itd powinny mieć w swojej nazwie suffiks w postaci parenta namespace'u
+    (np. BpmProvider, ArtistParser, itd)
+- niech wszystie parsery, providery, writery itd, które tworzone są dynamicznie, będą wrzucone w tablicę $this->writers, ->providers, itd
+- (Collection-) Element -> (Collection-)Item
+- podpiąć require.js
+- poprawić szerokości kolumn dla różnych rozdzielczości (col-lg-*, col-md-*, itd)
+- posortowanie podanych utworów wg podobieństwa (vide układanie seta)
+- (przekminić) Similarity - zmienić nazwę na Recommendation,
+- jeśli zamiast fali dźwiękowej pojawia się komunikat o błędzie, przycisk play / pause oraz czasy nie powinny być widoczne
+- KeyTools przenieść do Common (lub cały projekt do vendorsów)
+- dodać sortowanie w wynikach wyszukiwania
+- przekminić :
+    // abstract:
+    abstact protected function calculateSimilarity(...);
+
+    public function getSimilarity()
+    {
+        try {
+            $this->validate();
+
+            return $this->calculateSimilarity();
+        } catch (...) {
+            return false;
+        }
+    }
+
+    protected function validate(...)
+    {
+        // jeśli utwór nie ma wymaganych danych (klucz, bpm), rzuć wyjątek
+    }
+
+    // bpm, year...
+    protected function calculateSimilarity()
+    {
+        // oblicz podobieństwo
+    }
+
+    alternatywnie, rzucać wyjątek mogłaby funkcja setup, co byłoby lepsze, ponieważ na similarityMap i getCriteria
+    również bazują na w/w danych
+
+// ---
+
+var canvas = document.getElementsByTagName('canvas')[0]
+    ctx2 = document.getElementById("c2").getContext('2d')
+    image = new Image();
+
+image.src = canvas.toDataURL();
+
+image.onload = function() {
+    ctx2.drawImage(image, 0,0);
+}
+
+
+db.tracks.createIndex({ filename: 1 }, { unique: 1, name: 'idx_filename_unique' });
+db.tracks.createIndex({ guid: 1 }, { unique: 1, name: 'idx_guid_unique' });
+db.tracks.createIndex({ artist: 'text', title: 'text' }, { name: 'idx_artist_title_text' });

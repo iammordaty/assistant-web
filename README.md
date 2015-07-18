@@ -7,5 +7,6 @@ My music collection assistant
 - find similar tracks (silly - based on metadata fields)
 
 # plans
-- find inconsistencies / mismatches in track metadata 
+- find inconsistencies / mismatches in track metadata
+- i18n
 - ...?

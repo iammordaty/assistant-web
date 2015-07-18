@@ -1,0 +1,261 @@
+{% extends '@common/layout.twig' %}
+
+{% block title %}{{ track.artist }} - {{ track.title }}{% endblock %}
+
+{% block contentBlock %}
+    <div id="wave-progress" class="text-center"><i class="fa fa-cog fa-spin fa-5x"></i></div>
+    <div id="wave-container">
+        <div id="wave-controls">
+            <i data-role="play-pause" class="fa fa-play"></i>
+        </div>
+        <div id="wave-time-current-time" data-time-mode="elapsed">00:00</div>
+        <div id="wave-time-track-duration" data-track-length="{{ track.length }}">{{ track.length|formatSeconds }}</div>
+        <div id="wave"></div>
+    </div>
+
+    <script src="/vendor/wavesurfer.js/wavesurfer.min.js" type="text/javascript"></script>
+    <script type="text/javascript">
+        function formatSeconds(ss) {
+            var result = '',
+                s,
+                m,
+                h,
+                d;
+
+            s = Math.floor(ss % 60);
+            m = Math.floor((ss % 3600) / 60);
+            h = Math.floor((ss % 86400) / 3600);
+            d = Math.floor((ss % 2592000) / 86400);
+
+            if (d > 0) {
+                result += d + ':';
+            }
+
+            if (h > 0) {
+                result += (h < 10 ? '0' : '') + h + ':';
+            }
+
+            result += (m < 10 ? '0' : '') + m + ':';
+            result += (s < 10 ? '0' : '') + s;
+
+            return (ss < 0 ? '-' : '') + result;
+        }
+
+        $(function () {
+            var wavesurfer = Object.create(WaveSurfer),
+                wavesurferPlayInterval = null;
+
+            wavesurfer.init({
+                container: document.querySelector('#wave'),
+                waveColor: '#999',
+                progressColor: '#666',
+                height: 200,
+                cursorColor: '#fff'
+            });
+
+            wavesurfer.on('ready', function () {
+                $('#wave-progress').fadeOut('fast', function () {
+                    $(this).remove();
+                });
+
+                $('#wave-container').css('visibility','visible').hide().fadeIn('slow');
+            });
+
+            wavesurfer.on('seek', function () {
+                if (wavesurfer.backend.isPaused()) {
+                    wavesurfer.play();
+                }
+            });
+
+            wavesurfer.on('play', function () {
+                var $currentTimeIndicator = $('#wave-time-current-time'),
+                    trackDuration = wavesurfer.getDuration(),
+                    prefix = '',
+                    time;
+
+                $('[data-role="play-pause"]').removeClass('fa-play').addClass('fa-pause');
+
+                wavesurferPlayInterval = setInterval(
+                    function () {
+
+                        if ($currentTimeIndicator.data('time-mode') === 'elapsed') {
+                            prefix = '';
+                            time = wavesurfer.getCurrentTime();
+                        } else {
+                            prefix = '-';
+                            time = trackDuration - wavesurfer.getCurrentTime();
+                        }
+
+                        $('#wave-time-current-time').html(prefix + formatSeconds(time));
+                    },
+                    500
+                );
+            });
+
+            wavesurfer.on('pause', function () {
+                $('[data-role="play-pause"]').removeClass('fa-pause').addClass('fa-play');
+
+                clearInterval(wavesurferPlayInterval);
+            });
+
+            wavesurfer.on('finish', function () {
+                $('[data-role="play-pause"]').removeClass('fa-pause').addClass('fa-play');
+
+                clearInterval(wavesurferPlayInterval);
+            });
+
+            wavesurfer.on('error', function () {
+                $('#wave-progress').fadeOut('fast', function () {
+                    $(this).remove();
+                });
+
+                $('#wave').html('<p class="lead text-center text-muted">Wystąpił błąd podczas ładowania fali dźwiękowej</p>');
+                $('#wave-container').css('visibility','visible').hide().fadeIn('slow');
+
+                setTimeout(function () {
+                    $('#wave-container').slideUp('fast', function () {
+                        $(this).remove();
+                    });
+                }, 3000);
+            });
+
+            wavesurfer.load('{{ urlFor('track.contents.get', { guid: track.guid }) }}');
+
+            $('[data-role="play-pause"]').on('click', function (e) {
+                wavesurfer.playPause();
+            });
+
+            $('#wave-time-current-time').on('click', function () {
+                $(this).data(
+                    'time-mode',
+                    $(this).data('time-mode') === 'elapsed' ? 'remaining' : 'elapsed'
+                );
+            });
+        });
+    </script>
+
+    <div class="track-info">
+        <legend>
+            <a href="{{ urlFor('search.advanced.index') }}?artist={{ track.artist }}" class="undecorated">{{ track.artist }}</a> - {{ track.title }}
+        </legend>
+
+        <div class="row">
+            <div class="{% if keyInfo %}col-md-9{% else %}col-md-12{% endif %}">
+                <dl class="metadata-info dl-horizontal">
+                    <dt>{% if track.artists|length == 1%}Wykonawca{% else %}Wykonawcy{% endif %}</dt>
+                    <dd>
+                        {%- for artist in track.artists -%}
+                            <a href="{{ urlFor('search.advanced.index') }}?artist={{ artist|url_encode() }}" class="undecorated">{{ artist }}</a>
+                            {%- if not loop.last %}, {% endif -%}
+                        {%- endfor -%}
+                    </dd>
+
+                    <dt>Tytuł utworu</dt>
+                    <dd>{{ track.title }}</dd>
+
+                    <dt>Gatunek</dt>
+                    <dd><a href="{{ urlFor('search.advanced.index') }}?genre={{ track.genre }}" class="undecorated">{{ track.genre }}</a></dd>
+
+                    <dt>Album</dt>
+                    <dd>{{ track.album }}</dd>
+
+                    <dt>Czas trwania</dt>
+                    <dd>{{ track.length|formatSeconds }}</dd>
+
+                    <dt>Numer ścieżki</dt>
+                    <dd>{{ track.track_number }}</dd>
+
+                    <dt>Rok</dt>
+                    <dd><a href="{{ urlFor('search.advanced.index') }}?year={{ track.year }}" class="undecorated">{{ track.year }}</a></dd>
+
+                    <dt>BPM</dt>
+                    <dd><a href="{{ urlFor('search.advanced.index') }}?bpm={{ track.bpm }}" class="undecorated">{{ track.bpm }}</a></dd>
+
+                    <dt>Klucz</dt>
+                    <dd><a href="{{ urlFor('search.advanced.index') }}?initial_key={{ track.initial_key }}" class="undecorated">{{ track.initial_key }}</a></dd>
+
+                    <dt>Lokalizacja</dt>
+                    <dd>
+                        <ol class="breadcrumb">
+                            <li><a href="{{ urlFor('directory.browse.index') }}" class="undecorated"><i class="fa fa-home fa-lg"></i></a></li>
+                            {% for path in pathBreadcrumbs %}
+                                <li><a href="{{ urlFor('directory.browse.index', { guid: path.guid } )}}" class="undecorated">{{ path.path }}</a></li>
+                            {% endfor %}
+                        </ol>
+                    </dd>
+                </dl>
+            </div>
+
+            {% if keyInfo %}
+                <div class="col-md-3">
+                    <div class="panel panel-info ">
+                        <div class="panel-heading">
+                            <a href="{{ urlFor('search.advanced.index') }}?initial_key={{ track.initial_key }}" class="undecorated">{{ track.initial_key }}</a> - informacje
+                        </div>
+                        <div class="panel-body">
+                            {% for info, data in keyInfo %}
+                                <div class="row key-info-{{ info }}">
+                                    <span class="col-md-7 col-md-offset-1 text-right info-key"><strong>{{ data.title }}</strong></span>
+                                    <span class="col-md-4 info-value"><a href="{{ urlFor('search.advanced.index') }}?initial_key={{ data.value }}" class="undecorated">{{ data.value }}</a></span>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+            {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <div class="similar-track">
+        <legend>Podobne utwory</legend>
+
+        {% if similarTracks %}
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>Nazwa utworu</th>
+                        <th>Gatunek</th>
+                        <th>Długość</th>
+                        <th>Rok</th>
+                        <th>Klucz</th>
+                        <th>BPM</th>
+                        <th>%</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for similarTrack in similarTracks %}
+                        <tr class="{% if loop.index >= 50 %}hide{% endif %}">
+                            <td class="col-md-5">
+                                {% set name = similarTrack.track.artist ~ ' - ' ~ similarTrack.track.title %}
+                                <a href="{{ urlFor('track.track.index', { guid: similarTrack.track.guid } )}}" title="{{ name }}">{{ name|truncateText(60) }}</a>
+                            </td>
+                            <td class="col-md-2">
+                                <a class="undecorated" href="{{ urlFor('search.advanced.index') }}?genre={{ similarTrack.track.genre }}">{{ similarTrack.track.genre }}</a>
+                            </td>
+                            <td class="col-md-1">
+                                {{ similarTrack.track.length|formatSeconds }}
+                            </td>
+                            <td class="col-md-1">
+                                <a class="undecorated" href="{{ urlFor('search.advanced.index') }}?year={{ similarTrack.track.year }}">{{ similarTrack.track.year }}</a>
+                            </td>
+                            <td class="col-md-1">
+                                <a class="undecorated" href="{{ urlFor('search.advanced.index') }}?initial_key={{ similarTrack.track.initial_key }}">{{ similarTrack.track.initial_key }}</a>
+                            </td>
+                            <td class="col-md-1">
+                                <a class="undecorated" href="{{ urlFor('search.advanced.index') }}?bpm={{ similarTrack.track.bpm }}">{{ similarTrack.track.bpm }}</a>
+                            </td>
+                            <td class="col-md-1">
+                                {{ similarTrack.value }}%
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            <div class="text-center">
+                <button type="button" class="btn btn-default">Pokaż więcej</button>
+            </div>
+        {% else %}
+            <p class="lead text-center text-muted">Brak znaleziono podobnych utworów</p>
+        {% endif %}
+    </div>
+{% endblock %}

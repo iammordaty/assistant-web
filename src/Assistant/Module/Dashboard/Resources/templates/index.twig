@@ -1,0 +1,44 @@
+{% extends '@common/layout.twig' %}
+
+{% block title %}Dashboard{% endblock %}
+
+{% block contentBlock %}
+    {% include '@search/simple/form.twig' only %}
+
+    <div class="collection-overview">
+        <legend>Przegląd kolekcji</legend>
+        <div class="row">
+            <div class="col-lg-4">
+                <div class="list-group">
+                    <span class="list-group-item list-group-item-info">Top 10 gatunków</span>
+                    {% for genre, trackCount in trackCountByGenre %}
+                        <a href="{{ urlFor('search.advanced.index') }}?genre={{ genre }}" class="list-group-item">
+                            <span class="badge">{{ trackCount }}</span>{{ genre }}
+                        </a>
+                    {% endfor %}
+                </div>
+            </div>
+            <div class="col-lg-4">
+                <div class="list-group">
+                    <span class="list-group-item list-group-item-info">Top 10 wykonawców</span>
+                    {% for artist, trackCount in trackCountByArtist %}
+                        <a href="{{ urlFor('search.advanced.index') }}?artist={{ artist }}" class="list-group-item">
+                            <span class="badge">{{ trackCount }}</span>{{ artist }}
+                        </a>
+                    {% endfor %}
+                </div>
+            </div>
+            <div class="col-lg-4">
+                <div class="list-group">
+                    <span class="list-group-item list-group-item-info">Ostatnio dodane</span>
+                    {% for track in recentlyAddedTracks %}
+                        <a href="{{ urlFor('track.track.index', { guid: track.guid } )}}" title="{{ name }}" class="list-group-item">
+                            {% set name = track.artist ~ ' - ' ~ track.title %}
+                            {{ name|truncateText(37) }}
+                        </a>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
