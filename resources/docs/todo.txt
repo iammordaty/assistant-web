@@ -11,6 +11,8 @@
 [ok] Similarity - wyciągać utwory, które mają cokolwiek wspólnego (provider->getMap(), ..., ...) oraz je limitować
 [ok] Similarity - dodać obsługę odrzucania utworów wg określonych kryteriów (np. starszych niż x lat)
 [ok] przeglądanie kolekcji
+[ok] KeyTools przenieść do Common (lub cały projekt do vendorsów)
+[ok] niech wszystie parsery, providery, writery itd, które tworzone są dynamicznie, będą wrzucone w tablicę $this->writers, ->providers, itd
 
 Przekminić rozkład modeli / klas:
     - Collection\Model\Track, Collection\Model\Directory
@@ -18,14 +20,12 @@ Przekminić rozkład modeli / klas:
 
 - dla porządku wszystkie providery, parsery, itd powinny mieć w swojej nazwie suffiks w postaci parenta namespace'u
     (np. BpmProvider, ArtistParser, itd)
-- niech wszystie parsery, providery, writery itd, które tworzone są dynamicznie, będą wrzucone w tablicę $this->writers, ->providers, itd
 - (Collection-) Element -> (Collection-)Item
 - podpiąć require.js
 - poprawić szerokości kolumn dla różnych rozdzielczości (col-lg-*, col-md-*, itd)
 - posortowanie podanych utworów wg podobieństwa (vide układanie seta)
 - (przekminić) Similarity - zmienić nazwę na Recommendation,
 - jeśli zamiast fali dźwiękowej pojawia się komunikat o błędzie, przycisk play / pause oraz czasy nie powinny być widoczne
-- KeyTools przenieść do Common (lub cały projekt do vendorsów)
 - dodać sortowanie w wynikach wyszukiwania
 - przekminić :
     // abstract:
