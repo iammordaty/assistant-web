@@ -14,7 +14,14 @@ My web-based music collection assistant
 
 ## screenshots
 
+### Dashboard
 ![screenshot](http://i.imgur.com/iyTds3w.png "Dashboard")
+
+### Track info
 ![screenshot](http://i.imgur.com/vs80weq.png "Track")
+
+### Search
 ![screenshot](http://i.imgur.com/diZJn6a.png "Search")
+
+### Browse
 ![screenshot](http://i.imgur.com/lwRAgRz.png "Browse")
