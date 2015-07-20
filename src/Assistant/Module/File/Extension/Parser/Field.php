@@ -43,8 +43,8 @@ abstract class Field
         return strtolower(array_pop($parts));
     }
 
-    protected function setup()
-    {
-
-    }
+    /**
+     * Przygotowuje parser do użycia
+     */
+    abstract protected function setup();
 }
