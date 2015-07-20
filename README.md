@@ -1,12 +1,12 @@
 # assistant
-My music collection assistant
+My web-based music collection assistant
 
-# features
+## features
 - search
 - browse
-- find similar tracks (silly - based on metadata fields)
+- find similar tracks (silly - based on metadata fields: initial_key, bpm, genre, year)
 
-# plans
+## plans
 - find inconsistencies / mismatches in track metadata
 - i18n
 - ...?
