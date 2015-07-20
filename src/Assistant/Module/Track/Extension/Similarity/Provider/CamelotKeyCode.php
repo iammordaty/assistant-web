@@ -5,8 +5,8 @@
 namespace Assistant\Module\Track\Extension\Similarity\Provider;
 
 use Assistant\Module\Track\Extension\Similarity\Provider as BaseProvider;
+use Assistant\Module\Common;
 use Assistant\Module\Track;
-use Assistant\Lib\KeyTools;
 
 /**
  * Sprawdzić:
@@ -85,7 +85,7 @@ class CamelotKeyCode extends BaseProvider
      */
     protected function setup()
     {
-        $keyTools = new KeyTools();
+        $keyTools = new Common\Extension\KeyTools();
 
         foreach ($keyTools->camelotCode as $keyCode) {
             $this->similarityMap[$keyCode] = [

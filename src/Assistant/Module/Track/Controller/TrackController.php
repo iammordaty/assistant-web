@@ -57,7 +57,7 @@ class TrackController extends BaseController
      */
     private function getTrackKeyInfo(Track\Model\Track $track)
     {
-        $keyTools = new \Assistant\Lib\KeyTools();
+        $keyTools = new Common\Extension\KeyTools();
 
         if ($track->initial_key === null) {
             return null;

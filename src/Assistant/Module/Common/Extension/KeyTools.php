@@ -1,6 +1,6 @@
 <?php
 
-namespace Assistant\Lib;
+namespace Assistant\Module\Common\Extension;
 
 /**
  * https://github.com/mossspence/trakofflive/blob/master/appsrc/moss/musicapp/finder/keyTools.php
