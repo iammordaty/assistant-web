@@ -2,26 +2,35 @@
 
 namespace Assistant\Module\Collection\Extension\Writer;
 
-use Assistant\Module\File;
-use Assistant\Module\Collection;
-
 /**
  * Klasa, której zadaniem jest przetwarzanie katalogów znajdujących się w kolekcji
  */
 class Writer implements WriterInterface
 {
     /**
+     * @var \MongoDB
+     */
+    private $db;
+
+    /**
+     * Lista obsługiwanych writerów danych
+     *
      * @var array
      */
-    private $writers = [
+    private $writerNames = [
         'track',
         'directory',
     ];
 
     /**
-     * @var \MongoDB
-    */
-    private $db;
+     * Lista writerów danych
+     *
+     * @see setup()
+     * @see $writerNames
+     *
+     * @var \Assistant\Module\Collection\Extension\Writer[]
+     */
+    private $writers = [ ];
 
     /**
      * Konstruktor
@@ -38,32 +47,37 @@ class Writer implements WriterInterface
     /**
      * Zapisuje element kolekcji
      *
-     * @param \Assistant\Module\Track\Model\Track|File\Model\Directory $element
-     * @return \Assistant\Module\Track\Model\Track|File\Model\Directory
+     * @param \Assistant\Module\Track\Model\Track|\Assistant\Module\Directory\Model\Directory $item
+     * @return \Assistant\Module\Track\Model\Track|\Assistant\Module\Directory\Model\Directory
      */
-    public function save($element)
+    public function save($item)
     {
-        return $this->{ $this->getElementType($element) }->save($element);
+        return $this->writers[$this->getElementType($item)]->save($item);
     }
 
+    /**
+     * Przygotowuje writery do użycia
+     */
     private function setup()
     {
-        foreach ($this->writers as $writer) {
-            $className = sprintf('%s\%sWriter', __NAMESPACE__, ucfirst($writer));
+        foreach ($this->writerNames as $writerName) {
+            $className = sprintf('%s\%sWriter', __NAMESPACE__, ucfirst($writerName));
 
-            $this->{ lcfirst($writer) } = new $className($this->db);
+            $this->writers[$writerName] = new $className($this->db);
+
+            unset($className, $writerName);
         }
     }
 
     /**
      * Zwraca typ podanego elementu kolekcji
      *
-     * @param \Assistant\Module\Track\Model\Track|File\Model\Directory $element
+     * @param \Assistant\Module\Track\Model\Track|\Assistant\Module\Directory\Model\Directory $item
      * @return string
      */
-    private function getElementType(\Assistant\Model $element)
+    private function getElementType($item)
     {
-        $parts = explode('\\', get_class($element));
+        $parts = explode('\\', get_class($item));
 
         return lcfirst(array_pop($parts));
     }

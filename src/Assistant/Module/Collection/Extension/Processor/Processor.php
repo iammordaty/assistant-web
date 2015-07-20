@@ -8,17 +8,29 @@ namespace Assistant\Module\Collection\Extension\Processor;
 class Processor implements ProcessorInterface
 {
     /**
+     * Lista obsługiwanych procesorów danych
+     *
      * @var array
      */
-    protected $processors = [
+    private $processorNames = [
         'file',
         'directory',
     ];
 
     /**
+     * Lista procesoró danych
+     *
+     * @see setup()
+     * @see $processorNames
+     *
+     * @var \Assistant\Module\Collection\Extension\Processor[]
+     */
+    private $processors = [ ];
+
+    /**
      * @var array
      */
-    protected $parameters;
+    private $parameters;
 
     /**
      * Konstruktor
@@ -37,15 +49,20 @@ class Processor implements ProcessorInterface
      */
     public function process($node)
     {
-        return $this->{ lcfirst($node->getType()) }->process($node);
+        return $this->processors[$node->getType()]->process($node);
     }
 
+    /**
+     * Przygotowuje procesory do użycia
+     */
     protected function setup()
     {
-        foreach ($this->processors as $processor) {
-            $className = sprintf('%s\%sProcessor', __NAMESPACE__, ucfirst($processor));
+        foreach ($this->processorNames as $processorName) {
+            $className = sprintf('%s\%sProcessor', __NAMESPACE__, ucfirst($processorName));
 
-            $this->{ lcfirst($processor) } = new $className($this->parameters);
+            $this->processors[$processorName] = new $className($this->parameters);
+
+            unset($className, $processorName);
         }
     }
 }

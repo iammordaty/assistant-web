@@ -2,19 +2,41 @@
 
 namespace Assistant\Module\File\Extension;
 
+/**
+ * Fasada dla parserów operująch na metadanych
+ */
 class Parser
 {
     /**
+     * Lista parserów pól metadanych
+     *
      * @var array
      */
-    protected $parsers = [
+    private $parserNames = [
+        'artist',
+    ];
+
+    /**
+     * Lista parserów pól metadanych
+     *
+     * @see setup()
+     * @see $providerNames
+     *
+     * @var Parser\Field
+     */
+    private $parsers = [ ];
+
+    /**
+     * @var array
+     */
+    private $sourceFieldToDestinationFieldMap = [
         'artist' => 'artists',
     ];
 
     /**
      * @var array
      */
-    protected $parameters;
+    private $parameters;
 
     /**
      * Konstruktor
@@ -28,24 +50,36 @@ class Parser
         $this->setup();
     }
 
+    /**
+     * Parsuje metadane
+     *
+     * @param array $metadata
+     * @return array
+     */
     public function parse(array $metadata)
     {
         $result = [];
 
-        foreach ($this->parsers as $parser => $field) {
-            $result[$field] = $this->{ lcfirst($parser) }->parse($metadata[$parser]);
+        foreach ($this->parserNames as $parserName) {
+            $destination  = $this->sourceFieldToDestinationFieldMap[$parserName];
+            $result[$destination] = $this->parsers[$parserName]->parse($metadata[$parserName]);
         }
 
         return $result;
     }
 
+    /**
+     * Przygotowuje parsery do użycia
+     */
     protected function setup()
     {
-        foreach (array_keys($this->parsers) as $parser) {
-            $className = sprintf('%s\Parser\Field\%s', __NAMESPACE__, ucfirst($parser));
-            $parserParameters = isset($this->parameters[$parser]) ? $this->parameters[$parser] : null;
+        foreach ($this->parserNames as $parserName) {
+            $className = sprintf('%s\Parser\Field\%s', __NAMESPACE__, ucfirst($parserName));
+            $parserParameters = isset($this->parameters[$parserName]) ? $this->parameters[$parserName] : null;
 
-            $this->{ lcfirst($parser) } = new $className($parserParameters);
+            $this->parsers[$parserName] = new $className($parserParameters);
+
+            unset($parserName, $className, $parserParameters);
         }
     }
 }
