@@ -32,7 +32,7 @@ abstract class Node extends \SplFileInfo
         parent::__construct($filename);
 
         $this->ignored = false;
-        $this->relativePathname = sprintf('/%s', ltrim($relativePathname));
+        $this->relativePathname = sprintf('/%s', $relativePathname);
     }
 
     /**
