@@ -7,10 +7,15 @@ use Assistant\Module\File\Extension\Parser\Field as BaseField;
 class Artist extends BaseField
 {
     /**
+     * Lista wyjątków, które nie są rozdzielane
+     *
      * @var array
      */
     private $exceptions = [ ];
 
+    /**
+     * {@inheritDoc}
+     */
     public function parse($artist)
     {
         if (in_array($artist, $this->parameters['exceptions'])) {
@@ -25,6 +30,9 @@ class Artist extends BaseField
         return str_replace($this->exception['placeholders'], $this->parameters['exceptions'], $artists);
     }
 
+    /**
+     * {@inheritDoc}
+     */
     protected function setup()
     {
         $this->exceptions = [
@@ -37,6 +45,9 @@ class Artist extends BaseField
         }
     }
 
+    /**
+     * {@inheritDoc}
+     */
     private function explode($delimiters, $artist)
     {
         $artists = explode(

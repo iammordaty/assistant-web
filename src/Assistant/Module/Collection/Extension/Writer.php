@@ -3,7 +3,7 @@
 namespace Assistant\Module\Collection\Extension;
 
 /**
- *
+ * Klasa bazowa dla writerów
  */
 abstract class Writer
 {

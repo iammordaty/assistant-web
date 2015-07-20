@@ -2,6 +2,9 @@
 
 namespace Assistant\Module\Common\Extension\GetId3\Adapter;
 
+/**
+ * Klasa bazowa adapterów metadanych
+ */
 abstract class Metadata
 {
     /**
@@ -11,10 +14,20 @@ abstract class Metadata
      */
     protected $rawInfo;
 
-    public function __construct($rawInfo)
+    /**
+     * Konstruktor
+     *
+     * @param array $rawInfo
+     */
+    public function __construct(array $rawInfo)
     {
         $this->rawInfo = $rawInfo;
     }
 
+    /**
+     * Zwraca metadane zawarte pliku (utworze muzycznym)
+     *
+     * @return array
+     */
     abstract public function getMetadata();
 }

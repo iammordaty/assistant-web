@@ -20,6 +20,9 @@ class Id3v2 extends BaseMetadata
         'initial_key'
     ];
 
+    /**
+     * {@inheritDoc}
+     */
     public function getMetadata()
     {
         if (isset($this->rawInfo['tags']['id3v2']) === false) {
