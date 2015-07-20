@@ -14,14 +14,14 @@ My web-based music collection assistant
 
 ## screenshots
 
-Dashboard
+#### Dashboard
 ![screenshot](http://i.imgur.com/iyTds3w.png "Dashboard")
 
-Track info with similar tracks
+#### Track info with similar tracks
 ![screenshot](http://i.imgur.com/vs80weq.png "Track")
 
-Search for tracks
+#### Search for tracks
 ![screenshot](http://i.imgur.com/diZJn6a.png "Search")
 
-Browse collection
+#### Browse collection
 ![screenshot](http://i.imgur.com/lwRAgRz.png "Browse")
