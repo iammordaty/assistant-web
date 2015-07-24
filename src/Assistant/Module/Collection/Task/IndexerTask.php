@@ -73,8 +73,6 @@ class IndexerTask extends BaseTask
      */
     private function getIterator()
     {
-        // \RecursiveDirectoryIterator::SKIP_DOTS
-
         return new IgnoredPathIterator(
             new PathFilterIterator(
                 new RecursiveDirectoryIterator($this->parameters['root_dir']),
