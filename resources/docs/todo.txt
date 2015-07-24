@@ -69,6 +69,7 @@ image.onload = function() {
 }
 
 
-db.tracks.createIndex({ filename: 1 }, { unique: 1, name: 'idx_filename_unique' });
+db.tracks.createIndex({ pathname: 1 }, { unique: 1, name: 'idx_pathname_unique' });
 db.tracks.createIndex({ guid: 1 }, { unique: 1, name: 'idx_guid_unique' });
 db.tracks.createIndex({ artist: 'text', title: 'text' }, { name: 'idx_artist_title_text' });
+db.directories.createIndex({ pathname: 1 }, { unique: 1, name: 'idx_pathname_unique' });
