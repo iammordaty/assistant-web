@@ -8,33 +8,20 @@ namespace Assistant\Module\File\Extension;
 class RecursiveDirectoryIterator extends \RecursiveDirectoryIterator
 {
     /**
-     * @var array
-     */
-    private $nodeTypeToClassNameMap = [
-        'file' => Node\File::class,
-        'dir' => Node\Directory::class,
-    ];
-
-    /**
      * Zwraca biężący obiekt iteratora
      *
-     * @return Node\Directory|Node\File
+     * @return SplFileInfo
      */
     public function current()
     {
-        /* @var $current \SplFileInfo */
-        $current = parent::current();
-
-        $className = $this->nodeTypeToClassNameMap[$current->getType()];
-
-        return new $className(
-            $current->getRealPath(),
+        return new SplFileInfo(
+            parent::current()->getRealPath(),
             $this->getRealSubPathname()
         );
     }
 
     /**
-     * Zwraca absolutną ścieżkę do katalogu nadrzędnego w postaci kanonicznej
+     * Zwraca relatywną ścieżkę do katalogu nadrzędnego w postaci kanonicznej
      *
      * @return string
      */

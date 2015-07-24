@@ -2,21 +2,22 @@
 
 namespace Assistant\Module\Collection\Extension\Processor;
 
+use Assistant\Module\File;
 use Assistant\Module\Collection;
 use Assistant\Module\Directory;
 
 /**
  * Klasa, której zadaniem jest przetwarzanie katalogów znajdujących się w kolekcji
  */
-class DirectoryProcessor extends Collection\Extension\Processor implements ProcessorInterface
+class DirProcessor extends Collection\Extension\Processor implements ProcessorInterface
 {
     /**
      * Przetwarza katalog znajdujący się w kolekcji
      *
-     * @param \Assistant\Module\File\Extension\Node\Directory $node
+     * @param File\Extension\SplFileInfo $node
      * @return Directory\Model\Directory
      */
-    public function process($node)
+    public function process(File\Extension\SplFileInfo $node)
     {
         $directory = new Directory\Model\Directory();
 

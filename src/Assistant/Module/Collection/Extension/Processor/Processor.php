@@ -2,9 +2,11 @@
 
 namespace Assistant\Module\Collection\Extension\Processor;
 
+use Assistant\Module\File;
+
 /**
- * Klasa, której zadaniem jest przetwarzanie katalogów znajdujących się w kolekcji
- */
+ * Fasada dla procesorów przetwarzających elementy znajdujące się w kolekcji
+*/
 class Processor implements ProcessorInterface
 {
     /**
@@ -14,11 +16,11 @@ class Processor implements ProcessorInterface
      */
     private $processorNames = [
         'file',
-        'directory',
+        'dir',
     ];
 
     /**
-     * Lista procesoró danych
+     * Lista procesorów danych
      *
      * @see setup()
      * @see $processorNames
@@ -47,7 +49,7 @@ class Processor implements ProcessorInterface
     /**
      * {@inheritDoc}
      */
-    public function process($node)
+    public function process(File\Extension\SplFileInfo $node)
     {
         return $this->processors[$node->getType()]->process($node);
     }

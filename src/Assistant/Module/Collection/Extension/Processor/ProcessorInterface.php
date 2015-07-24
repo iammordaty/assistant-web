@@ -2,6 +2,8 @@
 
 namespace Assistant\Module\Collection\Extension\Processor;
 
+use Assistant\Module\File;
+
 /**
  * Interfejs dla procesorów elementów znajdujących się w kolekcji
  */
@@ -10,8 +12,8 @@ interface ProcessorInterface
     /**
      * Przetwarza surowy element kolekcji
      *
-     * @param \Assistant\Module\File\Extension\Node\File|\Assistant\Module\File\Extension\Node\Directory $node
-     * @return \Assistant\Module\Track\Model\Track|\Assistant\Module\File\Model\Directory
+     * @param File\Extension\SplFileInfo
+     * @return \Assistant\Module\Track\Model\Track|\Assistant\Module\Directory\Model\Directory
      */
-    public function process($node);
+    public function process(File\Extension\SplFileInfo $node);
 }

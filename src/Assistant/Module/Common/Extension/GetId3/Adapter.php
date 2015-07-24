@@ -39,7 +39,7 @@ class Adapter
         $this->id3->setOption($this->getId3Options);
     }
 
-    public function analyze(File\Extension\Node\File $file)
+    public function analyze(File\Extension\SplFileInfo $file)
     {
         $this->rawInfo = $this->id3->analyze($file->getPathname());
 

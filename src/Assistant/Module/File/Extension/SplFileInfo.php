@@ -3,23 +3,23 @@
 namespace Assistant\Module\File\Extension;
 
 /**
- * Klasa bazowa dla elementów kolekcji
+ * Rozszerzenie \SplFileInfo wspierające relatywne ścieżki do plików
  */
-abstract class Node extends \SplFileInfo
+class SplFileInfo extends \SplFileInfo
 {
     /**
      * Relatywna, w stosunku do katalogu głównego, ścieżka do elementu kolekcji
      *
      * @var string
      */
-    protected $relativePathname;
+    private $relativePathname;
 
     /**
      * Określa, czy element jest ignorowany
      *
      * @var bool
      */
-    protected $ignored;
+    private $ignored;
 
     /**
      * Konstruktor
@@ -66,17 +66,5 @@ abstract class Node extends \SplFileInfo
     public function getRelativePathname()
     {
         return $this->relativePathname;
-    }
-
-    /**
-     * Zwraca typ elementu
-     *
-     * @return string
-     */
-    public function getType()
-    {
-        $parts = explode('\\', static::class);
-
-        return strtolower(array_pop($parts));
     }
 }

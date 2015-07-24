@@ -2,8 +2,8 @@
 
 namespace Assistant\Module\Collection\Extension\Processor;
 
-use Assistant\Module\Common;
 use Assistant\Module\Collection;
+use Assistant\Module\Common;
 use Assistant\Module\File;
 use Assistant\Module\Track;
 
@@ -38,18 +38,18 @@ class FileProcessor extends Collection\Extension\Processor implements ProcessorI
     /**
      * Przetwarza plik (utwór muzyczny) znajdujący się w kolekcji
      *
-     * @param File\Extension\Node\File $file
+     * @param File\Extension\SplFileInfo $node
      * @return Track\Model\Track
      * @throws Exception\EmptyMetadataException
      */
-    public function process($file)
+    public function process(File\Extension\SplFileInfo $node)
     {
-        $this->id3->analyze($file);
+        $this->id3->analyze($node);
         $metadata = $this->id3->getId3v2Metadata();
 
         if (isset($metadata['artist']) === false || isset($metadata['title']) === false) {
             throw new Exception\EmptyMetadataException(
-                sprintf('Track %s does\'t contains metadata.', $file->getBasename())
+                sprintf('Track %s does\'t contains metadata.', $node->getBasename())
             );
         }
 
@@ -59,9 +59,9 @@ class FileProcessor extends Collection\Extension\Processor implements ProcessorI
         $track->guid = $this->slugify->slugify(sprintf('%s - %s', $metadata['artist'], $metadata['title']));
         $track->length = $this->id3->getTrackLength();
         $track->metadata_md5 = md5(json_encode($data));
-        $track->parent = $this->slugifyPath(dirname($file->getRelativePathname()));
-        $track->pathname = $file->getRelativePathname();
-        $track->ignored = $file->isIgnored();
+        $track->parent = $this->slugifyPath(dirname($node->getRelativePathname()));
+        $track->pathname = $node->getRelativePathname();
+        $track->ignored = $node->isIgnored();
         $track->indexed_date = new \MongoDate();
 
         return $track;
