@@ -39,7 +39,7 @@ abstract class Repository
      * Konstruktor
      *
      * @param \MongoDB $db
-     * @throws RuntimeException
+     * @throws \RuntimeException
      */
     public function __construct(\MongoDB $db)
     {
@@ -50,7 +50,7 @@ abstract class Repository
         }
 
         if (empty(static::$model)) {
-            throw new Exception('Parameter $collection can not be empty.');
+            throw new \RuntimeException('Parameter $model can not be empty.');
         }
     }
 
