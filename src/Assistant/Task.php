@@ -42,6 +42,9 @@ abstract class Task extends Command
         parent::__construct($name);
     }
 
+    /**
+     * {@inheritDoc}
+     */
     protected function initialize(InputInterface $input, OutputInterface $output)
     {
         $this->input = $input;
