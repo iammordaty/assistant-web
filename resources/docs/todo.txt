@@ -27,34 +27,7 @@ Przekminić rozkład modeli / klas:
 - (przekminić) Similarity - zmienić nazwę na Recommendation,
 - jeśli zamiast fali dźwiękowej pojawia się komunikat o błędzie, przycisk play / pause oraz czasy nie powinny być widoczne
 - dodać sortowanie w wynikach wyszukiwania
-- przekminić :
-    // abstract:
-    abstact protected function calculateSimilarity(...);
-
-    public function getSimilarity()
-    {
-        try {
-            $this->validate();
-
-            return $this->calculateSimilarity();
-        } catch (...) {
-            return false;
-        }
-    }
-
-    protected function validate(...)
-    {
-        // jeśli utwór nie ma wymaganych danych (klucz, bpm), rzuć wyjątek
-    }
-
-    // bpm, year...
-    protected function calculateSimilarity()
-    {
-        // oblicz podobieństwo
-    }
-
-    alternatywnie, rzucać wyjątek mogłaby funkcja setup, co byłoby lepsze, ponieważ na similarityMap i getCriteria
-    również bazują na w/w danych
+- wyjątki w similarity jeśli nie ma wartości
 
 // ---
 
