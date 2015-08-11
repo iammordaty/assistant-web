@@ -134,16 +134,9 @@ abstract class Repository
             $documents->skip($options['skip']);
         }
 
-        // An iteration on a MongoCursor object with yield produces a segfault
-        // https://bugs.php.net/bug.php?id=66671
-
-        $objects = [];
-
         foreach ($documents as $document) {
-            $objects[] = (new static::$model($document));
+            yield (new static::$model($document));
         }
-
-        return $objects;
     }
 
     /**

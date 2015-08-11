@@ -94,8 +94,10 @@ class Similarity
                     'value' => $this->getSimilarityValue($baseTrack, $similarTrack),
                 ];
             },
-            $this->repository->findBy(
-                $a = $this->getSimilarityCriteria($baseTrack)
+            iterator_to_array(
+                $this->repository->findBy(
+                    $this->getSimilarityCriteria($baseTrack)
+                )
             )
         );
 
