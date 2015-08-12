@@ -2,12 +2,12 @@
 
 namespace Assistant\Module\Mix\Controller;
 
-use Assistant\Controller as BaseController;
+use Assistant\Module\Common\Controller\AbstractController;
 use Assistant\Module\Track;
 
 use Cocur\Slugify\Slugify;
 
-class MixController extends BaseController
+class MixController extends AbstractController
 {
     public function index()
     {

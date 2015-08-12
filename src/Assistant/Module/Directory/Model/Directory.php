@@ -2,42 +2,42 @@
 
 namespace Assistant\Module\Directory\Model;
 
-use Assistant\Model as BaseModel;
+use Assistant\Module\Common\Model\AbstractModel;
 
-class Directory extends BaseModel
+class Directory extends AbstractModel
 {
     /**
      * @var \MongoId
      */
-    public $_id;
+    protected $_id;
 
     /**
      * @var string
      */
-    public $guid;
+    protected $guid;
 
     /**
      * @var string
      */
-    public $name;
+    protected $name;
 
     /**
      * @var string
      */
-    public $parent;
+    protected $parent;
 
     /**
      * @var string
      */
-    public $pathname;
+    protected $pathname;
 
     /**
      * @var bool
      */
-    public $ignored;
+    protected $ignored;
 
     /**
      * @var \MongoDate
      */
-    public $indexed_date;
+    protected $indexed_date;
 }

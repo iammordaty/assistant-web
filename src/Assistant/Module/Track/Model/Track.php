@@ -2,92 +2,92 @@
 
 namespace Assistant\Module\Track\Model;
 
-use Assistant\Model as BaseModel;
+use Assistant\Module\Common\Model\AbstractModel;
 
-class Track extends BaseModel
+class Track extends AbstractModel
 {
     /**
      * @var \MongoId
      */
-    public $_id;
+    protected $_id;
 
     /**
      * @var string
      */
-    public $guid;
+    protected $guid;
 
     /**
      * @var string
      */
-    public $artist;
+    protected $artist;
 
     /**
      * @var string[]
      */
-    public $artists;
+    protected $artists;
 
     /**
      * @var string
      */
-    public $title;
+    protected $title;
 
     /**
      * @var string
      */
-    public $album;
+    protected $album;
 
     /**
      * @var int
      */
-    public $track_number;
+    protected $track_number;
 
     /**
      * @var int
      */
-    public $year;
+    protected $year;
 
     /**
      * @var string
      */
-    public $genre;
+    protected $genre;
 
     /**
      * @var int
      */
-    public $bpm;
+    protected $bpm;
 
     /**
      * @var string
      */
-    public $initial_key;
+    protected $initial_key;
 
     /**
      * @var int
      */
-    public $length;
+    protected $length;
 
     /**
      * @var string
      */
-    public $metadata_md5;
+    protected $metadata_md5;
 
     /**
      * @var string
      */
-    public $parent;
+    protected $parent;
 
     /**
      * @var string
      */
-    public $pathname;
+    protected $pathname;
 
     /**
      * @var bool
      */
-    public $ignored;
+    protected $ignored;
 
     /**
      * @var \MongoDate
      */
-    public $indexed_date;
+    protected $indexed_date;
 }

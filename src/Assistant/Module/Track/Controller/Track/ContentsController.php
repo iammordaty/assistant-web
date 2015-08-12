@@ -2,10 +2,10 @@
 
 namespace Assistant\Module\Track\Controller\Track;
 
-use Assistant\Controller as BaseController;
+use Assistant\Module\Common\Controller\AbstractController;
 use Assistant\Module\Track;
 
-class ContentsController extends BaseController
+class ContentsController extends AbstractController
 {
     public function get($guid)
     {

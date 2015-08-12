@@ -1,11 +1,11 @@
 <?php
 
-namespace Assistant;
+namespace Assistant\Module\Common\Repository;
 
 /**
- * Klasa abstrakcyjna dla repozytoriów
+ * Bazowa klasa dla repozytoriów
  */
-abstract class Repository
+class Repository
 {
     /**
      * Nazwa kolekcji, na której operuje repozytorium

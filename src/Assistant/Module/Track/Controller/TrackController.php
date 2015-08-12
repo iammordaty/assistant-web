@@ -2,11 +2,11 @@
 
 namespace Assistant\Module\Track\Controller;
 
-use Assistant\Controller as BaseController;
+use Assistant\Module\Common\Controller\AbstractController;
 use Assistant\Module\Common;
 use Assistant\Module\Track;
 
-class TrackController extends BaseController
+class TrackController extends AbstractController
 {
     use Common\Extension\Traits\GetPathBreadcrumbs;
 

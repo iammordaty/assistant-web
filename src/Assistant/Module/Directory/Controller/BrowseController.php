@@ -2,12 +2,11 @@
 
 namespace Assistant\Module\Directory\Controller;
 
-use Assistant\Controller as BaseController;
 use Assistant\Module\Common;
 use Assistant\Module\Directory;
 use Assistant\Module\Track;
 
-class BrowseController extends BaseController
+class BrowseController extends Common\Controller\AbstractController
 {
     use Common\Extension\Traits\GetPathBreadcrumbs;
 

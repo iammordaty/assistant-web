@@ -2,7 +2,7 @@
 
 namespace Assistant\Module\Collection\Task;
 
-use Assistant\Task as BaseTask;
+use Assistant\Module\Common\Task\AbstractTask;
 use Assistant\Module\File\Extension\RecursiveDirectoryIterator;
 use Assistant\Module\File\Extension\PathFilterIterator;
 use Assistant\Module\File\Extension\IgnoredPathIterator;
@@ -14,7 +14,7 @@ use Symfony\Component\Console\Output\OutputInterface;
 /**
  * Task indeksujący utwory znajdujące się w kolekcji
  */
-class IndexerTask extends BaseTask
+class IndexerTask extends AbstractTask
 {
     /**
      * @var array

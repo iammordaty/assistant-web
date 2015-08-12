@@ -2,9 +2,9 @@
 
 namespace Assistant\Module\Directory\Repository;
 
-use Assistant\Repository as BaseRepository;
+use Assistant\Module\Common\Repository\Repository;
 
-class DirectoryRepository extends BaseRepository
+class DirectoryRepository extends Repository
 {
     protected static $collection = 'directories';
     protected static $model = 'Assistant\Module\Directory\Model\Directory';

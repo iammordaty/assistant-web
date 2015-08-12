@@ -2,9 +2,9 @@
 
 namespace Assistant\Module\Dashboard\Repository;
 
-use Assistant\Repository as BaseRepository;
+use Assistant\Module\Common\Repository\Repository;
 
-class DashboardRepository extends BaseRepository
+class DashboardRepository extends Repository
 {
     protected static $collection = 'tracks';
     protected static $model = 'Assistant\Module\Track\Model\Track';

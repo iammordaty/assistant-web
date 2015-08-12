@@ -33,7 +33,7 @@ class TrackWriter extends Collection\Extension\Writer implements WriterInterface
         if ($indexedTrack === null) {
             $this->assumeValidGuid($track);
 
-            $this->repository->insert((array) $track);
+            $this->repository->insert($track->toArray());
         } else {
             if ($track->metadata_md5 === $indexedTrack->metadata_md5) {
                 throw new Exception\DuplicatedElementException(
@@ -41,7 +41,7 @@ class TrackWriter extends Collection\Extension\Writer implements WriterInterface
                 );
             }
 
-            $this->repository->updateById($indexedTrack->_id, (array) $track);
+            $this->repository->updateById($indexedTrack->_id, $track->toArray());
         }
 
         return $track;

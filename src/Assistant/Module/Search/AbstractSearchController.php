@@ -2,12 +2,12 @@
 
 namespace Assistant\Module\Search;
 
-use Assistant\Controller as BaseController;
+use Assistant\Module\Common\Controller\AbstractController;
 
 /**
  * Bazowy kontroler wyszukiwania
  */
-abstract class Controller extends BaseController
+abstract class AbstractSearchController extends AbstractController
 {
     /**
      * @var integer

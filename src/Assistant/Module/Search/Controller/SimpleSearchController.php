@@ -2,12 +2,12 @@
 
 namespace Assistant\Module\Search\Controller;
 
-use Assistant\Module\Search\Controller as BaseController;
+use Assistant\Module\Search\AbstractSearchController;
 use Assistant\Module\Track;
 
 use Cocur\Slugify\Slugify;
 
-class SimpleSearchController extends BaseController
+class SimpleSearchController extends AbstractSearchController
 {
     protected function getQueryCriteria()
     {

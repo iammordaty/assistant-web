@@ -2,10 +2,10 @@
 
 namespace Assistant\Module\Dashboard\Controller;
 
-use Assistant\Controller as BaseController;
+use Assistant\Module\Common\Controller\AbstractController;
 use Assistant\Module\Dashboard;
 
-class DashboardController extends BaseController
+class DashboardController extends AbstractController
 {
     public function index()
     {

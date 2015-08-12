@@ -1,8 +1,8 @@
 <?php
 
-namespace Assistant;
+namespace Assistant\Module\Common\Controller;
 
-abstract class Controller
+abstract class AbstractController
 {
     /**
      * @var \Slim\Slim
