@@ -21,6 +21,7 @@ RUN apt-get install -y --no-install-recommends \
     nginx-light \
     php5-fpm \
     php5-cli \
+    php5-xdebug \
     php5-mongo
 
 # locale
@@ -31,10 +32,12 @@ RUN echo "pl_PL.UTF-8 UTF-8" >> /etc/locale.gen && \
     locale-gen --purge
 
 # tweaks
+
 RUN sed -e 's/;daemonize = yes/daemonize = no/' -i /etc/php5/fpm/php-fpm.conf && \
     sed -e 's/;listen\.owner/listen.owner/' -i /etc/php5/fpm/pool.d/www.conf && \
     sed -e 's/;listen\.group/listen.group/' -i /etc/php5/fpm/pool.d/www.conf && \
-    echo "\ndaemon off;" >> /etc/nginx/nginx.conf;
+    echo "\ndaemon off;" >> /etc/nginx/nginx.conf && \
+    echo "xdebug.cli_color=1" >> /etc/php5/mods-available/xdebug.ini;
 
 # composer
 
