@@ -33,12 +33,21 @@ class Adapter
      */
     protected $rawInfo;
 
+    /**
+     * Konstruktor
+     */
     public function __construct()
     {
         $this->id3 = new getID3();
         $this->id3->setOption($this->getId3Options);
     }
 
+    /**
+     * Analizuje plik (utwór muzyczny) i odczytuje zawarte w nim metadane
+     *
+     * @param \Assistant\Module\File\Extension\SplFileInfo $file
+     * @return self
+     */
     public function analyze(File\Extension\SplFileInfo $file)
     {
         $this->rawInfo = $this->id3->analyze($file->getPathname());
@@ -46,18 +55,23 @@ class Adapter
         return $this;
     }
 
+    /**
+     * Zwraca metadane zawarte w pliku (utworze muzycznym)
+     *
+     * @return array
+     */
     public function getId3v2Metadata()
     {
         return (new Adapter\Metadata\Id3v2($this->rawInfo))->getMetadata();
     }
 
+    /**
+     * Zwraca długość utworu muzycznego w sekundach
+     *
+     * @return integer
+     */
     public function getTrackLength()
     {
         return (int) $this->rawInfo['playtime_seconds'];
-    }
-
-    public function getMD5Sum()
-    {
-        return $this->rawInfo['md5_data'];
     }
 }

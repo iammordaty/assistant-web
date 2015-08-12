@@ -2,8 +2,14 @@
 
 namespace Assistant\Module\Search\Controller;
 
+/**
+ * Kontroler pozwalający na wyszukiwanie utworów po metadanych
+ */
 class AdvancedSearchController extends SimpleSearchController
 {
+    /**
+     * {@inheritDoc}
+     */
     protected function getQueryCriteria()
     {
         $request = $this->app->request();
@@ -75,11 +81,17 @@ class AdvancedSearchController extends SimpleSearchController
         return $criteria;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     protected function isRequestValid($criteria)
     {
         return !empty($criteria) || filter_input(INPUT_GET, 'submit', FILTER_VALIDATE_BOOLEAN) === true;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     protected function getType()
     {
         return 'advanced';

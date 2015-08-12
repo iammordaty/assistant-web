@@ -7,8 +7,14 @@ use Assistant\Module\Track;
 
 use Cocur\Slugify\Slugify;
 
+/**
+ * Kontroler pozwalający na wyszukiwanie utworów po nazwie lub artyście
+ */
 class SimpleSearchController extends AbstractSearchController
 {
+    /**
+     * {@inheritDoc}
+     */
     protected function getQueryCriteria()
     {
         $request = $this->app->request();
@@ -30,12 +36,18 @@ class SimpleSearchController extends AbstractSearchController
 
         return $criteria;
     }
-    
+
+    /**
+     * {@inheritDoc}
+     */
     protected function isRequestValid($criteria)
     {
         return !empty($criteria);
     }
 
+    /**
+     * {@inheritDoc}
+     */
     protected function getResults(array $criteria, array $options)
     {
         $repository = new Track\Repository\TrackRepository($this->app->container['db']);
@@ -48,6 +60,9 @@ class SimpleSearchController extends AbstractSearchController
         return $results;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     protected function getPaginator($pageNo, $totalCount)
     {
         if ($totalCount <= static::MAX_TRACKS_PER_PAGE) {
@@ -87,11 +102,17 @@ class SimpleSearchController extends AbstractSearchController
         );
     }
 
+    /**
+     * {@inheritDoc}
+     */
     protected function getType()
     {
         return 'simple';
     }
-
+    
+    /**
+     * {@inheritDoc}
+     */
     protected function handleRequest($form, $results, $paginator)
     {
         if ($this->getType() === 'simple' && $results['count'] === 1) {

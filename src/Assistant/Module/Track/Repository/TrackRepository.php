@@ -4,6 +4,9 @@ namespace Assistant\Module\Track\Repository;
 
 use Assistant\Module\Common\Repository\AbstractObjectRepository;
 
+/**
+ * Repozytorium obiektów Track
+ */
 class TrackRepository extends AbstractObjectRepository
 {
     /**

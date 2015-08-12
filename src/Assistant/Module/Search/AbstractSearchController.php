@@ -14,6 +14,9 @@ abstract class AbstractSearchController extends AbstractController
      */
     const MAX_TRACKS_PER_PAGE = 50;
 
+    /**
+     * Renderuje stronę wyszukiwania
+     */
     public function index()
     {
         $request = $this->app->request();
@@ -42,16 +45,51 @@ abstract class AbstractSearchController extends AbstractController
         $this->handleRequest($request->get(), $results, $paginator);
     }
 
+    /**
+     * Zwraca kryteria zapytania
+     *
+     * @return array
+     */
     abstract protected function getQueryCriteria();
 
+    /**
+     * Zwraca informację, czy żądanie jest prawidłowe
+     *
+     * @return bool
+     */
     abstract protected function isRequestValid($criteria);
 
+    /**
+     * Zwraca utwory spełniające podane kryteria wyszukiwania
+     *
+     * @param array $criteria
+     * @param array $options
+     * @return array
+     */
     abstract protected function getResults(array $criteria, array $options);
 
+    /**
+     * Zwraca obiekt paginatora lub null, jeśli paginator nie jest wymagany
+     *
+     * @see MAX_TRACKS_PER_PAGE
+     * @param integer $page
+     * @param integer $count
+     * @return \Pagerfanta\Pagerfanta|null
+     */
     abstract protected function getPaginator($page, $count);
 
+    /**
+     * Zwraca typ kontrolera obsługującego wyszukiwanie
+     */
     abstract protected function getType();
 
+    /**
+     * Obsługuje żądanie
+     *
+     * @param array $form
+     * @param array $results
+     * @param \Pagerfanta\Pagerfanta|null $paginator
+     */
     protected function handleRequest($form, $results, $paginator)
     {
         return $this->app->render(
@@ -65,16 +103,31 @@ abstract class AbstractSearchController extends AbstractController
         );
     }
 
+    /**
+     * Zwraca nazwę routingu służącego do nawigacji pomiędzy stronami
+     *
+     * @return string
+     */
     protected function getRouteName()
     {
         return sprintf('search.%s.index', strtolower($this->getType()));
     }
 
+    /**
+     * Zwraca nazwę szablonu do wyrenderowania
+     *
+     * @return string
+     */
     protected function getTemplateName()
     {
         return sprintf('@search/%s/index.twig', strtolower($this->getType()));
     }
 
+    /**
+     * Zwraca ustawienia sortowania
+     *
+     * @return array
+     */
     protected function getSort()
     {
         return [ 'guid' => 1 ];

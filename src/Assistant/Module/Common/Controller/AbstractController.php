@@ -2,6 +2,9 @@
 
 namespace Assistant\Module\Common\Controller;
 
+/**
+ * Abstrakcyjna klasa dla kontrolerów
+ */
 abstract class AbstractController
 {
     /**
@@ -9,7 +12,12 @@ abstract class AbstractController
      */
     protected $app;
 
-    public function __construct($app)
+    /**
+     * Konstruktor
+     *
+     * @param \Slim\Slim $app
+     */
+    public function __construct(\Slim\Slim $app)
     {
         $this->app = $app;
     }
