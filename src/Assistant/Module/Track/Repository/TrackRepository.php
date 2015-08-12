@@ -2,9 +2,9 @@
 
 namespace Assistant\Module\Track\Repository;
 
-use Assistant\Module\Common\Repository\Repository;
+use Assistant\Module\Common\Repository\AbstractObjectRepository;
 
-class TrackRepository extends Repository
+class TrackRepository extends AbstractObjectRepository
 {
     /**
      * {@inheritDoc}

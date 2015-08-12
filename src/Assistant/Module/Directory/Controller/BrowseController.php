@@ -48,8 +48,8 @@ class BrowseController extends Common\Controller\AbstractController
             ->findBy([ 'parent' => $directory->guid ], [ ], [ 'sort' => [ 'guid' => 1 ]]);
 
         return [
-            'directories' => $directories,
-            'tracks' => $tracks,
+            'directories' => iterator_to_array($directories),
+            'tracks' => iterator_to_array($tracks),
         ];
     }
 }

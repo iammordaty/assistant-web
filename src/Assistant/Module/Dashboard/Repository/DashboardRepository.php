@@ -7,8 +7,6 @@ use Assistant\Module\Common\Repository\Repository;
 class DashboardRepository extends Repository
 {
     protected static $collection = 'tracks';
-    protected static $model = 'Assistant\Module\Track\Model\Track';
-    protected static $baseConditions = [];
 
     public function getTrackCountByGenre(array $sort = [], $limit = 10)
     {

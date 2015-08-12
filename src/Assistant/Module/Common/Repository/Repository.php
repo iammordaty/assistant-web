@@ -15,20 +15,6 @@ class Repository
     protected static $collection;
 
     /**
-     * Nazwa klasy, na podstawie której zostanie utworzony obiekt.
-     *
-     * @var string
-     */
-    protected static $model;
-
-    /**
-     * Kryteria, które muszą być spełnione, aby obiekt(-y) mógł zostać pobrany
-     *
-     * @var array
-     */
-    protected static $baseConditions = [];
-
-    /**
      * Obiekt klasy MongoDB
      *
      * @var MongoDB
@@ -48,10 +34,6 @@ class Repository
         if (empty(static::$collection)) {
             throw new \RuntimeException('Parameter $collection can not be empty.');
         }
-
-        if (empty(static::$model)) {
-            throw new \RuntimeException('Parameter $model can not be empty.');
-        }
     }
 
     /**
@@ -59,22 +41,16 @@ class Repository
      *
      * @param array $conditions
      * @param array $fields
-     * @return Model|null
+     * @return array|null
      */
     public function findOneBy(array $conditions, array $fields = [])
     {
-        $document = $this->db
+        return $this->db
             ->selectCollection(static::$collection)
             ->findOne(
                 $conditions,
                 $fields
             );
-
-        if ($document === null) {
-            return null;
-        }
-
-        return new static::$model($document);
     }
 
     /**
@@ -82,7 +58,7 @@ class Repository
      *
      * @param string $guid
      * @param array $fields
-     * @return Model|null
+     * @return array|null
      */
     public function findOneByGuid($guid, array $fields = [])
     {
@@ -97,7 +73,7 @@ class Repository
      *
      * @param \MongoId $id
      * @param array $fields
-     * @return Model|null
+     * @return array|null
      */
     public function findOneById($id, array $fields = [])
     {
@@ -108,12 +84,12 @@ class Repository
     }
 
     /**
-     * Zwraca obiekty na podstawie podanych kryteriów
+     * Zwraca dokumenty na podstawie podanych kryteriów
      *
      * @param array $conditions
      * @param array $fields
      * @param array $options
-     * @return Model[]
+     * @return array
      */
     public function findBy(array $conditions, array $fields = [], array $options = [])
     {
@@ -135,16 +111,16 @@ class Repository
         }
 
         foreach ($documents as $document) {
-            yield (new static::$model($document));
+            yield $document;
         }
     }
 
     /**
-     * Zwraca obiekty na podstawie listy identyfikatorów
+     * Zwraca dokumenty na podstawie listy identyfikatorów
      *
      * @param array $ids
      * @param array $fields
-     * @return Model[]
+     * @return array
      */
     public function findById(array $ids, array $fields = [])
     {
@@ -155,12 +131,12 @@ class Repository
     }
 
     /**
-     * Dodaje obiekt do bazy danych
+     * Dodaje dokument do bazy danych
      *
      * @param array $data
-     * @return array
+     * @return bool
      */
-    public function insert(array $data)
+    public function insert($data)
     {
         if (array_key_exists('_id', $data) === true) {
             $data['_id'] = $this->idToMongoId($data['_id']);
@@ -176,14 +152,16 @@ class Repository
     }
     
     /**
-     * Aktualizuje obiekt na podstawie przekazanych kryteriów
+     * Aktualizuje dokument na podstawie przekazanych kryteriów
      *
      * @param array $conditions
      * @param array $data
-     * @return int Liczba zaktualizowanych obiektów
+     * @return int Liczba zaktualizowanych dokumentów
      */
-    public function update(array $conditions, array $data)
+    public function update()
     {
+        list($conditions, $data) = func_get_args();
+
         if (array_key_exists('_id', $data) === true) {
             unset($data['_id']);
         }
@@ -199,7 +177,7 @@ class Repository
     }
 
     /**
-     * Aktualizuje obiekt na podstawie jego identyfikatora
+     * Aktualizuje dokument na podstawie jego identyfikatora
      *
      * @param \MongoId|string $id
      * @param array $data
@@ -214,10 +192,10 @@ class Repository
     }
 
     /**
-     * Usuwa obiekty na podstawie podanych kryteriów
+     * Usuwa dokumenty na podstawie podanych kryteriów
      *
      * @param array $conditions
-     * @return int Liczba usuniętych obiektów
+     * @return int Liczba usuniętych dokumentów
      */
     public function removeBy(array $conditions = [])
     {
@@ -231,7 +209,7 @@ class Repository
     }
 
     /**
-     * Usuwa obiekt o podanym identyfikatorze
+     * Usuwa dokument o podanym identyfikatorze
      *
      * @param \MongoId|string $id
      * @return bool
@@ -244,7 +222,7 @@ class Repository
     }
 
     /**
-     * Zwraca informację o liczbie obiektów w kolekcji na podstawie podanych kryteriów
+     * Zwraca informację o liczbie dokumentów w kolekcji na podstawie podanych kryteriów
      *
      * @param array $conditions
      * @return int
@@ -253,9 +231,7 @@ class Repository
     {
         return $this->db
             ->selectCollection(static::$collection)
-            ->count(
-                $conditions
-            );
+            ->count($conditions);
     }
 
     /**
@@ -290,7 +266,7 @@ class Repository
     }
 
     /**
-     * Konwertuje tablicę łańcuchów zawierający identyfikator Mongo do obiektu \MongoId
+     * Konwertuje tablicę łańcuchów zawierający identyfikator Mongo do dokumentu \MongoId
      *
      * @param string $ids
      * @return \MongoId[]
@@ -307,7 +283,7 @@ class Repository
     }
 
     /**
-     * Konwertuje łańcuch zawierający identyfikator Mongo do obiektu \MongoId
+     * Konwertuje łańcuch zawierający identyfikator Mongo do dokumentu \MongoId
      *
      * @param string $id
      * @return \MongoId
