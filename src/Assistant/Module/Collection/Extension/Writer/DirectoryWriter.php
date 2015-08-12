@@ -36,7 +36,7 @@ class DirectoryWriter extends Collection\Extension\Writer implements WriterInter
             );
         }
 
-        $this->repository->insert($directory->toArray());
+        $this->repository->insert($directory);
 
         return $directory;
     }
