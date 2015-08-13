@@ -28,6 +28,7 @@ class TrackWriter extends Collection\Extension\Writer implements WriterInterface
      */
     public function save($track)
     {
+        /* @var $indexedTrack Track\Model\Track */
         $indexedTrack = $this->repository->findOneBy([ 'pathname' => $track->pathname ], [ 'metadata_md5' ]);
 
         if ($indexedTrack === null) {
@@ -41,12 +42,13 @@ class TrackWriter extends Collection\Extension\Writer implements WriterInterface
                 );
             }
 
-            $data = $track->toArray();
-            unset($data['_id']);
-            $indexedTrack->set($data);
-            
-            $this->repository->update($indexedTrack);
+            $track->_id = $indexedTrack->_id;
+            $track->indexed_date = $indexedTrack->indexed_date;
+
+            $this->repository->update($track);
         }
+
+        unset($indexedTrack);
 
         return $track;
     }
