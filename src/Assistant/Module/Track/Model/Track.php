@@ -24,7 +24,7 @@ class Track extends AbstractModel
     /**
      * @var string[]
      */
-    protected $artists;
+    protected $artists = [];
 
     /**
      * @var string
