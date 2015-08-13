@@ -117,7 +117,7 @@ class SimpleSearchController extends AbstractSearchController
     {
         if ($this->getType() === 'simple' && $results['count'] === 1) {
             return $this->app->redirect(
-                $this->app->urlFor('track.track.index', [ 'guid' => $results['tracks'][0]->guid])
+                $this->app->urlFor('track.track.index', [ 'guid' => $results['tracks']->current()->guid])
             );
         }
 
