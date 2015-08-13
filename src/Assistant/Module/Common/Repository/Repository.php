@@ -146,7 +146,7 @@ class Repository
 
         $result = $this->db
             ->selectCollection(static::$collection)
-            ->insert($data);
+            ->insert($this->filter($data));
 
         return ((int) $result['ok'] === 1);
     }
@@ -170,7 +170,7 @@ class Repository
             ->selectCollection(static::$collection)
             ->update(
                 $conditions,
-                [ '$set' => $data ]
+                [ '$set' => $this->filter($data) ]
             );
 
         return $result['n'];
@@ -263,6 +263,22 @@ class Repository
         return $this->db
             ->selectCollection(static::$collection)
             ->createIndex($keys, $options);
+    }
+
+    /**
+     * Filtruje dane przed ich zapisem do bazy danych
+     *
+     * @param array $data
+     * @return array
+     */
+    protected function filter(array $data)
+    {
+        return array_filter(
+            $data,
+            function ($value) {
+                return $value !== null;
+            }
+        );
     }
 
     /**
