@@ -10,7 +10,7 @@ abstract class Writer
     /**
      * Obiekt repozytorium
      *
-     * @var \Assistant\Repository
+     * @var \Assistant\Module\Common\Repository\AbstractObjectRepository
      */
     protected $repository;
 
