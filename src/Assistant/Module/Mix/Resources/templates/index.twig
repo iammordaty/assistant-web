@@ -35,7 +35,7 @@
 
         <ol>
             {% for track in tracks %}
-                <li>{{ track.artist }} - {{ track.title }}</li>
+                <li>{{ track.track.artist }} - {{ track.track.title }} {% if loop.index0 > 0 %} ({{ track.similarityValue }}%){% endif %}</li>
             {% endfor %}
         </ol>
 
@@ -62,7 +62,7 @@
 
         <ol>
             {% for track in mix %}
-                <li>{{ track.track.artist }} - {{ track.track.title }}</li>
+                <li>{{ track.track.artist }} - {{ track.track.title }} {% if loop.index0 > 0 %} ({{ track.similarityValue }}%){% endif %}</li>
             {% endfor %}
         </ol>
     {% endif %}

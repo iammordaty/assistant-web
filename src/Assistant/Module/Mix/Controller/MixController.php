@@ -18,35 +18,44 @@ class MixController extends AbstractController
 
             $listing = explode(PHP_EOL, $request->post('listing'));
 
-            foreach ($listing as $trackName) {
-                if (($track = $this->getTrackByName($trackName))) {
-                    $tracks[] = $track;
-                }
-            }
-
             $similarity = new Track\Extension\Similarity(
                 new Track\Repository\TrackRepository($this->app->container['db']),
                 $this->app->container->parameters['track']['similarity']
             );
 
+            $previousTrack = null;
+
+            foreach ($listing as $trackName) {
+                if (($track = $this->getTrackByName($trackName))) {
+                    $tracks[] = [
+                        'track' => $track,
+                        'similarityValue' => $previousTrack !== null
+                            ? $similarity->getSimilarityValue($previousTrack, $track)
+                            : null
+                    ];
+
+                    $previousTrack = $track;
+                }
+            }
+
             $matrix = [];
 
             foreach ($tracks as $track) {
                 $row = [
-                    'track' => $track,
+                    'track' => $track['track'],
                     'tracks' => [ ],
                 ];
 
                 foreach ($tracks as $track2) {
-                    $row['tracks'][$track2->guid] = [
-                        'track' => $track2,
-                        'similarityValue' => $track->guid !== $track2->guid
-                            ? $similarity->getSimilarityValue($track, $track2)
+                    $row['tracks'][$track2['track']->guid] = [
+                        'track' => $track2['track'],
+                        'similarityValue' => $track['track']->guid !== $track2['track']->guid
+                            ? $similarity->getSimilarityValue($track['track'], $track2['track'])
                             : null
                     ];
                 }
 
-                $matrix[$track->guid] = $row;
+                $matrix[$track['track']->guid] = $row;
             }
         }
 
