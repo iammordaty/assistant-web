@@ -7,8 +7,6 @@ use Assistant\Module\File\Extension\RecursiveDirectoryIterator;
 use Assistant\Module\File\Extension\PathFilterIterator;
 use Assistant\Module\File\Extension\IgnoredPathIterator;
 use Assistant\Module\Collection;
-use Assistant\Module\Track;
-use Assistant\Module\Directory;
 
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
