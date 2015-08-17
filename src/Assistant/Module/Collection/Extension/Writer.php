@@ -30,6 +30,16 @@ abstract class Writer
     }
 
     /**
+     * Usuwa elementy znajdujące się w kolekcji
+     *
+     * @return int
+     */
+    public function clean()
+    {
+        return $this->repository->removeBy();
+    }
+
+    /**
      * Zwraca typ writera
      *
      * @return string

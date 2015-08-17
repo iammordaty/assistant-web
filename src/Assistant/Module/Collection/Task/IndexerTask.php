@@ -7,9 +7,12 @@ use Assistant\Module\File\Extension\RecursiveDirectoryIterator;
 use Assistant\Module\File\Extension\PathFilterIterator;
 use Assistant\Module\File\Extension\IgnoredPathIterator;
 use Assistant\Module\Collection;
+use Assistant\Module\Track;
+use Assistant\Module\Directory;
 
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
+use Symfony\Component\Console\Input\InputOption;
 
 /**
  * Task indeksujący utwory znajdujące się w kolekcji
@@ -30,7 +33,8 @@ class IndexerTask extends AbstractTask
         
         $this
             ->setName('collection:index')
-            ->setDescription('Indeksuje utwory oraz katalogi znajdujące się w kolekcji');
+            ->setDescription('Indeksuje utwory oraz katalogi znajdujące się w kolekcji')
+            ->addOption('clear', 'c', InputOption::VALUE_NONE, 'Clear collection before indexing');
     }
 
     /**
@@ -40,6 +44,10 @@ class IndexerTask extends AbstractTask
     {
         $processor = new Collection\Extension\Processor\Processor($this->app->container->parameters);
         $writer = new Collection\Extension\Writer\Writer($this->app->container['db']);
+
+        if ($input->getOption('clear') === true) {
+            $writer->clear();
+        }
 
         /* @var $node \Assistant\Module\File\Extension\Node */
         foreach ($this->getIterator() as $node) {

@@ -3,7 +3,7 @@
 namespace Assistant\Module\Collection\Extension\Writer;
 
 /**
- * Klasa, której zadaniem jest przetwarzanie katalogów znajdujących się w kolekcji
+ * Fasada dla writerów zajmujących się zapisywaniem elementów w kolekcji
  */
 class Writer implements WriterInterface
 {
@@ -53,6 +53,16 @@ class Writer implements WriterInterface
     public function save($item)
     {
         return $this->writers[$this->getElementType($item)]->save($item);
+    }
+
+    /**
+     * Usuwa elementy z kolekcji
+     */
+    public function clear()
+    {
+        foreach ($this->writers as $writer) {
+            $writer->clean();
+        }
     }
 
     /**
