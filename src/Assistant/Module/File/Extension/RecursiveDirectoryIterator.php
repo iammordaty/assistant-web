@@ -14,10 +14,14 @@ class RecursiveDirectoryIterator extends \RecursiveDirectoryIterator
      */
     public function current()
     {
-        return new SplFileInfo(
+        $node = new SplFileInfo(
             parent::current()->getRealPath(),
             $this->getRealSubPathname()
         );
+
+        $node->setAsDot($this->isDot());
+
+        return $node;
     }
 
     /**

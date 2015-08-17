@@ -22,27 +22,27 @@ class SplFileInfo extends \SplFileInfo
     private $ignored;
 
     /**
+     * Określa, czy element jest kropką
+     *
+     * @var bool
+     */
+    private $dot;
+
+    /**
      * Konstruktor
      *
      * @param string $filename
      * @param string $relativePathname
+     * @param bool $isDot
      */
     public function __construct($filename, $relativePathname)
     {
         parent::__construct($filename);
 
-        $this->ignored = false;
         $this->relativePathname = sprintf('/%s', $relativePathname);
-    }
 
-    /**
-     * Zwraca informację, czy element jest ignorowany
-     *
-     * @return bool
-     */
-    public function isIgnored()
-    {
-        return $this->ignored;
+        $this->ignored = false;
+        $this->dot = false;
     }
 
     /**
@@ -56,6 +56,40 @@ class SplFileInfo extends \SplFileInfo
         $this->ignored = (bool) $ignored;
 
         return $this;
+    }
+
+    /**
+     * Zwraca informację, czy element jest ignorowany
+     *
+     * @return bool
+     */
+    public function isIgnored()
+    {
+        return $this->ignored;
+    }
+
+    /**
+     * Ustawia flagę oznaczającą, że element jest kropką
+     *
+     * @param bool $dot
+     * @return self
+     */
+    public function setAsDot($dot)
+    {
+        $this->dot = (bool) $dot;
+
+        return $this;
+    }
+
+
+    /**
+     * Ustawia flagę oznaczającą, że element jest kropką
+     *
+     * @return self
+     */
+    public function isDot()
+    {
+        return $this->dot;
     }
 
     /**
