@@ -49,29 +49,37 @@ class IndexerTask extends AbstractTask
             $writer->clear();
         }
 
-        /* @var $node \Assistant\Module\File\Extension\Node */
+        $stats = [ 'added' => [ 'file' => 0, 'dir' => 0 ], 'empty' => 0, 'duplicated' => 0, 'error' => 0, ];
+
+        /* @var $node \Assistant\Module\File\Extension\SplFileInfo */
         foreach ($this->getIterator() as $node) {
             try {
                 $element = $processor->process($node);
                 $writer->save($element);
 
+                $stats['added'][$node->getType()]++;
+
                 $this->info('.', false);
             } catch (Collection\Extension\Processor\Exception\EmptyMetadataException $e) {
+                $stats['empty']++;
+
                 $this->error('.', false);
             } catch (Collection\Extension\Writer\Exception\DuplicatedElementException $e) {
-                $this->comment('.', false);
+                if ($node->isDot() === false) {
+                    $stats['duplicated']++;
+
+                    $this->comment('.', false);
+                }
             } catch (\Exception $e) {
+                $stats['error']++;
+
                 $this->error($e->getMessage());
             } finally {
                 unset($node, $element);
             }
         }
 
-        $this->info('');
-
-        $this->info(
-            sprintf('Maksymalne użycie pamięci: %.3f MB', (memory_get_peak_usage() / (1024 * 1024)))
-        );
+        $this->showSummary($stats);
 
         unset($input, $output);
     }
@@ -91,5 +99,32 @@ class IndexerTask extends AbstractTask
             IgnoredPathIterator::SELF_FIRST,
             IgnoredPathIterator::CATCH_GET_CHILD
         );
+    }
+
+    /**
+     * Wyświetla podsumowanie procesu indeksowania
+     *
+     * @param array $stats
+     */
+    private function showSummary(array $stats)
+    {
+        $this->info('');
+        $this->info('Zakończono.');
+        $this->info('');
+
+        $this->info(
+            sprintf(
+                'Liczba dodanych elementów: %d (plików: %d, katalogów: %d)',
+                $stats['added']['file'] + $stats['added']['dir'],
+                $stats['added']['file'],
+                $stats['added']['dir']
+            )
+        );
+        $this->info(sprintf('Liczba utworów bez metadanych: %d', $stats['empty']));
+        $this->info(sprintf('Liczba pominiętych utworów: %d', $stats['duplicated']));
+        $this->info(sprintf('Liczba elementów nie dodanych z powodu błędu: %d', $stats['error']));
+
+        $this->info('');
+        $this->info(sprintf('Maksymalne użycie pamięci: %.3f MB', (memory_get_peak_usage() / (1024 * 1024))));
     }
 }
