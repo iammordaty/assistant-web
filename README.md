@@ -18,19 +18,19 @@ My web-based music collection assistant
 - MongoDB >= 3.x (2.x should works too)
 - nginx / Apache
 
-## Contributions
+## contributions
 Contributions are greatly appreciated. Please fork this repository and open a pull request to add snippets, make grammar tweaks, etc.
 
 ## screenshots
 
-#### Dashboard
+#### dashboard
 ![screenshot](http://i.imgur.com/iyTds3w.png "Dashboard")
 
-#### Track info with similar tracks
+#### track info with similar tracks
 ![screenshot](http://i.imgur.com/vs80weq.png "Track")
 
-#### Search for tracks
+#### search for tracks
 ![screenshot](http://i.imgur.com/diZJn6a.png "Search")
 
-#### Browse collection
+#### browse collection
 ![screenshot](http://i.imgur.com/lwRAgRz.png "Browse")
