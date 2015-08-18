@@ -11,8 +11,17 @@ abstract class Provider
 {
     /**
      * Maksymalna wartość podobieństwa, jaką może zwrócić dostawca
+     *
+     * @var int
      */
     const MAX_SIMILARITY_VALUE = 100;
+
+    /**
+     * Nazwa pola metadanych, na którym operuje dostawca
+     *
+     * @var string
+     */
+    const METADATA_FIELD = null;
 
     /**
      * @var array
@@ -30,9 +39,14 @@ abstract class Provider
      * Konstruktor
      *
      * @param array|null $parameters
+     * @throws \RuntimeException
      */
     public function __construct(array $parameters = null)
     {
+        if (empty(static::METADATA_FIELD)) {
+            throw new \RuntimeException('Parameter METADATA_FIELD can not be empty.');
+        }
+
         if ($parameters !== null) {
             $this->parameters = $parameters;
         }
@@ -62,7 +76,10 @@ abstract class Provider
      *
      * @return string
      */
-    abstract public function getMetadataField();
+    public function getMetadataField()
+    {
+        return static::METADATA_FIELD;
+    }
 
     /**
      * Przygotowuje dane dostawcy do użycia

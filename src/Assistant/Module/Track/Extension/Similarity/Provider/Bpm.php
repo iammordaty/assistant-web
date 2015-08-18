@@ -10,6 +10,11 @@ class Bpm extends BaseProvider
     /**
      * {@inheritDoc}
      */
+    const METADATA_FIELD = 'bpm';
+
+    /**
+     * {@inheritDoc}
+     */
     protected $similarityMap = [
         1 => 98,
         2 => 93,
@@ -46,13 +51,5 @@ class Bpm extends BaseProvider
                 $baseTrack->bpm + $this->parameters['tolerance']
             )
         ];
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public function getMetadataField()
-    {
-        return 'bpm';
     }
 }

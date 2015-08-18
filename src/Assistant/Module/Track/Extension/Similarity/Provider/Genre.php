@@ -8,6 +8,11 @@ use Assistant\Module\Track;
 class Genre extends BaseProvider
 {
     /**
+     * {@inheritDoc}
+     */
+    const METADATA_FIELD = 'genre';
+
+    /**
      * @var array
      */
     private $similarityMapBase = [
@@ -92,17 +97,9 @@ class Genre extends BaseProvider
     /**
      * {@inheritDoc}
      */
-    public function getMetadataField()
-    {
-        return 'genre';
-    }
-
-    /**
-     * {@inheritDoc}
-     */
     protected function setup()
     {
-        $this->similarityMap = [];
+        $this->similarityMap = [ ];
 
         foreach ($this->similarityMapBase as $map) {
             $this->similarityMap[] = [

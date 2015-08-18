@@ -10,6 +10,11 @@ class Year extends BaseProvider
     /**
      * {@inheritDoc}
      */
+    const METADATA_FIELD = 'year';
+
+    /**
+     * {@inheritDoc}
+     */
     protected $similarityMap = [
         1 => 98,
         2 => 90,
@@ -54,14 +59,8 @@ class Year extends BaseProvider
             }
         );
 
-        return [ '$in' => $years ];
-    }
+        unset($range, $currentYear);
 
-    /**
-     * {@inheritDoc}
-     */
-    public function getMetadataField()
-    {
-        return 'year';
+        return [ '$in' => $years ];
     }
 }

@@ -10,6 +10,11 @@ class CamelotKeyCode extends BaseProvider
     /**
      * {@inheritDoc}
      */
+    const METADATA_FIELD = 'initial_key';
+
+    /**
+     * {@inheritDoc}
+     */
     public function getSimilarity(Track\Model\Track $baseTrack, Track\Model\Track $comparedTrack)
     {
         return isset($this->similarityMap[$baseTrack->initial_key][$comparedTrack->initial_key])
@@ -23,14 +28,6 @@ class CamelotKeyCode extends BaseProvider
     public function getCriteria(Track\Model\Track $baseTrack)
     {
         return [ '$in' => array_keys($this->similarityMap[$baseTrack->initial_key]) ];
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public function getMetadataField()
-    {
-        return 'initial_key';
     }
 
     /**
