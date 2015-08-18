@@ -160,7 +160,7 @@ class Similarity
 
             $this->maxSimilarityValue += ($providerClassName::MAX_SIMILARITY_VALUE * $this->weights[$providerName]);
 
-            unset($providerName, $providerClassName, $providerParameters, $provider);
+            unset($providerName, $providerClassName, $providerParameters, $providerName);
         }
 
         $this->maxSimilarityValue /=  $this->providersCount;
