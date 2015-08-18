@@ -15,6 +15,11 @@ class SimpleSearchController extends AbstractSearchController
     /**
      * {@inheritDoc}
      */
+    const SEARCH_FORM_TYPE = 'simple';
+
+    /**
+     * {@inheritDoc}
+     */
     protected function getQueryCriteria()
     {
         $request = $this->app->request();
@@ -101,21 +106,13 @@ class SimpleSearchController extends AbstractSearchController
             ]
         );
     }
-
-    /**
-     * {@inheritDoc}
-     */
-    protected function getType()
-    {
-        return 'simple';
-    }
     
     /**
      * {@inheritDoc}
      */
     protected function handleRequest($form, $results, $paginator)
     {
-        if ($this->getType() === 'simple' && $results['count'] === 1) {
+        if ($this->getSearchFormType() === self::SEARCH_FORM_TYPE && $results['count'] === 1) {
             return $this->app->redirect(
                 $this->app->urlFor('track.track.index', [ 'guid' => $results['tracks']->current()->guid])
             );

@@ -10,9 +10,16 @@ use Assistant\Module\Common\Controller\AbstractController;
 abstract class AbstractSearchController extends AbstractController
 {
     /**
+     * Maksymalna liczba wyszukanych utworów na stronie
+     *
      * @var integer
      */
     const MAX_TRACKS_PER_PAGE = 50;
+
+    /**
+     * Typ wyszukiwarki
+     */
+    const SEARCH_FORM_TYPE = null;
 
     /**
      * Renderuje stronę wyszukiwania
@@ -33,7 +40,7 @@ abstract class AbstractSearchController extends AbstractController
                 [
                     'skip' => ($page - 1) * static::MAX_TRACKS_PER_PAGE,
                     'limit' => static::MAX_TRACKS_PER_PAGE,
-                    'sort' => $this->getSort()
+                    'sort' => $this->getSortParams()
                 ]
             );
 
@@ -79,11 +86,6 @@ abstract class AbstractSearchController extends AbstractController
     abstract protected function getPaginator($page, $count);
 
     /**
-     * Zwraca typ kontrolera obsługującego wyszukiwanie
-     */
-    abstract protected function getType();
-
-    /**
      * Obsługuje żądanie
      *
      * @param array $form
@@ -104,13 +106,21 @@ abstract class AbstractSearchController extends AbstractController
     }
 
     /**
+     * Zwraca typ kontrolera obsługującego wyszukiwanie
+     */
+    protected function getSearchFormType()
+    {
+        return static::SEARCH_FORM_TYPE;
+    }
+
+    /**
      * Zwraca nazwę routingu służącego do nawigacji pomiędzy stronami
      *
      * @return string
      */
     protected function getRouteName()
     {
-        return sprintf('search.%s.index', strtolower($this->getType()));
+        return sprintf('search.%s.index', strtolower($this->getSearchFormType()));
     }
 
     /**
@@ -120,7 +130,7 @@ abstract class AbstractSearchController extends AbstractController
      */
     protected function getTemplateName()
     {
-        return sprintf('@search/%s/index.twig', strtolower($this->getType()));
+        return sprintf('@search/%s/index.twig', strtolower($this->getSearchFormType()));
     }
 
     /**
@@ -128,7 +138,7 @@ abstract class AbstractSearchController extends AbstractController
      *
      * @return array
      */
-    protected function getSort()
+    protected function getSortParams()
     {
         return [ 'guid' => 1 ];
     }

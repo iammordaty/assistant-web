@@ -10,6 +10,11 @@ class AdvancedSearchController extends SimpleSearchController
     /**
      * {@inheritDoc}
      */
+    const SEARCH_FORM_TYPE = 'advanced';
+
+    /**
+     * {@inheritDoc}
+     */
     protected function getQueryCriteria()
     {
         $request = $this->app->request();
@@ -87,13 +92,5 @@ class AdvancedSearchController extends SimpleSearchController
     protected function isRequestValid($criteria)
     {
         return !empty($criteria) || filter_input(INPUT_GET, 'submit', FILTER_VALIDATE_BOOLEAN) === true;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    protected function getType()
-    {
-        return 'advanced';
     }
 }
