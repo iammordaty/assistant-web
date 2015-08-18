@@ -38,16 +38,4 @@ abstract class Writer
     {
         return $this->repository->removeBy();
     }
-
-    /**
-     * Zwraca typ writera
-     *
-     * @return string
-     */
-    public function getType()
-    {
-        $parts = explode('\\', static::class);
-
-        return strtolower(str_replace('Writer', '', array_pop($parts)));
-    }
 }

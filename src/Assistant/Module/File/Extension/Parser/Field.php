@@ -32,18 +32,6 @@ abstract class Field
     abstract public function parse($value);
 
     /**
-     * Zwraca typ tagu
-     *
-     * @return string
-     */
-    public function getType()
-    {
-        $parts = explode('\\', static::class);
-
-        return strtolower(array_pop($parts));
-    }
-
-    /**
      * Przygotowuje parser do użycia
      */
     abstract protected function setup();
