@@ -22,7 +22,7 @@ $app->configureMode(
                 'indexer' => [
                     'excluded_dirs' => [
                         '/_new',
-                        '/Albums',
+                        '/Albums/Various Artists',
                         '/Tools',
                         '/Sets',
                         '/Other/- 2006',
