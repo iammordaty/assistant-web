@@ -31,10 +31,10 @@
                         <li {% if menu == "statistics" %}class="active"{% endif %}><a href="#">Statystyki</a></li>
                         <li {% if menu == "mix" %}class="active"{% endif %}><a href="/mix">Uporządkuj miks</a></li>
                     </ul>
-                    <div class="col-sm-4 col-md-4 pull-right">
+                    <div class="navbar-right">
                         <form method="GET" action="{{ urlFor('search.simple.index') }}" class="navbar-form" role="search">
-                            <div class="input-group col-sm-12 col-md-12">
-                                <input type="text" name="query" value="{{ form.query }}" class="form-control" placeholder="Wprowadź szukaną frazę...">
+                            <div class="input-group">
+                                <input type="text" name="query" value="{{ form.query }}" class="form-control" placeholder="Szukaj...">
                                 <div class="input-group-btn">
                                     <button class="btn btn-default" type="submit"><i class="fa fa-search"></i></button>
                                 </div>
