@@ -2,34 +2,36 @@
     <legend>Wyszukiwanie</legend>
 
     <div class="form-group">
-        <label for="inputType" class="col-md-1 control-label">Wykonawca</label>
-        <div class="col-md-5">
+        <label for="inputType" class="col-sm-1 control-label">
+            <span class="ellipsis"><span>Wykonawca</span></span>
+        </label>
+        <div class="col-sm-5">
             <input type="text" name="artist" value="{{ form.artist }}" class="form-control" placeholder="Wykonawca">
         </div>
-        <label class="col-md-1 control-label">Tytuł</label>
-        <div class="col-md-5">
-            <input type="text" name="title" value="{{ form.title }}"class="form-control" placeholder="Tytuł">
+        <label class="col-sm-1 control-label">Tytuł</label>
+        <div class="col-sm-5">
+            <input type="text" name="title" value="{{ form.title }}" class="form-control" placeholder="Tytuł">
         </div>
     </div>
 
     <!-- wpiąć autocompleter -->
     <div class="form-group">
-        <label class="col-md-1 control-label">Gatunek</label>
-        <div class="col-md-3">
+        <label class="col-sm-1 control-label">Gatunek</label>
+        <div class="col-sm-5 col-md-3">
             <input type="text" name="genre" value="{{ form.genre }}"class="form-control" placeholder="np. House, Tech House">
         </div>
     </div>
 
     <div class="form-group">
-        <label class="col-md-1 control-label">Rok</label>
-        <div class="col-md-6">
+        <label class="col-sm-1 control-label">Rok</label>
+        <div class="col-sm-10 col-md-6">
             <div class="form-group">
-                <div class="col-md-3">
+                <div class="col-xs-7 col-sm-3">
                     <input type="number" name="year" value="{{ form.year }}" min="1990" max="{{ now|date('Y')}}"
                            class="form-control" placeholder="np. {{ now|date('Y')}}">
                 </div>
-                <label class="col-md-1 control-label" title="Tolerancja">&#177;</label>
-                <div class="col-md-2">
+                <label class="col-xs-1 control-label" title="Tolerancja">&#177;</label>
+                <div class="col-xs-4 col-sm-2">
                     <input type="number" name="year_tolerance" value="{{ form.year_tolerance }}" min="0" max="25" class="form-control" placeholder="0">
                 </div>
             </div>
@@ -38,21 +40,21 @@
 
     <!-- wpiąć x-editable i dodać opcje: perfect fourth, perfect fifth, itd -->
     <div class="form-group">
-        <label class="col-md-1 control-label">Klucz</label>
-        <div class="col-md-3">
+        <label class="col-sm-1 control-label">Tonacja</label>
+        <div class="col-sm-5 col-md-1">
             <input type="text" name="initial_key" value="{{ form.initial_key }}" class="form-control" placeholder="np. 4A, 5A">
         </div>
     </div>
 
     <div class="form-group">
-        <label class="col-md-1 control-label" title="Liczba uderzeń na minutę">BPM</label>
-        <div class="col-md-6">
+        <label class="col-sm-1 control-label" title="Liczba uderzeń na minutę">BPM</label>
+        <div class="col-sm-10 col-md-6">
             <div class="form-group">
-                <div class="col-md-3">
+                <div class="col-xs-7 col-sm-3">
                     <input type="number" name="bpm" value="{{ form.bpm }}" min="100" max="200" class="form-control" placeholder="np. 125">
                 </div>
-                <label class="col-md-1 control-label" title="Tolerancja">&#177;</label>
-                <div class="col-md-2">
+                <label class="col-xs-1 control-label" title="Tolerancja">&#177;</label>
+                <div class="col-xs-4 col-sm-2">
                     <input type="number" name="bpm_tolerance" value="{{ form.bpm_tolerance }}" min="0" max="10" class="form-control" placeholder="0">
                 </div>
             </div>

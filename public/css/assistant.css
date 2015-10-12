@@ -124,3 +124,26 @@ a.undecorated:hover {
   padding: 0;
   background-color: initial;
 }
+
+.ellipsis {
+    overflow: hidden!important;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
+.ellipsis {
+    display: table;
+    table-layout: fixed;
+    width: 100%;
+    white-space: nowrap;
+}
+
+.ellipsis > * {
+    display: table-cell;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.table-responsive table .track-name {
+    min-width: 250px;
+}

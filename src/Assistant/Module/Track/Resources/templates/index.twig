@@ -140,54 +140,74 @@
         </legend>
 
         <div class="row">
-            <div class="{% if keyInfo %}col-md-9{% else %}col-md-12{% endif %}">
-                <dl class="metadata-info dl-horizontal">
-                    <dt>{% if track.artists|length == 1%}Wykonawca{% else %}Wykonawcy{% endif %}</dt>
-                    <dd>
+            <div class="col-xs-12 {% if keyInfo %}col-sm-8 col-md-9{% endif %}">
+                <div class="row">
+                    <span class="col-xs-4 col-sm-3 col-md-2 text-right">
+                        <strong>{% if track.artists|length == 1%}Wykonawca{% else %}Wykonawcy{% endif %}</strong>
+                    </span>
+                    <span class="col-xs-8 col-sm-9 col-md-10">
                         {%- for artist in track.artists -%}
                             <a href="{{ urlFor('search.advanced.index') }}?artist={{ artist|url_encode() }}" class="undecorated">{{ artist }}</a>
                             {%- if not loop.last %}, {% endif -%}
                         {%- endfor -%}
-                    </dd>
+                    </span>
+                </div>
 
-                    <dt>Tytuł utworu</dt>
-                    <dd>{{ track.title }}</dd>
+                <div class="row">
+                    <span class="col-xs-4 col-sm-3 col-md-2 text-right"><strong>Tytuł utworu</strong></span>
+                    <span class="col-xs-8 col-sm-9 col-md-10">{{ track.title }}</span>
+                </div>
 
-                    <dt>Gatunek</dt>
-                    <dd><a href="{{ urlFor('search.advanced.index') }}?genre={{ track.genre }}" class="undecorated">{{ track.genre }}</a></dd>
+                <div class="row">
+                    <span class="col-xs-4 col-sm-3 col-md-2 text-right"><strong>Gatunek</strong></span>
+                    <span class="col-xs-8 col-sm-9 col-md-10"><a href="{{ urlFor('search.advanced.index') }}?genre={{ track.genre }}" class="undecorated">{{ track.genre }}</a></span>
+                </div>
 
-                    <dt>Album</dt>
-                    <dd>{{ track.album }}</dd>
+                <div class="row">
+                    <span class="col-xs-4 col-sm-3 col-md-2 text-right"><strong>Album</strong></span>
+                    <span class="col-xs-8 col-sm-9 col-md-10">{{ track.album }}</span>
+                </div>
 
-                    <dt>Czas trwania</dt>
-                    <dd>{{ track.length|formatSeconds }}</dd>
+                <div class="row">
+                    <span class="col-xs-4 col-sm-3 col-md-2 text-right"><strong>Czas trwania</strong></span>
+                    <span class="col-xs-8 col-sm-9 col-md-10">{{ track.length|formatSeconds }}</span>
+                </div>
 
-                    <dt>Numer ścieżki</dt>
-                    <dd>{{ track.track_number }}</dd>
+                <div class="row">
+                    <span class="col-xs-4 col-sm-3 col-md-2 text-right"><strong>Ścieżka</strong></span>
+                    <span class="col-xs-8 col-sm-9 col-md-10">{{ track.track_number }}</span>
+                </div>
 
-                    <dt>Rok</dt>
-                    <dd><a href="{{ urlFor('search.advanced.index') }}?year={{ track.year }}" class="undecorated">{{ track.year }}</a></dd>
+                <div class="row">
+                    <span class="col-xs-4 col-sm-3 col-md-2 text-right"><strong>Rok</strong></span>
+                    <span class="col-xs-8 col-sm-9 col-md-10"><a href="{{ urlFor('search.advanced.index') }}?year={{ track.year }}" class="undecorated">{{ track.year }}</a></span>
+                </div>
 
-                    <dt>BPM</dt>
-                    <dd><a href="{{ urlFor('search.advanced.index') }}?bpm={{ track.bpm }}" class="undecorated">{{ track.bpm }}</a></dd>
+                <div class="row">
+                    <span class="col-xs-4 col-sm-3 col-md-2 text-right"><strong>BPM</strong></span>
+                    <span class="col-xs-8 col-sm-9 col-md-10"><a href="{{ urlFor('search.advanced.index') }}?bpm={{ track.bpm }}" class="undecorated">{{ track.bpm }}</a></span>
+                </div>
 
-                    <dt>Klucz</dt>
-                    <dd><a href="{{ urlFor('search.advanced.index') }}?initial_key={{ track.initial_key }}" class="undecorated">{{ track.initial_key }}</a></dd>
+                <div class="row">
+                    <span class="col-xs-4 col-sm-3 col-md-2 text-right"><strong>Tonacja</strong></span>
+                    <span class="col-xs-8 col-sm-9 col-md-10"><a href="{{ urlFor('search.advanced.index') }}?initial_key={{ track.initial_key }}" class="undecorated">{{ track.initial_key }}</a></span>
+                </div>
 
-                    <dt>Lokalizacja</dt>
-                    <dd>
+                <div class="row">
+                    <span class="col-xs-4 col-sm-3 col-md-2 text-right"><strong>Położenie</strong></span>
+                    <span class="col-xs-8 col-sm-9 col-md-10">
                         <ol class="breadcrumb">
                             <li><a href="{{ urlFor('directory.browse.index') }}" class="undecorated"><i class="fa fa-home fa-lg"></i></a></li>
                             {% for path in pathBreadcrumbs %}
                                 <li><a href="{{ urlFor('directory.browse.index', { guid: path.guid } )}}" class="undecorated">{{ path.path }}</a></li>
                             {% endfor %}
                         </ol>
-                    </dd>
-                </dl>
+                    </span>
+                </div>
             </div>
 
             {% if keyInfo %}
-                <div class="col-md-3">
+                <div class="col-xs-12 col-sm-4 col-md-3">
                     <div class="panel panel-info ">
                         <div class="panel-heading">
                             <a href="{{ urlFor('search.advanced.index') }}?initial_key={{ track.initial_key }}" class="undecorated">{{ track.initial_key }}</a> - informacje
@@ -195,8 +215,14 @@
                         <div class="panel-body">
                             {% for info, data in keyInfo %}
                                 <div class="row key-info-{{ info }}">
-                                    <span class="col-md-7 col-md-offset-1 text-right info-key"><strong>{{ data.title }}</strong></span>
-                                    <span class="col-md-4 info-value"><a href="{{ urlFor('search.advanced.index') }}?initial_key={{ data.value }}" class="undecorated">{{ data.value }}</a></span>
+                                    <span class="col-xs-4 col-sm-8 col-md-7 col-md-offset-1 text-right info-key">
+                                        <span class="ellipsis"><strong>{{ data.title }}</strong></span>
+                                    </span>
+                                    <span class="col-xs-8 col-sm-4 info-value">
+                                        <a href="{{ urlFor('search.advanced.index') }}?initial_key={{ data.value }}" class="undecorated">
+                                            {{ data.value }}
+                                        </a>
+                                    </span>
                                 </div>
                             {% endfor %}
                         </div>
@@ -206,51 +232,55 @@
         </div>
     </div>
 
-    <div class="similar-track">
+    <div class="similar-tracks">
         <legend>Podobne utwory</legend>
 
         {% if similarTracks %}
-            <table class="table table-hover">
-                <thead>
-                    <tr>
-                        <th>Nazwa utworu</th>
-                        <th>Gatunek</th>
-                        <th>Długość</th>
-                        <th>Rok</th>
-                        <th>Klucz</th>
-                        <th>BPM</th>
-                        <th>%</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for similarTrack in similarTracks %}
-                        <tr class="{% if loop.index >= 50 %}hide{% endif %}">
-                            <td class="col-md-5">
-                                {% set name = similarTrack.track.artist ~ ' - ' ~ similarTrack.track.title %}
-                                <a href="{{ urlFor('track.track.index', { guid: similarTrack.track.guid } )}}" title="{{ name }}">{{ name|truncateText(60) }}</a>
-                            </td>
-                            <td class="col-md-2">
-                                <a class="undecorated" href="{{ urlFor('search.advanced.index') }}?genre={{ similarTrack.track.genre }}">{{ similarTrack.track.genre }}</a>
-                            </td>
-                            <td class="col-md-1">
-                                {{ similarTrack.track.length|formatSeconds }}
-                            </td>
-                            <td class="col-md-1">
-                                <a class="undecorated" href="{{ urlFor('search.advanced.index') }}?year={{ similarTrack.track.year }}">{{ similarTrack.track.year }}</a>
-                            </td>
-                            <td class="col-md-1">
-                                <a class="undecorated" href="{{ urlFor('search.advanced.index') }}?initial_key={{ similarTrack.track.initial_key }}">{{ similarTrack.track.initial_key }}</a>
-                            </td>
-                            <td class="col-md-1">
-                                <a class="undecorated" href="{{ urlFor('search.advanced.index') }}?bpm={{ similarTrack.track.bpm }}">{{ similarTrack.track.bpm }}</a>
-                            </td>
-                            <td class="col-md-1">
-                                {{ similarTrack.value }}%
-                            </td>
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Nazwa utworu</th>
+                            <th>Gatunek</th>
+                            <th>Długość</th>
+                            <th>Rok</th>
+                            <th>Tonacja</th>
+                            <th>BPM</th>
+                            <th>%</th>
                         </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
+                    </thead>
+                    <tbody>
+                        {% for similarTrack in similarTracks %}
+                            <tr class="{% if loop.index >= 50 %}hide{% endif %}">
+                                <td class="col-xs-5">
+                                    <span class="ellipsis track-name">
+                                        {% set name = similarTrack.track.artist ~ ' - ' ~ similarTrack.track.title %}
+                                        <a href="{{ urlFor('track.track.index', { guid: similarTrack.track.guid } )}}" title="{{ name }}">{{ name }}</a>
+                                    </span>
+                                </td>
+                                <td class="col-xs-2">
+                                    <a class="undecorated" href="{{ urlFor('search.advanced.index') }}?genre={{ similarTrack.track.genre }}">{{ similarTrack.track.genre }}</a>
+                                </td>
+                                <td class="col-xs-1">
+                                    {{ similarTrack.track.length|formatSeconds }}
+                                </td>
+                                <td class="col-xs-1">
+                                    <a class="undecorated" href="{{ urlFor('search.advanced.index') }}?year={{ similarTrack.track.year }}">{{ similarTrack.track.year }}</a>
+                                </td>
+                                <td class="col-xs-1">
+                                    <a class="undecorated" href="{{ urlFor('search.advanced.index') }}?initial_key={{ similarTrack.track.initial_key }}">{{ similarTrack.track.initial_key }}</a>
+                                </td>
+                                <td class="col-xs-1">
+                                    <a class="undecorated" href="{{ urlFor('search.advanced.index') }}?bpm={{ similarTrack.track.bpm }}">{{ similarTrack.track.bpm }}</a>
+                                </td>
+                                <td class="col-xs-1">
+                                    {{ similarTrack.value }}%
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
             <div class="text-center">
                 <button type="button" class="btn btn-default">Pokaż więcej</button>
             </div>
