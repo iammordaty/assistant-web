@@ -32,9 +32,9 @@
                 <div class="list-group">
                     <span class="list-group-item list-group-item-info">Ostatnio dodane</span>
                     {% for track in recentlyAddedTracks %}
-                        <a class="ellipsis list-group-item">
+                        <a href="{{ urlFor('track.track.index', { guid: track.guid } )}}" class="ellipsis list-group-item">
                             {% set name = track.artist ~ ' - ' ~ track.title %}
-                            <span href="{{ urlFor('track.track.index', { guid: track.guid } )}}" title="{{ name }}">
+                            <span  title="{{ name }}">
                                 {{ name }}
                             </span>
                         </a>
