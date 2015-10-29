@@ -12,7 +12,7 @@ $app->config(
 
 $app->container->servers = [
     'db' => [
-        'host' => 'assistant.mongo/assistant',
+        'host' => 'assistant-mongo/assistant',
         'database' => 'assistant',
         'options' => [ ]
     ],

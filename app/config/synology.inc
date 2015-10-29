@@ -13,10 +13,6 @@ $app->configureMode(
 
         $app->config('debug', true);
 
-        $servers = $app->container->servers;
-        $servers['db']['host'] = 'assistant-mongo/assistant';
-        $app->container->servers = $servers;
-
         $parameters = [
             'collection' => [
                 'indexer' => [
