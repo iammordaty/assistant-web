@@ -10,7 +10,8 @@
     "autoload": {
         "psr-0": {
             "Assistant": "src/"
-        }
+        },
+         "classmap": [ "vendor/james-heinrich/getid3/getid3" ]
     },
 
     "require": {
