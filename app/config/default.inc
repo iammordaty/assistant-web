@@ -20,11 +20,9 @@ $app->container->servers = [
 
 $app->container->parameters = [
     'collection' => [
-        'indexer' => [
-            'root_dir' => '/collection',
-            'ignored_dirs' => [ ],
-            'excluded_dirs' => [ ]
-        ]
+        'root_dir' => '/collection',
+        'ignored_dirs' => [ ],
+        'excluded_dirs' => [ ]
     ],
 
     'track' => [

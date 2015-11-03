@@ -15,7 +15,7 @@ class ContentsController extends AbstractController
             return $this->app->notFound();
         }
 
-        $file = $this->app->container->parameters['collection']['indexer']['root_dir'] . $track->pathname;
+        $file = $this->app->container->parameters['collection']['root_dir'] . $track->pathname;
 
         if (is_readable($file) === false) {
             return $this->app->notFound();
