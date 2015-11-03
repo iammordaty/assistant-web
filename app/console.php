@@ -26,6 +26,7 @@ require_once BASE_DIR . '/app/config/' . gethostname() . '.inc';
 $console = new Console\Application();
 $console->addCommands(
     [
+        new \Assistant\Module\Collection\Task\CleanerTask($app),
         new \Assistant\Module\Collection\Task\IndexerTask($app),
     ]
 );
