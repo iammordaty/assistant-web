@@ -27,12 +27,33 @@ class IndexerTask extends AbstractTask
      */
     protected function configure()
     {
-        $this->parameters = $this->app->container->parameters['collection']['indexer'];
-        
+        $this->parameters = $this->app->container->parameters['collection'];
+
         $this
             ->setName('collection:index')
-            ->setDescription('Indeksuje utwory oraz katalogi znajdujące się w kolekcji')
-            ->addOption('clear', 'c', InputOption::VALUE_NONE, 'Clear collection before indexing');
+            ->setDescription('Indexes tracks and directories in collection')
+            ->addOption(
+                'pathname',
+                'p',
+                InputOption::VALUE_REQUIRED,
+                'Pathname to index',
+                $this->parameters['root_dir']
+            );
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    protected function initialize(InputInterface $input, OutputInterface $output)
+    {
+        parent::initialize($input, $output);
+
+        $this->stats = [
+            'added' => [ 'file' => 0, 'dir' => 0 ],
+            'empty_metadata' => 0,
+            'duplicated' => 0,
+            'error' => 0,
+        ];
     }
 
     /**
@@ -43,33 +64,27 @@ class IndexerTask extends AbstractTask
         $processor = new Collection\Extension\Processor\Processor($this->app->container->parameters);
         $writer = new Collection\Extension\Writer\Writer($this->app->container['db']);
 
-        if ($input->getOption('clear') === true) {
-            $writer->clear();
-        }
-
-        $stats = [ 'added' => [ 'file' => 0, 'dir' => 0 ], 'empty' => 0, 'duplicated' => 0, 'error' => 0, ];
-
         /* @var $node \Assistant\Module\File\Extension\SplFileInfo */
         foreach ($this->getIterator() as $node) {
             try {
                 $element = $processor->process($node);
                 $writer->save($element);
 
-                $stats['added'][$node->getType()]++;
+                $this->stats['added'][$node->getType()]++;
 
                 $this->info('.', false);
             } catch (Collection\Extension\Processor\Exception\EmptyMetadataException $e) {
-                $stats['empty']++;
+                $this->stats['empty_metadata']++;
 
                 $this->error('.', false);
             } catch (Collection\Extension\Writer\Exception\DuplicatedElementException $e) {
                 if ($node->isDot() === false) {
-                    $stats['duplicated']++;
+                    $this->stats['duplicated']++;
 
                     $this->comment('.', false);
                 }
             } catch (\Exception $e) {
-                $stats['error']++;
+                $this->stats['error']++;
 
                 $this->error($e->getMessage());
             } finally {
@@ -77,7 +92,7 @@ class IndexerTask extends AbstractTask
             }
         }
 
-        $this->showSummary($stats);
+        $this->showSummary();
 
         unset($input, $output);
     }
@@ -101,10 +116,8 @@ class IndexerTask extends AbstractTask
 
     /**
      * Wyświetla podsumowanie procesu indeksowania
-     *
-     * @param array $stats
      */
-    private function showSummary(array $stats)
+    private function showSummary()
     {
         $this->info('');
         $this->info('Zakończono.');
@@ -113,14 +126,14 @@ class IndexerTask extends AbstractTask
         $this->info(
             sprintf(
                 'Liczba dodanych elementów: %d (plików: %d, katalogów: %d)',
-                $stats['added']['file'] + $stats['added']['dir'],
-                $stats['added']['file'],
-                $stats['added']['dir']
+                $this->stats['added']['file'] + $this->stats['added']['dir'],
+                $this->stats['added']['file'],
+                $this->stats['added']['dir']
             )
         );
-        $this->info(sprintf('Liczba utworów bez metadanych: %d', $stats['empty']));
-        $this->info(sprintf('Liczba pominiętych utworów: %d', $stats['duplicated']));
-        $this->info(sprintf('Liczba elementów nie dodanych z powodu błędu: %d', $stats['error']));
+        $this->info(sprintf('Liczba utworów bez metadanych: %d', $this->stats['empty_metadata']));
+        $this->info(sprintf('Liczba pominiętych utworów: %d', $this->stats['duplicated']));
+        $this->info(sprintf('Liczba elementów nie dodanych z powodu błędu: %d', $this->stats['error']));
 
         $this->info('');
         $this->info(sprintf('Maksymalne użycie pamięci: %.3f MB', (memory_get_peak_usage() / (1024 * 1024))));
