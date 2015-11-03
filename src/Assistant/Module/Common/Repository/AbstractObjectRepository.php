@@ -111,7 +111,7 @@ abstract class AbstractObjectRepository extends Repository
     }
 
     /**
-     * Dodaje obiekt do bazy danych
+     * Usuwa obiekt z bazy danych
      *
      * @param \Assistant\Module\Common\Model\AbstractModel $object
      * @return bool
