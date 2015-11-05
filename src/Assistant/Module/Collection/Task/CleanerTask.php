@@ -56,20 +56,17 @@ class CleanerTask extends AbstractTask
      */
     protected function execute(InputInterface $input, OutputInterface $output)
     {
-        $pathname = $input->getArgument('pathname');
-        $searchCondition = $pathname === $this->parameters['root_dir']
-            ? [ ]
-            : [ 'pathname' => new \MongoRegex(sprintf('/^%s/', $pathname)) ];
-
         $force = (bool) $input->getOption('force');
 
-        if (is_dir($pathname)) {
-            $this->stats['removed']['dir'] = $this->remove(
-                (new DirectoryRepository($this->app->container['db'])),
-                $searchCondition,
-                $force
-            );
-        }
+        $pathname = $input->getArgument('pathname');
+        $relativePathname = str_replace($this->parameters['root_dir'], '', $pathname);
+        $searchCondition = [ 'pathname' => new \MongoRegex(sprintf('/^%s/', preg_quote($relativePathname))) ];
+
+        $this->stats['removed']['dir'] = $this->remove(
+            (new DirectoryRepository($this->app->container['db'])),
+            $searchCondition,
+            $force
+        );
 
         $this->stats['removed']['file'] = $this->remove(
             (new TrackRepository($this->app->container['db'])),
