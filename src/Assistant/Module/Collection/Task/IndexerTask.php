@@ -32,9 +32,8 @@ class IndexerTask extends AbstractTask
         $this
             ->setName('collection:index')
             ->setDescription('Indexes tracks and directories in collection')
-            ->addOption(
+            ->addArgument(
                 'pathname',
-                'p',
                 InputOption::VALUE_REQUIRED,
                 'Pathname to index',
                 $this->parameters['root_dir']
