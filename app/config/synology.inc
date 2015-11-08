@@ -15,15 +15,13 @@ $app->configureMode(
 
         $parameters = [
             'collection' => [
-                'indexer' => [
-                    'excluded_dirs' => [
-                        '/_new',
-                        '/Albums/Various Artists',
-                        '/Tools',
-                        '/Sets',
-                        '/Other/- 2006',
-                        '/Other/2006'
-                    ]
+                'excluded_dirs' => [
+                    '/_new',
+                    '/Albums/Various Artists',
+                    '/Tools',
+                    '/Sets',
+                    '/Other/- 2006',
+                    '/Other/2006'
                 ]
             ]
         ];

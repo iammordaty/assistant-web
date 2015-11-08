@@ -15,11 +15,9 @@ $app->configureMode(
 
         $parameters = [
             'collection' => [
-                'indexer' => [
-                    'ignored_dirs' => [
-                    ],
-                    'excluded_dirs' => [
-                    ]
+                'ignored_dirs' => [
+                ],
+                'excluded_dirs' => [
                 ]
             ]
         ];
