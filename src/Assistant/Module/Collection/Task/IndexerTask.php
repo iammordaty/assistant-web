@@ -6,6 +6,7 @@ use Assistant\Module\Common\Task\AbstractTask;
 use Assistant\Module\File\Extension\RecursiveDirectoryIterator;
 use Assistant\Module\File\Extension\PathFilterIterator;
 use Assistant\Module\File\Extension\IgnoredPathIterator;
+use Assistant\Module\File\Extension\SplFileInfo;
 use Assistant\Module\Collection;
 
 use Symfony\Component\Console\Input\InputInterface;
@@ -63,8 +64,7 @@ class IndexerTask extends AbstractTask
         $processor = new Collection\Extension\Processor\Processor($this->app->container->parameters);
         $writer = new Collection\Extension\Writer\Writer($this->app->container['db']);
 
-        /* @var $node \Assistant\Module\File\Extension\SplFileInfo */
-        foreach ($this->getIterator() as $node) {
+        foreach ($this->getIterator($input->getArgument('pathname')) as $node) {
             try {
                 $element = $processor->process($node);
                 $writer->save($element);
@@ -97,13 +97,24 @@ class IndexerTask extends AbstractTask
     }
 
     /**
-     * @return \IgnoredPathIterator
+     * @param string $pathname
+     * @return IgnoredPathIterator
      */
-    private function getIterator()
+    private function getIterator($pathname)
     {
+        if (is_file($pathname)) {
+            $relativePathname = str_replace(sprintf('%s/', $this->parameters['root_dir']), '', $pathname);
+
+            $iterator = new \RecursiveArrayIterator(
+                [ new SplFileInfo($pathname, $relativePathname) ]
+            );
+        } else {
+            $iterator = new RecursiveDirectoryIterator($pathname);
+        }
+
         return new IgnoredPathIterator(
             new PathFilterIterator(
-                new RecursiveDirectoryIterator($this->parameters['root_dir']),
+                $iterator,
                 $this->parameters['root_dir'],
                 $this->parameters['excluded_dirs']
             ),
