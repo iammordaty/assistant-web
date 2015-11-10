@@ -30,4 +30,11 @@ abstract class Metadata
      * @return array
      */
     abstract public function getMetadata();
+
+    /**
+     * Przygotowuje metadane do formatu używanego przez bibliotekę getID3
+     *
+     * @return array
+     */
+    abstract public function prepareMetadata(array $metadata);
 }

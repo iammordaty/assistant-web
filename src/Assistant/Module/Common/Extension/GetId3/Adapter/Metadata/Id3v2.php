@@ -43,4 +43,22 @@ class Id3v2 extends BaseMetadata
 
         return $metadata;
     }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function prepareMetadata(array $metadata)
+    {
+        $rawId3v2Info = isset($this->rawInfo['tags']['id3v2']) ? $this->rawInfo['tags']['id3v2'] : [ ];
+
+        foreach ($metadata as $field => $value) {
+            if (in_array($field, $this->fields)) {
+                $rawId3v2Info[$field] = [ $value ];
+            }
+        }
+
+        $this->rawInfo['tags']['id3v2'] = $rawId3v2Info;
+
+        return $rawId3v2Info;
+    }
 }

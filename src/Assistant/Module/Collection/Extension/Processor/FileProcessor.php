@@ -44,8 +44,9 @@ class FileProcessor extends Collection\Extension\Processor implements ProcessorI
      */
     public function process(File\Extension\SplFileInfo $node)
     {
-        $this->id3->analyze($node);
-        $metadata = $this->id3->getId3v2Metadata();
+        $metadata = $this->id3
+            ->setFile($node)
+            ->readId3v2Metadata();
 
         if (isset($metadata['artist']) === false || isset($metadata['title']) === false) {
             throw new Exception\EmptyMetadataException(
