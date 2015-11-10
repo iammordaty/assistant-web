@@ -1,5 +1,5 @@
 {
-    "name": "movies",
+    "name": "assistant-web",
     "authors": [
         {
             "name": "iammordaty",
@@ -11,16 +11,17 @@
         "psr-0": {
             "Assistant": "src/"
         },
-         "classmap": [ "vendor/james-heinrich/getid3/getid3" ]
+        "classmap": [ "vendor/james-heinrich/getid3/getid3" ]
     },
 
     "require": {
         "slim/slim": "2.*",
         "slim/views": "0.1.*",
         "twig/twig": "~1.0",
-        "james-heinrich/getid3": "*",
+        "james-heinrich/getid3": "dev-master",
         "symfony/console": "*",
         "cocur/slugify": "*",
+        "cocur/background-process": "^0.5.0",
         "pagerfanta/pagerfanta": "*"
     }
 }
