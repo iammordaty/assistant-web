@@ -29,6 +29,7 @@ $console->addCommands(
         new \Assistant\Module\Collection\Task\ReindexerTask($app),
         new \Assistant\Module\Collection\Task\CleanerTask($app),
         new \Assistant\Module\Collection\Task\IndexerTask($app),
+        new \Assistant\Module\Track\Task\AudioDataCalculatorTask($app),
     ]
 );
 
