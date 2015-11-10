@@ -7,9 +7,10 @@ use Assistant\Module\Common\Repository\AbstractObjectRepository;
 use Assistant\Module\Directory\Repository\DirectoryRepository;
 use Assistant\Module\Track\Repository\TrackRepository;
 
+use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
-use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Input\InputOption;
+use Symfony\Component\Console\Output\OutputInterface;
 
 /**
  * Task usuwający nieistniejące utwory oraz katalogu z kolekcji
@@ -33,7 +34,7 @@ class CleanerTask extends AbstractTask
             ->setDescription('Removes non-existent tracks and directories from collection')
             ->addArgument(
                 'pathname',
-                InputOption::VALUE_REQUIRED,
+                InputArgument::OPTIONAL,
                 'Pathname to remove from collection',
                 $this->parameters['root_dir']
             )->addOption('force', 'f', InputOption::VALUE_NONE, 'Do not check file existence');

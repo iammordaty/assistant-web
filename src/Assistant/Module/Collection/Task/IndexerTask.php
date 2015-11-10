@@ -9,9 +9,9 @@ use Assistant\Module\File\Extension\IgnoredPathIterator;
 use Assistant\Module\File\Extension\SplFileInfo;
 use Assistant\Module\Collection;
 
+use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
-use Symfony\Component\Console\Input\InputOption;
 
 /**
  * Task indeksujący utwory znajdujące się w kolekcji
@@ -35,7 +35,7 @@ class IndexerTask extends AbstractTask
             ->setDescription('Indexes tracks and directories in collection')
             ->addArgument(
                 'pathname',
-                InputOption::VALUE_REQUIRED,
+                InputArgument::OPTIONAL,
                 'Pathname to index',
                 $this->parameters['root_dir']
             );
