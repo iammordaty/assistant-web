@@ -130,10 +130,10 @@ class Adapter
         if ($result === false) {
             throw new Exception\WriterException(
                 sprintf(
-                    'Cannot write tags into "%s" (error: %s, warnings: %s)',
-                    $node->getPathname(),
-                    implode('; ', $this->id3Writer->errors) ?: 'none',
-                    implode('; ', $this->id3Writer->warnings) ?: 'none'
+                    'Cannot write tags into "%s" (errors: %s, warnings: %s)',
+                    $this->file->getPathname(),
+                    strip_tags(htmlspecialchars_decode(implode('; ', $this->id3Writer->errors) ?: 'none')),
+                    strip_tags(htmlspecialchars_decode(implode('; ', $this->id3Writer->warnings) ?: 'none'))
                 )
             );
         }
