@@ -52,7 +52,7 @@ class Track extends AbstractModel
     protected $genre;
 
     /**
-     * @var int
+     * @var float
      */
     protected $bpm;
 

@@ -32,7 +32,7 @@ class Bpm extends BaseProvider
             return static::MAX_SIMILARITY_VALUE;
         }
 
-        $distance = abs($baseTrack->bpm - $comparedTrack->bpm);
+        $distance = (int) round(abs($baseTrack->bpm - $comparedTrack->bpm));
         $similarity = isset($this->similarityMap[$distance]) ? $this->similarityMap[$distance] : 0;
 
         // echo $baseTrack->bpm, ' vs. ', $comparedTrack->bpm, ' = ', $similarity, " ($distance)", PHP_EOL;
