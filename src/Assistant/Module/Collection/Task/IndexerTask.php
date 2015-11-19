@@ -19,6 +19,13 @@ use Symfony\Component\Console\Output\OutputInterface;
 class IndexerTask extends AbstractTask
 {
     /**
+     * Tablica asocjacyjna zawierająca statystyki zadania
+     *
+     * @var array
+     */
+    private $stats;
+
+    /**
      * @var array
      */
     private $parameters;
