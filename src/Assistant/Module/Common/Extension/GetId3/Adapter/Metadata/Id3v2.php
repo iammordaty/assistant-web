@@ -51,9 +51,9 @@ class Id3v2 extends BaseMetadata
     {
         $rawId3v2Info = isset($this->rawInfo['tags']['id3v2']) ? $this->rawInfo['tags']['id3v2'] : [ ];
 
-        // odfiltruj duplikaty ponieważ nie są dozwolone przez getid3_writetags
+        // duplikaty oraz niektóre wielkrotne pola są niedozwolone
         foreach ($rawId3v2Info as $field => $value) {
-            $rawId3v2Info[$field] = array_unique($value, SORT_REGULAR);
+            $rawId3v2Info[$field] = [ reset($value) ];
         }
 
         foreach ($metadata as $field => $value) {

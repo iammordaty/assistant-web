@@ -120,6 +120,9 @@ class Adapter
 
         $fileModificationTime = $this->file->getMTime();
 
+        $this->id3Writer->warnings = [];
+        $this->id3Writer->errors = [];
+
         $this->id3Writer->filename = $this->file->getPathname();
         $this->id3Writer->tag_data = (new Adapter\Metadata\Id3v2($this->rawInfo))->prepareMetadata($metadata);
 
@@ -128,16 +131,34 @@ class Adapter
         touch($this->file->getPathname(), $fileModificationTime);
 
         if ($result === false) {
-            throw new Exception\WriterException(
-                sprintf(
-                    'Cannot write tags into "%s" (errors: %s, warnings: %s)',
-                    $this->file->getPathname(),
-                    strip_tags(htmlspecialchars_decode(implode('; ', $this->id3Writer->errors) ?: 'none')),
-                    strip_tags(htmlspecialchars_decode(implode('; ', $this->id3Writer->warnings) ?: 'none'))
-                )
+            throw new Exception\WriteTagsException(
+                sprintf('Unable to save metadata to into a "%s"', $this->file->getPathname())
             );
         }
 
         return $result;
+    }
+
+    /**
+     * Zwraca listę niekrytycznych błędów wykrytych podczas zapisywania metadanych w utworze muzycznym
+     *
+     * @return array
+     */
+    public function getWriterWarnings()
+    {
+        // preg match all /<li>(.*?)<\/li>/g
+        // return strip_tags(htmlspecialchars_decode($errors));
+
+        return $this->id3Writer->warnings;
+    }
+
+    /**
+     * Zwraca listę krytycznych błędów wykrytych podczas zapisywania metadanych w utworze muzycznym
+     *
+     * @return array
+     */
+    public function getWriterErrors()
+    {
+        return $this->id3Writer->errors;
     }
 }
