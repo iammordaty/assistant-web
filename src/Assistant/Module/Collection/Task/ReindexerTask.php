@@ -37,21 +37,24 @@ class ReindexerTask extends AbstractTask
      */
     protected function execute(InputInterface $input, OutputInterface $output)
     {
-        $this->info('Uruchamianie zadania czyszczenia kolekcji...');
+        $this->app->log->info('Task executed');
+
+        $this->app->log->info('Executing \"collection:clean -f\"');
 
         (new CleanerTask($this->app))->run(
             new ArrayInput([ '--force' => true ]),
             $output
         );
 
-        $this->info('');
-        $this->info('Uruchamianie indeksowania kolekcji...');
+        $this->app->log->info('Executing \"collection:index"');
 
         (new IndexerTask($this->app))->run(
             new ArrayInput([ ]),
             $output
         );
 
-        unset($input);
+        $this->app->log->info('Task finished');
+
+        unset($input, $output);
     }
 }

@@ -23,6 +23,7 @@
         "cocur/slugify": "*",
         "cocur/background-process": "^0.5.0",
         "pagerfanta/pagerfanta": "*",
-        "php-curl-class/php-curl-class": "^4.8"
+        "php-curl-class/php-curl-class": "^4.8",
+        "monolog/monolog": "^1.17"
     }
 }

@@ -64,6 +64,8 @@ class CleanerTask extends AbstractTask
      */
     protected function execute(InputInterface $input, OutputInterface $output)
     {
+        $this->app->log->info('Task executed', array_merge($input->getArguments(), $input->getOptions()));
+
         $force = (bool) $input->getOption('force');
 
         $pathname = $input->getArgument('pathname');
@@ -82,7 +84,7 @@ class CleanerTask extends AbstractTask
             $force
         );
 
-        $this->showSummary();
+        $this->app->log->info('Task finished', $this->stats);
 
         unset($searchCondition, $input, $output);
     }
@@ -112,27 +114,5 @@ class CleanerTask extends AbstractTask
         unset($repository, $conditions);
 
         return $removed;
-    }
-
-    /**
-     * Wyświetla podsumowanie procesu indeksowania
-     */
-    private function showSummary()
-    {
-        $this->info('');
-        $this->info('Zakończono.');
-        $this->info('');
-
-        $this->info(
-            sprintf(
-                'Liczba usuniętych elementów: %d (plików: %d, katalogów: %d)',
-                $this->stats['removed']['file'] + $this->stats['removed']['dir'],
-                $this->stats['removed']['file'],
-                $this->stats['removed']['dir']
-            )
-        );
-
-        $this->info('');
-        $this->info(sprintf('Maksymalne użycie pamięci: %.3f MB', (memory_get_peak_usage() / (1024 * 1024))));
     }
 }

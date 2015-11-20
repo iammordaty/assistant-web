@@ -1,5 +1,9 @@
 <?php
 
+use Monolog\Logger;
+use Monolog\Handler\StreamHandler;
+use Monolog\Formatter\LineFormatter;
+
 /* @var $app \Slim\Slim */
 
 $app->config(
@@ -91,5 +95,26 @@ $app->container->singleton(
             ->selectDB($app->container->servers['db']['database']);
 
         return $client;
+    }
+);
+
+$app->container->singleton(
+    'log',
+    function () use ($app) {
+        $logsDir = sprintf('%s/app/logs', $app->config('base_dir'));
+
+        $logger = new Logger(sprintf('%s-logger', $app->getName()));
+
+        $formatter = new LineFormatter('[%datetime%] %level_name% %message% %context% %extra%' . PHP_EOL);
+        $formatter->ignoreEmptyContextAndExtra(true);
+
+        $logger->setHandlers(
+            [
+                (new StreamHandler(sprintf('%s/app.error.log', $logsDir), Logger::ERROR))->setFormatter($formatter),
+                (new StreamHandler(sprintf('%s/app.debug.log', $logsDir), Logger::DEBUG))->setFormatter($formatter),
+            ]
+        );
+
+        return $logger;
     }
 );

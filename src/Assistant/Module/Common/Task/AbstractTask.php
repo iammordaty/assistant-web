@@ -6,8 +6,24 @@ use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 
+use Monolog\Processor\MemoryUsageProcessor;
+
 abstract class AbstractTask extends Command
 {
+    /**
+     * Obiekt klasy Slim
+     *
+     * @var \Slim\Slim
+     */
+    protected $app;
+
+    /**
+     * Obiekt klasy Logger
+     *
+     * @var \Monolog\Logger
+     */
+    protected $log;
+
     /**
      * Obiekt InputInterface
      *
@@ -23,13 +39,6 @@ abstract class AbstractTask extends Command
     protected $output;
 
     /**
-     * Obiekt klasy Slim
-     *
-     * @var \Slim\Slim
-     */
-    protected $app;
-
-    /**
      * Konstruktor
      *
      * @param \Slim\Slim $app
@@ -40,6 +49,8 @@ abstract class AbstractTask extends Command
         $this->app = $app;
 
         parent::__construct($name);
+
+        $this->setup();
     }
 
     /**
@@ -91,5 +102,24 @@ abstract class AbstractTask extends Command
             sprintf('<comment>%s</comment>', $message),
             $newline
         );
+    }
+
+    /**
+     * Przygotowuje task do użycia
+     */
+    private function setup()
+    {
+        $procId = uniqid();
+
+        $this->app->log
+            ->pushProcessor(new MemoryUsageProcessor())
+            ->pushProcessor(function ($record) use ($procId) {
+                $record['extra']['task'] = $this->getName();
+                $record['extra']['procId'] = $procId;
+
+                return $record;
+            });
+
+        return;
     }
 }

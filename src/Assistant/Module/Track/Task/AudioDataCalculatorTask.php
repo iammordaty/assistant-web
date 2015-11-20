@@ -69,7 +69,7 @@ class AudioDataCalculatorTask extends AbstractTask
             'processed' => [ 'file' => 0, 'dir' => 0 ],
             'updated' => 0,
             'mismatch' => [ 'initial_key' => 0, 'bpm' => 0 ],
-            'skipped' => [ 'too_large' => 0,  'calculated' => 0, 'same_data' => 0 ],
+            'skipped' => [ 'too_long' => 0,  'already_calculated' => 0, 'same_data' => 0 ],
             'error' => [ 'backend' => 0, 'tags' => 0 ],
         ];
     }
@@ -79,6 +79,8 @@ class AudioDataCalculatorTask extends AbstractTask
      */
     protected function execute(InputInterface $input, OutputInterface $output)
     {
+        $this->app->log->info('Task executed', array_merge($input->getArguments(), $input->getOptions()));
+
         $id3 = new Common\Extension\GetId3\Adapter();
 
         $skipCalculated = $input->getOption('skip-calculated');
@@ -90,8 +92,12 @@ class AudioDataCalculatorTask extends AbstractTask
             if ($node->isDir() === true) {
                 $this->stats['processed']['dir']++;
 
+                unset($node);
+
                 continue;
             }
+
+            $this->app->log->info('Processing track', [ 'pathname' => $node->getPathname() ]);
 
             $this->stats['processed']['file']++;
 
@@ -101,9 +107,14 @@ class AudioDataCalculatorTask extends AbstractTask
                     ->readId3v2Metadata();
 
                 if ($id3->getTrackLength() / 60 > 20) {
-                    $this->stats['skipped']['too_large']++;
+                    $this->stats['skipped']['too_long']++;
 
-                    unset($metadata);
+                    $this->app->log->info(
+                        'Track is too long, skipping...',
+                        [ 'length' => $id3->getTrackLength() / 60 ]
+                    );
+
+                    unset($node, $metadata);
 
                     continue;
                 }
@@ -111,7 +122,12 @@ class AudioDataCalculatorTask extends AbstractTask
                 $isCalculated = isset($metadata['bpm']) === true && isset($metadata['initial_key']) === true;
 
                 if ($skipCalculated === true && $isCalculated === true) {
-                    $this->stats['skipped']['calculated']++;
+                    $this->stats['skipped']['already_calculated']++;
+
+                    $this->app->log->info(
+                        'Track is already calculated (bpm and initial_key exists), skipping',
+                        array_intersect_key($metadata, array_flip([ 'bpm', 'initial_key' ]))
+                    );
 
                     unset($metadata);
                         
@@ -123,7 +139,9 @@ class AudioDataCalculatorTask extends AbstractTask
                 if ($this->isTrackHasSameData($metadata, $audioData) === true) {
                     $this->stats['skipped']['same_data']++;
 
-                    unset($metadata, $audioData);
+                    $this->app->log->info('Track has the same audio data, update is not necessary', $audioData);
+
+                    unset($node, $metadata, $audioData);
 
                     continue;
                 }
@@ -136,27 +154,40 @@ class AudioDataCalculatorTask extends AbstractTask
                 }
 
                 if ($writeData === true) {
+                    $this->app->log->info('Updating track audio data', $audioData);
+
                     $id3->writeId3v2Metadata($audioData);
+
+                    if ($id3->getWriterWarnings()) {
+                        $this->app->log->warning('Track metadata saved with warnings', $id3->getWriterWarnings());
+                    }
 
                     $this->stats['updated']++;
                 }
 
-                $this->info('.');
-
-            } catch (WriterException $e) {
-                $this->stats['error']['tags']++;
-
-                $this->error($e->getMessage());
+                $this->app->log->info('Track processing completed successfully');
             } catch (BackendAudioDataCalculatorException $e) {
                 $this->stats['error']['backend']++;
 
-                $this->error($e->getMessage());
+                $this->app->log->error($e->getMessage(), [ 'metadata' => $metadata ]);
+            } catch (WriterException $e) {
+                $this->stats['error']['tags']++;
+
+                $this->app->log->error(
+                    $e->getMessage(),
+                    [
+                        'metadata' => $metadata,
+                        'audioData' => $audioData,
+                        'id3WriterErrors' => $id3->getWriterErrors(),
+                        'id3WriterWarnings' => $id3->getWriterWarnings(),
+                    ]
+                );
             } finally {
-                unset($node);
+                unset($node, $metadata, $audioData);
             }
         }
 
-        $this->showSummary();
+        $this->app->log->info('Task finished', $this->stats);
 
         unset($input, $output, $id3, $iterator);
     }
@@ -243,16 +274,5 @@ class AudioDataCalculatorTask extends AbstractTask
         }
 
         return (string) $metadata['bpm'] === (string) $audioData['bpm'] && $metadata['initial_key'] === $audioData['initial_key'];
-    }
-
-    /**
-     * Wyświetla podsumowanie procesu indeksowania
-     */
-    private function showSummary()
-    {
-        print_r($this->stats);
-
-        $this->info('');
-        $this->info(sprintf('Maksymalne użycie pamięci: %.3f MB', (memory_get_peak_usage() / (1024 * 1024))));
     }
 }

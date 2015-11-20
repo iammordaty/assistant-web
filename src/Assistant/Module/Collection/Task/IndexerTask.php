@@ -68,17 +68,21 @@ class IndexerTask extends AbstractTask
      */
     protected function execute(InputInterface $input, OutputInterface $output)
     {
+        $this->app->log->info('Task executed', array_merge($input->getArguments(), $input->getOptions()));
+
         $processor = new Collection\Extension\Processor\Processor($this->app->container->parameters);
         $writer = new Collection\Extension\Writer\Writer($this->app->container['db']);
 
         foreach ($this->getIterator($input->getArgument('pathname')) as $node) {
+            $this->app->log->info('Processing node', [ 'pathname' => $node->getPathname() ]);
+
             try {
                 $element = $processor->process($node);
                 $writer->save($element);
 
                 $this->stats['added'][$node->getType()]++;
 
-                $this->info('.', false);
+                $this->app->log->info('Node processing completed successfully');
             } catch (Collection\Extension\Processor\Exception\EmptyMetadataException $e) {
                 $this->stats['empty_metadata']++;
 
@@ -86,21 +90,22 @@ class IndexerTask extends AbstractTask
             } catch (Collection\Extension\Writer\Exception\DuplicatedElementException $e) {
                 if ($node->isDot() === false) {
                     $this->stats['duplicated']++;
-
-                    $this->comment('.', false);
                 }
+
+                // it's not a big deal, so log as debug
+                $this->app->log->debug($e->getMessage());
             } catch (\Exception $e) {
                 $this->stats['error']++;
 
-                $this->error($e->getMessage());
+                $this->app->log->error($e->getMessage());
             } finally {
                 unset($node, $element);
             }
         }
 
-        $this->showSummary();
+        $this->app->log->info('Task finished', $this->stats);
 
-        unset($input, $output);
+        unset($input, $output, $processor, $writer);
     }
 
     /**
@@ -129,30 +134,5 @@ class IndexerTask extends AbstractTask
             IgnoredPathIterator::SELF_FIRST,
             IgnoredPathIterator::CATCH_GET_CHILD
         );
-    }
-
-    /**
-     * Wyświetla podsumowanie procesu indeksowania
-     */
-    private function showSummary()
-    {
-        $this->info('');
-        $this->info('Zakończono.');
-        $this->info('');
-
-        $this->info(
-            sprintf(
-                'Liczba dodanych elementów: %d (plików: %d, katalogów: %d)',
-                $this->stats['added']['file'] + $this->stats['added']['dir'],
-                $this->stats['added']['file'],
-                $this->stats['added']['dir']
-            )
-        );
-        $this->info(sprintf('Liczba utworów bez metadanych: %d', $this->stats['empty_metadata']));
-        $this->info(sprintf('Liczba pominiętych utworów: %d', $this->stats['duplicated']));
-        $this->info(sprintf('Liczba elementów nie dodanych z powodu błędu: %d', $this->stats['error']));
-
-        $this->info('');
-        $this->info(sprintf('Maksymalne użycie pamięci: %.3f MB', (memory_get_peak_usage() / (1024 * 1024))));
     }
 }
