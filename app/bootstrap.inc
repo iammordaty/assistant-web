@@ -17,10 +17,9 @@ foreach ($iterator as $node) {
     }
 
     $module = substr($node, strrpos($node, '/'));
-
     $modules[$module] = $node->getPathname();
 
-    unset($nod);
+    unset($node);
 }
 
 unset($iterator, $node);
