@@ -47,8 +47,8 @@ class Bpm extends BaseProvider
     {
         return [
             '$in' => range(
-                $baseTrack->bpm - $this->parameters['tolerance'],
-                $baseTrack->bpm + $this->parameters['tolerance']
+                round($baseTrack->bpm) - $this->parameters['tolerance'],
+                round($baseTrack->bpm) + $this->parameters['tolerance']
             )
         ];
     }

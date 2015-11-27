@@ -32,11 +32,20 @@ class Id3v2 extends BaseMetadata
         $metadata = [ ];
 
         foreach ($this->rawInfo['tags']['id3v2'] as $field => $value) {
-            if (in_array($field, $this->fields)) {
-                $metadata[$field] = $value[0];
+            if (in_array($field, $this->fields) && !empty($value[0]) ) {
+                switch ($field) {
+                    case 'track_number':
+                    case 'year':
+                        $metadata[$field] = (int) $value[0];
+                        break;
 
-                if (is_numeric($metadata[$field])) {
-                    $metadata[$field] = (int) $metadata[$field];
+                    case 'bpm':
+                        $metadata[$field] = (float) $value[0];
+                        break;
+
+                    default:
+                        $metadata[$field] = $value[0];
+                        break;
                 }
             }
         }
