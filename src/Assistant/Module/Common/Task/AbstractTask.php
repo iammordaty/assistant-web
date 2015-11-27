@@ -49,8 +49,6 @@ abstract class AbstractTask extends Command
         $this->app = $app;
 
         parent::__construct($name);
-
-        $this->setup();
     }
 
     /**
@@ -60,6 +58,19 @@ abstract class AbstractTask extends Command
     {
         $this->input = $input;
         $this->output = $output;
+
+        $procId = uniqid();
+
+        $this->app->log
+            ->pushProcessor(new MemoryUsageProcessor())
+            ->pushProcessor(function ($record) use ($procId) {
+                $record['extra']['task'] = $this->getName();
+                $record['extra']['procId'] = $procId;
+
+                return $record;
+            });
+
+        unset($procId);
     }
 
     /**
@@ -102,24 +113,5 @@ abstract class AbstractTask extends Command
             sprintf('<comment>%s</comment>', $message),
             $newline
         );
-    }
-
-    /**
-     * Przygotowuje task do użycia
-     */
-    private function setup()
-    {
-        $procId = uniqid();
-
-        $this->app->log
-            ->pushProcessor(new MemoryUsageProcessor())
-            ->pushProcessor(function ($record) use ($procId) {
-                $record['extra']['task'] = $this->getName();
-                $record['extra']['procId'] = $procId;
-
-                return $record;
-            });
-
-        return;
     }
 }

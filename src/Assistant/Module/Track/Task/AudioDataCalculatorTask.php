@@ -126,11 +126,11 @@ class AudioDataCalculatorTask extends AbstractTask
 
                     $this->app->log->info(
                         'Track is already calculated (bpm and initial_key exists), skipping',
-                        array_intersect_key($metadata, array_flip([ 'bpm', 'initial_key' ]))
+                        [ 'bpm' => $metadata['bpm'], 'initial_key' => $metadata['initial_key'] ]
                     );
 
-                    unset($metadata);
-                        
+                    unset($node, $metadata);
+
                     continue;
                 }
 
@@ -153,9 +153,15 @@ class AudioDataCalculatorTask extends AbstractTask
                     $this->stats['mismatch']['bpm']++;
                 }
 
-                if ($writeData === true) {
-                    $this->app->log->info('Updating track audio data', $audioData);
+                $this->app->log->info(
+                    sprintf('%s track audio data', ($writeData === true) ? 'Updating' : 'Calculated'),
+                    [
+                        'audioData' => $audioData,
+                        'metadata' => [ 'bpm' => $metadata['bpm'], 'initial_key' => $metadata['initial_key'] ],
+                    ]
+                );
 
+                if ($writeData === true) {
                     $id3->writeId3v2Metadata($audioData);
 
                     if ($id3->getWriterWarnings()) {
@@ -169,13 +175,17 @@ class AudioDataCalculatorTask extends AbstractTask
             } catch (BackendAudioDataCalculatorException $e) {
                 $this->stats['error']['backend']++;
 
-                $this->app->log->error($e->getMessage(), [ 'metadata' => $metadata ]);
+                $this->app->log->error(
+                    $e->getMessage(),
+                    [ 'pathname' => $node->getPathname(), 'metadata' => $metadata ]
+                );
             } catch (WriterException $e) {
                 $this->stats['error']['tags']++;
 
                 $this->app->log->error(
                     $e->getMessage(),
                     [
+                        'pathname' => $node->getPathname(),
                         'metadata' => $metadata,
                         'audioData' => $audioData,
                         'id3WriterErrors' => $id3->getWriterErrors(),
@@ -261,7 +271,7 @@ class AudioDataCalculatorTask extends AbstractTask
     }
 
     /**
-     * Określa, czy dane zawarte w metadanych pliku są takie same jak obliczone
+     * Określa, czy dane zawarte w metadanych pliku są takie same jak te obliczone przez backend
      *
      * @param array $metadata
      * @param array $audioData
