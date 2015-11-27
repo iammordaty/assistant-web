@@ -17,11 +17,11 @@ $app->configureMode(
             'collection' => [
                 'excluded_dirs' => [
                     '/_new',
-                    '/Albums/Various Artists',
+                    '/Albums',
                     '/Tools',
                     '/Sets',
                     '/Other/- 2006',
-                    '/Other/2006'
+                    '@eaDir',
                 ]
             ]
         ];
