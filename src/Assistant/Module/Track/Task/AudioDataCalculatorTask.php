@@ -119,9 +119,10 @@ class AudioDataCalculatorTask extends AbstractTask
                     continue;
                 }
 
-                $isCalculated = isset($metadata['bpm']) === true && isset($metadata['initial_key']) === true;
+                $hasInitialKey = isset($metadata['initial_key']) === true;
+                $hasBpm = isset($metadata['bpm']) === true;
 
-                if ($skipCalculated === true && $isCalculated === true) {
+                if ($skipCalculated === true && $hasInitialKey === true && $hasBpm === true) {
                     $this->stats['skipped']['already_calculated']++;
 
                     $this->app->log->info(
@@ -146,10 +147,10 @@ class AudioDataCalculatorTask extends AbstractTask
                     continue;
                 }
 
-                if ($metadata['initial_key'] !== $audioData['initial_key']) {
+                if ($hasInitialKey === true && $metadata['initial_key']  !== $audioData['initial_key']) {
                     $this->stats['mismatch']['initial_key']++;
                 }
-                if ($metadata['bpm'] !== $audioData['bpm']) {
+                if ($hasBpm === true && $metadata['bpm'] !== $audioData['bpm']) {
                     $this->stats['mismatch']['bpm']++;
                 }
 
@@ -273,11 +274,11 @@ class AudioDataCalculatorTask extends AbstractTask
     /**
      * Określa, czy dane zawarte w metadanych pliku są takie same jak te obliczone przez backend
      *
-     * @param array $metadata
+     * @param array|null $metadata
      * @param array $audioData
      * @return bool
      */
-    private function isTrackHasSameData(array $metadata, array $audioData)
+    private function isTrackHasSameData($metadata, array $audioData)
     {
         if (isset($metadata['bpm']) === false || isset($metadata['initial_key']) === false) {
             return false;
