@@ -70,7 +70,7 @@ class AudioDataCalculatorTask extends AbstractTask
             'updated' => 0,
             'mismatch' => [ 'initial_key' => 0, 'bpm' => 0 ],
             'skipped' => [ 'too_long' => 0,  'already_calculated' => 0, 'same_data' => 0 ],
-            'error' => [ 'backend' => 0, 'tags' => 0 ],
+            'error' => [ 'backend' => 0, 'tags' => 0, 'other' => 0 ],
         ];
     }
 
@@ -191,6 +191,18 @@ class AudioDataCalculatorTask extends AbstractTask
                         'audioData' => $audioData,
                         'id3WriterErrors' => $id3->getWriterErrors(),
                         'id3WriterWarnings' => $id3->getWriterWarnings(),
+                    ]
+                );
+           } catch (\Exception $e) {
+                $this->stats['error']['other']++;
+
+                $this->app->log->critical(
+                    $e->getMessage(),
+                    [
+                        'pathname' => $node->getPathname(),
+                        'metadata' => $metadata,
+                        'audioData' => $audioData,
+                        'exception' => $e,
                     ]
                 );
             } finally {
