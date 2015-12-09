@@ -193,7 +193,7 @@ class AudioDataCalculatorTask extends AbstractTask
                         'id3WriterWarnings' => $id3->getWriterWarnings(),
                     ]
                 );
-           } catch (\Exception $e) {
+            } catch (\Exception $e) {
                 $this->stats['error']['other']++;
 
                 $this->app->log->critical(
