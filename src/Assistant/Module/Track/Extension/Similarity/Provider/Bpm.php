@@ -16,6 +16,7 @@ class Bpm extends BaseProvider
      * {@inheritDoc}
      */
     protected $similarityMap = [
+        0 => self::MAX_SIMILARITY_VALUE,
         1 => 98,
         2 => 93,
         3 => 70,
@@ -28,10 +29,6 @@ class Bpm extends BaseProvider
      */
     public function getSimilarity(Track\Model\Track $baseTrack, Track\Model\Track $comparedTrack)
     {
-        if ($comparedTrack->bpm === $baseTrack->bpm) {
-            return static::MAX_SIMILARITY_VALUE;
-        }
-
         $distance = (int) round(abs($baseTrack->bpm - $comparedTrack->bpm));
         $similarity = isset($this->similarityMap[$distance]) ? $this->similarityMap[$distance] : 0;
 
