@@ -12,7 +12,7 @@ class MixController extends AbstractController
     public function index()
     {
         $request = $this->app->request();
-        
+
         if ($request->isPost()) {
             $tracks = [];
 
@@ -64,17 +64,23 @@ class MixController extends AbstractController
             [
                 'menu' => 'mix',
                 'listing' => $request->post('listing'),
-                'tracks' => isset($tracks) ? $tracks : [],
-                'matrix' => isset($matrix) ? $matrix : [],
-                'mix' => isset($matrix) ? $this->rearrange($matrix) : [],
+                'tracks' => !empty($tracks) ? $tracks : [ ],
+                'matrix' => !empty($matrix) ? $matrix : [ ],
+                'mix' => !empty($matrix) ? $this->rearrange($matrix) : [ ],
             ]
         );
     }
 
     private function getTrackByName($name)
     {
-        $query = new \MongoRegex('/' . trim($name) . '/i');
-        $guidQuery = new \MongoRegex('/' . trim((new Slugify())->slugify($name)) . '/i');
+        $trimmedName = trim($name);
+
+        if (empty($trimmedName)) {
+            return null;
+        }
+
+        $query = new \MongoRegex('/' . $trimmedName . '/i');
+        $guidQuery = new \MongoRegex('/' . (new Slugify())->slugify($trimmedName) . '/i');
 
         return (new Track\Repository\TrackRepository($this->app->container['db']))->findOneBy(
             [
