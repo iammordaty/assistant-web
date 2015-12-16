@@ -147,7 +147,7 @@ class AudioDataCalculatorTask extends AbstractTask
                     continue;
                 }
 
-                if ($hasInitialKey === true && $metadata['initial_key']  !== $audioData['initial_key']) {
+                if ($hasInitialKey === true && $metadata['initial_key'] !== $audioData['initial_key']) {
                     $this->stats['mismatch']['initial_key']++;
                 }
                 if ($hasBpm === true && $metadata['bpm'] !== $audioData['bpm']) {
@@ -158,7 +158,10 @@ class AudioDataCalculatorTask extends AbstractTask
                     sprintf('%s track audio data', ($writeData === true) ? 'Updating' : 'Calculated'),
                     [
                         'audioData' => $audioData,
-                        'metadata' => [ 'bpm' => $metadata['bpm'], 'initial_key' => $metadata['initial_key'] ],
+                        'metadata' => [
+                            'initial_key' => $hasInitialKey === true ? $metadata['initial_key'] : null,
+                            'bpm' => $hasBpm === true ? $metadata['bpm'] : null,
+                        ],
                     ]
                 );
 
