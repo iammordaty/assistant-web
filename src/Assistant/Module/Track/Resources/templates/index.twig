@@ -121,7 +121,12 @@
 
             wavesurfer.load('{{ urlFor('track.contents.get', { guid: track.guid }) }}');
 
-            $('[data-role="play-pause"]').on('click', function (e) {
+            $('[data-role="similar-tracks:show-more"]').on('click', function () {
+                $('div.similar-tracks tr.hide').hide().removeClass('hide').fadeIn('fast');
+                $(this).remove();
+            });
+
+            $('[data-role="play-pause"]').on('click', function () {
                 wavesurfer.playPause();
             });
 
@@ -136,7 +141,7 @@
 
     <div class="track-info">
         <legend>
-            <a href="{{ urlFor('search.advanced.index') }}?artist={{ track.artist }}" class="undecorated">{{ track.artist }}</a> - {{ track.title }}
+                <a href="{{ urlFor('search.advanced.index') }}?artist={{ track.artist }}" class="undecorated">{{ track.artist }}</a> - {{ track.title }}
         </legend>
 
         <div class="row">
@@ -282,7 +287,7 @@
                 </table>
             </div>
             <div class="text-center">
-                <button type="button" class="btn btn-default">Pokaż więcej</button>
+                <button type="button" class="btn btn-default" data-role="similar-tracks:show-more">Pokaż więcej</button>
             </div>
         {% else %}
             <p class="lead text-center text-muted">Nie znaleziono podobnych utworów</p>
