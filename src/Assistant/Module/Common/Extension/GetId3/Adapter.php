@@ -146,9 +146,6 @@ class Adapter
      */
     public function getWriterWarnings()
     {
-        // preg match all /<li>(.*?)<\/li>/g
-        // return strip_tags(htmlspecialchars_decode($errors));
-
         return $this->id3Writer->warnings;
     }
 
@@ -159,6 +156,25 @@ class Adapter
      */
     public function getWriterErrors()
     {
-        return $this->id3Writer->errors;
+        $errors = [];
+
+        foreach ($this->id3Writer->errors as $error) {
+            $result = htmlspecialchars_decode($error);
+            $matches = [];
+
+            if ((bool) preg_match_all('/<li>(.*?)<\/li>/i', $result, $matches) === true) {
+                if (($pos = strpos($result, ':')) !== false) {
+                    $result = substr($result, 0, $pos + 1) . ' ';
+                }
+
+                $result .= implode('; ', $matches[1]);
+            }
+
+            $errors[] = strip_tags($result);
+
+            unset($error, $result, $matches);
+        }
+
+        return $errors;
     }
 }
