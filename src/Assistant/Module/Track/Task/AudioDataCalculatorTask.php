@@ -5,12 +5,11 @@ namespace Assistant\Module\Track\Task;
 use Assistant\Module\Common;
 use Assistant\Module\Common\Task\AbstractTask;
 use Assistant\Module\Common\Extension\GetId3\Exception\WriterException;
+use Assistant\Module\Common\Extension\Backend\Exception\AudioDataCalculatorException;
 use Assistant\Module\File\Extension\PathFilterIterator;
 use Assistant\Module\File\Extension\RecursiveDirectoryIterator;
 use Assistant\Module\File\Extension\SplFileInfo;
-use Assistant\Module\Track\Extension\Exception\BackendAudioDataCalculatorException;
 
-use Curl\Curl;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
@@ -82,6 +81,7 @@ class AudioDataCalculatorTask extends AbstractTask
         $this->app->log->info('Task executed', array_merge($input->getArguments(), $input->getOptions()));
 
         $id3 = new Common\Extension\GetId3\Adapter();
+        $backend = new Common\Extension\Backend\Client();
 
         $skipCalculated = $input->getOption('skip-calculated');
         $writeData = $input->getOption('write-data');
@@ -135,7 +135,7 @@ class AudioDataCalculatorTask extends AbstractTask
                     continue;
                 }
 
-                $audioData = $this->calculateAudioData($node);
+                $audioData = $backend->calculateAudioData($node);
 
                 if ($this->isTrackHasSameData($metadata, $audioData) === true) {
                     $this->stats['skipped']['same_data']++;
@@ -176,7 +176,7 @@ class AudioDataCalculatorTask extends AbstractTask
                 }
 
                 $this->app->log->info('Track processing completed successfully');
-            } catch (BackendAudioDataCalculatorException $e) {
+            } catch (AudioDataCalculatorException $e) {
                 $this->stats['error']['backend']++;
 
                 $this->app->log->error(
@@ -246,44 +246,6 @@ class AudioDataCalculatorTask extends AbstractTask
         }
 
         return $iterator;
-    }
-
-    /**
-     * @param SplFileInfo $node
-     * @return array
-     * @throws \RuntimeException
-     */
-    private function calculateAudioData(SplFileInfo $node)
-    {
-        $curl = new Curl();
-        $curl->setTimeout(600);
-
-        $response = (array) $curl->get(
-            sprintf(
-                '%s/track/%s',
-                'http://assistant-backend',
-                rawurlencode(ltrim($node->getRelativePathname(), DIRECTORY_SEPARATOR))
-            )
-        );
-
-        if ($curl->error === true) {
-            $message = '';
-
-            if (isset($response['command']) === true) {
-                $message .= sprintf('%s: ', $response['command']);
-            }
-            if (isset($response['message']) === true) {
-                $message .= $response['message'];
-            }
-
-            throw new BackendAudioDataCalculatorException($message ?: $curl->errorMessage, $curl->errorCode ?: 500);
-        }
-
-        $curl->close();
-
-        unset($curl);
-
-        return $response;
     }
 
     /**
