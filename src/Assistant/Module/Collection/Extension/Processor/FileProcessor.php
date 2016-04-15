@@ -23,6 +23,11 @@ class FileProcessor extends Collection\Extension\Processor implements ProcessorI
     private $parser;
 
     /**
+     * @var Common\Extension\Backend\Client
+     */
+    private $backend;
+
+    /**
      * Konstruktor
      *
      * @param array $parameters
@@ -33,6 +38,7 @@ class FileProcessor extends Collection\Extension\Processor implements ProcessorI
 
         $this->id3 = new Common\Extension\GetId3\Adapter();
         $this->parser = new File\Extension\Parser($parameters['track']['metadata']['parser']);
+        $this->backend = new Common\Extension\Backend\Client();
     }
 
     /**
@@ -64,6 +70,8 @@ class FileProcessor extends Collection\Extension\Processor implements ProcessorI
         $track->pathname = $node->getRelativePathname();
         $track->ignored = $node->isIgnored();
         $track->indexed_date = new \MongoDate();
+
+        $this->backend->addToSimilarCollection($track);
 
         return $track;
     }

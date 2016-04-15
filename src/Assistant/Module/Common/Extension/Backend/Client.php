@@ -3,6 +3,7 @@
 namespace Assistant\Module\Common\Extension\Backend;
 
 use Assistant\Module\File\Extension\SplFileInfo;
+use Assistant\Module\Track;
 
 use Curl\Curl;
 
@@ -64,5 +65,27 @@ class Client
         }
 
         return $response;
+    }
+
+    /**
+     * @param Track\Model\Track $track
+     * @return bool
+     * @throws Exception\SimilarCollectionException
+     */
+    public function addToSimilarCollection(Track\Model\Track $track)
+    {
+        $response = (array) $this->curl->post(
+            sprintf('%s/%s', 'http://assistant-backend', 'musly/collection/tracks'),
+            json_encode($track->toArray())
+        );
+
+        if ($this->curl->error === true) {
+            throw new Exception\SimilarCollectionException(
+                isset($response['message']) ? $response['message'] : $this->curl->errorMessage,
+                $this->curl->errorCode ?: 500
+            );
+        }
+
+        return true;
     }
 }
