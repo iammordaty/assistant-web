@@ -83,7 +83,7 @@ class SplFileInfo extends \SplFileInfo
 
 
     /**
-     * Ustawia flagę oznaczającą, że element jest kropką
+     * Zwraca informację czy element jest kropką
      *
      * @return self
      */
