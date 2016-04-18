@@ -102,12 +102,16 @@ class Genre extends BaseProvider
         $this->similarityMap = [ ];
 
         foreach ($this->similarityMapBase as $map) {
-            $this->similarityMap[] = [
+            $max = [
                 $map[0],
                 $map[0],
                 static::MAX_SIMILARITY_VALUE,
             ];
 
+            if (array_search($max, $this->similarityMap) === false) {
+                $this->similarityMap[] = $max;
+            }
+
             $this->similarityMap[] = [
                 $map[0],
                 $map[1],
@@ -119,6 +123,10 @@ class Genre extends BaseProvider
                 $map[0],
                 $map[2],
             ];
+
+            unset($map, $max);
         }
+
+        unset($map);
     }
 }
