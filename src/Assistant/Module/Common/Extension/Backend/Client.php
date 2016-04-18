@@ -88,4 +88,43 @@ class Client
 
         return true;
     }
+
+    /**
+     * @param Track\Model\Track $track
+     * @param array $similarGenres
+     * @param array $similarYears
+     * @return array
+     * @throws Exception\SimilarCollectionException
+     */
+    public function getSimilarTracks(Track\Model\Track $track, array $similarGenres, array $similarYears)
+    {
+        $query = http_build_query([ 'genre' => $similarGenres, 'year' => $similarYears ]);
+
+        $response = $this->curl->get(
+            sprintf(
+                '%s/%s%s?%s',
+                'http://assistant-backend',
+                'musly/similar',
+                rawurlencode($track->pathname),
+                preg_replace('/%5B(?:[0-9]|[1-9][0-9]+)%5D=/', '=', $query)
+            )
+        );
+
+        if ($this->curl->error === true) {
+            throw new Exception\SimilarCollectionException(
+                isset($response['message']) ? $response['message'] : $this->curl->errorMessage,
+                $this->curl->errorCode ?: 500
+            );
+        }
+
+        return array_map(
+            function ($similarTrack) {
+                return [
+                    'pathname' => str_replace('/collection', '', $similarTrack->pathname),
+                    'similarity' => $similarTrack->similarity,
+                ];
+            },
+            $response
+        );
+    }
 }

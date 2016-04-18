@@ -19,6 +19,7 @@ class Similarity
         'camelotKeyCode',
         'genre',
         'year',
+        'musly'
     ];
 
     /**

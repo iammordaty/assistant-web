@@ -72,6 +72,7 @@ $app->container->parameters = [
             ],
             'weights' => [
                 'camelotKeyCode' => 1,
+                'musly' => 1,
                 'genre' => 0.90,
                 'bpm' => 0.80,
                 'year' => 0.70,
