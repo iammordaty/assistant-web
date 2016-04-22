@@ -32,7 +32,7 @@ class Genre extends BaseProvider
         [ 'Deep House', 'Electronic', 50 ],
 
         [ 'Tech House', 'Techno', 90 ],
-        [ 'Tech House', 'Indie Dance', 85 ],
+        [ 'Tech House', 'Indie Dance', 70 ],
         [ 'Tech House', 'Electro House', 65 ],
         [ 'Tech House', 'Progressive House', 60 ],
         [ 'Tech House', 'Electronic', 50 ],
