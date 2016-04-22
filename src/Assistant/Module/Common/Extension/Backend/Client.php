@@ -69,14 +69,22 @@ class Client
 
     /**
      * @param Track\Model\Track $track
+     * @param array $similarKeys
+     * @param array $similarYears
      * @return bool
      * @throws Exception\SimilarCollectionException
      */
-    public function addToSimilarCollection(Track\Model\Track $track)
+    public function addToSimilarCollection(Track\Model\Track $track, array $similarKeys, array $similarYears)
     {
         $response = (array) $this->curl->post(
             sprintf('%s/%s', 'http://assistant-backend', 'musly/collection/tracks'),
-            json_encode($track->toArray())
+            json_encode(
+                [
+                    'pathname' => $track->pathname,
+                    'initial_key' => $similarKeys,
+                    'year' => $similarYears,
+                ]
+            )
         );
 
         if ($this->curl->error === true) {
@@ -91,14 +99,14 @@ class Client
 
     /**
      * @param Track\Model\Track $track
-     * @param array $similarGenres
+     * @param array $similarKeys
      * @param array $similarYears
      * @return array
      * @throws Exception\SimilarCollectionException
      */
-    public function getSimilarTracks(Track\Model\Track $track, array $similarGenres, array $similarYears)
+    public function getSimilarTracks(Track\Model\Track $track, array $similarKeys, array $similarYears)
     {
-        $query = http_build_query([ 'genre' => $similarGenres, 'year' => $similarYears ]);
+        $query = http_build_query([ 'initial_key' => $similarKeys, 'year' => $similarYears ]);
 
         $response = $this->curl->get(
             sprintf(

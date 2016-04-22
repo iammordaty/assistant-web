@@ -28,6 +28,11 @@ class FileProcessor extends Collection\Extension\Processor implements ProcessorI
     private $backend;
 
     /**
+     * @var Track\Extension\Similarity\Provider\Musly
+     */
+    private $musly;
+
+    /**
      * Konstruktor
      *
      * @param array $parameters
@@ -38,6 +43,7 @@ class FileProcessor extends Collection\Extension\Processor implements ProcessorI
 
         $this->id3 = new Common\Extension\GetId3\Adapter();
         $this->parser = new File\Extension\Parser($parameters['track']['metadata']['parser']);
+        $this->musly = new Track\Extension\Similarity\Provider\Musly();
         $this->backend = new Common\Extension\Backend\Client();
     }
 
@@ -71,7 +77,11 @@ class FileProcessor extends Collection\Extension\Processor implements ProcessorI
         $track->ignored = $node->isIgnored();
         $track->indexed_date = new \MongoDate();
 
-        $this->backend->addToSimilarCollection($track);
+        $this->backend->addToSimilarCollection(
+            $track,
+            $this->musly->getSimilarKeys($track),
+            $this->musly->getSimilarYears($track)
+        );
 
         return $track;
     }
