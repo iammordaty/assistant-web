@@ -8,6 +8,7 @@ use Assistant\Module\File\Extension\PathFilterIterator;
 use Assistant\Module\File\Extension\IgnoredPathIterator;
 use Assistant\Module\File\Extension\SplFileInfo;
 use Assistant\Module\Collection;
+use Assistant\Module\Common;
 
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
