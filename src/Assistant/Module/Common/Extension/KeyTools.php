@@ -3,8 +3,9 @@
 namespace Assistant\Module\Common\Extension;
 
 /**
- * https://github.com/mossspence/trakofflive/blob/master/appsrc/moss/musicapp/finder/keyTools.php
+ * KeyTools
  *
+ * @link https://github.com/mossspence/trakofflive/blob/master/appsrc/moss/musicapp/finder/keyTools.php
  * @author oneilstuart
  */
 class KeyTools
