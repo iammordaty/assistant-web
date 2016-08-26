@@ -51,11 +51,11 @@ class Client
         if ($this->curl->error === true) {
             $message = '';
 
-            if (isset($response['command']) === true) {
-                $message .= sprintf('%s: ', $response['command']);
+            if (isset($response->command) === true) {
+                $message .= sprintf('%s: ', $response->command);
             }
-            if (isset($response['message']) === true) {
-                $message .= $response['message'];
+            if (isset($response->message) === true) {
+                $message .= $response->message;
             }
 
             throw new Exception\AudioDataCalculatorException(
@@ -89,7 +89,7 @@ class Client
 
         if ($this->curl->error === true) {
             throw new Exception\SimilarCollectionException(
-                isset($response['message']) ? $response['message'] : $this->curl->errorMessage,
+                isset($response->message) ? $response->message : $this->curl->errorMessage,
                 $this->curl->errorCode ?: 500
             );
         }
@@ -120,7 +120,7 @@ class Client
 
         if ($this->curl->error === true) {
             throw new Exception\SimilarCollectionException(
-                isset($response['message']) ? $response['message'] : $this->curl->errorMessage,
+                isset($response->message) ? $response->message : $this->curl->errorMessage,
                 $this->curl->errorCode ?: 500
             );
         }
