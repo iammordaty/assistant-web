@@ -29,11 +29,17 @@ class Musly extends BaseProvider
     public function getSimilarity(Track\Model\Track $baseTrack, Track\Model\Track $comparedTrack)
     {
         if ($this->similarTracks === null) {
-            $this->similarTracks = (new Common\Extension\Backend\Client())->getSimilarTracks(
-                $baseTrack,
-                $this->getSimilarKeys($baseTrack),
-                $this->getSimilarYears($baseTrack)
-            );
+            try {
+                $this->similarTracks = (new Common\Extension\Backend\Client())->getSimilarTracks(
+                    $baseTrack,
+                    $this->getSimilarKeys($baseTrack),
+                    $this->getSimilarYears($baseTrack)
+                );
+            } catch (Common\Extension\Backend\Exception\Exception $e) {
+                unset($e);
+
+                $this->similarTracks = [];
+            }
         }
 
         $similarity = 0;
