@@ -14,11 +14,6 @@ class Musly extends BaseProvider
     const METADATA_FIELD = 'pathname';
 
     /**
-     * @var Common\Extension\KeyTools
-     */
-    private $keyTools;
-
-    /**
      * @var array|null
      */
     private $similarTracks = null;
