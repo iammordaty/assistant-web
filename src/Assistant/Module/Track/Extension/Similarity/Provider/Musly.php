@@ -32,7 +32,6 @@ class Musly extends BaseProvider
             try {
                 $this->similarTracks = (new Common\Extension\Backend\Client())->getSimilarTracks(
                     $baseTrack,
-                    $this->getSimilarKeys($baseTrack),
                     $this->getSimilarYears($baseTrack)
                 );
             } catch (Common\Extension\Backend\Exception\Exception $e) {
