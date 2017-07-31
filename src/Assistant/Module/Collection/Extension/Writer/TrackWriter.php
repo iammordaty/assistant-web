@@ -60,7 +60,7 @@ class TrackWriter extends Collection\Extension\Writer implements WriterInterface
      */
     private function assumeValidGuid(Track\Model\Track &$track)
     {
-        $count = $this->repository->count([ 'guid' => new \MongoRegex(sprintf('/^%s(\d+)?/i', $track->guid)) ]);
+        $count = $this->repository->count([ 'guid' => new \MongoRegex(sprintf('/^%s(?:-\d+)?$/i', $track->guid)) ]);
 
         if ($count !== 0) {
             $track->guid .= sprintf('-%d', $count + 1);
