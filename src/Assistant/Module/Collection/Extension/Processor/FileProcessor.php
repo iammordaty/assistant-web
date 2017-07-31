@@ -77,11 +77,7 @@ class FileProcessor extends Collection\Extension\Processor implements ProcessorI
         $track->ignored = $node->isIgnored();
         $track->indexed_date = new \MongoDate();
 
-        $this->backend->addToSimilarCollection(
-            $track,
-            $this->musly->getSimilarKeys($track),
-            $this->musly->getSimilarYears($track)
-        );
+        $this->backend->addToSimilarCollection($track, $this->musly->getSimilarYears($track));
 
         return $track;
     }

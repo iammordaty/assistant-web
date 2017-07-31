@@ -43,7 +43,7 @@ class Client
         $response = (array) $this->curl->get(
             sprintf(
                 '%s/track/%s',
-                'http://assistant-backend',
+                'http://backend',
                 rawurlencode(ltrim($node->getRelativePathname(), DIRECTORY_SEPARATOR))
             )
         );
@@ -69,19 +69,17 @@ class Client
 
     /**
      * @param Track\Model\Track $track
-     * @param array $similarKeys
      * @param array $similarYears
      * @return bool
      * @throws Exception\SimilarCollectionException
      */
-    public function addToSimilarCollection(Track\Model\Track $track, array $similarKeys, array $similarYears)
+    public function addToSimilarCollection(Track\Model\Track $track, array $similarYears)
     {
         $response = (array) $this->curl->post(
-            sprintf('%s/%s', 'http://assistant-backend', 'musly/collection/tracks'),
+            sprintf('%s/%s', 'http://backend', 'musly/collection/tracks'),
             json_encode(
                 [
                     'pathname' => $track->pathname,
-                    'initial_key' => $similarKeys,
                     'year' => $similarYears,
                 ]
             )
@@ -99,19 +97,18 @@ class Client
 
     /**
      * @param Track\Model\Track $track
-     * @param array $similarKeys
      * @param array $similarYears
      * @return array
      * @throws Exception\SimilarCollectionException
      */
-    public function getSimilarTracks(Track\Model\Track $track, array $similarKeys, array $similarYears)
+    public function getSimilarTracks(Track\Model\Track $track, array $similarYears)
     {
-        $query = http_build_query([ 'initial_key' => $similarKeys, 'year' => $similarYears ]);
+        $query = http_build_query([ 'year' => $similarYears ]);
 
         $response = $this->curl->get(
             sprintf(
                 '%s/%s%s?%s',
-                'http://assistant-backend',
+                'http://backend',
                 'musly/similar',
                 rawurlencode($track->pathname),
                 preg_replace('/%5B(?:[0-9]|[1-9][0-9]+)%5D=/', '=', $query)

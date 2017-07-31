@@ -29,11 +29,17 @@ class Musly extends BaseProvider
     public function getSimilarity(Track\Model\Track $baseTrack, Track\Model\Track $comparedTrack)
     {
         if ($this->similarTracks === null) {
-            $this->similarTracks = (new Common\Extension\Backend\Client())->getSimilarTracks(
-                $baseTrack,
-                $this->getSimilarKeys($baseTrack),
-                $this->getSimilarYears($baseTrack)
-            );
+            try {
+                $this->similarTracks = (new Common\Extension\Backend\Client())->getSimilarTracks(
+                    $baseTrack,
+                    $this->getSimilarKeys($baseTrack),
+                    $this->getSimilarYears($baseTrack)
+                );
+            } catch (Common\Extension\Backend\Exception\Exception $e) {
+                unset($e);
+
+                $this->similarTracks = [];
+            }
         }
 
         $similarity = 0;
@@ -47,22 +53,6 @@ class Musly extends BaseProvider
         }
 
         return $similarity;
-    }
-
-    /**
-     * @param Track\Model\Track $track
-     * @return array
-     */
-    public function getSimilarKeys(Track\Model\Track $track)
-    {
-        return [
-            $track->initial_key,
-            $this->keyTools->perfectFourth($track->initial_key),
-            $this->keyTools->perfectFifth($track->initial_key),
-            $this->keyTools->dominantRelative($track->initial_key),
-            $this->keyTools->minorThird($track->initial_key),
-            $this->keyTools->relativeMinorToMajor($track->initial_key),
-        ];
     }
 
     /**
@@ -93,13 +83,5 @@ class Musly extends BaseProvider
         return [
             '$exists' => true
         ];
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    protected function setup()
-    {
-        $this->keyTools = new Common\Extension\KeyTools();
     }
 }
