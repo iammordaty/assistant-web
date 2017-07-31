@@ -98,7 +98,10 @@ class IndexerTask extends AbstractTask
             } catch (Common\Extension\Backend\Exception\Exception $e) {
                 $this->stats['error']++;
 
-                $this->app->log->error($e->getMessage(), [ 'element' => $element->toArray() ]);
+                $this->app->log->error(
+                    $e->getMessage(),
+                    [ 'element' => isset($element) ? $element->toArray() : null ]
+                );
             } catch (\Exception $e) {
                 $this->stats['error']++;
 
