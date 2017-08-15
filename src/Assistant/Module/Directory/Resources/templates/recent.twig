@@ -1,0 +1,69 @@
+{% extends '@common/layout.twig' %}
+
+{% block title %}{{ directory.pathname|default('Przeglądaj') }}{% endblock %}
+
+{% block contentBlock %}
+    {% for month in recent %}
+        <div class="directory-info">
+            <ol class="breadcrumb">
+                <li>{{ month.name }}</li>
+            </ol>
+        </div>
+
+        {% if month.tracks %}
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>
+                                <a href="">Nazwa utworu<i class="fa fa-caret-{% if sort.title == -1 %}down{% else %}up{% endif %} pull-right"></i></a>
+                            </th>
+                            <th>
+                                <a href="">Gatunek <i class="fa fa-caret-{% if sort.genre == -1 %}down{% else %}up{% endif %} pull-right"></i></a>
+                            </th>
+                            <th>
+                                <a href="">Długość<i class="fa fa-caret-{% if sort.genre == -1 %}down{% else %}up{% endif %} pull-right"></i></a>
+                            </th>
+                            <th>
+                                <a href="">Rok <i class="fa fa-caret-{% if sort.year == -1 %}down{% else %}up{% endif %} pull-right"></i></a>
+                            </th>
+                            <th>
+                                <a href="">Tonacja <i class="fa fa-caret-{% if sort.initial_key == -1 %}down{% else %}up{% endif %} pull-right"></i></a>
+                            </th>
+                            <th>
+                                <a href="">BPM <i class="fa fa-caret-{% if sort.bpm == -1 %}down{% else %}up{% endif %} pull-right"></i></a>
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for track in month.tracks %}
+                            <tr>
+                                <td class="col-xs-6">
+                                    <span class="ellipsis track-name">
+                                        {% set name = track.artist ~ ' - ' ~ track.title %}
+                                        <a href="{{ urlFor('track.track.index', { guid: track.guid } )}}" title="{{ name }}">{{ name }}</a>
+                                    </span>
+                                </td>
+                                <td class="col-xs-2">
+                                    <a class="undecorated" href="{{ urlFor('search.advanced.index') }}?genre={{ track.genre }}">{{ track.genre }}</a>
+                                </td>
+                                <td class="col-xs-1">
+                                    {{ track.length|formatSeconds }}
+                                </td>
+                                <td class="col-xs-1">
+                                    <a class="undecorated" href="{{ urlFor('search.advanced.index') }}?year={{ track.year }}">{{ track.year }}</a>
+                                </td>
+                                <td class="col-xs-1">
+                                    <a class="undecorated" href="{{ urlFor('search.advanced.index') }}?initial_key={{ track.initial_key }}">{{ track.initial_key }}</a>
+                                </td>
+                                <td class="col-xs-1">
+                                    <a class="undecorated" href="{{ urlFor('search.advanced.index') }}?bpm={{ track.bpm }}">{{ track.bpm }}</a>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% endif %}
+    {% endfor %}
+{% endblock %}

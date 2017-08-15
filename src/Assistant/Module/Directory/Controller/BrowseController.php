@@ -28,7 +28,50 @@ class BrowseController extends Common\Controller\AbstractController
             ]
         );
     }
+    
+    public function recent()
+    {
+        $getGroupName = function ($name) {
+            $parts = explode(DIRECTORY_SEPARATOR, ltrim($name, '/'), 4);
 
+            return sprintf('%s/%s', $parts[1], $parts[2]);
+        };
+
+        $recent = [];
+
+        $tracks = (new Track\Repository\TrackRepository($this->app->container['db']))
+            ->findBy([ ], [ ], [ 'limit' => 500, 'sort' => [ 'indexed_date' => -1 ] ]);
+
+        $repository = new Directory\Repository\DirectoryRepository($this->app->container['db']);
+
+        foreach ($tracks as $track) {
+            $key = $getGroupName($track->parent);
+            
+            if (isset($recent[$key]) === false) {
+                $recent[$key] = [
+                    'name' => $getGroupName($repository->findOneByGuid($track->parent)->pathname),
+                    'tracks' => [],
+                ];
+            }
+
+            $recent[$key]['tracks'][$track->guid] = $track;
+        }
+
+        krsort($recent);
+
+        foreach ($recent as &$group) {
+            ksort($group['tracks']);
+        }
+
+        return $this->app->render(
+            '@directory/recent.twig',
+            [
+                'menu' => 'browse',
+                'recent' => $recent,
+            ]
+        );
+    }
+    
     /**
      * Zwraca elementy kolekcji znajdujące się w podanym katalogu
      *
