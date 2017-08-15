@@ -30,7 +30,9 @@
             </div>
             <div class="col-lg-4">
                 <div class="list-group">
-                    <span class="list-group-item list-group-item-info">Ostatnio dodane</span>
+                    <span class="list-group-item list-group-item-info">
+                        <a href="{{ urlFor('directory.browse.recent') }}" title="Pokaż więcej ostatnio dodanych">Ostatnio dodane</a>
+                    </span>
                     {% for track in recentlyAddedTracks %}
                         <a href="{{ urlFor('track.track.index', { guid: track.guid } )}}" class="ellipsis list-group-item">
                             {% set name = track.artist ~ ' - ' ~ track.title %}
