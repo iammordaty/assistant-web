@@ -25,10 +25,7 @@ class Musly extends BaseProvider
     {
         if ($this->similarTracks === null) {
             try {
-                $this->similarTracks = (new Common\Extension\Backend\Client())->getSimilarTracks(
-                    $baseTrack,
-                    $this->getSimilarYears($baseTrack)
-                );
+                $this->similarTracks = (new Common\Extension\Backend\Client())->getSimilarTracks($baseTrack);
             } catch (Common\Extension\Backend\Exception\Exception $e) {
                 unset($e);
 
@@ -36,35 +33,9 @@ class Musly extends BaseProvider
             }
         }
 
-        $similarity = 0;
-
-        foreach ($this->similarTracks as $similarTrack) {
-            if ($comparedTrack->pathname === $similarTrack['pathname']) {
-                $similarity = $similarTrack['similarity'];
-
-                break;
-            }
-        }
-
-        return $similarity;
-    }
-
-    /**
-     * @param Track\Model\Track $track
-     * @return array
-     */
-    public function getSimilarYears(Track\Model\Track $track)
-    {
-        $years = [
-            $track->year - 1,
-            $track->year,
-        ];
-
-        if ($track->year < ($currentYear = (new \DateTime())->format('Y'))) {
-            $years[] = $track->year + 1;
-        }
-
-        return $years;
+        return isset($this->similarTracks[$comparedTrack->pathname])
+            ? $this->similarTracks[$comparedTrack->pathname]
+            : 0;
     }
 
     /**

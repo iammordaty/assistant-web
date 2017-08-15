@@ -21,32 +21,51 @@ class TrackController extends AbstractController
             );
         }
 
+        $form = $this->app->request->get('similarity');
+
         return $this->app->render(
             '@track/index.twig',
             [
                 'menu' => 'track',
-                'track' => $track,
+                'track' => $track->toArray(),
                 'keyInfo' => $this->getTrackKeyInfo($track),
                 'pathBreadcrumbs' => $this->getPathBreadcrumbs(dirname($track->pathname)),
-                'similarTracks' => $this->getSimilarTracks($track),
+                'form' => $form,
+                'similarTracks' => $this->getSimilarTracks(
+                    $track,
+                    $this->app->container->parameters['track']['similarity'],
+                    $form
+                ),
             ]
         );
     }
 
     /**
-     * Zwraca utwory podobne do podanego
+     * Zwraca utwory podobne do podanego utworu
      *
-     * @param Track\Model\Track $baseTrack
+     * @param Track\Model\Track $track
+     * @param \Slim\Http\Request $request
      * @return array
      */
-    private function getSimilarTracks(Track\Model\Track $baseTrack)
+    private function getSimilarTracks($baseTrack, $baseParameters, $customParameters)
     {
+        $track = $baseTrack;
+        $parameters = $baseParameters;
+
+        if (!empty($customParameters['track'])) {
+            $track = $track->set($customParameters['track']);
+        }
+
+        if (!empty($customParameters['providers']['names'])) {
+            $parameters['providers']['names'] = $customParameters['providers']['names'];
+        }
+
         $similarity = new Track\Extension\Similarity(
             new Track\Repository\TrackRepository($this->app->container['db']),
-            $this->app->container->parameters['track']['similarity']
+            $parameters
         );
 
-        return $similarity->getSimilarTracks($baseTrack);
+        return $similarity->getSimilarTracks($track);
     }
 
     /**
