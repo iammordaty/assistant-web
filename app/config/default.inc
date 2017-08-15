@@ -43,6 +43,7 @@ $app->container->parameters = [
                         ' vs. ',
                         ' with ',
                         ' x ',
+                        ' X ',
                     ],
                     'exceptions' => [
                         'Cause & Affect',
@@ -66,25 +67,38 @@ $app->container->parameters = [
         ],
 
         'similarity' => [
+            'providers' => [
+                'names' => [
+                    'bpm',
+                    'camelotKeyCode',
+                    'genre',
+                    'musly',
+                    'year',
+                ],
+                'parameters' => [
+                    'bpm' => [
+                        'tolerance' => 5,
+                        'weight' => 0.70,
+                    ],
+                    'camelotKeyCode' => [
+                        'weight' => 0.90,
+                    ],
+                    'genre' => [
+                        'weight' => 0.75,
+                    ],
+                    'musly' => [
+                        'weight' => 1,
+                    ],
+                    'year' => [
+                        'tolerance' => 2,
+                        'weight' => 0.60,
+                    ],
+                ]
+            ],
             'limit' => [
                 'tracks' => 200,
                 'value' => 60,
             ],
-            'weights' => [
-                'camelotKeyCode' => 1,
-                'musly' => 1,
-                'genre' => 0.90,
-                'bpm' => 0.80,
-                'year' => 0.70,
-            ],
-            'provider' => [
-                'bpm' => [
-                    'tolerance' => 5,
-                ],
-                'year' => [
-                    'tolerance' => 2,
-                ],
-            ]
         ],
     ]
 ];

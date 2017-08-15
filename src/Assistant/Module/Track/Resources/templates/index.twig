@@ -4,7 +4,7 @@
 
 {% block contentBlock %}
     <div id="wave-progress" class="text-center"><i class="fa fa-cog fa-spin fa-5x"></i></div>
-    <div id="wave-container">
+    <div id="wave-container" data-track-url="{{ urlFor('track.contents.get', { guid: track.guid }) }}">
         <div id="wave-controls">
             <i data-role="play-pause" class="fa fa-play"></i>
         </div>
@@ -14,134 +14,11 @@
     </div>
 
     <script src="/vendor/wavesurfer.js/wavesurfer.min.js" type="text/javascript"></script>
-    <script type="text/javascript">
-        function formatSeconds(ss) {
-            var result = '',
-                s,
-                m,
-                h,
-                d;
-
-            s = Math.floor(ss % 60);
-            m = Math.floor((ss % 3600) / 60);
-            h = Math.floor((ss % 86400) / 3600);
-            d = Math.floor((ss % 2592000) / 86400);
-
-            if (d > 0) {
-                result += d + ':';
-            }
-
-            if (h > 0) {
-                result += (h < 10 ? '0' : '') + h + ':';
-            }
-
-            result += (m < 10 ? '0' : '') + m + ':';
-            result += (s < 10 ? '0' : '') + s;
-
-            return (ss < 0 ? '-' : '') + result;
-        }
-
-        $(function () {
-            var wavesurfer = Object.create(WaveSurfer),
-                wavesurferPlayInterval = null;
-
-            wavesurfer.init({
-                container: document.querySelector('#wave'),
-                waveColor: '#999',
-                progressColor: '#666',
-                height: 200,
-                cursorColor: '#fff'
-            });
-
-            wavesurfer.on('ready', function () {
-                $('#wave-progress').fadeOut('fast', function () {
-                    $(this).remove();
-                });
-
-                $('#wave-container').css('visibility','visible').hide().fadeIn('slow');
-            });
-
-            wavesurfer.on('seek', function () {
-                if (wavesurfer.backend.isPaused()) {
-                    wavesurfer.play();
-                }
-            });
-
-            wavesurfer.on('play', function () {
-                var $currentTimeIndicator = $('#wave-time-current-time'),
-                    trackDuration = wavesurfer.getDuration(),
-                    prefix = '',
-                    time;
-
-                $('[data-role="play-pause"]').removeClass('fa-play').addClass('fa-pause');
-
-                wavesurferPlayInterval = setInterval(
-                    function () {
-
-                        if ($currentTimeIndicator.data('time-mode') === 'elapsed') {
-                            prefix = '';
-                            time = wavesurfer.getCurrentTime();
-                        } else {
-                            prefix = '-';
-                            time = trackDuration - wavesurfer.getCurrentTime();
-                        }
-
-                        $('#wave-time-current-time').html(prefix + formatSeconds(time));
-                    },
-                    500
-                );
-            });
-
-            wavesurfer.on('pause', function () {
-                $('[data-role="play-pause"]').removeClass('fa-pause').addClass('fa-play');
-
-                clearInterval(wavesurferPlayInterval);
-            });
-
-            wavesurfer.on('finish', function () {
-                $('[data-role="play-pause"]').removeClass('fa-pause').addClass('fa-play');
-
-                clearInterval(wavesurferPlayInterval);
-            });
-
-            wavesurfer.on('error', function () {
-                $('#wave-progress').fadeOut('fast', function () {
-                    $(this).remove();
-                });
-
-                $('#wave').html('<p class="lead text-center text-muted">Wystąpił błąd podczas ładowania fali dźwiękowej</p>');
-                $('#wave-container').css('visibility','visible').hide().fadeIn('slow');
-
-                setTimeout(function () {
-                    $('#wave-container').slideUp('fast', function () {
-                        $(this).remove();
-                    });
-                }, 3000);
-            });
-
-            wavesurfer.load('{{ urlFor('track.contents.get', { guid: track.guid }) }}');
-
-            $('[data-role="similar-tracks:show-more"]').on('click', function () {
-                $('div.similar-tracks tr.hide').hide().removeClass('hide').fadeIn('fast');
-                $(this).remove();
-            });
-
-            $('[data-role="play-pause"]').on('click', function () {
-                wavesurfer.playPause();
-            });
-
-            $('#wave-time-current-time').on('click', function () {
-                $(this).data(
-                    'time-mode',
-                    $(this).data('time-mode') === 'elapsed' ? 'remaining' : 'elapsed'
-                );
-            });
-        });
-    </script>
+    <script src="/js/track.js" type="text/javascript"></script>
 
     <div class="track-info">
         <legend>
-                <a href="{{ urlFor('search.advanced.index') }}?artist={{ track.artist }}" class="undecorated">{{ track.artist }}</a> - {{ track.title }}
+            <a href="{{ urlFor('search.advanced.index') }}?artist={{ track.artist }}" class="undecorated">{{ track.artist }}</a> - {{ track.title }}
         </legend>
 
         <div class="row">
@@ -151,10 +28,10 @@
                         <strong>{% if track.artists|length == 1%}Wykonawca{% else %}Wykonawcy{% endif %}</strong>
                     </span>
                     <span class="col-xs-8 col-sm-9 col-md-10">
-                        {%- for artist in track.artists -%}
+                       {%- for artist in track.artists -%}
                             <a href="{{ urlFor('search.advanced.index') }}?artist={{ artist|url_encode() }}" class="undecorated">{{ artist }}</a>
-                            {%- if not loop.last %}, {% endif -%}
-                        {%- endfor -%}
+                           {%- if not loop.last %}, {% endif -%}
+                       {%- endfor -%}
                     </span>
                 </div>
 
@@ -203,44 +80,116 @@
                     <span class="col-xs-8 col-sm-9 col-md-10">
                         <ol class="breadcrumb">
                             <li><a href="{{ urlFor('directory.browse.index') }}" class="undecorated"><i class="fa fa-home fa-lg"></i></a></li>
-                            {% for path in pathBreadcrumbs %}
+                           {% for path in pathBreadcrumbs %}
                                 <li><a href="{{ urlFor('directory.browse.index', { guid: path.guid } )}}" class="undecorated">{{ path.path }}</a></li>
-                            {% endfor %}
+                           {% endfor %}
                         </ol>
                     </span>
                 </div>
             </div>
 
-            {% if keyInfo %}
+           {% if keyInfo %}
                 <div class="col-xs-12 col-sm-4 col-md-3">
                     <div class="panel panel-info ">
                         <div class="panel-heading">
                             <a href="{{ urlFor('search.advanced.index') }}?initial_key={{ track.initial_key }}" class="undecorated">{{ track.initial_key }}</a> - informacje
                         </div>
                         <div class="panel-body">
-                            {% for info, data in keyInfo %}
+                           {% for info, data in keyInfo %}
                                 <div class="row key-info-{{ info }}">
                                     <span class="col-xs-4 col-sm-8 col-md-7 col-md-offset-1 text-right info-key">
                                         <span class="ellipsis"><strong>{{ data.title }}</strong></span>
                                     </span>
                                     <span class="col-xs-8 col-sm-4 info-value">
                                         <a href="{{ urlFor('search.advanced.index') }}?initial_key={{ data.value }}" class="undecorated">
-                                            {{ data.value }}
+                                           {{ data.value }}
                                         </a>
                                     </span>
                                 </div>
-                            {% endfor %}
+                           {% endfor %}
                         </div>
                     </div>
-            {% endif %}
-            </div>
+                </div>
+           {% endif %}
         </div>
     </div>
 
     <div class="similar-tracks">
-        <legend>Podobne utwory</legend>
+        <!-- TODO: usunąć niepotrzebny kod js -->
+        <!-- TODO: usunąć niepotrzebne style -->
+        <!-- TODO: dostosować górny i dolny margines -->
+        <!-- TODO: przepisać js-y odpowiedzialne za pokazywanie i ukrywanie input-ów -->
+        <legend>
+            Podobne utwory
+            <i class="fa fa-angle-double-down pull-right toggle-visibility {% if form %} fa-rotate-180 {% endif %} "
+                data-role="similar-tracks:toggle-visibility"></i>
+        </legend>
 
-        {% if similarTracks %}
+        <form action="{{ urlFor('track.track.index', { guid: track.guid } )}}" method="get" data-role="similar-tracks:parameters"
+              class="form-horizontal {% if not form %} hide {% endif %}">
+            <div class="form-group">
+                <div class="col-xs-4 col-sm-2">
+                    <label class="checkbox-inline" for="provider-musly">
+                          <input type="checkbox" id="provider-musly" name="similarity[providers][names][]" value="musly"
+                                {% if not form or 'musly' in form.providers.names|default %} checked="checked" {% endif %}> Musly
+                    </label>
+                </div>
+                <div class="col-xs-4 col-sm-2">
+                    <span class="additional-info-wrap">
+                        <label class="checkbox-inline" for="provider-genre">
+                              <input type="checkbox" name="similarity[providers][names][]" id="provider-genre" value="genre"
+                                    {% if not form or 'genre' in form.providers.names|default %} checked="checked" {% endif %}> Genre
+                        </label>
+                        <div class="additional-info {% if form and 'genre' not in form.providers.names|default %} hide {% endif %}">
+                              <input type="text" name="similarity[track][genre]" value="{{ form.track.genre|default(track.genre) }}"
+                                     class="form-control input-sm" placeholder="{{ track.genre }}">
+                        </div>
+                    </span>
+                </div>
+                <div class="col-xs-4 col-sm-2">
+                    <span class="additional-info-wrap">
+                        <label class="checkbox-inline" for="provider-year">
+                              <input type="checkbox" name="similarity[providers][names][]" id="provider-year" value="year"
+                                    {% if not form or 'year' in form.providers.names|default %} checked="checked" {% endif %}> Year
+                        </label>
+                        <div class="additional-info {% if form and 'year' not in form.providers.names|default %} hide {% endif %}">
+                            <input type="number" name="similarity[track][year]" value="{{ form.track.year|default(track.year) }}" min="1990" max="{{ now|date('Y')}}"
+                                   class="form-control input-sm" placeholder="{{ track.year }}">
+                        </div>
+                    </span>
+                </div>
+                <div class="clearfix visible-xs"></div>
+                <div class="col-xs-4 col-sm-2">
+                    <span class="additional-info-wrap">
+                        <label class="checkbox-inline" for="provider-bpm">
+                              <input type="checkbox" name="similarity[providers][names][]" id="provider-bpm" value="bpm"
+                                    {% if not form or 'bpm' in form.providers.names|default %} checked="checked" {% endif %}> BPM
+                        </label>
+                        <div class="additional-info {% if form and 'bpm' not in form.providers.names|default %} hide {% endif %}">
+                              <input type="number" name="similarity[track][bpm]" value="{{ form.track.bpm|default(track.bpm) }}" min="100" max="200" step="0.1"
+                                     class="form-control input-sm" placeholder="{{ track.bpm }}">
+                        </div>
+                    </span>
+                </div>
+                <div class="col-xs-4 col-sm-2">
+                    <span class="additional-info-wrap">
+                        <label class="checkbox-inline" for="provider-camelotKeyCode">
+                              <input type="checkbox" name="similarity[providers][names][]" id="provider-camelotKeyCode" value="camelotKeyCode"
+                                    {% if not form or 'camelotKeyCode' in form.providers.names|default %} checked="checked" {% endif %}> Tonacja
+                        </label>
+                        <div class="additional-info {% if form and 'camelotKeyCode' not in form.providers.names|default %} hide {% endif %}">
+                              <input type="text" name="similarity[track][initial_key]" value="{{ form.track.initial_key|default(track.initial_key) }}"
+                                     class="form-control input-sm" placeholder="{{ track.initial_key }}">
+                        </div>
+                    </span>
+                </div>
+                <div class="col-xs-4 col-sm-2">
+                    <button type="submit" name="similarity-settings" value="1" class="btn btn-default btn-sm pull-right">Odśwież</button>
+                </div>
+            </div>
+        </form>
+
+       {% if similarTracks %}
             <div class="table-responsive">
                 <table class="table table-hover">
                     <thead>
@@ -255,11 +204,11 @@
                         </tr>
                     </thead>
                     <tbody>
-                        {% for similarTrack in similarTracks %}
+                       {% for similarTrack in similarTracks %}
                             <tr class="{% if loop.index >= 50 %}hide{% endif %}">
                                 <td class="col-xs-5">
                                     <span class="ellipsis track-name">
-                                        {% set name = similarTrack.track.artist ~ ' - ' ~ similarTrack.track.title %}
+                                       {% set name = similarTrack.track.artist ~ ' - ' ~ similarTrack.track.title %}
                                         <a href="{{ urlFor('track.track.index', { guid: similarTrack.track.guid } )}}" title="{{ name }}">{{ name }}</a>
                                     </span>
                                 </td>
@@ -267,7 +216,7 @@
                                     <a class="undecorated" href="{{ urlFor('search.advanced.index') }}?genre={{ similarTrack.track.genre }}">{{ similarTrack.track.genre }}</a>
                                 </td>
                                 <td class="col-xs-1">
-                                    {{ similarTrack.track.length|formatSeconds }}
+                                   {{ similarTrack.track.length|formatSeconds }}
                                 </td>
                                 <td class="col-xs-1">
                                     <a class="undecorated" href="{{ urlFor('search.advanced.index') }}?year={{ similarTrack.track.year }}">{{ similarTrack.track.year }}</a>
@@ -279,18 +228,18 @@
                                     <a class="undecorated" href="{{ urlFor('search.advanced.index') }}?bpm={{ similarTrack.track.bpm }}">{{ similarTrack.track.bpm }}</a>
                                 </td>
                                 <td class="col-xs-1">
-                                    {{ similarTrack.value }}%
+                                   {{ similarTrack.value }}%
                                 </td>
                             </tr>
-                        {% endfor %}
+                       {% endfor %}
                     </tbody>
                 </table>
             </div>
             <div class="text-center">
                 <button type="button" class="btn btn-default" data-role="similar-tracks:show-more">Pokaż więcej</button>
             </div>
-        {% else %}
+       {% else %}
             <p class="lead text-center text-muted">Nie znaleziono podobnych utworów</p>
-        {% endif %}
+       {% endif %}
     </div>
 {% endblock %}

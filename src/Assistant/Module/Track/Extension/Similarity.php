@@ -10,17 +10,11 @@ use Assistant\Module\Track;
 class Similarity
 {
     /**
-     * Lista obsługiwanych dostawców podobieństwa
+     * Lista nazw używanych dostawców podobieństwa
      *
      * @var array
      */
-    private $providerNames = [
-        'bpm',
-        'camelotKeyCode',
-        'genre',
-        'year',
-        'musly'
-    ];
+    private $providerNames = [ ];
 
     /**
      * Lista dostawców podobieństwa
@@ -145,26 +139,30 @@ class Similarity
      */
     private function setup()
     {
-        $this->weights = $this->parameters['weights'];
-
+        $this->providerNames = $this->parameters['providers']['names'];
         $this->providersCount = count($this->providerNames);
+
+        $this->weights = [];
         $this->maxSimilarityValue = 0;
 
         foreach ($this->providerNames as $providerName) {
             $providerClassName = sprintf('%s\Similarity\Provider\%s', __NAMESPACE__, ucfirst($providerName));
 
-            $providerParameters = isset($this->parameters['provider'][$providerName])
-                ? $this->parameters['provider'][$providerName]
+            $providerParameters = isset($this->parameters['providers']['parameters'][$providerName])
+                ? $this->parameters['providers']['parameters'][$providerName]
                 : null;
 
             $this->providers[$providerName] = new $providerClassName($providerParameters);
+            $this->weights[$providerName] = $providerParameters['weight'];
 
             $this->maxSimilarityValue += ($providerClassName::MAX_SIMILARITY_VALUE * $this->weights[$providerName]);
 
             unset($providerName, $providerClassName, $providerParameters, $providerName);
         }
 
-        $this->maxSimilarityValue /=  $this->providersCount;
+        $this->maxSimilarityValue /= $this->providersCount;
+
+        var_dump($this->providerNames);
     }
 
     /**

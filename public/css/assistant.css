@@ -147,3 +147,31 @@ a.undecorated:hover {
 .table-responsive table .track-name {
     min-width: 250px;
 }
+
+.similar-tracks .toggle-visibility {
+    font-size: 70%;
+    line-height: 30px;
+    cursor: pointer;
+}
+
+label.radio-inline, label.checkbox-inline {
+    margin-bottom: 10px !important;
+    padding: 10px 10px 10px 30px;
+}
+
+.checkbox-inline + .checkbox-inline, .radio-inline + .radio-inline {
+    margin-left: 0;
+}
+
+.columns label.radio-inline, .columns label.checkbox-inline {
+    min-width: 190px;
+    vertical-align: top;
+    width: 30%;
+}
+
+.additional-info-wrap .additional-info {
+    margin-top: -10px;
+    padding-bottom: 10px;
+    padding-left: 10px;
+    padding: 0 10px 10px;
+}
