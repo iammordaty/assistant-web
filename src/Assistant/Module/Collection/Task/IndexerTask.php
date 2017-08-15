@@ -93,7 +93,6 @@ class IndexerTask extends AbstractTask
                     $this->stats['duplicated']++;
                 }
 
-                // it's not a big deal, so log as debug
                 $this->app->log->debug($e->getMessage());
             } catch (Common\Extension\Backend\Exception\Exception $e) {
                 $this->stats['error']++;
