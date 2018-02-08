@@ -87,7 +87,7 @@ class IndexerTask extends AbstractTask
             } catch (Collection\Extension\Processor\Exception\EmptyMetadataException $e) {
                 $this->stats['empty_metadata']++;
 
-                $this->error('.', false);
+                $this->app->log->warn('Track does not contains metadata');
             } catch (Collection\Extension\Writer\Exception\DuplicatedElementException $e) {
                 if ($node->isDot() === false) {
                     $this->stats['duplicated']++;
