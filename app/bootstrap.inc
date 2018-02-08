@@ -3,7 +3,7 @@
 /* @var $app \Slim\Slim */
 
 // require enviroment config
-require_once BASE_DIR . '/app/config/' . gethostname() . '.inc';
+require_once sprintf('%s/app/config/%s.inc', BASE_DIR, getenv('SLIM_MODE'));
 
 // get application modules
 
