@@ -161,8 +161,6 @@ class Similarity
         }
 
         $this->maxSimilarityValue /= $this->providersCount;
-
-        var_dump($this->providerNames);
     }
 
     /**
