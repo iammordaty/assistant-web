@@ -85,6 +85,11 @@ class Track extends AbstractModel
      * @var bool
      */
     protected $ignored;
+    
+    /**
+    * @var \MongoDate
+    */
+    protected $modified_date;
 
     /**
      * @var \MongoDate

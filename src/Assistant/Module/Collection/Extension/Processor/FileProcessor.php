@@ -69,6 +69,7 @@ class FileProcessor extends Collection\Extension\Processor implements ProcessorI
         $track->parent = $this->slugifyPath(dirname($node->getRelativePathname()));
         $track->pathname = $node->getRelativePathname();
         $track->ignored = $node->isIgnored();
+        $track->modified_date = new \MongoDate($node->getMTime());
         $track->indexed_date = new \MongoDate();
 
         $this->backend->addToSimilarCollection($track);
