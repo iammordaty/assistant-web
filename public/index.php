@@ -8,7 +8,6 @@ require_once BASE_DIR . '/vendor/autoload.php';
 
 $app = new \Slim\Slim();
 $app->setName('assistant');
-$app->container['mode'] = gethostname();
 
 // boostrap app
 require_once BASE_DIR . '/app/bootstrap.inc';

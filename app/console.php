@@ -17,10 +17,9 @@ require_once BASE_DIR . '/vendor/autoload.php';
 
 $app = new \Slim\Slim();
 $app->setName('assistant-console');
-$app->container['mode'] = gethostname();
 
 // add additional configuration
-require_once BASE_DIR . '/app/config/' . gethostname() . '.inc';
+require_once sprintf('%s/app/config/%s.inc', BASE_DIR, getenv('SLIM_MODE'));
 
 // prepare tasks and console app
 $console = new Console\Application();
