@@ -40,13 +40,13 @@ class BrowseController extends Common\Controller\AbstractController
         $recent = [];
 
         $tracks = (new Track\Repository\TrackRepository($this->app->container['db']))
-            ->findBy([ ], [ ], [ 'limit' => 500, 'sort' => [ 'indexed_date' => -1 ] ]);
+            ->findBy([ ], [ ], [ 'limit' => 500, 'sort' => [ 'modified_date' => -1 ] ]);
 
         $repository = new Directory\Repository\DirectoryRepository($this->app->container['db']);
 
         foreach ($tracks as $track) {
             $key = $getGroupName($track->parent);
-            
+
             if (isset($recent[$key]) === false) {
                 $recent[$key] = [
                     'name' => $getGroupName($repository->findOneByGuid($track->parent)->pathname),
