@@ -27,9 +27,10 @@ require_once sprintf('%s/app/config/%s.inc', BASE_DIR, getenv('SLIM_MODE'));
 $console = new Console\Application();
 $console->addCommands(
     [
-        new \Assistant\Module\Collection\Task\ReindexerTask($app),
         new \Assistant\Module\Collection\Task\CleanerTask($app),
         new \Assistant\Module\Collection\Task\IndexerTask($app),
+        new \Assistant\Module\Collection\Task\MoverTask($app),
+        new \Assistant\Module\Collection\Task\ReindexerTask($app),
         new \Assistant\Module\Track\Task\AudioDataCalculatorTask($app),
     ]
 );

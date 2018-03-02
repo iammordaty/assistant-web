@@ -6,6 +6,7 @@ use Assistant\Module\Common\Task\AbstractTask;
 use Assistant\Module\Common\Repository\AbstractObjectRepository;
 use Assistant\Module\Directory\Repository\DirectoryRepository;
 use Assistant\Module\Track\Repository\TrackRepository;
+use Assistant\Module\File\Extension\SplFileInfo;
 
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
@@ -38,7 +39,16 @@ class MoverTask extends AbstractTask
 
         $this
             ->setName('collection:move')
-            ->setDescription('Move new and tagged tracks to target directories');
+            ->setDescription('Move new and tagged tracks to target directories')
+            ->addArgument(
+                'pathname',
+                InputArgument::REQUIRED,
+                'Pathname to move'
+            )->addArgument(
+                'targetPathname',
+                InputArgument::REQUIRED,
+                'Target pathname'
+            );
     }
 
     /**
@@ -48,65 +58,46 @@ class MoverTask extends AbstractTask
     {
         parent::initialize($input, $output);
 
-        $this->stats = [
-            'removed' => [ 'file' => 0, 'dir' => 0 ],
-        ];
+        $this->stats = [ ];
     }
 
     /**
-     * Rozpoczyna proces usuwania nieistniejących elementów z kolekcji
+     * Rozpoczyna proces usuwania przenoszenia podanego elementu
      */
     protected function execute(InputInterface $input, OutputInterface $output)
     {
         $this->app->log->info('Task executed', array_merge($input->getArguments(), $input->getOptions()));
 
-        $force = (bool) $input->getOption('force');
+        $rootDir = $this->app->container->parameters['collection']['root_dir'];
 
-        $pathname = $input->getArgument('pathname');
-        $relativePathname = str_replace($this->parameters['root_dir'], '', $pathname);
-        $searchCondition = [ 'pathname' => new \MongoRegex(sprintf('/^%s/', preg_quote($relativePathname))) ];
-
-        $this->stats['removed']['dir'] = $this->remove(
-            (new DirectoryRepository($this->app->container['db'])),
-            $searchCondition,
-            $force
+        $element = new SplFileInfo(
+            $input->getArgument('pathname'),
+            str_replace(sprintf('%s/', $rootDir), '', $input->getArgument('pathname'))
         );
 
-        $this->stats['removed']['file'] = $this->remove(
-            (new TrackRepository($this->app->container['db'])),
-            $searchCondition,
-            $force
+        if (file_exists($element->getPathname()) === false) {
+            throw new \Exception("Element {$target->getPathname()} does not exists!");
+        }
+
+        $target = new SplFileInfo(
+            $input->getArgument('targetPathname'),
+            str_replace(sprintf('%s/', $rootDir), '', $input->getArgument('targetPathname'))
         );
+
+        if ($target->isFile() === true && file_exists($target->getPathname()) === true) {
+    		throw new \Exception("Target {$target->getPathname()} already exists!");
+    	}
+
+        if (file_exists($target->getPath()) === false && mkdir($target->getPath(), 0777, true) === false) {
+			throw new \Exception("Can\'t create directory {$target->getPath()}.");
+		}
+
+    	if (rename($element->getPathname(), $target->getPathname()) === false) {
+    		throw new Exception("Can\'t move {$element->getPathname()} to {$target->getPathname()}.");
+    	}
 
         $this->app->log->info('Task finished', $this->stats);
 
-        unset($searchCondition, $input, $output);
-    }
-
-    /**
-     * Usuwa nieistniejące elementy z kolekcji
-     *
-     * @param AbstractObjectRepository $repository
-     * @param array $conditions
-     * @param bool $force
-     * @return int
-     */
-    private function remove(AbstractObjectRepository $repository, array $conditions, $force)
-    {
-        $removed = 0;
-
-        foreach ($repository->findBy($conditions) as $element) {
-            $pathname = sprintf('%s%s', $this->parameters['root_dir'], $element->pathname);
-
-            if ($force === true || file_exists($pathname) === false) {
-                $repository->remove($element);
-
-                $removed++;
-            }
-        }
-
-        unset($repository, $conditions);
-
-        return $removed;
+        unset($input, $output);
     }
 }
