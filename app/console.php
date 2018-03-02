@@ -2,6 +2,8 @@
 
 use Symfony\Component\Console;
 
+setlocale(LC_TIME, 'pl_PL.utf8');
+
 define('BASE_DIR', realpath(__DIR__ . '/..'));
 
 require_once BASE_DIR . '/vendor/autoload.php';
