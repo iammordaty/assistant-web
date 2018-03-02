@@ -1,6 +1,6 @@
 {% extends '@common/layout.twig' %}
 
-{% block title %}{{ directory.pathname|default('Przeglądaj') }}{% endblock %}
+{% block title %}{{ directory.pathname|trim(constant('DIRECTORY_SEPARATOR'))|default('Przeglądaj kolekcję') }}{% endblock %}
 
 {% block contentBlock %}
     <div class="directory-info">

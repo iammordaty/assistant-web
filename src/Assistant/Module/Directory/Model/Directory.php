@@ -39,5 +39,10 @@ class Directory extends AbstractModel
     /**
      * @var \MongoDate
      */
+    protected $modified_date;
+
+    /**
+     * @var \MongoDate
+     */
     protected $indexed_date;
 }
