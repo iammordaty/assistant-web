@@ -26,6 +26,7 @@ class DirProcessor extends Collection\Extension\Processor implements ProcessorIn
         $directory->parent = $this->slugifyPath(dirname($node->getRelativePathname()));
         $directory->pathname = $node->getRelativePathname();
         $directory->ignored = $node->isIgnored();
+        $directory->modified_date = new \MongoDate($node->getMTime());
         $directory->indexed_date = new \MongoDate();
 
         return $directory;
