@@ -20,7 +20,6 @@ $app->configureMode(
                     '/Albums',
                     '/Tools',
                     '/Sets',
-                    '/Other/- 2006',
                     '@eaDir',
                 ]
             ]
