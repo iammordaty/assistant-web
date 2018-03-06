@@ -12,6 +12,17 @@ $app->group('/directory', function () use ($app) {
         }
     )->name('directory.browse.recent');
 
+    // TODO: /browse/incoming/(:guid+)
+    $app->get(
+        '/browse/incoming(:pathname+)',
+        function ($pathnameParts = null) use ($app) {
+            $pathname = $pathnameParts ? implode(DIRECTORY_SEPARATOR, $pathnameParts) : null;
+
+            (new Directory\Controller\BrowseController($app))->incoming($pathname);
+        }
+    )->name('directory.browse.incoming');
+
+    // TODO: /browse/collection/(:guid+)
     $app->get(
         '/(:guid+)',
         function ($guidParts = null) use ($app) {
