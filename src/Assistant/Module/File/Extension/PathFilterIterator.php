@@ -26,11 +26,11 @@ class PathFilterIterator extends \RecursiveFilterIterator
     /**
      * Konstruktor
      *
-     * @param \RecursiveIterator $iterator
+     * @param \Iterator $iterator
      * @param string $rootPath
      * @param array $excludedPaths
      */
-    public function __construct(\RecursiveIterator $iterator, $rootPath, array $excludedPaths)
+    public function __construct(\Iterator $iterator, $rootPath, array $excludedPaths)
     {
         parent::__construct($iterator);
 
