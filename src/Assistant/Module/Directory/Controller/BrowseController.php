@@ -47,7 +47,7 @@ class BrowseController extends Common\Controller\AbstractController
         $recent = [];
 
         $tracks = (new Track\Repository\TrackRepository($this->app->container['db']))
-            ->findBy([ ], [ ], [ 'limit' => 500, 'sort' => [ 'modified_date' => -1 ] ]);
+            ->findBy([ ], [ ], [ 'limit' => 1000, 'sort' => [ 'modified_date' => -1 ] ]);
 
         $repository = new Directory\Repository\DirectoryRepository($this->app->container['db']);
 
