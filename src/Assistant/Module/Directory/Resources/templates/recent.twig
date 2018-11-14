@@ -33,12 +33,15 @@
                             <th>
                                 <a href="">BPM <i class="fa fa-caret-{% if sort.bpm == -1 %}down{% else %}up{% endif %} pull-right"></i></a>
                             </th>
+                            <th>
+                                <a href="">Dodany <i class="fa fa-caret-{% if sort.indexed == -1 %}down{% else %}up{% endif %} pull-right"></i></a>
+                            </th>
                         </tr>
                     </thead>
                     <tbody>
                         {% for track in month.tracks %}
                             <tr>
-                                <td class="col-xs-6">
+                                <td class="col-xs-5">
                                     <span class="ellipsis track-name">
                                         {% set name = track.artist ~ ' - ' ~ track.title %}
                                         <a href="{{ urlFor('track.track.index', { guid: track.guid } )}}" title="{{ name }}">{{ name }}</a>
@@ -58,6 +61,9 @@
                                 </td>
                                 <td class="col-xs-1">
                                     <a class="undecorated" href="{{ urlFor('search.advanced.index') }}?bpm={{ track.bpm }}">{{ track.bpm }}</a>
+                                </td>
+                                <td class="col-xs-1">
+                                    {{ track.indexed_date.toDateTime|formatDateAsDaysAgo }}
                                 </td>
                             </tr>
                         {% endfor %}
