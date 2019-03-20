@@ -1,6 +1,6 @@
 <?php
 
-namespace Assistant\Module\Collection\Extension\Processor\Exception;
+namespace Assistant\Module\Collection\Extension\Validator\Exception;
 
 /**
  * Wyjątek rzucany w sytuacji, gdy utwór nie zawiera metadanych

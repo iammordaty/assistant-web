@@ -1,20 +1,20 @@
 <?php
 
-namespace Assistant\Module\Collection\Extension\Processor;
+namespace Assistant\Module\Collection\Extension\Reader;
 
 use Assistant\Module\File;
 
 /**
  * Fasada dla procesorów przetwarzających elementy znajdujące się w kolekcji
 */
-class Processor implements ProcessorInterface
+class ReaderFacade
 {
     /**
      * Lista obsługiwanych procesorów danych
      *
      * @var array
      */
-    private $processorNames = [
+    private $readerNames = [
         'file',
         'dir',
     ];
@@ -23,11 +23,9 @@ class Processor implements ProcessorInterface
      * Lista procesorów danych
      *
      * @see setup()
-     * @see $processorNames
-     *
-     * @var \Assistant\Module\Collection\Extension\Processor[]
+     * @see $readerNames
      */
-    private $processors = [ ];
+    private $readers = [ ];
 
     /**
      * @var array
@@ -51,7 +49,7 @@ class Processor implements ProcessorInterface
      */
     public function process(File\Extension\SplFileInfo $node)
     {
-        return $this->processors[$node->getType()]->process($node);
+        return $this->readers[$node->getType()]->process($node);
     }
 
     /**
@@ -59,12 +57,12 @@ class Processor implements ProcessorInterface
      */
     protected function setup()
     {
-        foreach ($this->processorNames as $processorName) {
-            $className = sprintf('%s\%sProcessor', __NAMESPACE__, ucfirst($processorName));
+        foreach ($this->readerNames as $readerName) {
+            $className = sprintf('%s\%sReader', __NAMESPACE__, ucfirst($readerName));
 
-            $this->processors[$processorName] = new $className($this->parameters);
+            $this->readers[$readerName] = new $className($this->parameters);
 
-            unset($className, $processorName);
+            unset($className, $readerName);
         }
     }
 }

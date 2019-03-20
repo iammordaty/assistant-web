@@ -2,42 +2,45 @@
 
 namespace Assistant\Module\Collection\Extension\Writer;
 
-use Assistant\Module\Collection;
-use Assistant\Module\Directory;
+use Assistant\Module\Directory\Model\Directory;
+use Assistant\Module\Directory\Repository\DirectoryRepository;
+use MongoDB;
 
 /**
  * Writer dla elementów będących katalogami
  */
-class DirectoryWriter extends Collection\Extension\Writer implements WriterInterface
+class DirectoryWriter extends AbstractWriter
 {
     /**
      * {@inheritDoc}
      */
-    public function __construct(\MongoDB $db)
+    public function __construct(MongoDB $db)
     {
         parent::__construct($db);
 
-        $this->repository = new Directory\Repository\DirectoryRepository($db);
+        $this->repository = new DirectoryRepository($db);
     }
 
     /**
      * Zapisuje katalog zawierający utwory muzyczne w bazie danych
      *
-     * @param \Assistant\Module\Directory\Model\Directory $directory
-     * @return \Assistant\Module\Directory\Model\Directory
+     * @param Directory $directory
+     * @return Directory
      */
     public function save($directory)
     {
-        $indexedDirectory = $this->repository->findOneBy([ 'pathname' => $directory->pathname ], [ 'metadata_md5' ]);
-
-        if ($indexedDirectory !== null) {
-            throw new Exception\DuplicatedElementException(
-                sprintf('Directory "%s" is already in database.', $directory->guid)
-            );
-        }
-
         $this->repository->insert($directory);
 
         return $directory;
+    }
+
+    /**
+     * Usuwa elementy znajdujące się w kolekcji
+     *
+     * @return int
+     */
+    public function clean()
+    {
+        return $this->repository->removeBy();
     }
 }
