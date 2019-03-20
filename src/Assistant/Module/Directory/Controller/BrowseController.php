@@ -90,7 +90,7 @@ class BrowseController extends Common\Controller\AbstractController
         $tracks = [];
         $directories = [];
 
-        $reader = new Collection\Extension\Processor\ReaderFacade($this->app->container->parameters);
+        $reader = new Collection\Extension\Reader\ReaderFacade($this->app->container->parameters);
 
         // TODO: Do zastanowienia się: po refaktoringu elementy powinny mieć dostęp do obiektów SplFileInfo
         foreach ($this->getIterator($absolutePathname) as $node) {
