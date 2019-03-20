@@ -26,7 +26,7 @@ class Id3v2 extends BaseMetadata
     public function getMetadata()
     {
         if (isset($this->rawInfo['tags']['id3v2']) === false) {
-            return null;
+            return [];
         }
 
         $metadata = [ ];

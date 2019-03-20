@@ -2,13 +2,17 @@
 
 namespace Assistant\Module\Collection\Extension\Writer;
 
+use Assistant\Module\Directory\Model\Directory;
+use Assistant\Module\Track\Model\Track;
+use MongoDB;
+
 /**
  * Fasada dla writerów zajmujących się zapisywaniem elementów w kolekcji
  */
-class Writer implements WriterInterface
+class WriterFacade
 {
     /**
-     * @var \MongoDB
+     * @var MongoDB
      */
     private $db;
 
@@ -27,17 +31,15 @@ class Writer implements WriterInterface
      *
      * @see setup()
      * @see $writerNames
-     *
-     * @var \Assistant\Module\Collection\Extension\Writer[]
      */
     private $writers = [ ];
 
     /**
      * Konstruktor
      *
-     * @param \MongoDB $db
+     * @param MongoDB $db
      */
-    public function __construct(\MongoDB $db)
+    public function __construct(MongoDB $db)
     {
         $this->db = $db;
 
@@ -47,8 +49,8 @@ class Writer implements WriterInterface
     /**
      * Zapisuje element kolekcji
      *
-     * @param \Assistant\Module\Track\Model\Track|\Assistant\Module\Directory\Model\Directory $item
-     * @return \Assistant\Module\Track\Model\Track|\Assistant\Module\Directory\Model\Directory
+     * @param Track|Directory $item
+     * @return Track|Directory
      */
     public function save($item)
     {
@@ -82,7 +84,7 @@ class Writer implements WriterInterface
     /**
      * Zwraca typ podanego elementu kolekcji
      *
-     * @param \Assistant\Module\Track\Model\Track|\Assistant\Module\Directory\Model\Directory $item
+     * @param Track|Directory $item
      * @return string
      */
     private function getElementType($item)

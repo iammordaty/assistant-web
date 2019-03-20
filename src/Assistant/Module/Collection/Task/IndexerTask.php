@@ -2,14 +2,19 @@
 
 namespace Assistant\Module\Collection\Task;
 
+use Assistant\Module\Collection\Extension\Reader\ReaderFacade;
+use Assistant\Module\Collection\Extension\Validator\Exception\DuplicatedElementException;
+use Assistant\Module\Collection\Extension\Validator\Exception\EmptyMetadataException;
+use Assistant\Module\Collection\Extension\Validator\ValidatorFacade;
+use Assistant\Module\Collection\Extension\Writer\WriterFacade;
+use Assistant\Module\Common\Extension\Backend\Exception\Exception as BackendException;
 use Assistant\Module\Common\Task\AbstractTask;
-use Assistant\Module\File\Extension\RecursiveDirectoryIterator;
-use Assistant\Module\File\Extension\PathFilterIterator;
 use Assistant\Module\File\Extension\IgnoredPathIterator;
+use Assistant\Module\File\Extension\PathFilterIterator;
+use Assistant\Module\File\Extension\RecursiveDirectoryIterator;
 use Assistant\Module\File\Extension\SplFileInfo;
-use Assistant\Module\Collection;
-use Assistant\Module\Common;
-
+use Exception;
+use RecursiveArrayIterator;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
@@ -71,37 +76,39 @@ class IndexerTask extends AbstractTask
     {
         $this->app->log->info('Task executed', array_merge($input->getArguments(), $input->getOptions()));
 
-        $processor = new Collection\Extension\Processor\Processor($this->app->container->parameters);
-        $writer = new Collection\Extension\Writer\Writer($this->app->container['db']);
+        $reader = new ReaderFacade($this->app->container->parameters);
+        $validator = new ValidatorFacade($this->app->container['db'], $this->app->container->parameters);
+        $writer = new WriterFacade($this->app->container['db']);
 
         foreach ($this->getIterator($input->getArgument('pathname')) as $node) {
             $this->app->log->info('Processing node', [ 'pathname' => $node->getPathname() ]);
 
             try {
-                $element = $processor->process($node);
+                $element = $reader->process($node);
+                $validator->validate($element);
                 $writer->save($element);
 
                 $this->stats['added'][$node->getType()]++;
 
                 $this->app->log->info('Node processing completed successfully');
-            } catch (Collection\Extension\Processor\Exception\EmptyMetadataException $e) {
+            } catch (EmptyMetadataException $e) {
                 $this->stats['empty_metadata']++;
 
                 $this->app->log->warn('Track does not contains metadata');
-            } catch (Collection\Extension\Writer\Exception\DuplicatedElementException $e) {
+            } catch (DuplicatedElementException $e) {
                 if ($node->isDot() === false) {
                     $this->stats['duplicated']++;
                 }
 
                 $this->app->log->debug($e->getMessage());
-            } catch (Common\Extension\Backend\Exception\Exception $e) {
+            } catch (BackendException $e) {
                 $this->stats['error']++;
 
                 $this->app->log->error(
                     $e->getMessage(),
                     [ 'element' => isset($element) ? $element->toArray() : null ]
                 );
-            } catch (\Exception $e) {
+            } catch (Exception $e) {
                 $this->stats['error']++;
 
                 $this->app->log->error($e->getMessage());
@@ -112,7 +119,7 @@ class IndexerTask extends AbstractTask
 
         $this->app->log->info('Task finished', $this->stats);
 
-        unset($input, $output, $processor, $writer);
+        unset($input, $output, $reader, $writer);
     }
 
     /**
@@ -124,7 +131,7 @@ class IndexerTask extends AbstractTask
         if (is_file($pathname)) {
             $relativePathname = str_replace(sprintf('%s/', $this->parameters['root_dir']), '', $pathname);
 
-            $iterator = new \RecursiveArrayIterator(
+            $iterator = new RecursiveArrayIterator(
                 [ new SplFileInfo($pathname, $relativePathname) ]
             );
         } else {

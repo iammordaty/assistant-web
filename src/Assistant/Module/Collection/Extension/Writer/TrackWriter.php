@@ -2,46 +2,58 @@
 
 namespace Assistant\Module\Collection\Extension\Writer;
 
-use Assistant\Module\Collection;
-use Assistant\Module\Track;
+use Assistant\Module\Common\Extension\Backend\Client as BackendClient;
+use Assistant\Module\Track\Model\Track;
+use Assistant\Module\Track\Repository\TrackRepository;
+use MongoDB;
+use MongoRegex;
 
 /**
  * Writer dla elementów będących utworami muzycznymi
  */
-class TrackWriter extends Collection\Extension\Writer implements WriterInterface
+class TrackWriter extends AbstractWriter
 {
+    /**
+     * @var TrackRepository
+     */
+    private $repository;
+
+    /**
+     * @var BackendClient
+     */
+    private $backendClient;
+
     /**
      * {@inheritDoc}
      */
-    public function __construct(\MongoDB $db)
+    public function __construct(MongoDB $db)
     {
         parent::__construct($db);
 
-        $this->repository = new Track\Repository\TrackRepository($db);
+        $this->repository = new TrackRepository($db);
+        $this->backendClient = new BackendClient();
     }
 
     /**
      * Zapisuje utwór muzyczny w bazie danych
      *
-     * @param Track\Model\Track $track
-     * @return Track\Model\Track
+     * @param Track $track
+     * @return Track
      */
     public function save($track)
     {
-        /* @var $indexedTrack Track\Model\Track */
+        /* @var $indexedTrack Track */
         $indexedTrack = $this->repository->findOneBy([ 'pathname' => $track->pathname ], [ 'metadata_md5' ]);
 
         if ($indexedTrack === null) {
-            $this->assumeValidGuid($track);
+            $this->assumeUniqueGuid($track);
 
-            $this->repository->insert($track);
-        } else {
-            if ($track->metadata_md5 === $indexedTrack->metadata_md5) {
-                throw new Exception\DuplicatedElementException(
-                    sprintf('Track "%s" is already in database.', $track->guid)
-                );
+            $result = $this->repository->insert($track);
+
+            if ($result === true) {
+                $this->backendClient->addToSimilarCollection($track);
             }
-
+        } else {
             $track->_id = $indexedTrack->_id;
             $track->indexed_date = $indexedTrack->indexed_date;
 
@@ -54,13 +66,23 @@ class TrackWriter extends Collection\Extension\Writer implements WriterInterface
     }
 
     /**
+     * Usuwa elementy znajdujące się w kolekcji
+     *
+     * @return int
+     */
+    public function clean()
+    {
+        return $this->repository->removeBy();
+    }
+
+    /**
      * Zapewnia, że guid podanego utworu jest unikalny
      *
-     * @param Track\Model\Track $track
+     * @param Track $track
      */
-    private function assumeValidGuid(Track\Model\Track &$track)
+    private function assumeUniqueGuid(Track &$track)
     {
-        $count = $this->repository->count([ 'guid' => new \MongoRegex(sprintf('/^%s(?:-\d+)?$/i', $track->guid)) ]);
+        $count = $this->repository->count([ 'guid' => new MongoRegex(sprintf('/^%s(?:-\d+)?$/i', $track->guid)) ]);
 
         if ($count !== 0) {
             $track->guid .= sprintf('-%d', $count + 1);

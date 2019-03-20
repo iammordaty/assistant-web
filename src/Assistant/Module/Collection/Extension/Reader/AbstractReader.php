@@ -1,13 +1,14 @@
 <?php
 
-namespace Assistant\Module\Collection\Extension;
+namespace Assistant\Module\Collection\Extension\Reader;
 
+use Assistant\Module\File\Extension\SplFileInfo;
 use Cocur\Slugify\Slugify;
 
 /**
  * Klasa, której zadaniem jest przetwarzanie katalogów znajdujących się w kolekcji
  */
-abstract class Processor
+abstract class AbstractReader
 {
     /**
      * @var array
@@ -34,6 +35,13 @@ abstract class Processor
 
         $this->slugify = new Slugify();
     }
+
+    /**
+     * Przetwarza katalog znajdujący się w kolekcji
+     *
+     * @param SplFileInfo $node
+     */
+    abstract public function process(SplFileInfo $node);
 
     /**
      * Zwraca ścieżkę do katalogu, w której poszczególne poziomy są slugiem
