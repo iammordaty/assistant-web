@@ -12,9 +12,9 @@ My web-based music collection assistant
 ## plans
 - find inconsistencies / mismatches in track metadata ("Watermät" vs "Watermat", "The Disciples" vs. "Disciples", and so on)
 - i18n
-- custom tags to tracks info
+- custom tags in the track view
 - integrate Indexer with [Essentia](https://github.com/MTG/essentia) (which is "library for audio and music analysis, description and synthesis")
-- opt out of a backend written in go
+- opt-out of a backend written in go
 - upgrade to PHP7
 - ...?
 
