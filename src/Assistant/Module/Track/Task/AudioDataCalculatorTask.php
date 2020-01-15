@@ -97,7 +97,7 @@ class AudioDataCalculatorTask extends AbstractTask
                 continue;
             }
 
-            $this->app->log->info('Processing track', [ 'pathname' => $node->getPathname() ]);
+            $this->app->log->debug('Processing track', [ 'pathname' => $node->getPathname() ]);
 
             $this->stats['processed']['file']++;
 
@@ -109,7 +109,7 @@ class AudioDataCalculatorTask extends AbstractTask
                 if ($id3->getTrackLength() / 60 > 20) {
                     $this->stats['skipped']['too_long']++;
 
-                    $this->app->log->info(
+                    $this->app->log->debug(
                         'Track is too long, skipping...',
                         [ 'length' => $id3->getTrackLength() / 60 ]
                     );
@@ -125,7 +125,7 @@ class AudioDataCalculatorTask extends AbstractTask
                 if ($skipCalculated === true && $hasInitialKey === true && $hasBpm === true) {
                     $this->stats['skipped']['already_calculated']++;
 
-                    $this->app->log->info(
+                    $this->app->log->debug(
                         'Track is already calculated (bpm and initial_key exists), skipping',
                         [ 'bpm' => $metadata['bpm'], 'initial_key' => $metadata['initial_key'] ]
                     );
@@ -140,7 +140,7 @@ class AudioDataCalculatorTask extends AbstractTask
                 if ($this->isTrackHasSameData($metadata, $audioData) === true) {
                     $this->stats['skipped']['same_data']++;
 
-                    $this->app->log->info('Track has the same audio data, update is not necessary', $audioData);
+                    $this->app->log->debug('Track has the same audio data, update is not necessary', $audioData);
 
                     unset($node, $metadata, $audioData);
 
@@ -154,7 +154,7 @@ class AudioDataCalculatorTask extends AbstractTask
                     $this->stats['mismatch']['bpm']++;
                 }
 
-                $this->app->log->info(
+                $this->app->log->debug(
                     sprintf('%s track audio data', ($writeData === true) ? 'Updating' : 'Calculated'),
                     [
                         'audioData' => $audioData,
@@ -175,7 +175,7 @@ class AudioDataCalculatorTask extends AbstractTask
                     $this->stats['updated']++;
                 }
 
-                $this->app->log->info('Track processing completed successfully');
+                $this->app->log->debug('Track processing completed successfully');
             } catch (AudioDataCalculatorException $e) {
                 $this->stats['error']['backend']++;
 

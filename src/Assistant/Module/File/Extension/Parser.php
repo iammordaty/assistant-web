@@ -61,8 +61,11 @@ class Parser
         $result = [];
 
         foreach ($this->parserNames as $parserName) {
-            $destination  = $this->sourceFieldToDestinationFieldMap[$parserName];
-            $result[$destination] = $this->parsers[$parserName]->parse($metadata[$parserName]);
+            $destination = $this->sourceFieldToDestinationFieldMap[$parserName];
+
+            if (isset($metadata[$parserName])) {
+                $result[$destination] = $this->parsers[$parserName]->parse($metadata[$parserName]);
+            }
         }
 
         return $result;

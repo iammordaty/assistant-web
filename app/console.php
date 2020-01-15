@@ -32,6 +32,7 @@ $console->addCommands(
         new \Assistant\Module\Collection\Task\MoverTask($app),
         new \Assistant\Module\Collection\Task\ReindexerTask($app),
         new \Assistant\Module\Track\Task\AudioDataCalculatorTask($app),
+        new \Assistant\Module\Track\Task\CleanerTask($app),
     ]
 );
 

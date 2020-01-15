@@ -175,3 +175,26 @@ label.radio-inline, label.checkbox-inline {
     padding-left: 10px;
     padding: 0 10px 10px;
 }
+
+pre.raw {
+    border: 0;
+    background-color: transparent;
+    padding-left: 0;
+    padding-bottom: 0;
+}
+
+.btn-primary-outline {
+    background-color: transparent;
+    border-color: #ccc;
+    border: 0;
+    padding: 0;
+}
+
+.info-value .popover, table .popover {
+    max-width: none;
+}
+
+.info-value .popover {
+    width: auto;
+    min-width: 400px;
+}

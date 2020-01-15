@@ -3,13 +3,7 @@
 namespace Assistant\Module\Common\Controller;
 
 use Assistant\Module\Common;
-use Assistant\Module\Directory;
-use Assistant\Module\Collection;
-use Assistant\Module\Track;
-use Assistant\Module\File\Extension\RecursiveDirectoryIterator;
-use Assistant\Module\File\Extension\PathFilterIterator;
-use Assistant\Module\File\Extension\IgnoredPathIterator;
-use Assistant\Module\File\Extension\SplFileInfo;
+use Cocur\BackgroundProcess\BackgroundProcess;
 
 class TaskController extends Common\Controller\AbstractController
 {
@@ -22,8 +16,20 @@ class TaskController extends Common\Controller\AbstractController
         // TODO: "/data" configa
         // TODO: "/collection" configa
 
-        (new \Cocur\BackgroundProcess\BackgroundProcess(
+        (new BackgroundProcess(
             sprintf('php /data/app/console.php track:calculate-audio-data -w "/collection/%s"', ltrim($pathname, '/'))
+        ))->run();
+    }
+
+    public function clean()
+    {
+        $pathname = $this->app->request()->post('pathname');
+
+        // TODO: "/data" configa
+        // TODO: "/collection" configa
+
+        (new BackgroundProcess(
+            sprintf('php /data/app/console.php track:clean -r "/collection/%s"', ltrim($pathname, '/'))
         ))->run();
     }
 
@@ -41,7 +47,7 @@ class TaskController extends Common\Controller\AbstractController
 
         // TODO: "/data" z configa
 
-        $r = (new \Cocur\BackgroundProcess\BackgroundProcess(
+        $r = (new BackgroundProcess(
             $cmdString = sprintf(
                 'php /data/app/console.php collection:move %s %s',
                 escapeshellarg($absolutePathname),

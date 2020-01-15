@@ -95,4 +95,12 @@ class Track extends AbstractModel
      * @var \MongoDate
      */
     protected $indexed_date;
+
+    /**
+     * @var string[]
+     */
+    protected $tags = [
+        'techno',
+        'śmieszne',
+    ];
 }
