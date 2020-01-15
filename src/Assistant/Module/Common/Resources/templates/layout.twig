@@ -30,6 +30,7 @@
                         <li {% if menu == "search" %}class="active"{% endif %}><a href="{{ urlFor('search.advanced.index') }}">Wyszukaj</a></li>
                         <li {% if menu == "statistics" %}class="active"{% endif %}><a href="#">Statystyki</a></li>
                         <li {% if menu == "mix" %}class="active"{% endif %}><a href="/mix">Uporządkuj miks</a></li>
+                        <li {% if menu == "log" %}class="active"{% endif %}><a href="{{ urlFor('common.log.index') }}">Logi</a></li>
                     </ul>
                     <div class="navbar-right">
                         <form method="GET" action="{{ urlFor('search.simple.index') }}" class="navbar-form" role="search">

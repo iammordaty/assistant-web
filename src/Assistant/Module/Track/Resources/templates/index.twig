@@ -79,7 +79,7 @@
                     <span class="col-xs-4 col-sm-3 col-md-2 text-right"><strong>Położenie</strong></span>
                     <span class="col-xs-8 col-sm-9 col-md-10">
                         <ol class="breadcrumb">
-                            <li><a href="{{ urlFor('directory.browse.index') }}" class="undecorated"><i class="fa fa-home fa-lg"></i></a></li>
+                           <li><a href="{{ urlFor('directory.browse.index') }}" class="undecorated"><i class="fa fa-home fa-lg"></i></a></li>
                            {% for path in pathBreadcrumbs %}
                                 <li><a href="{{ urlFor('directory.browse.index', { guid: path.guid } )}}" class="undecorated">{{ path.path }}</a></li>
                            {% endfor %}
@@ -101,7 +101,17 @@
                                         <span class="ellipsis"><strong>{{ data.title }}</strong></span>
                                     </span>
                                     <span class="col-xs-8 col-sm-4 info-value">
-                                        <a href="{{ urlFor('search.advanced.index') }}?initial_key={{ data.value }}" class="undecorated">
+                                        <a
+                                            href="{{ urlFor('search.advanced.index') }}?initial_key={{ data.value }}"
+                                            class="undecorated"
+                                            {% if data.description %}
+                                            data-toggle="popover"
+                                            {% endif %}
+                                            data-placement="bottom"
+                                            data-trigger="hover"
+                                            data-html="true"
+                                            data-content="{{ data.description }}"
+                                        >
                                            {{ data.value }}
                                         </a>
                                     </span>

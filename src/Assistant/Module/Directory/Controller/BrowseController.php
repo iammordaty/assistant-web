@@ -9,7 +9,6 @@ use Assistant\Module\Track;
 use Assistant\Module\File\Extension\RecursiveDirectoryIterator;
 use Assistant\Module\File\Extension\PathFilterIterator;
 use Assistant\Module\File\Extension\IgnoredPathIterator;
-use Assistant\Module\File\Extension\SplFileInfo;
 
 // TODO: Uprościć przeglądarkę: ścieżki i katalogi w jednej tablicy
 class BrowseController extends Common\Controller\AbstractController
@@ -79,7 +78,8 @@ class BrowseController extends Common\Controller\AbstractController
         );
     }
 
-    public function incoming($pathname) {
+    public function incoming($pathname)
+    {
         $absolutePathname = sprintf(
             '%s%s',
             $this->app->container->parameters['collection']['root_dir'],
@@ -130,12 +130,20 @@ class BrowseController extends Common\Controller\AbstractController
             'tracks' => $tracks,
         ];
 
+        $pathBreadcrumbs = array_map(function ($pathname) {
+            return [
+                'pathname' => DIRECTORY_SEPARATOR . $pathname,
+                'displayName' => $pathname,
+            ];
+        }, explode(DIRECTORY_SEPARATOR, ltrim($pathname, DIRECTORY_SEPARATOR)));
+
         return $this->app->render(
             '@directory/incoming.twig',
             [
                 'menu' => 'browse',
-                'directory' => $absolutePathname,
-                'pathBreadcrumbs' => explode(DIRECTORY_SEPARATOR, ltrim($absolutePathname, DIRECTORY_SEPARATOR)),
+                'absolutePathname' => $absolutePathname,
+                'pathname' => $pathname,
+                'pathBreadcrumbs' => $pathBreadcrumbs,
                 'childrens' => $childrens,
             ]
         );

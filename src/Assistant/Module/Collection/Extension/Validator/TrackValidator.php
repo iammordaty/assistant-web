@@ -69,7 +69,7 @@ class TrackValidator extends AbstractValidator
             ->readId3v2Metadata();
 
         if (isset($metadata['artist']) === false || isset($metadata['title']) === false) {
-            throw new EmptyMetadataException(sprintf('Track %s does\'t contains metadata.', $node->getBasename()));
+            throw new EmptyMetadataException(sprintf('Track %s does\'t contains metadata.', $file->getBasename()));
         }
 
         // TODO: tutaj, w przyszości, powinna zawarta być także logika odpowiedzialna za wyszukiwanie

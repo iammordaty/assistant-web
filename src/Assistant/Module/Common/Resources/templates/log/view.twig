@@ -1,0 +1,33 @@
+<table class="table table-hover" data-element="log-viewer" data-log="{{ log }}" data-mtime="{{ logMtime }}" data-maxlines="{{ maxLines }}">
+    <tbody>
+        {% for line in logContent %}
+            <tr {% if line.level == 'ERROR' %}class="danger"{% elseif line.level == 'INFO' %}class="info"{% endif %}>
+                <td title="{{ line.raw }}" class="col-xs-2">{{ line.date }}</td>
+                <td
+                    class="col-xs-7"
+                    {% if line.message|length > 200 %}
+                        title="{{ line.message }}"
+                    {% endif %}
+                >
+                    {{ line.message|truncateText(200) }}
+                    {% if line.pathname %}"<span title="{{ line.pathname.full }}">{{ line.pathname.short }}"</span>{% endif %}
+                </td>
+                <td class="col-xs-2">{{ line.task }}</td>
+                <td class="col-xs-1 text-right">
+                    <button
+                        type="button"
+                        class="btn btn-primary-outline {% if not line.context %}disabled{% endif %}"
+                        {% if line.context %}
+                        data-toggle="popover"
+                        {% endif %}
+                        data-placement="bottom"
+                        data-trigger="hover"
+                        title="Kontekst"
+                        data-html="true"
+                        data-content="<pre class='raw'>{{ line.context }}</pre>"
+                    ><i class="fa fa-eye{% if not line.context %}-slash{% endif %}"></i></button>
+                </td>
+            </tr>
+        {% endfor %}
+    </tbody>
+</table>

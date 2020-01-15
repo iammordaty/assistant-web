@@ -4,8 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#composer-lock-the-lock-file",
         "This file is @generated automatically"
     ],
-    "hash": "ebf0d47fa5d539bf24f3a3273c146856",
-    "content-hash": "487747d4bbdc9542f095df05b802982e",
+    "content-hash": "eda671ad5bd10793a68b0afde54cdec0",
     "packages": [
         {
             "name": "cocur/background-process",
@@ -40,7 +39,7 @@
                 "process",
                 "unix"
             ],
-            "time": "2015-10-24 17:38:37"
+            "time": "2015-10-24T17:38:37+00:00"
         },
         {
             "name": "cocur/slugify",
@@ -103,7 +102,7 @@
                 "slug",
                 "slugify"
             ],
-            "time": "2015-09-29 18:26:32"
+            "time": "2015-09-29T18:26:32+00:00"
         },
         {
             "name": "james-heinrich/getid3",
@@ -111,35 +110,62 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/JamesHeinrich/getID3.git",
-                "reference": "8ce04db961150be6b37953b4b4b7fd92d59d67bd"
+                "reference": "ce6d09951b53e2112b7d56f6fcb1e74f92d6e775"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/JamesHeinrich/getID3/zipball/a3ffa811f18f3a906ff39bd5f20c39b3f2ee6a1b",
-                "reference": "8ce04db961150be6b37953b4b4b7fd92d59d67bd",
+                "url": "https://api.github.com/repos/JamesHeinrich/getID3/zipball/ce6d09951b53e2112b7d56f6fcb1e74f92d6e775",
+                "reference": "ce6d09951b53e2112b7d56f6fcb1e74f92d6e775",
                 "shasum": ""
             },
             "require": {
                 "php": ">=5.3.0"
             },
+            "require-dev": {
+                "jakub-onderka/php-parallel-lint": "^0.9 || ^1.0"
+            },
+            "suggest": {
+                "ext-SimpleXML": "SimpleXML extension is required to analyze RIFF/WAV/BWF audio files (also requires `ext-libxml`).",
+                "ext-com_dotnet": "COM extension is required when loading files larger than 2GB on Windows.",
+                "ext-ctype": "ctype extension is required when loading files larger than 2GB on 32-bit PHP (also on 64-bit PHP on Windows) or executing `getid3_lib::CopyTagsToComments`.",
+                "ext-dba": "DBA extension is required to use the DBA database as a cache storage.",
+                "ext-exif": "EXIF extension is required for graphic modules.",
+                "ext-iconv": "iconv extension is required to work with different character sets (when `ext-mbstring` is not available).",
+                "ext-json": "JSON extension is required to analyze Apple Quicktime videos.",
+                "ext-libxml": "libxml extension is required to analyze RIFF/WAV/BWF audio files.",
+                "ext-mbstring": "mbstring extension is required to work with different character sets.",
+                "ext-mysql": "MySQL extension is required to use the MySQL database as a cache storage (deprecated in PHP 5.5, removed in PHP >= 7.0, use `ext-mysqli` instead).",
+                "ext-mysqli": "MySQLi extension is required to use the MySQL database as a cache storage.",
+                "ext-rar": "RAR extension is required for RAR archive module.",
+                "ext-sqlite3": "SQLite3 extension is required to use the SQLite3 database as a cache storage.",
+                "ext-xml": "XML extension is required for graphic modules to analyze the XML metadata.",
+                "ext-zlib": "Zlib extension is required for archive modules and compressed metadata."
+            },
             "type": "library",
+            "extra": {
+                "branch-alias": {
+                    "dev-master": "1.9.x-dev"
+                }
+            },
             "autoload": {
                 "classmap": [
-                    "getid3/getid3.php"
+                    "getid3/"
                 ]
             },
             "notification-url": "https://packagist.org/downloads/",
             "license": [
-                "GPL"
+                "GPL-1.0-or-later",
+                "LGPL-3.0-only",
+                "MPL-2.0"
             ],
             "description": "PHP script that extracts useful information from popular multimedia file formats",
-            "homepage": "http://www.getid3.org/",
+            "homepage": "https://www.getid3.org/",
             "keywords": [
                 "codecs",
                 "php",
                 "tags"
             ],
-            "time": "2015-11-09 14:52:36"
+            "time": "2019-03-14T22:22:10+00:00"
         },
         {
             "name": "monolog/monolog",
@@ -216,7 +242,7 @@
                 "logging",
                 "psr-3"
             ],
-            "time": "2015-10-14 12:51:02"
+            "time": "2015-10-14T12:51:02+00:00"
         },
         {
             "name": "pagerfanta/pagerfanta",
@@ -283,7 +309,7 @@
                 "paginator",
                 "paging"
             ],
-            "time": "2014-10-06 10:57:25"
+            "time": "2014-10-06T10:57:25+00:00"
         },
         {
             "name": "php-curl-class/php-curl-class",
@@ -339,7 +365,91 @@
                 "web service",
                 "xml"
             ],
-            "time": "2015-10-31 18:25:18"
+            "time": "2015-10-31T18:25:18+00:00"
+        },
+        {
+            "name": "php-extended/php-system",
+            "version": "1.4.0",
+            "source": {
+                "type": "git",
+                "url": "https://gitlab.com/php-extended/php-system.git",
+                "reference": "9e6b3c2009ef56dc123efc43900e40cdf217ace0"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://gitlab.com/api/v4/projects/php-extended%2Fphp-system/repository/archive.zip?sha=9e6b3c2009ef56dc123efc43900e40cdf217ace0",
+                "reference": "9e6b3c2009ef56dc123efc43900e40cdf217ace0",
+                "shasum": ""
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "PhpExtended\\System\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Anastaszor",
+                    "role": "Developer"
+                }
+            ],
+            "description": "A generic way to find informations about the running system",
+            "homepage": "https://gitlab.com/php-extended/php-system",
+            "keywords": [
+                "operating system",
+                "os",
+                "php",
+                "system"
+            ],
+            "time": "2018-06-07T06:03:27+00:00"
+        },
+        {
+            "name": "php-extended/php-tail",
+            "version": "2.2.0",
+            "source": {
+                "type": "git",
+                "url": "https://gitlab.com/php-extended/php-tail.git",
+                "reference": "19fbd3a79ccc071954f28296b2c44754335304a0"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://gitlab.com/api/v4/projects/php-extended%2Fphp-tail/repository/archive.zip?sha=19fbd3a79ccc071954f28296b2c44754335304a0",
+                "reference": "19fbd3a79ccc071954f28296b2c44754335304a0",
+                "shasum": ""
+            },
+            "require": {
+                "php-extended/php-system": "^1.2"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "PhpExtended\\Tail\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Anastaszor",
+                    "role": "Developer"
+                }
+            ],
+            "description": "A smart way to tail files depending of the environment",
+            "homepage": "https://gitlab.com/php-extended/php-tail",
+            "keywords": [
+                "cheat",
+                "mighty",
+                "naive",
+                "php",
+                "tail"
+            ],
+            "time": "2018-06-07T06:04:58+00:00"
         },
         {
             "name": "psr/log",
@@ -377,7 +487,7 @@
                 "psr",
                 "psr-3"
             ],
-            "time": "2012-12-21 11:40:51"
+            "time": "2012-12-21T11:40:51+00:00"
         },
         {
             "name": "slim/slim",
@@ -423,7 +533,7 @@
                 "rest",
                 "router"
             ],
-            "time": "2015-03-08 18:41:17"
+            "time": "2015-03-08T18:41:17+00:00"
         },
         {
             "name": "slim/views",
@@ -476,7 +586,7 @@
                 "slimphp",
                 "templating"
             ],
-            "time": "2014-12-09 23:48:51"
+            "time": "2014-12-09T23:48:51+00:00"
         },
         {
             "name": "symfony/console",
@@ -532,7 +642,7 @@
             ],
             "description": "Symfony Console Component",
             "homepage": "https://symfony.com",
-            "time": "2015-10-20 14:38:46"
+            "time": "2015-10-20T14:38:46+00:00"
         },
         {
             "name": "twig/twig",
@@ -593,7 +703,7 @@
             "keywords": [
                 "templating"
             ],
-            "time": "2015-11-05 12:49:06"
+            "time": "2015-11-05T12:49:06+00:00"
         }
     ],
     "packages-dev": [],

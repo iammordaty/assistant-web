@@ -1,0 +1,20 @@
+{% extends '@common/layout.twig' %}
+
+{% block title %}Logi{% endblock %}
+
+{% block contentBlock %}
+    <script src="/js/log.js" type="text/javascript"></script>
+
+    {% for log in availableLogs %}
+        <div>
+            <legend><a class="undecorated" href="?log={{ log }}">{{ log }}</a></legend>
+
+            {% include '@common/log/view.twig' with {
+                log: log,
+                logMtime: logMtimes[log],
+                logContent: logContents[log],
+                maxLines: maxLines
+            } only %}
+        </div>
+    {% endfor %}
+{% endblock %}

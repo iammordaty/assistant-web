@@ -1,4 +1,6 @@
 $(document).ready(function() {
+        $('[data-toggle="popover"]').popover();
+
 	//When checkboxes/radios checked/unchecked, toggle background color
 	$('.form-group').on('click','input[type=radio]',function() {
 		$(this).closest('.form-group').find('.radio-inline, .radio').removeClass('checked');
