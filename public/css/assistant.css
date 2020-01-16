@@ -5,7 +5,6 @@ body {
 
 .jumbotron {
     margin-top: 5px;
-    background-image: url(http://www.backgroundmedia.eu/data/media/837/DJM%20600%20and%20Pioneer%20Headphones.jpg);
 }
 
 .navbar + .container {
@@ -13,7 +12,7 @@ body {
 }
 
 .form-group .form-group {
-    margin-bottom: 0px!important;
+    margin-bottom: 0!important;
 }
 
 a.undecorated {
@@ -171,8 +170,6 @@ label.radio-inline, label.checkbox-inline {
 
 .additional-info-wrap .additional-info {
     margin-top: -10px;
-    padding-bottom: 10px;
-    padding-left: 10px;
     padding: 0 10px 10px;
 }
 
@@ -185,8 +182,7 @@ pre.raw {
 
 .btn-primary-outline {
     background-color: transparent;
-    border-color: #ccc;
-    border: 0;
+    border: 0 #ccc;
     padding: 0;
 }
 
@@ -197,4 +193,8 @@ pre.raw {
 .info-value .popover {
     width: auto;
     min-width: 400px;
+}
+
+table .popover {
+    max-width: none;
 }
