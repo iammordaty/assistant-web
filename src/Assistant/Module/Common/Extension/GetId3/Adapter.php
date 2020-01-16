@@ -143,8 +143,11 @@ class Adapter
     /**
      * Zapisuje podane metadane w pliku (utworze muzycznym)
      * TODO: $mode = 'overwrite' / 'append'
-     * @throws Exception\Writer
+     *
+     * @param array $metadata
+     * @param bool $overwrite
      * @return bool
+     * @throws Exception\WriterException
      */
     public function writeId3v2Metadata(array $metadata, $overwrite = false)
     {

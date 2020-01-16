@@ -25,6 +25,8 @@
         "pagerfanta/pagerfanta": "*",
         "php-curl-class/php-curl-class": "^4.8",
         "monolog/monolog": "^1.17",
-        "php-extended/php-tail": "^2.2"
+        "php-extended/php-tail": "^2.2",
+        "ext-json": "*",
+        "ext-mongo": "*"
     }
 }

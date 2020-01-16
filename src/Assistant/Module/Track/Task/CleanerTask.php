@@ -150,7 +150,7 @@ class CleanerTask extends AbstractTask
     {
         $basename = $node->getBasename('.' . $node->getExtension());
 
-        $metadata = array_map('trim', explode(' - ', $basename, 2));
+        $metadata = array_map('trim', explode('-', $basename, 2));
 
         $artist = $metadata[0];
         $title = $metadata[1];
@@ -165,13 +165,13 @@ class CleanerTask extends AbstractTask
     {
         $artist = strtolower($artist);
 
-        $artist = str_replace('ft.', 'feat.', $artist);
-        $artist = str_replace('ft', 'feat.', $artist);
+        $artist = str_replace(['ft.', 'ft'], 'feat.', $artist);
         $artist = str_replace('vs', 'vs.', $artist);
         $artist = preg_replace('/\.+/', '.', $artist);
         $artist = ucwords($artist, " \t\r\n\f\v[]-1234567890");
 
         // TODO: Usuwać wielokrotne spacje
+        $artist = ucwords($artist, " \t\r\n\f\v[]");
 
         return $artist;
     }
@@ -180,8 +180,7 @@ class CleanerTask extends AbstractTask
     {
         $title = strtolower($title);
 
-        $title = str_replace('(', '[', $title);
-        $title = str_replace(')', ']', $title);
+        $title = str_replace(['(', ')'], ['[', ']'], $title);
         $title = ucwords($title, " \t\r\n\f\v[]-1234567890");
 
         // TODO: Spróbować ogarnąć taki przypadek:
