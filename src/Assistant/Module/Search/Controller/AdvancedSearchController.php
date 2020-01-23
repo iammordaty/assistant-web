@@ -2,6 +2,10 @@
 
 namespace Assistant\Module\Search\Controller;
 
+use Assistant\Module\Search\Extension\MinMaxExpressionParser;
+use Assistant\Module\Search\Extension\MinMaxExpressionInfoToDbQuery;
+use Assistant\Module\Search\Extension\YearMinMaxExpressionParser;
+
 /**
  * Kontroler pozwalający na wyszukiwanie utworów po metadanych
  */
@@ -46,20 +50,18 @@ class AdvancedSearchController extends SimpleSearchController
             }
         }
 
-        if (!empty($request->get('year')) && ($year = (int) $request->get('year')) > 0) {
-            $tolerance = (int) $request->get('year_tolerance');
+        if (($year = $request->get('year'))) {
+            $minMaxInfo = YearMinMaxExpressionParser::parse($year);
 
-            if ($tolerance === 0) {
-                $criteria['year'] = $year;
-            } else {
-                $criteria['year'] = [ '$in' => range($year - $tolerance, $year + $tolerance) ];
+            if ($minMaxInfo) {
+                $criteria['year'] = MinMaxExpressionInfoToDbQuery::convert($minMaxInfo);
             }
         }
 
         if (!empty($request->get('initial_key'))) {
             $keys = array_map(
                 function ($key) {
-                    return trim(strtoupper($key));
+                    return strtoupper(trim($key));
                 },
                 explode(',', $request->get('initial_key'))
             );
@@ -73,13 +75,11 @@ class AdvancedSearchController extends SimpleSearchController
             }
         }
 
-        if (!empty($request->get('bpm')) && ($bpm = (int) $request->get('bpm')) > 0) {
-            $tolerance = (int) $request->get('bpm_tolerance');
+        if ($bpm = $request->get('bpm')) {
+            $minMaxInfo = MinMaxExpressionParser::parse($bpm);
 
-            if ($tolerance === 0) {
-                $criteria['bpm'] = $bpm;
-            } else {
-                $criteria['bpm'] = [ '$in' => range($bpm - $tolerance, $bpm + $tolerance) ];
+            if ($minMaxInfo) {
+                $criteria['bpm'] = MinMaxExpressionInfoToDbQuery::convert($minMaxInfo);
             }
         }
 
