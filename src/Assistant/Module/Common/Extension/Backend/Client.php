@@ -22,7 +22,7 @@ class Client
     public function __construct()
     {
         $this->curl = new Curl();
-        $this->curl->setTimeout(60);
+        $this->curl->setTimeout(3 * 60);
     }
 
     /**
