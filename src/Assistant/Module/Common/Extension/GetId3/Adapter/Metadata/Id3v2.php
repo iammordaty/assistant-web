@@ -13,11 +13,12 @@ class Id3v2 extends BaseMetadata
         'artist',
         'title',
         'album',
+        'publisher',
         'track_number',
         'year',
         'genre',
         'bpm',
-        'initial_key'
+        'initial_key',
     ];
 
     /**
@@ -60,7 +61,7 @@ class Id3v2 extends BaseMetadata
     {
         $rawId3v2Info = isset($this->rawInfo['tags']['id3v2']) ? $this->rawInfo['tags']['id3v2'] : [ ];
 
-        // duplikaty oraz niektóre wielkrotne pola są niedozwolone
+        // duplikaty oraz wielokrotne tagi i wartości są niedozwolone
         foreach ($rawId3v2Info as $field => $value) {
             $rawId3v2Info[$field] = [ reset($value) ];
         }

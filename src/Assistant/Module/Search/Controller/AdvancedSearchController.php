@@ -50,6 +50,23 @@ class AdvancedSearchController extends SimpleSearchController
             }
         }
 
+        if (($publisher = $request->get('publisher'))) {
+            $keys = array_map(
+                function ($publisher) {
+                    return new \MongoRegex('/^' . trim($publisher) . '$/i');
+                },
+                explode(',', $publisher)
+            );
+
+            $filtered = array_merge(array_unique(array_filter($keys)));
+
+            if (count($filtered) === 1) {
+                $criteria['publisher'] = $filtered[0];
+            } else {
+                $criteria['publisher'] = [ '$in' => $filtered ];
+            }
+        }
+
         if (($year = $request->get('year'))) {
             $minMaxInfo = YearMinMaxExpressionParser::parse($year);
 

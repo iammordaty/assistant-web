@@ -52,6 +52,11 @@ class Track extends AbstractModel
     protected $genre;
 
     /**
+     * @var string
+     */
+    protected $publisher;
+
+    /**
      * @var float
      */
     protected $bpm;
@@ -85,7 +90,7 @@ class Track extends AbstractModel
      * @var bool
      */
     protected $ignored;
-    
+
     /**
     * @var \MongoDate
     */
