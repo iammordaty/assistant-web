@@ -54,6 +54,9 @@ class TrackWriter extends AbstractWriter
                 $this->backendClient->addToSimilarCollection($track);
             }
         } else {
+            // TODO: zapis powinien odbyć się tylko wówczas, gdy zmieniły się dane,
+            //       czyli md5 z metadanych są różne
+
             $track->_id = $indexedTrack->_id;
             $track->indexed_date = $indexedTrack->indexed_date;
 
