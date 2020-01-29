@@ -3,6 +3,11 @@
 /* @var $app \Slim\Slim */
 
 // require enviroment config
+use Assistant\Module\Common\Extension\Twig\CustomTwigExtension;
+use Slim\Views\TwigExtension as SlimTwigExtension;
+use Twig\Extension\Debug;
+use Twig\Extension\DebugExtension as TwigDebugExtension;
+
 require_once sprintf('%s/app/config/%s.inc', BASE_DIR, getenv('SLIM_MODE'));
 
 // get application modules
@@ -65,13 +70,16 @@ foreach ($modules as $name => $path) {
 }
 
 $view->parserExtensions = [
-    new \Slim\Views\TwigExtension(),
-    new \Assistant\Module\Common\Extension\Twig\CustomTwigExtension(),
+    new SlimTwigExtension(),
+    new CustomTwigExtension(),
+    new \Twig_Extensions_Extension_Text(),
+    new \Twig_Extensions_Extension_Date(),
 ];
 
 if ($app->config('debug')) {
-    $view->parserOptions['debug'] = true ;
-    $view->parserExtensions[] = new \Twig_Extension_Debug();
+    $view->parserOptions['debug'] = true;
+
+    $view->parserExtensions[] = new TwigDebugExtension();
 }
 
 $app->view($view);

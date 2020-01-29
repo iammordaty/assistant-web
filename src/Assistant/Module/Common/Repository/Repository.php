@@ -144,9 +144,11 @@ class Repository
             $data['_id'] = new \MongoId();
         }
 
+        $filtered = $this->filter($data);
+
         $result = $this->db
             ->selectCollection(static::$collection)
-            ->insert($this->filter($data));
+            ->insert($filtered);
 
         return ((int) $result['ok'] === 1);
     }

@@ -1,11 +1,15 @@
 {
-    "name": "assistant-web",
+    "name": "iammordaty/assistant-web",
     "authors": [
         {
             "name": "iammordaty",
             "email": "iammordaty@users.noreply.github.com"
         }
     ],
+
+    "config": {
+        "sort-packages": true
+    },
 
     "autoload": {
         "psr-0": {
@@ -15,18 +19,22 @@
     },
 
     "require": {
-        "slim/slim": "2.*",
-        "slim/views": "0.1.*",
-        "twig/twig": "~1.0",
-        "james-heinrich/getid3": "dev-master",
-        "symfony/console": "*",
-        "cocur/slugify": "*",
+        "php": "~7.4",
+        "ext-json": "*",
+        "ext-mongodb": "~1.6.1",
+        "alcaeus/mongo-php-adapter": "^1.1",
         "cocur/background-process": "^0.5.0",
+        "cocur/slugify": "*",
+        "james-heinrich/getid3": "dev-master",
+        "monolog/monolog": "^1.17",
         "pagerfanta/pagerfanta": "*",
         "php-curl-class/php-curl-class": "^4.8",
-        "monolog/monolog": "^1.17",
         "php-extended/php-tail": "^2.2",
-        "ext-json": "*",
-        "ext-mongo": "*"
+        "slim/slim": "2.*",
+        "slim/views": "0.1.*",
+        "symfony/console": "*",
+        "symfony/translation": "^5.0",
+        "twig/extensions": "^1.5",
+        "twig/twig": "~2.0"
     }
 }

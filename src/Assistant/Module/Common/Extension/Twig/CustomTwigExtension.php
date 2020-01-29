@@ -2,7 +2,10 @@
 
 namespace Assistant\Module\Common\Extension\Twig;
 
-class CustomTwigExtension extends \Twig_Extension
+use Twig\Extension\AbstractExtension;
+use Twig\TwigFilter;
+
+class CustomTwigExtension extends AbstractExtension
 {
     /**
      * {@inheritdoc}
@@ -18,44 +21,12 @@ class CustomTwigExtension extends \Twig_Extension
     public function getFilters()
     {
         return [
-            'truncateText' => new \Twig_Filter_Method($this, 'truncateText'),
-            'formatDateAsDaysAgo' => new \Twig_Filter_Method($this, 'formatDateAsDaysAgo'),
-            'formatSeconds' => new \Twig_Filter_Method($this, 'formatSeconds'),
-            'timeAgoFormat' => new \Twig_Filter_Method($this, 'timeAgoFormat'),
-            'pluralize' => new \Twig_Filter_Method($this, 'pluralize'),
+            new TwigFilter('formatDateAsDaysAgo', [ $this, 'formatDateAsDaysAgo' ]),
+            new TwigFilter('formatSeconds', [ $this, 'formatSeconds' ]),
         ];
     }
 
-    /**
-     * Funkcja przycina teskt o wybraną ilość znaków, jak przycięta ilość znaków wypadnie w środku wyrazu.
-     * Wyszukuje najbliższy znak $break.
-     *
-     * @param text $string - tekst
-     * @param int $limit - limit znaków, który musi być tekst przycięty
-     * @param string $break - znak, który jest wyszukiwany
-     * @param string $pad - znacznik, który jest pokazywany przy przyciętym tekście
-     */
-    public function truncateText($string, $limit, $break = ' ', $pad = '...')
-    {
-        if (strlen($string) <= $limit) {
-            return $string;
-        }
-
-        if (false !== ($breakpoint = strpos($string, $break, $limit))) {
-            if ($breakpoint < strlen($string) - 1) {
-                $string = substr($string, 0, $breakpoint) . $pad;
-            }
-        }
-
-        return $string;
-    }
-
-    /**
-     * formatDateAsDaysAgo
-     *
-     * @param \DateTime $inputDate
-     */
-    public function formatDateAsDaysAgo($inputDate)
+    public function formatDateAsDaysAgo(\DateTime $inputDate): string
     {
         $now = new \DateTime();
         $interval = $now->diff($inputDate);
@@ -74,7 +45,7 @@ class CustomTwigExtension extends \Twig_Extension
             : $inputDate->format('d.m.Y');
     }
 
-    public function formatSeconds($ss)
+    public function formatSeconds(string $ss): string
     {
         $result = '';
 
@@ -98,21 +69,5 @@ class CustomTwigExtension extends \Twig_Extension
         $result .= ($s < 10 ? '0' : '') . $s;
 
         return $result;
-    }
-
-    public function pluralize($value, $string1, $string2, $string5)
-    {
-        if ($value == 1) {
-            return $value . ' ' . $string1;
-        }
-
-        $jedn = ($value % 10);
-        $dzies = (intval($value / 10) % 10);
-
-        if ($jedn > 1 && $jedn < 5 && $dzies <> 1) {
-            return $value . ' ' . $string2;
-        }
-
-        return $value . " " . $string5;
     }
 }
