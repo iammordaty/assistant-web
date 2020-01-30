@@ -63,7 +63,7 @@
                                     <a class="undecorated" href="{{ urlFor('search.advanced.index') }}?bpm={{ track.bpm }}">{{ track.bpm }}</a>
                                 </td>
                                 <td class="col-xs-1">
-                                    {{ track.indexed_date.toDateTime|time_diff }}
+                                    {{ track.indexed_date.toDateTime|formatDateAsDaysAgo }}
                                 </td>
                             </tr>
                         {% endfor %}

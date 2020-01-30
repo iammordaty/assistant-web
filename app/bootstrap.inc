@@ -5,8 +5,8 @@
 // require enviroment config
 use Assistant\Module\Common\Extension\Twig\CustomTwigExtension;
 use Slim\Views\TwigExtension as SlimTwigExtension;
-use Twig\Extension\Debug;
 use Twig\Extension\DebugExtension as TwigDebugExtension;
+use Twig\Extensions\TextExtension as TwigTextExtension;
 
 require_once sprintf('%s/app/config/%s.inc', BASE_DIR, getenv('SLIM_MODE'));
 
@@ -70,10 +70,9 @@ foreach ($modules as $name => $path) {
 }
 
 $view->parserExtensions = [
-    new SlimTwigExtension(),
     new CustomTwigExtension(),
-    new \Twig_Extensions_Extension_Text(),
-    new \Twig_Extensions_Extension_Date(),
+    new SlimTwigExtension(),
+    new TwigTextExtension(),
 ];
 
 if ($app->config('debug')) {

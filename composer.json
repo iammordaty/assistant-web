@@ -14,8 +14,7 @@
     "autoload": {
         "psr-0": {
             "Assistant": "src/"
-        },
-        "classmap": [ "vendor/james-heinrich/getid3/getid3" ]
+        }
     },
 
     "require": {
@@ -25,7 +24,7 @@
         "alcaeus/mongo-php-adapter": "^1.1",
         "cocur/background-process": "^0.5.0",
         "cocur/slugify": "*",
-        "james-heinrich/getid3": "dev-master",
+        "james-heinrich/getid3": "^1.9",
         "monolog/monolog": "^1.17",
         "pagerfanta/pagerfanta": "*",
         "php-curl-class/php-curl-class": "^4.8",
@@ -33,7 +32,6 @@
         "slim/slim": "2.*",
         "slim/views": "0.1.*",
         "symfony/console": "*",
-        "symfony/translation": "^5.0",
         "twig/extensions": "^1.5",
         "twig/twig": "~2.0"
     }
