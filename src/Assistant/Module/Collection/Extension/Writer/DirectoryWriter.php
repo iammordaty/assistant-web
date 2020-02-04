@@ -4,7 +4,6 @@ namespace Assistant\Module\Collection\Extension\Writer;
 
 use Assistant\Module\Directory\Model\Directory;
 use Assistant\Module\Directory\Repository\DirectoryRepository;
-use MongoDB\DeleteResult;
 
 /**
  * Writer dla elementów będących katalogami

@@ -5,7 +5,6 @@ namespace Assistant\Module\Collection\Extension\Writer;
 use Assistant\Module\Common\Extension\Backend\Client as BackendClient;
 use Assistant\Module\Track\Model\Track;
 use Assistant\Module\Track\Repository\TrackRepository;
-use MongoDB\DeleteResult;
 use MongoDB\BSON\Regex;
 
 /**
@@ -45,7 +44,7 @@ class TrackWriter implements WriterInterface
 
             $result = $this->repository->insert($track);
 
-            if ($result === true) {
+            if ($result->getInsertedCount() === 1) {
                 $this->backendClient->addToSimilarCollection($track);
             }
         } else {
@@ -61,7 +60,7 @@ class TrackWriter implements WriterInterface
     }
 
     /**
-     * Zapewnia, że guid podanego utworu jest unikalny
+     * Zwraca unikalny guid dla podanego utworu
      *
      * @param Track $track
      * @return string
