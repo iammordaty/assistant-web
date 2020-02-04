@@ -3,9 +3,11 @@
 namespace Assistant\Module\Mix\Controller;
 
 use Assistant\Module\Common\Controller\AbstractController;
-use Assistant\Module\Track;
-
+use Assistant\Module\Track\Extension\Similarity;
+use Assistant\Module\Track\Model\Track;
+use Assistant\Module\Track\Repository\TrackRepository;
 use Cocur\Slugify\Slugify;
+use MongoDB\BSON\Regex;
 
 class MixController extends AbstractController
 {
@@ -18,8 +20,8 @@ class MixController extends AbstractController
 
             $listing = explode(PHP_EOL, $request->post('listing'));
 
-            $similarity = new Track\Extension\Similarity(
-                new Track\Repository\TrackRepository($this->app->container['db']),
+            $similarity = new Similarity(
+                new TrackRepository($this->app->container['db']),
                 $this->app->container->parameters['track']['similarity']
             );
 
@@ -71,7 +73,7 @@ class MixController extends AbstractController
         );
     }
 
-    private function getTrackByName($name)
+    private function getTrackByName(string $name): ?Track
     {
         $trimmedName = trim($name);
 
@@ -79,10 +81,12 @@ class MixController extends AbstractController
             return null;
         }
 
-        $query = new \MongoRegex('/' . $trimmedName . '/i');
-        $guidQuery = new \MongoRegex('/' . (new Slugify())->slugify($trimmedName) . '/i');
+        $slugify = new Slugify();
 
-        return (new Track\Repository\TrackRepository($this->app->container['db']))->findOneBy(
+        $query = new Regex($trimmedName, 'i');
+        $guidQuery = new Regex($slugify->slugify($trimmedName), 'i');
+
+        $track = (new TrackRepository($this->app->container['db']))->findOneBy(
             [
                 '$or' => [
                     [ 'artist' => $query ],
@@ -91,6 +95,9 @@ class MixController extends AbstractController
                 ]
             ]
         );
+
+        /** @var Track|null $track */
+        return $track;
     }
 
     private function rearrange(array $matrix)
@@ -118,7 +125,7 @@ class MixController extends AbstractController
         $mostSimilar = null;
 
         foreach ($tracks as $track) {
-            if ($track['similarityValue'] > $mostSimilar['similarityValue']) {
+            if ($mostSimilar === null || $track['similarityValue'] > $mostSimilar['similarityValue']) {
                 $mostSimilar = $track;
             }
         }

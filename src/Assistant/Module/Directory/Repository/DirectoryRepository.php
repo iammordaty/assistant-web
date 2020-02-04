@@ -3,6 +3,7 @@
 namespace Assistant\Module\Directory\Repository;
 
 use Assistant\Module\Common\Repository\AbstractObjectRepository;
+use Assistant\Module\Directory\Model\Directory;
 
 /**
  * Repozytorium obiektów Directory
@@ -12,15 +13,15 @@ class DirectoryRepository extends AbstractObjectRepository
     /**
      * {@inheritDoc}
      */
-    protected static $collection = 'directories';
+    protected const COLLECTION = 'directories';
 
     /**
      * {@inheritDoc}
      */
-    protected static $model = 'Assistant\Module\Directory\Model\Directory';
+    protected const MODEL = Directory::class;
 
     /**
      * {@inheritDoc}
      */
-    protected static $baseConditions = [ 'ignored' => false ];
+    protected static array $baseConditions = [ 'ignored' => false ];
 }

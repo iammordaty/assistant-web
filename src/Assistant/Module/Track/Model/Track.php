@@ -3,11 +3,14 @@
 namespace Assistant\Module\Track\Model;
 
 use Assistant\Module\Common\Model\AbstractModel;
+use MongoDB\BSON\ObjectId;
+use MongoDB\BSON\UTCDateTime;
+use MongoDB\Model\BSONArray;
 
 class Track extends AbstractModel
 {
     /**
-     * @var \MongoId
+     * @var ObjectId
      */
     protected $_id;
 
@@ -22,7 +25,7 @@ class Track extends AbstractModel
     protected $artist;
 
     /**
-     * @var string[]
+     * @var BSONArray|array
      */
     protected $artists = [];
 
@@ -92,20 +95,17 @@ class Track extends AbstractModel
     protected $ignored;
 
     /**
-    * @var \MongoDate
+    * @var UTCDateTime
     */
     protected $modified_date;
 
     /**
-     * @var \MongoDate
+     * @var UTCDateTime|null
      */
     protected $indexed_date;
 
     /**
-     * @var string[]
+     * @var BSONArray|array
      */
-    protected $tags = [
-        'techno',
-        'śmieszne',
-    ];
+    protected $tags = [];
 }

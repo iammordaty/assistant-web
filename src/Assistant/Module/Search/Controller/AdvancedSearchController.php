@@ -5,6 +5,7 @@ namespace Assistant\Module\Search\Controller;
 use Assistant\Module\Search\Extension\MinMaxExpressionParser;
 use Assistant\Module\Search\Extension\MinMaxExpressionInfoToDbQuery;
 use Assistant\Module\Search\Extension\YearMinMaxExpressionParser;
+use MongoDB\BSON\Regex;
 
 /**
  * Kontroler pozwalający na wyszukiwanie utworów po metadanych
@@ -26,17 +27,17 @@ class AdvancedSearchController extends SimpleSearchController
         $criteria = [];
 
         if (!empty($request->get('artist'))) {
-            $criteria['artist'] = new \MongoRegex('/' . trim($request->get('artist')) . '/i');
+            $criteria['artist'] = new Regex(trim($request->get('artist')), 'i');
         }
 
         if (!empty($request->get('title'))) {
-            $criteria['title'] = new \MongoRegex('/' . trim($request->get('title')) . '/i');
+            $criteria['title'] = new Regex(trim($request->get('title')), 'i');
         }
 
         if (!empty($request->get('genre'))) {
             $keys = array_map(
                 function ($genre) {
-                    return new \MongoRegex('/^' . trim($genre) . '$/i');
+                    return new Regex('^' . trim($genre) . '$', 'i');
                 },
                 explode(',', $request->get('genre'))
             );
@@ -53,7 +54,7 @@ class AdvancedSearchController extends SimpleSearchController
         if (($publisher = $request->get('publisher'))) {
             $keys = array_map(
                 function ($publisher) {
-                    return new \MongoRegex('/^' . trim($publisher) . '$/i');
+                    return new Regex('^' . trim($publisher) . '$', 'i');
                 },
                 explode(',', $publisher)
             );

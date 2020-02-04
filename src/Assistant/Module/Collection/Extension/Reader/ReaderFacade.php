@@ -2,67 +2,45 @@
 
 namespace Assistant\Module\Collection\Extension\Reader;
 
-use Assistant\Module\File;
+use Assistant\Module\Common\Extension\GetId3\Adapter as Id3Adapter;
+use Assistant\Module\Directory\Model\Directory;
+use Assistant\Module\File\Extension\Parser as MetadataParser;
+use Assistant\Module\File\Extension\SplFileInfo;
+use Assistant\Module\Track\Model\Track;
 
 /**
  * Fasada dla procesorów przetwarzających elementy znajdujące się w kolekcji
 */
 class ReaderFacade
 {
-    /**
-     * Lista obsługiwanych procesorów danych
-     *
-     * @var array
-     */
-    private $readerNames = [
-        'file',
-        'dir',
-    ];
+    private DirectoryReader $directoryReader;
 
-    /**
-     * Lista procesorów danych
-     *
-     * @see setup()
-     * @see $readerNames
-     */
-    private $readers = [ ];
+    private FileReader $fileReader;
 
-    /**
-     * @var array
-     */
-    private $parameters;
-
-    /**
-     * Konstruktor
-     *
-     * @param array $parameters
-     */
     public function __construct(array $parameters)
     {
-        $this->parameters = $parameters;
+        $this->directoryReader = new DirectoryReader();
 
-        $this->setup();
+        $this->fileReader = new FileReader(
+            new Id3Adapter(),
+            new MetadataParser($parameters['track']['metadata']['parser']),
+        );
     }
 
     /**
-     * {@inheritDoc}
+     * @param SplFileInfo $node
+     * @return Directory|Track
      */
-    public function process(File\Extension\SplFileInfo $node)
+    public function read(SplFileInfo $node)
     {
-        return $this->readers[$node->getType()]->process($node);
-    }
+        $nodeType = $node->getType();
 
-    /**
-     * Przygotowuje procesory do użycia
-     */
-    protected function setup()
-    {
-        foreach ($this->readerNames as $readerName) {
-            $className = sprintf('%s\%sReader', __NAMESPACE__, ucfirst($readerName));
+        if ($nodeType === 'file') {
+            return $this->fileReader->read($node);
+        }
 
-            $this->readers[$readerName] = new $className($this->parameters);
-
-            unset($className, $readerName);
+        if ($node->getType() === 'dir') {
+            return $this->directoryReader->read($node);
         }
     }
 }

@@ -29,7 +29,7 @@ abstract class AbstractSearchController extends AbstractController
         $request = $this->app->request();
         $criteria = $this->getQueryCriteria();
 
-        $results = [ ];
+        $results = [ 'count' => 0 ];
         $paginator = null;
 
         if ($this->isRequestValid($criteria) === true) {

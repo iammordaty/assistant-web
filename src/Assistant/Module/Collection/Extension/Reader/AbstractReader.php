@@ -11,28 +11,14 @@ use Cocur\Slugify\Slugify;
 abstract class AbstractReader
 {
     /**
-     * @var array
-     */
-    private $parameters;
-
-    /**
      * Obiekt klasy Slugify
      *
      * @var Slugify
      */
-    protected $slugify;
+    protected Slugify $slugify;
 
-    /**
-     * Konstruktor
-     *
-     * @param array|null $parameters
-     */
-    public function __construct(array $parameters = null)
+    public function __construct()
     {
-        if ($parameters !== null) {
-            $this->parameters = $parameters;
-        }
-
         $this->slugify = new Slugify();
     }
 
@@ -41,7 +27,7 @@ abstract class AbstractReader
      *
      * @param SplFileInfo $node
      */
-    abstract public function process(SplFileInfo $node);
+    abstract public function read(SplFileInfo $node);
 
     /**
      * Zwraca ścieżkę do katalogu, w której poszczególne poziomy są slugiem

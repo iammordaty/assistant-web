@@ -3,6 +3,7 @@
 namespace Assistant\Module\Track\Repository;
 
 use Assistant\Module\Common\Repository\AbstractObjectRepository;
+use Assistant\Module\Track\Model\Track;
 
 /**
  * Repozytorium obiektów Track
@@ -12,15 +13,15 @@ class TrackRepository extends AbstractObjectRepository
     /**
      * {@inheritDoc}
      */
-    protected static $collection = 'tracks';
+    protected const COLLECTION = 'tracks';
 
     /**
      * {@inheritDoc}
      */
-    protected static $model = 'Assistant\Module\Track\Model\Track';
+    protected const MODEL = Track::class;
 
     /**
      * {@inheritDoc}
      */
-    protected static $baseConditions = [ 'ignored' => false ];
+    protected static array $baseConditions = [ 'ignored' => false ];
 }

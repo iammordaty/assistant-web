@@ -59,16 +59,18 @@ class Id3v2 extends BaseMetadata
      */
     public function prepareMetadata(array $metadata)
     {
-        $rawId3v2Info = isset($this->rawInfo['tags']['id3v2']) ? $this->rawInfo['tags']['id3v2'] : [ ];
+        $rawId3v2Info = $this->rawInfo['tags']['id3v2'] ?? [];
 
         // duplikaty oraz wielokrotne tagi i wartości są niedozwolone
         foreach ($rawId3v2Info as $field => $value) {
-            $rawId3v2Info[$field] = [ reset($value) ];
+            $firstValue = reset($value);
+
+            $rawId3v2Info[$field] = [ (string) $firstValue ];
         }
 
         foreach ($metadata as $field => $value) {
             if (in_array($field, $this->fields)) {
-                $rawId3v2Info[$field] = [ $value ];
+                $rawId3v2Info[$field] = [ (string) $value ];
             }
         }
 

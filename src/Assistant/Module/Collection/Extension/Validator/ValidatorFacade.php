@@ -2,90 +2,74 @@
 
 namespace Assistant\Module\Collection\Extension\Validator;
 
+use Assistant\Module\Common\Extension\GetId3\Adapter as Id3Adapter;
+use Assistant\Module\Common\Model\ModelInterface;
 use Assistant\Module\Directory\Model\Directory;
+use Assistant\Module\Directory\Repository\DirectoryRepository;
 use Assistant\Module\Track\Model\Track;
-use MongoDB;
+use Assistant\Module\Track\Repository\TrackRepository;
+use MongoDB\Database;
 
 /**
- * Fasada dla walidatorów plików oraz katalogów mających
- * zostać dodanych do kolekji
+ * Fasada dla walidatorów plików oraz katalogów mających zostać dodanych do kolekcji
  */
 class ValidatorFacade
 {
     /**
-     * Lista obsługiwanych walidatorów danych
+     * Obiekt walidatora katalogów
      *
-     * @var array
+     * @var DirectoryValidator
      */
-    private $validatorNames = [
-        'track',
-        'directory',
-    ];
+    private DirectoryValidator $directoryValidator;
 
     /**
-     * Lista walidatorów danych
+     * Obiekt walidatora plików (utworów muzycznych)
      *
-     * @see setup()
-     * @see $validatorNames
+     * @var TrackValidator
      */
-    private $validators = [ ];
+    private TrackValidator $trackValidator;
 
-    /**
-     * @var MongoDB
-     */
-    private $db;
-
-    /**
-     * @var array
-     */
-    private $parameters;
-
-    /**
-     * Konstruktor
-     *
-     * @param MongoDB $db
-     * @param array $parameters
-     */
-    public function __construct(MongoDB $db, array $parameters)
+    public function __construct(Database $database, array $parameters)
     {
-        $this->db = $db;
-        $this->parameters = $parameters;
+        $this->directoryValidator = new DirectoryValidator(
+            new DirectoryRepository($database),
+        );
 
-        $this->setup();
+        $this->trackValidator = new TrackValidator(
+            new TrackRepository($database),
+            new Id3Adapter(),
+            $parameters['collection']['root_dir']
+        );
     }
 
     /**
-     * @param Track|Directory $item
-     * @return Track|Directory
+     * @param ModelInterface|Track|Directory $item
+     * @return void
      */
-    public function validate($item)
+    public function validate(ModelInterface $item): void
     {
-        return $this->validators[$this->getElementType($item)]->validate($item);
-    }
+        $itemType = static::getItemType($item);
 
-    /**
-     * Przygotowuje walidatory do użycia
-     */
-    protected function setup()
-    {
-        // TODO: jak wyżej
-        // TODO: przekazywać repo, nie bazę danych
-        foreach ($this->validatorNames as $validatorName) {
-            $className = sprintf('%s\%sValidator', __NAMESPACE__, ucfirst($validatorName));
+        if ($itemType === 'directory') {
+            $this->directoryValidator->validate($item);
 
-            $this->validators[$validatorName] = new $className($this->db, $this->parameters);
+            return;
+        }
 
-            unset($className, $validatorName);
+        if ($itemType === 'track') {
+            $this->trackValidator->validate($item);
         }
     }
 
     /**
      * Zwraca typ podanego elementu kolekcji
      *
-     * @param Track|Directory $item
+     * @todo Chyba bardziej właściwe byłoby, gdyby to model zwracał informację o typie via getType()
+     *
+     * @param ModelInterface|Track|Directory $item
      * @return string
      */
-    private function getElementType($item)
+    private static function getItemType(ModelInterface $item): string
     {
         $parts = explode('\\', get_class($item));
 

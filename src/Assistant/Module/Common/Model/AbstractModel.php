@@ -4,8 +4,12 @@ namespace Assistant\Module\Common\Model;
 
 /**
  * Klasa abstrakcyjna dla modeli
+ *
+ * TODO: Niech modele nie zawierają powiązań specyficznych dla bazy danych (ObjectId, UTCDateTime, itd).
+ *       Stworzyć klasę, która zajmie się konwertowaniem danych do/z bazy danych na typy PHP
+ * TODO: Utworzyć gettery oraz settery i korzystać z nich zamiast metod magicznych
  */
-abstract class AbstractModel
+abstract class AbstractModel implements ModelInterface
 {
     /**
      * Konstruktor
@@ -40,7 +44,7 @@ abstract class AbstractModel
             $this->$property = $value;
         };
 
-        if (is_array($name)) {
+        if (is_iterable($name)) {
             foreach ($name as $property => $value) {
                 $setProperty($property, $value);
             }
@@ -86,7 +90,6 @@ abstract class AbstractModel
      * @see set()
      * @param string|array $name
      * @param mixed $value
-     * @return self
      *
      * @throws \InvalidArgumentException
      */
@@ -100,7 +103,7 @@ abstract class AbstractModel
      *
      * @see get()
      * @param string $name
-     * @return mxied
+     * @return mixed
      *
      * @throws \InvalidArgumentException
      */

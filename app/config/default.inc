@@ -3,8 +3,10 @@
 use Monolog\Logger;
 use Monolog\Handler\StreamHandler;
 use Monolog\Formatter\LineFormatter;
+use MongoDB\Client as MongoDBClient;
+use Slim\Slim;
 
-/* @var $app \Slim\Slim */
+/* @var $app Slim */
 
 $app->config(
     [
@@ -16,6 +18,7 @@ $app->config(
 
 $app->container->servers = [
     'db' => [
+        'connection_uri' => 'mongodb://assistant-mongo',
         'host' => 'assistant-mongo/assistant',
         'database' => 'assistant',
         'options' => [ ]
@@ -106,10 +109,12 @@ $app->container->parameters = [
 $app->container->singleton(
     'db',
     function () use ($app) {
-        $client = (new MongoClient($app->container->servers['db']['host'], $app->container->servers['db']['options']))
-            ->selectDB($app->container->servers['db']['database']);
+        [ 'connection_uri' => $connectionUri, 'database' => $database ] = $app->container->servers['db'];
 
-        return $client;
+        $client = new MongoDBClient($connectionUri);
+        $database = $client->selectDatabase($database);
+
+        return $database;
     }
 );
 

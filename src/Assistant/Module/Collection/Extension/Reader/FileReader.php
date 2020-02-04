@@ -6,34 +6,29 @@ use Assistant\Module\Common\Extension\GetId3\Adapter as Id3Adapter;
 use Assistant\Module\File\Extension\Parser as MetadataParser;
 use Assistant\Module\File\Extension\SplFileInfo;
 use Assistant\Module\Track\Model\Track;
-use MongoDate;
+use MongoDB\BSON\UTCDateTime;
 
 /**
  * Klasa, której zadaniem jest przetwarzanie plików (utworów muzycznych) znajdujących się w kolekcji
  */
 class FileReader extends AbstractReader
 {
-    /**
-     * @var Id3Adapter
-     */
-    private $id3Adapter;
+    private Id3Adapter $id3Adapter;
+
+    private MetadataParser $metadataParser;
 
     /**
-     * @var MetadataParser
-     */
-    private $metadataParser;
-
-    /**
-     * Konstruktor
+     * FileReader constructor.
      *
-     * @param array $parameters
+     * @param Id3Adapter $id3Adapter
+     * @param MetadataParser $metadataParser
      */
-    public function __construct(array $parameters)
+    public function __construct(Id3Adapter $id3Adapter, MetadataParser $metadataParser)
     {
-        parent::__construct($parameters);
+        parent::__construct();
 
-        $this->id3Adapter = new Id3Adapter();
-        $this->metadataParser = new MetadataParser($parameters['track']['metadata']['parser']);
+        $this->id3Adapter = $id3Adapter;
+        $this->metadataParser = $metadataParser;
     }
 
     /**
@@ -41,7 +36,7 @@ class FileReader extends AbstractReader
      *
      * @return Track
      */
-    public function process(SplFileInfo $node)
+    public function read(SplFileInfo $node)
     {
         $metadata = $this->id3Adapter
             ->setFile($node)
@@ -56,8 +51,8 @@ class FileReader extends AbstractReader
         $track->parent = $this->slugifyPath(dirname($node->getRelativePathname()));
         $track->pathname = $node->getRelativePathname();
         $track->ignored = $node->isIgnored();
-        $track->modified_date = new MongoDate($node->getMTime());
-        $track->indexed_date = new MongoDate();
+        $track->modified_date = new UTCDateTime($node->getMTime());
+        $track->indexed_date = new UTCDateTime();
 
         return $track;
     }
@@ -66,11 +61,12 @@ class FileReader extends AbstractReader
      * Zwraca guid dla podanego pliku (utworu muzycznego)
      *
      * @param SplFileInfo $node
-     * @return Track
+     * @param array $metadata
+     * @return string
      */
-    private function getGuid(SplFileInfo $node, array $metadata)
+    private function getGuid(SplFileInfo $node, array $metadata): string
     {
-        $string = isset($metadata['artist']) && isset($metadata['title'])
+        $string = isset($metadata['artist'], $metadata['title'])
             ? sprintf('%s - %s', $metadata['artist'], $metadata['title'])
             : $node->getBasename(sprintf('.%s', $node->getExtension()));
 
