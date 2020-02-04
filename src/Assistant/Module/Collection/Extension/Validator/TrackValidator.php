@@ -5,53 +5,39 @@ namespace Assistant\Module\Collection\Extension\Validator;
 use Assistant\Module\Collection\Extension\Validator\Exception\DuplicatedElementException;
 use Assistant\Module\Collection\Extension\Validator\Exception\EmptyMetadataException;
 use Assistant\Module\Common\Extension\GetId3\Adapter as Id3Adapter;
-use Assistant\Module\File\Extension\Parser as MetadataParser;
+use Assistant\Module\Common\Model\ModelInterface;
 use Assistant\Module\File\Extension\SplFileInfo;
 use Assistant\Module\Track\Model\Track;
 use Assistant\Module\Track\Repository\TrackRepository;
-use MongoDB;
 
 /**
  * Walidator elementów będących plikami
  */
-class TrackValidator extends AbstractValidator
+class TrackValidator implements ValidatorInterface
 {
-    /**
-     * @var Id3Adapter
-     */
-    private $id3Adapter;
+    private TrackRepository $repository;
 
-    /**
-     * @var MetadataParser
-     */
-    private $metadataParser;
+    private Id3Adapter $id3Adapter;
 
-    /**
-     * @var TrackRepository
-     */
-    private $repository;
+    private string $collectionRootDirectory;
 
-    /**
-     * {@inheritDoc}
-     */
-    public function __construct(MongoDB $db, array $parameters)
+    public function __construct(TrackRepository $repository, Id3Adapter $id3Adapter, string $collectionRootDirectory)
     {
-        parent::__construct($db, $parameters);
-
-        $this->repository = new TrackRepository($db);
-        $this->id3Adapter = new Id3Adapter();
-        $this->metadataParser = new MetadataParser($parameters['track']['metadata']['parser']);
+        $this->repository = $repository;
+        $this->id3Adapter = $id3Adapter;
+        $this->collectionRootDirectory = $collectionRootDirectory;
     }
 
     /**
      * Waliduje plik (utwór muzyczny) pod kątem możliwości dodania go do bazy danych
      *
-     * @param Track $track
+     * @param Track|ModelInterface $track
+     * @return void
      */
-    public function validate($track)
+    public function validate(ModelInterface $track): void
     {
         /* @var $indexedTrack Track */
-        $indexedTrack = $this->repository->findOneBy([ 'pathname' => $track->pathname ], [ 'metadata_md5' ]);
+        $indexedTrack = $this->repository->findOneBy([ 'pathname' => $track->pathname ]);
 
         if ($indexedTrack !== null && $track->metadata_md5 === $indexedTrack->metadata_md5) {
             throw new DuplicatedElementException(
@@ -59,9 +45,9 @@ class TrackValidator extends AbstractValidator
             );
         }
 
-        // TODO: plik powienien zawierać całą ścieżkę
-        // TODO: $track jako model powienien mieć metodę $track->getNode() / getFile()
-        $fullTrackPathname = $this->parameters['collection']['root_dir'] . $track->pathname;
+        // TODO: plik powinien zawierać całą ścieżkę
+        // TODO: $track jako model powinien mieć metodę $track->getNode() / getFile()
+        $fullTrackPathname = $this->collectionRootDirectory . $track->pathname;
         $file = new SplFileInfo($fullTrackPathname, ltrim($track->pathname, DIRECTORY_SEPARATOR));
 
         $metadata = $this->id3Adapter
@@ -72,7 +58,7 @@ class TrackValidator extends AbstractValidator
             throw new EmptyMetadataException(sprintf('Track %s does\'t contains metadata.', $file->getBasename()));
         }
 
-        // TODO: tutaj, w przyszości, powinna zawarta być także logika odpowiedzialna za wyszukiwanie
-        // niekonsekwencji w metadanych
+        // TODO: tutaj, w przyszłości, powinna zawarta być także logika odpowiedzialna za wyszukiwanie
+        //       niekonsekwencji w metadanych
     }
 }

@@ -3,46 +3,59 @@
 namespace Assistant\Module\Directory\Model;
 
 use Assistant\Module\Common\Model\AbstractModel;
+use MongoDB\BSON\ObjectId;
+use MongoDB\BSON\UTCDateTime;
 
 class Directory extends AbstractModel
 {
     /**
-     * @var \MongoId
+     * @var ObjectId
      */
-    protected $_id;
+    protected ObjectId $_id;
+
+    /**
+     * @var string|null
+     */
+    protected ?string $guid;
 
     /**
      * @var string
      */
-    protected $guid;
+    protected string $name;
+
+    /**
+     * @var string|null
+     */
+    protected ?string $parent;
 
     /**
      * @var string
      */
-    protected $name;
-
-    /**
-     * @var string
-     */
-    protected $parent;
-
-    /**
-     * @var string
-     */
-    protected $pathname;
+    protected string $pathname;
 
     /**
      * @var bool
      */
-    protected $ignored;
+    protected bool $ignored;
 
     /**
-     * @var \MongoDate
+     * @var UTCDateTime
      */
-    protected $modified_date;
+    protected UTCDateTime $modified_date;
 
     /**
-     * @var \MongoDate
+     * @var UTCDateTime
      */
-    protected $indexed_date;
+    protected UTCDateTime $indexed_date;
+
+    /**
+     * {@inheritDoc}
+     */
+    public function __construct($data = null)
+    {
+        $data['guid'] ??= null;
+        $data['parent'] ??= null;
+
+        parent::__construct($data);
+    }
 }

@@ -3,37 +3,30 @@
 namespace Assistant\Module\Collection\Extension\Validator;
 
 use Assistant\Module\Collection\Extension\Validator\Exception\DuplicatedElementException;
+use Assistant\Module\Common\Model\ModelInterface;
 use Assistant\Module\Directory\Model\Directory;
 use Assistant\Module\Directory\Repository\DirectoryRepository;
-use MongoDB;
 
 /**
  * Walidator elementów będących katalogami
  */
-class DirectoryValidator extends AbstractValidator
+class DirectoryValidator implements ValidatorInterface
 {
-    /**
-     * @var DirectoryRepository
-     */
-    private $repository;
+    private DirectoryRepository $repository;
 
-    /**
-     * {@inheritDoc}
-     */
-    public function __construct(MongoDB $db, array $parameters)
+    public function __construct(DirectoryRepository $repository)
     {
-        parent::__construct($db, $parameters);
-
-        $this->repository = new DirectoryRepository($db);
+        $this->repository = $repository;
     }
 
     /**
      * Waliduje katalog pod kątem możliwości dodania go do bazy danych
      *
-     * @param Directory $directory
+     * @param Directory|ModelInterface $directory
+     * @return void
      * @throws DuplicatedElementException
      */
-    public function validate($directory)
+    public function validate(ModelInterface $directory): void
     {
         $indexedDirectory = $this->repository->findOneBy([ 'pathname' => $directory->pathname ]);
 

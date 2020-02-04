@@ -2,42 +2,48 @@
 
 namespace Assistant\Module\Common\Repository;
 
+use Assistant\Module\Common\Model\ModelInterface;
+use Assistant\Module\Common\Model\ModelInterface as Model;
+use MongoDB\Database;
+use MongoDB\InsertOneResult;
+use MongoDB\UpdateResult;
+
 /**
  * Klasa abstrakcyjna dla repozytoriów obiektów
  */
-abstract class AbstractObjectRepository extends Repository
+abstract class AbstractObjectRepository extends AbstractRepository
 {
     /**
      * Klasa, na podstawie której zostanie utworzony obiekt
      *
      * @var string
      */
-    protected static $model;
+    protected const MODEL = '';
 
     /**
      * Kryteria, które muszą być spełnione, aby obiekt(-y) mógł zostać pobrany
      *
      * @var array
      */
-    protected static $baseConditions;
+    protected static array $baseConditions = [];
 
     /**
      * Konstruktor
      *
-     * @param \MongoDB $db
+     * @param Database $database
      * @throws \RuntimeException
      * @throws \BadMethodCallException
      */
-    public function __construct(\MongoDB $db)
+    public function __construct(Database $database)
     {
-        parent::__construct($db);
+        parent::__construct($database);
 
-        if (empty(static::$model)) {
-            throw new \RuntimeException('Parameter $model can not be empty.');
+        if (empty(static::MODEL)) {
+            throw new \RuntimeException('Constant MODEL can not be empty.');
         }
 
-        if (class_exists(static::$model) === false) {
-            throw new \RuntimeException(sprintf('Class "%s" does not exists.', static::$model));
+        if (class_exists(static::MODEL) === false) {
+            throw new \RuntimeException(sprintf('Class "%s" does not exists.', static::MODEL));
         }
     }
 
@@ -45,51 +51,77 @@ abstract class AbstractObjectRepository extends Repository
      * Zwraca obiekt na podstawie podanych kryteriów
      *
      * @param array $conditions
-     * @param array $fields
-     * @return mixed
+     * @param array $options
+     * @return Model|null
      */
-    public function findOneBy(array $conditions, array $fields = [])
+    public function findOneBy(array $conditions, array $options = []): ?Model
     {
         $document = parent::findOneBy(
             array_merge($conditions, static::$baseConditions),
-            $fields
+            $options
         );
 
         if ($document === null) {
             return null;
         }
 
-        return new static::$model($document);
+        $objectClassname = static::MODEL;
+        $object = new $objectClassname($document);
+
+        return $object;
+    }
+
+    /**
+     * Zwraca dokument na podstawie jego guid-a
+     *
+     * @param string $guid
+     * @param array $options
+     * @return Model|null
+     */
+    public function findOneByGuid(string $guid, array $options = []): ?Model
+    {
+        return $this->findOneBy(
+            [ 'guid' => $guid ],
+            $options
+        );
     }
 
     /**
      * Zwraca obiekty na podstawie podanych kryteriów
      *
      * @param array $conditions
-     * @param array $fields
      * @param array $options
-     * @return \Assistant\Module\Common\Model\AbstractModel[]
+     * @return \Traversable|ModelInterface
      */
-    public function findBy(array $conditions, array $fields = [], array $options = [])
+    public function findBy(array $conditions, array $options = []): \Traversable
     {
-        $documents = parent::findBy(
+        $cursor = parent::findBy(
             array_merge($conditions, static::$baseConditions),
-            $fields,
             $options
         );
 
-        foreach ($documents as $document) {
-            yield (new static::$model($document));
+        $cursor->setTypeMap([
+            'root' => 'array',
+            'document' => 'array',
+            'array' => 'array',
+        ]);
+
+        /** @var ModelInterface $document */
+        foreach ($cursor as $document) {
+            $objectClassname = static::MODEL;
+            $object = new $objectClassname($document);
+
+            yield $object;
         }
     }
 
     /**
      * Dodaje obiekt do bazy danych
      *
-     * @param \Assistant\Module\Common\Model\AbstractModel $object
-     * @return bool
+     * @param Model $object
+     * @return InsertOneResult
      */
-    public function insert($object)
+    public function insert($object): InsertOneResult
     {
         return parent::insert($object->toArray());
     }
@@ -97,10 +129,10 @@ abstract class AbstractObjectRepository extends Repository
     /**
      * Dodaje obiekt do bazy danych
      *
-     * @param \Assistant\Module\Common\Model\AbstractModel $object
-     * @return bool
+     * @param Model $object
+     * @return UpdateResult
      */
-    public function update()
+    public function update(): UpdateResult
     {
         $object = func_get_arg(0);
 
@@ -113,12 +145,12 @@ abstract class AbstractObjectRepository extends Repository
     /**
      * Usuwa obiekt z bazy danych
      *
-     * @param \Assistant\Module\Common\Model\AbstractModel $object
+     * @param Model $object
      * @return bool
      */
     public function remove($object)
     {
-        return parent::removeById(
+        return $this->removeById(
             $object->get('_id')
         );
     }

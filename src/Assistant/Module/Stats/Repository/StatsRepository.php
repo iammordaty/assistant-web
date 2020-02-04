@@ -1,20 +1,19 @@
 <?php
 
-namespace Assistant\Module\Dashboard\Repository;
+namespace Assistant\Module\Stats\Repository;
 
-use Assistant\Module\Common\Repository\Repository;
+use Assistant\Module\Common\Repository\AbstractRepository;
+use MongoDB\Driver\Cursor;
 
 /**
- * Repozytorium wykorzystywane w dashboard
- *
- * @todo Przenieść do modułu Statistics
+ * Repozytorium zawierające metody statystyczne
  */
-class DashboardRepository extends Repository
+class StatsRepository extends AbstractRepository
 {
     /**
      * {@inheritDoc}
      */
-    protected static $collection = 'tracks';
+    protected const COLLECTION = 'tracks';
 
     /**
      * Zwraca liczbę utworów w podziale na gatunki
@@ -38,6 +37,15 @@ class DashboardRepository extends Repository
     public function getTrackCountByArtist(array $sort = [], $limit = 10)
     {
         return $this->aggregateBy('artists', 'array', $sort, $limit);
+    }
+
+    /**
+     * @param int $limit
+     * @return Cursor
+     */
+    public function getRecentlyAddedTracks(int $limit = 10)
+    {
+        return $this->findBy([ ], [ 'limit' => $limit, 'sort' => [ 'indexed_date' => -1 ] ]);
     }
 
     /**
@@ -74,17 +82,13 @@ class DashboardRepository extends Repository
             array_unshift($ops, [ '$unwind' => '$' . $field ]);
         }
 
-        $rawData = $this->db
-            ->selectCollection(static::$collection)
-            ->aggregate($ops);
+        $rawData = $this->aggregate($ops);
 
         $result = [];
 
-        foreach ($rawData['result'] as $group) {
+        foreach ($rawData as $group) {
             $result[$group['_id'][$field]] = $group['count'];
         }
-
-        unset($ops, $rawData);
 
         return $result;
     }

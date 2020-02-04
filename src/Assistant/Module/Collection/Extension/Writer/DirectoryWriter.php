@@ -4,21 +4,18 @@ namespace Assistant\Module\Collection\Extension\Writer;
 
 use Assistant\Module\Directory\Model\Directory;
 use Assistant\Module\Directory\Repository\DirectoryRepository;
-use MongoDB;
+use MongoDB\DeleteResult;
 
 /**
  * Writer dla elementów będących katalogami
  */
-class DirectoryWriter extends AbstractWriter
+class DirectoryWriter implements WriterInterface
 {
-    /**
-     * {@inheritDoc}
-     */
-    public function __construct(MongoDB $db)
-    {
-        parent::__construct($db);
+    private DirectoryRepository $repository;
 
-        $this->repository = new DirectoryRepository($db);
+    public function __construct(DirectoryRepository $repository)
+    {
+        $this->repository = $repository;
     }
 
     /**
@@ -32,15 +29,5 @@ class DirectoryWriter extends AbstractWriter
         $this->repository->insert($directory);
 
         return $directory;
-    }
-
-    /**
-     * Usuwa elementy znajdujące się w kolekcji
-     *
-     * @return int
-     */
-    public function clean()
-    {
-        return $this->repository->removeBy();
     }
 }

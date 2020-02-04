@@ -9,6 +9,10 @@ use Assistant\Module\File\Extension\SplFileInfo;
 use Assistant\Module\Track\Model\Track;
 use Assistant\Module\Directory\Model\Directory;
 
+/**
+ * @todo Dokończyć
+ * @todo Zmienić na klasę z metodami statycznymi
+ */
 trait GetTargetPath
 {
     /**

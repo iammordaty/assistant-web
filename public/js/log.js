@@ -1,7 +1,7 @@
 $(function () {
     $('[data-toggle="popover"]').popover();
 
-    $('[data-element="log-viewer"').each(function () {
+    $('[data-element="log-viewer"]').each(function () {
         var $viewer = $(this),
             log = $viewer.data('log'),
             mtime = $viewer.data('mtime'),

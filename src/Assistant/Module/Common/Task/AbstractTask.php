@@ -59,7 +59,7 @@ abstract class AbstractTask extends Command
         $this->input = $input;
         $this->output = $output;
 
-        $procId = uniqid();
+        $procId = uniqid('procId', true);
 
         $this->app->log
             ->pushProcessor(new MemoryUsageProcessor())

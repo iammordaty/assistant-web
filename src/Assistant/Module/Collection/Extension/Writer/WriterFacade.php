@@ -2,9 +2,13 @@
 
 namespace Assistant\Module\Collection\Extension\Writer;
 
+use Assistant\Module\Common\Extension\Backend\Client as BackendClient;
+use Assistant\Module\Common\Model\ModelInterface;
 use Assistant\Module\Directory\Model\Directory;
+use Assistant\Module\Directory\Repository\DirectoryRepository;
 use Assistant\Module\Track\Model\Track;
-use MongoDB;
+use Assistant\Module\Track\Repository\TrackRepository;
+use MongoDB\Database;
 
 /**
  * Fasada dla writerów zajmujących się zapisywaniem elementów w kolekcji
@@ -12,82 +16,64 @@ use MongoDB;
 class WriterFacade
 {
     /**
-     * @var MongoDB
+     * Obiekt klasy odpowiedzialnej za zapis katalogów w bazie danych
+     *
+     * @var DirectoryWriter
      */
-    private $db;
+    private DirectoryWriter $directoryWriter;
 
     /**
-     * Lista obsługiwanych writerów danych
+     * Obiekt klasy odpowiedzialnej za zapis plików (utworów muzycznych) w bazie danych
      *
-     * @var array
+     * @var TrackWriter
      */
-    private $writerNames = [
-        'track',
-        'directory',
-    ];
-
-    /**
-     * Lista writerów danych
-     *
-     * @see setup()
-     * @see $writerNames
-     */
-    private $writers = [ ];
+    private TrackWriter $trackWriter;
 
     /**
      * Konstruktor
      *
-     * @param MongoDB $db
+     * @param Database $database
      */
-    public function __construct(MongoDB $db)
+    public function __construct(Database $database)
     {
-        $this->db = $db;
+        $this->directoryWriter = new DirectoryWriter(
+            new DirectoryRepository($database),
+        );
 
-        $this->setup();
+        $this->trackWriter = new TrackWriter(
+            new TrackRepository($database),
+            new BackendClient(),
+        );
     }
 
     /**
      * Zapisuje element kolekcji
      *
-     * @param Track|Directory $item
-     * @return Track|Directory
+     * @param ModelInterface|Track|Directory $item
+     * @return void
      */
-    public function save($item)
+    public function save(ModelInterface $item): void
     {
-        return $this->writers[$this->getElementType($item)]->save($item);
-    }
+        $itemType = static::getItemType($item);
 
-    /**
-     * Usuwa elementy z kolekcji
-     */
-    public function clear()
-    {
-        foreach ($this->writers as $writer) {
-            $writer->clean();
+        if ($itemType === 'directory') {
+            $this->directoryWriter->save($item);
         }
-    }
 
-    /**
-     * Przygotowuje writery do użycia
-     */
-    private function setup()
-    {
-        foreach ($this->writerNames as $writerName) {
-            $className = sprintf('%s\%sWriter', __NAMESPACE__, ucfirst($writerName));
-
-            $this->writers[$writerName] = new $className($this->db);
-
-            unset($className, $writerName);
+        if ($itemType === 'track') {
+            $this->trackWriter->save($item);
         }
     }
 
     /**
      * Zwraca typ podanego elementu kolekcji
      *
-     * @param Track|Directory $item
+     * @todo Chyba bardziej właściwe byłoby, gdyby to model zwracał informację o typie via getType()
+     *
+     * @param ModelInterface|Track|Directory $item
      * @return string
      */
-    private function getElementType($item)
+    private static function getItemType(ModelInterface $item): string
     {
         $parts = explode('\\', get_class($item));
 

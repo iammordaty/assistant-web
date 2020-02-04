@@ -4,8 +4,8 @@ namespace Assistant\Module\Search\Controller;
 
 use Assistant\Module\Search\AbstractSearchController;
 use Assistant\Module\Track;
-
 use Cocur\Slugify\Slugify;
+use MongoDB\BSON\Regex;
 
 /**
  * Kontroler pozwalający na wyszukiwanie utworów po nazwie lub artyście
@@ -22,13 +22,15 @@ class SimpleSearchController extends AbstractSearchController
      */
     protected function getQueryCriteria()
     {
-        $request = $this->app->request();
-
         $criteria = [];
 
-        if (!empty($request->get('query'))) {
-            $query = new \MongoRegex('/' . trim($request->get('query')) . '/i');
-            $guidQuery = new \MongoRegex('/' . trim((new Slugify())->slugify($request->get('query'))) . '/i');
+        $query = trim($this->app->request()->get('query'));
+
+        if (!empty($query)) {
+            $slugify = new Slugify();
+
+            $query = new Regex($query, 'i');
+            $guidQuery = new Regex($slugify->slugify($query), 'i');
 
             $criteria = [
                 '$or' => [
@@ -58,7 +60,7 @@ class SimpleSearchController extends AbstractSearchController
         $repository = new Track\Repository\TrackRepository($this->app->container['db']);
 
         $results = [
-            'tracks' => $repository->findBy($criteria, [ ], $options),
+            'tracks' => $repository->findBy($criteria, $options),
             'count' => $repository->count($criteria),
         ];
 

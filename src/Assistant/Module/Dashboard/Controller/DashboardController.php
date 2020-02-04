@@ -3,13 +3,14 @@
 namespace Assistant\Module\Dashboard\Controller;
 
 use Assistant\Module\Common\Controller\AbstractController;
-use Assistant\Module\Dashboard;
+use Assistant\Module\Stats\Repository\StatsRepository;
+use Assistant\Module\Track\Repository\TrackRepository;
 
 class DashboardController extends AbstractController
 {
     public function index()
     {
-        $repository = new Dashboard\Repository\DashboardRepository($this->app->container['db']);
+        $repository = new StatsRepository($this->app->container['db']);
 
         return $this->app->render(
             '@dashboard/index.twig',
@@ -17,7 +18,7 @@ class DashboardController extends AbstractController
                 'menu' => 'dashboard',
                 'trackCountByGenre' => $repository->getTrackCountByGenre(),
                 'trackCountByArtist' => $repository->getTrackCountByArtist(),
-                'recentlyAddedTracks' => $repository->findBy([ ], [ ], [ 'limit' => 10, 'sort' => [ 'indexed_date' => -1 ] ]),
+                'recentlyAddedTracks' => $repository->getRecentlyAddedTracks(),
             ]
         );
     }

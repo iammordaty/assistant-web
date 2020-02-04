@@ -5,33 +5,28 @@ namespace Assistant\Module\Collection\Extension\Writer;
 use Assistant\Module\Common\Extension\Backend\Client as BackendClient;
 use Assistant\Module\Track\Model\Track;
 use Assistant\Module\Track\Repository\TrackRepository;
-use MongoDB;
-use MongoRegex;
+use MongoDB\DeleteResult;
+use MongoDB\BSON\Regex;
 
 /**
  * Writer dla elementów będących utworami muzycznymi
  */
-class TrackWriter extends AbstractWriter
+class TrackWriter implements WriterInterface
 {
-    /**
-     * @var TrackRepository
-     */
-    private $repository;
+    private TrackRepository $repository;
+
+    private BackendClient $backendClient;
 
     /**
-     * @var BackendClient
+     * TrackWriter constructor.
+     *
+     * @param TrackRepository $repository
+     * @param BackendClient $backendClient
      */
-    private $backendClient;
-
-    /**
-     * {@inheritDoc}
-     */
-    public function __construct(MongoDB $db)
+    public function __construct(TrackRepository $repository, BackendClient $backendClient)
     {
-        parent::__construct($db);
-
-        $this->repository = new TrackRepository($db);
-        $this->backendClient = new BackendClient();
+        $this->repository = $repository;
+        $this->backendClient = $backendClient;
     }
 
     /**
@@ -43,10 +38,10 @@ class TrackWriter extends AbstractWriter
     public function save($track)
     {
         /* @var $indexedTrack Track */
-        $indexedTrack = $this->repository->findOneBy([ 'pathname' => $track->pathname ], [ 'metadata_md5' ]);
+        $indexedTrack = $this->repository->findOneBy([ 'pathname' => $track->pathname ]);
 
         if ($indexedTrack === null) {
-            $this->assumeUniqueGuid($track);
+            $track->guid = $this->getUniqueGuid($track);
 
             $result = $this->repository->insert($track);
 
@@ -54,9 +49,6 @@ class TrackWriter extends AbstractWriter
                 $this->backendClient->addToSimilarCollection($track);
             }
         } else {
-            // TODO: zapis powinien odbyć się tylko wówczas, gdy zmieniły się dane,
-            //       czyli md5 z metadanych są różne
-
             $track->_id = $indexedTrack->_id;
             $track->indexed_date = $indexedTrack->indexed_date;
 
@@ -69,26 +61,21 @@ class TrackWriter extends AbstractWriter
     }
 
     /**
-     * Usuwa elementy znajdujące się w kolekcji
-     *
-     * @return int
-     */
-    public function clean()
-    {
-        return $this->repository->removeBy();
-    }
-
-    /**
      * Zapewnia, że guid podanego utworu jest unikalny
      *
      * @param Track $track
+     * @return string
      */
-    private function assumeUniqueGuid(Track &$track)
+    private function getUniqueGuid(Track $track): ?string
     {
-        $count = $this->repository->count([ 'guid' => new MongoRegex(sprintf('/^%s(?:-\d+)?$/i', $track->guid)) ]);
+        $count = $this->repository->count([ 'guid' => new Regex(sprintf('^%s(?:-\d+)?$', $track->guid), 'i') ]);
 
-        if ($count !== 0) {
-            $track->guid .= sprintf('-%d', $count + 1);
+        if ($count === 0) {
+            return $track->guid;
         }
+
+        $guid = $track->guid .= sprintf('-%d', $count + 1);
+
+        return $guid;
     }
 }

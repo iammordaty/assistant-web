@@ -2,23 +2,26 @@
 
 namespace Assistant\Module\Directory\Controller;
 
-use Assistant\Module\Common;
-use Assistant\Module\Directory;
-use Assistant\Module\Collection;
-use Assistant\Module\Track;
-use Assistant\Module\File\Extension\RecursiveDirectoryIterator;
+use Assistant\Module\Collection\Extension\Reader\ReaderFacade;
+use Assistant\Module\Common\Controller\AbstractController;
+use Assistant\Module\Common\Extension\Traits\GetPathBreadcrumbs;
+use Assistant\Module\Common\Extension\Traits\GetTargetPath;
+use Assistant\Module\Directory\Model\Directory;
+use Assistant\Module\Directory\Repository\DirectoryRepository;
 use Assistant\Module\File\Extension\PathFilterIterator;
-use Assistant\Module\File\Extension\IgnoredPathIterator;
+use Assistant\Module\File\Extension\RecursiveDirectoryIterator;
+use Assistant\Module\Track\Repository\TrackRepository;
 
 // TODO: Uprościć przeglądarkę: ścieżki i katalogi w jednej tablicy
-class BrowseController extends Common\Controller\AbstractController
+class BrowseController extends AbstractController
 {
-    use Common\Extension\Traits\GetPathBreadcrumbs,
-        Common\Extension\Traits\GetTargetPath;
+    use GetPathBreadcrumbs,
+        GetTargetPath;
 
     public function index($guid = null)
     {
-        $directory = (new Directory\Repository\DirectoryRepository($this->app->container['db']))->findOneByGuid($guid);
+        $directory = (new DirectoryRepository($this->app->container['db']))
+            ->findOneBy([ 'guid' => $guid ]);
 
         if ($directory === null) {
             $this->app->notFound();
@@ -45,10 +48,10 @@ class BrowseController extends Common\Controller\AbstractController
 
         $recent = [];
 
-        $tracks = (new Track\Repository\TrackRepository($this->app->container['db']))
-            ->findBy([ ], [ ], [ 'limit' => 1000, 'sort' => [ 'modified_date' => -1 ] ]);
+        $tracks = (new TrackRepository($this->app->container['db']))
+            ->findBy([ ], [ 'limit' => 1000, 'sort' => [ 'modified_date' => -1 ] ]);
 
-        $repository = new Directory\Repository\DirectoryRepository($this->app->container['db']);
+        $repository = new DirectoryRepository($this->app->container['db']);
 
         foreach ($tracks as $track) {
             $key = $getGroupName($track->parent);
@@ -90,11 +93,11 @@ class BrowseController extends Common\Controller\AbstractController
         $tracks = [];
         $directories = [];
 
-        $reader = new Collection\Extension\Reader\ReaderFacade($this->app->container->parameters);
+        $reader = new ReaderFacade($this->app->container->parameters);
 
         // TODO: Do zastanowienia się: po refaktoringu elementy powinny mieć dostęp do obiektów SplFileInfo
         foreach ($this->getIterator($absolutePathname) as $node) {
-            $element = $reader->process($node);
+            $element = $reader->read($node);
             $targetPath = $this->getTargetPath($node);
 
             if ($node->isFile()) {
@@ -111,15 +114,6 @@ class BrowseController extends Common\Controller\AbstractController
                 ];
             }
         }
-
-        echo '<!--<pre>';
-        foreach ($directories as $data) {
-            echo $data['directory']->pathname, ' - ', $data['targetPath'], PHP_EOL;
-        }
-        foreach ($tracks as $data) {
-            echo $data['track']->pathname, ' - ', $data['targetPath'], PHP_EOL;
-        }
-        echo '</pre>-->';
 
         usort($tracks, function($data1, $data2) {
         	return strnatcasecmp($data1['track']->pathname, $data2['track']->pathname);
@@ -152,20 +146,19 @@ class BrowseController extends Common\Controller\AbstractController
     /**
      * Zwraca elementy kolekcji znajdujące się w podanym katalogu
      *
-     * @param \Assistant\Module\Directory\Model\Directory $directory
+     * @param Directory $directory
      * @return array
      */
-    private function getChildrens(Directory\Model\Directory $directory)
+    private function getChildrens(Directory $directory)
     {
-        $directories = (new Directory\Repository\DirectoryRepository($this->app->container['db']))
+        $directories = (new DirectoryRepository($this->app->container['db']))
             ->findBy(
                 [ 'parent' => $directory->guid ],
-                [ ],
                 [ 'sort' => [ 'guid' => 1 ]]
             );
 
-        $tracks = (new Track\Repository\TrackRepository($this->app->container['db']))
-            ->findBy([ 'parent' => $directory->guid ], [ ], [ 'sort' => [ 'guid' => 1 ]]);
+        $tracks = (new TrackRepository($this->app->container['db']))
+            ->findBy([ 'parent' => $directory->guid ], [ 'sort' => [ 'guid' => 1 ]]);
 
         return [
             'directories' => iterator_to_array($directories),
@@ -175,7 +168,7 @@ class BrowseController extends Common\Controller\AbstractController
 
     /**
      * @param string $pathname
-     * @return IgnoredPathIterator
+     * @return PathFilterIterator
      */
     private function getIterator($pathname)
     {

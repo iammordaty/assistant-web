@@ -71,6 +71,9 @@ class IndexerTask extends AbstractTask
 
     /**
      * Rozpoczyna proces indeksowania kolekcji
+     *
+     * @param InputInterface $input
+     * @param OutputInterface $output
      */
     protected function execute(InputInterface $input, OutputInterface $output)
     {
@@ -84,7 +87,7 @@ class IndexerTask extends AbstractTask
             $this->app->log->info('Processing node', [ 'pathname' => $node->getPathname() ]);
 
             try {
-                $element = $reader->process($node);
+                $element = $reader->read($node);
                 $validator->validate($element);
                 $writer->save($element);
 

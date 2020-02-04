@@ -6,7 +6,7 @@ use Assistant\Module\Common\Task\AbstractTask;
 use Assistant\Module\Common\Repository\AbstractObjectRepository;
 use Assistant\Module\Directory\Repository\DirectoryRepository;
 use Assistant\Module\Track\Repository\TrackRepository;
-
+use MongoDB\BSON\Regex;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
@@ -61,6 +61,9 @@ class CleanerTask extends AbstractTask
 
     /**
      * Rozpoczyna proces usuwania nieistniejących elementów z kolekcji
+     *
+     * @param InputInterface $input
+     * @param OutputInterface $output
      */
     protected function execute(InputInterface $input, OutputInterface $output)
     {
@@ -70,7 +73,7 @@ class CleanerTask extends AbstractTask
 
         $pathname = $input->getArgument('pathname');
         $relativePathname = str_replace($this->parameters['root_dir'], '', $pathname);
-        $searchCondition = [ 'pathname' => new \MongoRegex(sprintf('/^%s/', preg_quote($relativePathname))) ];
+        $searchCondition = [ 'pathname' => new Regex('^' . preg_quote($relativePathname)) ];
 
         $this->stats['removed']['dir'] = $this->remove(
             (new DirectoryRepository($this->app->container['db'])),
@@ -110,8 +113,6 @@ class CleanerTask extends AbstractTask
                 $removed++;
             }
         }
-
-        unset($repository, $conditions);
 
         return $removed;
     }
