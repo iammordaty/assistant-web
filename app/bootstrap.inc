@@ -1,12 +1,18 @@
 <?php
 
-/* @var $app \Slim\Slim */
-
-// require enviroment config
+use Assistant\Module\Common\Extension\Slim\Views\Twig;
 use Assistant\Module\Common\Extension\Twig\CustomTwigExtension;
+use Khill\Duration\Duration;
+use Slim\Slim;
 use Slim\Views\TwigExtension as SlimTwigExtension;
 use Twig\Extension\DebugExtension as TwigDebugExtension;
 use Twig\Extensions\TextExtension as TwigTextExtension;
+use Westsworld\TimeAgo;
+use Westsworld\TimeAgo\Translations\Pl as TimeAgoPolishTranslation;
+
+/* @var $app Slim */
+
+// require environment config
 
 require_once sprintf('%s/app/config/%s.inc', BASE_DIR, getenv('SLIM_MODE'));
 
@@ -57,7 +63,7 @@ foreach ($modules as $path) {
 
 // setup view
 
-$view = new \Assistant\Module\Common\Extension\Slim\Views\Twig();
+$view = new Twig();
 
 foreach ($modules as $name => $path) {
     $templatesPath = sprintf('%s/Resources/templates/', $path);
@@ -69,8 +75,13 @@ foreach ($modules as $name => $path) {
     unset($name, $path, $templatesPath);
 }
 
+$translation = new TimeAgoPolishTranslation();
+$timeAgo = new TimeAgo($translation);
+
+$duration = new Duration();
+
 $view->parserExtensions = [
-    new CustomTwigExtension(),
+    new CustomTwigExtension($timeAgo, $duration),
     new SlimTwigExtension(),
     new TwigTextExtension(),
 ];
@@ -83,4 +94,4 @@ if ($app->config('debug')) {
 
 $app->view($view);
 
-unset($view);
+unset($view, $translation, $timeAgo, $duration);

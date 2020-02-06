@@ -2,17 +2,22 @@
 
 namespace Assistant\Module\Track\Controller;
 
-use Assistant\Module\Common\Controller\AbstractController;
 use Assistant\Module\Common;
+use Assistant\Module\Common\Controller\AbstractController;
+use Assistant\Module\Common\Extension\Traits\GetPathBreadcrumbs;
 use Assistant\Module\Track;
+use Assistant\Module\Track\Extension\Similarity;
+use Assistant\Module\Track\Model\Track as TrackModel;
+use Assistant\Module\Track\Repository\TrackRepository;
+use KeyTools\KeyTools;
 
 class TrackController extends AbstractController
 {
-    use Common\Extension\Traits\GetPathBreadcrumbs;
+    use GetPathBreadcrumbs;
 
     public function index($guid)
     {
-        $track = (new Track\Repository\TrackRepository($this->app->container['db']))->findOneByGuid($guid);
+        $track = (new TrackRepository($this->app->container['db']))->findOneByGuid($guid);
 
         if ($track === null) {
             $this->app->redirect(
@@ -43,11 +48,12 @@ class TrackController extends AbstractController
     /**
      * Zwraca utwory podobne do podanego utworu
      *
-     * @param Track\Model\Track $track
-     * @param \Slim\Http\Request $request
+     * @param TrackModel $baseTrack
+     * @param array $baseParameters
+     * @param array|null $customParameters
      * @return array
      */
-    private function getSimilarTracks($baseTrack, $baseParameters, $customParameters)
+    private function getSimilarTracks(TrackModel $baseTrack, array $baseParameters, ?array $customParameters)
     {
         $track = $baseTrack;
         $parameters = $baseParameters;
@@ -60,8 +66,8 @@ class TrackController extends AbstractController
             $parameters['providers']['names'] = $customParameters['providers']['names'];
         }
 
-        $similarity = new Track\Extension\Similarity(
-            new Track\Repository\TrackRepository($this->app->container['db']),
+        $similarity = new Similarity(
+            new TrackRepository($this->app->container['db']),
             $parameters
         );
 
@@ -71,24 +77,24 @@ class TrackController extends AbstractController
     /**
      * Zwraca klucze podobne do klucza podanego utworu
      *
-     * @param Track\Model\Track $track
+     * @param TrackModel $track
      * @return array|null
      */
-    private function getTrackKeyInfo(Track\Model\Track $track)
+    private function getTrackKeyInfo(TrackModel $track)
     {
-        $keyTools = new Common\Extension\KeyTools();
+        $keyTools = new KeyTools([ 'notation' => KeyTools::NOTATION_CAMELOT_KEY ]);
 
-        if ($track->initial_key === null) {
+        if (!$keyTools->isValidKey($track->initial_key)) {
             return null;
         }
 
         $implode = function ($lines) {
-            return implode($lines, '<br  />');
+            return implode('<br  />', $lines);
         };
 
         return [
             'relativeMinorToMajor' => [
-                'title' => sprintf('To %s', $keyTools->getKeyMode($track->initial_key) ? 'minor' : 'major'),
+                'title' => sprintf('To %s', $keyTools->isMinorKey($track->initial_key) ? 'major' : 'minor'),
                 'value' => $keyTools->relativeMinorToMajor($track->initial_key),
                 'description' => $implode([
                     'This combination will likely sound good because the notes of both scales are the same,',

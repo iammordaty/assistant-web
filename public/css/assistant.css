@@ -147,6 +147,10 @@ a.undecorated:hover {
     min-width: 250px;
 }
 
+.table-responsive table .time-ago {
+    max-width: 79px;
+}
+
 .similar-tracks .toggle-visibility {
     font-size: 70%;
     line-height: 30px;

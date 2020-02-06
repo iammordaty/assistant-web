@@ -2,17 +2,21 @@
 
 namespace Assistant\Module\Common\Extension\Twig;
 
+use Khill\Duration\Duration;
 use Twig\Extension\AbstractExtension;
 use Twig\TwigFilter;
+use Westsworld\TimeAgo;
 
 class CustomTwigExtension extends AbstractExtension
 {
-    /**
-     * {@inheritdoc}
-     */
-    public function getName()
+    private TimeAgo $timeAgo;
+
+    private Duration $duration;
+
+    public function __construct(TimeAgo $timeAgo, Duration $duration)
     {
-        return 'custom_twig_extension';
+        $this->timeAgo = $timeAgo;
+        $this->duration = $duration;
     }
 
     /**
@@ -21,53 +25,32 @@ class CustomTwigExtension extends AbstractExtension
     public function getFilters()
     {
         return [
-            new TwigFilter('formatDateAsDaysAgo', [ $this, 'formatDateAsDaysAgo' ]),
-            new TwigFilter('formatSeconds', [ $this, 'formatSeconds' ]),
+            new TwigFilter('time_ago', [ $this, 'getTimeAgoInWords' ]),
+            new TwigFilter('format_duration', [ $this, 'getFormattedDuration' ]),
         ];
     }
 
-    public function formatDateAsDaysAgo(\DateTime $inputDate): string
+    public function getTimeAgoInWords(\DateTime $date): string
     {
-        $now = new \DateTime();
-        $interval = $now->diff($inputDate);
-
-        switch ($interval->format('%a')) {
-            case 0:
-                return 'Dzisiaj';
-            case 1:
-                return 'Wczoraj';
-            case 2:
-                return 'Przedwczoraj';
-        }
-
-        return ($interval->format('%a') <= 7)
-            ? $interval->format('%a') . ' dni temu'
-            : $inputDate->format('d.m.Y');
+        return $this->timeAgo->inWords($date);
     }
 
-    public function formatSeconds(string $ss): string
+    public function getFormattedDuration(int $seconds): string
     {
-        $result = '';
+        $formatted = $this->duration->formatted($seconds, true);
 
-        $s = $ss % 60;
-        $m = floor(($ss % 3600) / 60);
-        $h = floor(($ss % 86400) / 3600);
-        $d = floor(($ss % 2592000) / 86400);
-
-        if ($d > 0) {
-            $result .= $d . ':';
+        if ($this->duration->hours === 0) {
+            $formatted = str_replace('0:', '', $formatted);
         }
 
-        if ($h > 0) {
-            $result .= ($h < 10 ? '0' : '') . $h . ':';
-        }
+        return $formatted;
+    }
 
-        if ($m > 0 || $s > 0) {
-            $result .= ($m < 10 ? '0' : '') . $m . ':';
-        }
-
-        $result .= ($s < 10 ? '0' : '') . $s;
-
-        return $result;
+    /**
+     * {@inheritdoc}
+     */
+    public function getName()
+    {
+        return 'custom_twig_extension';
     }
 }

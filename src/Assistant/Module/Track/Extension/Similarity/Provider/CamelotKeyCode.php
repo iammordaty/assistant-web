@@ -1,9 +1,10 @@
 <?php
+
 namespace Assistant\Module\Track\Extension\Similarity\Provider;
 
 use Assistant\Module\Track\Extension\Similarity\Provider as BaseProvider;
-use Assistant\Module\Common;
-use Assistant\Module\Track;
+use Assistant\Module\Track\Model\Track;
+use KeyTools\KeyTools;
 
 class CamelotKeyCode extends BaseProvider
 {
@@ -15,17 +16,15 @@ class CamelotKeyCode extends BaseProvider
     /**
      * {@inheritDoc}
      */
-    public function getSimilarity(Track\Model\Track $baseTrack, Track\Model\Track $comparedTrack)
+    public function getSimilarity(Track $baseTrack, Track $comparedTrack)
     {
-        return isset($this->similarityMap[$baseTrack->initial_key][$comparedTrack->initial_key])
-            ? $this->similarityMap[$baseTrack->initial_key][$comparedTrack->initial_key]
-            : 0;
+        return $this->similarityMap[$baseTrack->initial_key][$comparedTrack->initial_key] ?? 0;
     }
 
     /**
      * {@inheritDoc}
      */
-    public function getCriteria(Track\Model\Track $baseTrack)
+    public function getCriteria(Track $baseTrack)
     {
         return [ '$in' => array_keys($this->similarityMap[$baseTrack->initial_key]) ];
     }
@@ -35,9 +34,9 @@ class CamelotKeyCode extends BaseProvider
      */
     protected function setup()
     {
-        $keyTools = new Common\Extension\KeyTools();
+        $keyTools = new KeyTools([ 'notation' => KeyTools::NOTATION_CAMELOT_KEY ]);
 
-        foreach ($keyTools->camelotCode as $keyCode) {
+        foreach (KeyTools::NOTATION_KEYS_CAMELOT_KEY as $keyCode) {
             $this->similarityMap[$keyCode] = [
                 $keyCode => static::MAX_SIMILARITY_VALUE,
                 $keyTools->perfectFourth($keyCode) => 95,

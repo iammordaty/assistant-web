@@ -9,7 +9,7 @@
             <i data-role="play-pause" class="fa fa-play"></i>
         </div>
         <div id="wave-time-current-time" data-time-mode="elapsed">00:00</div>
-        <div id="wave-time-track-duration" data-track-length="{{ track.length }}">{{ track.length|formatSeconds }}</div>
+        <div id="wave-time-track-duration" data-track-length="{{ track.length }}">{{ track.length|format_duration }}</div>
         <div id="wave"></div>
     </div>
 
@@ -57,7 +57,7 @@
 
                 <div class="row">
                     <span class="col-xs-4 col-sm-3 col-md-2 text-right"><strong>Czas trwania</strong></span>
-                    <span class="col-xs-8 col-sm-9 col-md-10">{{ track.length|formatSeconds }}</span>
+                    <span class="col-xs-8 col-sm-9 col-md-10">{{ track.length|format_duration }}</span>
                 </div>
 
                 <div class="row">
@@ -231,7 +231,7 @@
                                     <a class="undecorated" href="{{ urlFor('search.advanced.index') }}?genre={{ similarTrack.track.genre }}">{{ similarTrack.track.genre }}</a>
                                 </td>
                                 <td class="col-xs-1">
-                                   {{ similarTrack.track.length|formatSeconds }}
+                                   {{ similarTrack.track.length|format_duration }}
                                 </td>
                                 <td class="col-xs-1">
                                     <a class="undecorated" href="{{ urlFor('search.advanced.index') }}?year={{ similarTrack.track.year }}">{{ similarTrack.track.year }}</a>

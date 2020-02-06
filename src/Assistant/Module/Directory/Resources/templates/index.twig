@@ -75,7 +75,7 @@
                                 <a class="undecorated" href="{{ urlFor('search.advanced.index') }}?genre={{ track.genre }}">{{ track.genre }}</a>
                             </td>
                             <td class="col-xs-1">
-                                {{ track.length|formatSeconds }}
+                                {{ track.length|format_duration }}
                             </td>
                             <td class="col-xs-1">
                                 <a class="undecorated" href="{{ urlFor('search.advanced.index') }}?year={{ track.year }}">{{ track.year }}</a>
