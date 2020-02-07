@@ -2,7 +2,7 @@
     <legend>Wyszukiwanie</legend>
 
     <div class="form-group">
-        <label for="inputType" class="col-sm-1 control-label">
+        <label class="col-sm-1 control-label">
             <span class="ellipsis"><span>Wykonawca</span></span>
         </label>
         <div class="col-sm-5">
@@ -50,6 +50,14 @@
         <label class="col-sm-1 control-label" title="Liczba uderzeń na minutę">BPM</label>
         <div class="col-sm-5 col-md-3">
             <input type="text" name="bpm" value="{{ form.bpm }}" class="form-control" placeholder="np. => 125">
+        </div>
+    </div>
+
+    <div class="form-group">
+        <label class="col-sm-1 control-label">Dodany</label>
+        <div class="col-sm-5 col-md-3">
+            {% set year = now|date('Y') %}
+            <input name="indexed_date" value="{{ form.indexed_date }}" class="form-control" placeholder="np. >= {{ year - 3 }}">
         </div>
     </div>
 

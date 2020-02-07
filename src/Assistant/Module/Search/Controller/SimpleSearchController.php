@@ -15,7 +15,7 @@ class SimpleSearchController extends AbstractSearchController
     /**
      * {@inheritDoc}
      */
-    const SEARCH_FORM_TYPE = 'simple';
+    protected const SEARCH_FORM_TYPE = 'simple';
 
     /**
      * {@inheritDoc}
@@ -47,7 +47,7 @@ class SimpleSearchController extends AbstractSearchController
     /**
      * {@inheritDoc}
      */
-    protected function isRequestValid($criteria)
+    protected function isRequestValid(array $criteria): bool
     {
         return !empty($criteria);
     }

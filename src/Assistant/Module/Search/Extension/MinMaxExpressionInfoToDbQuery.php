@@ -11,10 +11,9 @@ class MinMaxExpressionInfoToDbQuery
     public static function convert(array $minMaxInfo)
     {
         $minMaxInfoValues = array_values($minMaxInfo);
-        $filtered = array_merge(array_unique($minMaxInfoValues));
 
-        if (count($filtered) === 1) {
-            return $filtered[0];
+        if ($minMaxInfoValues[0] === $minMaxInfoValues[1]) {
+            return $minMaxInfoValues[0];
         }
 
         $query = [];

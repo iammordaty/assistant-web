@@ -14,12 +14,12 @@ abstract class AbstractSearchController extends AbstractController
      *
      * @var integer
      */
-    const MAX_TRACKS_PER_PAGE = 50;
+    protected const MAX_TRACKS_PER_PAGE = 50;
 
     /**
      * Typ wyszukiwarki
      */
-    const SEARCH_FORM_TYPE = null;
+    protected const SEARCH_FORM_TYPE = null;
 
     /**
      * Renderuje stronę wyszukiwania
@@ -62,9 +62,10 @@ abstract class AbstractSearchController extends AbstractController
     /**
      * Zwraca informację, czy żądanie jest prawidłowe
      *
+     * @param array $criteria
      * @return bool
      */
-    abstract protected function isRequestValid($criteria);
+    abstract protected function isRequestValid(array $criteria): bool;
 
     /**
      * Zwraca utwory spełniające podane kryteria wyszukiwania

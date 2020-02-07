@@ -2,13 +2,9 @@
 
 namespace Assistant\Module\Search\Extension;
 
-class MinMaxExpressionParser
+class RawMinMaxExpressionParser
 {
-    /**
-     * @param string $expression
-     * @return array|null
-     */
-    public static function parse($expression)
+    public static function parse(string $expression): ?array
     {
         $value = self::normalizeExpression($expression);
 
@@ -16,34 +12,34 @@ class MinMaxExpressionParser
 
         if (is_numeric($value)) {
             return [
-                'gte' => (int) $value,
-                'lte' => (int) $value,
+                'gte' => $value,
+                'lte' => $value,
             ];
         }
 
         // "value" - "value"
 
         $matches = [];
-        $isMatched = preg_match('/^(\d+)-(\d+)$/', $value, $matches) === 1;
+        $isMatched = preg_match('/^([\w.]+)-([\w.]+)$/', $value, $matches) === 1;
 
         if ($isMatched) {
             return [
-                'gte' => (int) $matches[1],
-                'lte' => (int) $matches[2],
+                'gte' => $matches[1],
+                'lte' => $matches[2],
             ];
         }
 
         // ">= value", "> value", "<= value", "< value"
 
         $matches = [];
-        $isMatched = preg_match('/^(?\'op\'[><])(?\'eq\'=)?(?\'val\'\d+)/', $value, $matches) === 1;
+        $isMatched = preg_match('/^(?\'op\'[><])(?\'eq\'=)?(?\'val\'[\w.]+)/', $value, $matches) === 1;
 
         if (!$isMatched) {
             return null;
         }
 
         $equal = $matches['eq'] === '=' ? 'e' : '';
-        $value = (int) $matches['val'];
+        $value = $matches['val'];
 
         // ">= value", "> value"
 
@@ -62,14 +58,10 @@ class MinMaxExpressionParser
         ];
     }
 
-    /**
-     * @param string $expression
-     * @return string
-     */
-    protected static function normalizeExpression($expression)
+    protected static function normalizeExpression(string $expression): string
     {
-        $value = str_replace(' ', '', trim($expression));
+        $normalizedExpression = str_replace(' ', '', trim($expression));
 
-        return $value;
+        return $normalizedExpression;
     }
 }

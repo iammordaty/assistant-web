@@ -2,10 +2,12 @@
 
 namespace Assistant\Module\Search\Controller;
 
-use Assistant\Module\Search\Extension\MinMaxExpressionParser;
+use Assistant\Module\Search\Extension\DateTimeMinMaxExpressionParser;
+use Assistant\Module\Search\Extension\NumberMinMaxExpressionParser;
 use Assistant\Module\Search\Extension\MinMaxExpressionInfoToDbQuery;
 use Assistant\Module\Search\Extension\YearMinMaxExpressionParser;
 use MongoDB\BSON\Regex;
+use MongoDB\BSON\UTCDateTime;
 
 /**
  * Kontroler pozwalający na wyszukiwanie utworów po metadanych
@@ -15,7 +17,7 @@ class AdvancedSearchController extends SimpleSearchController
     /**
      * {@inheritDoc}
      */
-    const SEARCH_FORM_TYPE = 'advanced';
+    protected const SEARCH_FORM_TYPE = 'advanced';
 
     /**
      * {@inheritDoc}
@@ -94,10 +96,18 @@ class AdvancedSearchController extends SimpleSearchController
         }
 
         if ($bpm = $request->get('bpm')) {
-            $minMaxInfo = MinMaxExpressionParser::parse($bpm);
+            $minMaxInfo = NumberMinMaxExpressionParser::parse($bpm);
 
             if ($minMaxInfo) {
                 $criteria['bpm'] = MinMaxExpressionInfoToDbQuery::convert($minMaxInfo);
+            }
+        }
+
+        if ($indexed_date = $request->get('indexed_date')) {
+            $minMaxInfo = DateTimeMinMaxExpressionParser::parse($indexed_date);
+
+            if ($minMaxInfo) {
+                $criteria['indexed_date'] = MinMaxExpressionInfoToDbQuery::convert($minMaxInfo);
             }
         }
 
@@ -107,7 +117,7 @@ class AdvancedSearchController extends SimpleSearchController
     /**
      * {@inheritDoc}
      */
-    protected function isRequestValid($criteria)
+    protected function isRequestValid(array $criteria): bool
     {
         return !empty($criteria) || filter_input(INPUT_GET, 'submit', FILTER_VALIDATE_BOOLEAN) === true;
     }

@@ -2,12 +2,9 @@
 
 namespace Assistant\Module\Search\Extension;
 
-class YearMinMaxExpressionParser extends MinMaxExpressionParser
+class YearMinMaxExpressionParser extends NumberMinMaxExpressionParser
 {
-    /**
-     * @inheritDoc
-     */
-    public static function parse($expression)
+    public static function parse(string $expression): ?array
     {
         $value = self::normalizeExpression($expression);
 
