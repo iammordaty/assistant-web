@@ -49,7 +49,7 @@ class TrackWriter implements WriterInterface
             }
         } else {
             $track->_id = $indexedTrack->_id;
-            $track->indexed_date = $indexedTrack->indexed_date;
+            $track->modified_date = $indexedTrack->indexed_date;
 
             $this->repository->update($track);
         }
