@@ -65,7 +65,7 @@ class TrackWriter implements WriterInterface
      * @param Track $track
      * @return string
      */
-    private function getUniqueGuid(Track $track): ?string
+    private function getUniqueGuid(Track $track): string
     {
         $count = $this->repository->count([ 'guid' => new Regex(sprintf('^%s(?:-\d+)?$', $track->guid), 'i') ]);
 
