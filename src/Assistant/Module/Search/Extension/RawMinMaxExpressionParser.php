@@ -20,7 +20,7 @@ class RawMinMaxExpressionParser
         // "value" - "value"
 
         $matches = [];
-        $isMatched = preg_match('/^([\w.]+)-([\w.]+)$/', $value, $matches) === 1;
+        $isMatched = preg_match('/^([\d.-\/]+)-([\d.-\/]+)$$/', $value, $matches) === 1;
 
         if ($isMatched) {
             return [
@@ -32,7 +32,7 @@ class RawMinMaxExpressionParser
         // ">= value", "> value", "<= value", "< value"
 
         $matches = [];
-        $isMatched = preg_match('/^(?\'op\'[><])(?\'eq\'=)?(?\'val\'[\w.]+)/', $value, $matches) === 1;
+        $isMatched = preg_match('/^(?\'op\'[><])(?\'eq\'=)?(?\'val\'[\d.-\/]+)/', $value, $matches) === 1;
 
         if (!$isMatched) {
             return null;
