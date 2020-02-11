@@ -4,8 +4,8 @@ namespace Assistant\Module\Directory\Controller;
 
 use Assistant\Module\Collection\Extension\Reader\ReaderFacade;
 use Assistant\Module\Common\Controller\AbstractController;
-use Assistant\Module\Common\Extension\Traits\GetPathBreadcrumbs;
-use Assistant\Module\Common\Extension\Traits\GetTargetPath;
+use Assistant\Module\Common\Extension\PathBreadcrumbsGenerator;
+use Assistant\Module\Common\Extension\TargetPathService;
 use Assistant\Module\Directory\Model\Directory;
 use Assistant\Module\Directory\Repository\DirectoryRepository;
 use Assistant\Module\File\Extension\PathFilterIterator;
@@ -15,9 +15,6 @@ use Assistant\Module\Track\Repository\TrackRepository;
 // TODO: Uprościć przeglądarkę: ścieżki i katalogi w jednej tablicy
 class BrowseController extends AbstractController
 {
-    use GetPathBreadcrumbs,
-        GetTargetPath;
-
     public function index($guid = null)
     {
         $directory = (new DirectoryRepository($this->app->container['db']))
@@ -27,12 +24,14 @@ class BrowseController extends AbstractController
             $this->app->notFound();
         }
 
+        $pathBreadcrumbs = PathBreadcrumbsGenerator::factory()->getPathBreadcrumbs($directory->pathname);
+
         return $this->app->render(
             '@directory/index.twig',
             [
                 'menu' => 'browse',
                 'directory' => $directory,
-                'pathBreadcrumbs' => $this->getPathBreadcrumbs($directory->pathname),
+                'pathBreadcrumbs' => $pathBreadcrumbs,
                 'childrens' => $this->getChildrens($directory),
             ]
         );
@@ -95,10 +94,12 @@ class BrowseController extends AbstractController
 
         $reader = new ReaderFacade($this->app->container->parameters);
 
+        $targetPathService = TargetPathService::factory();
+
         // TODO: Do zastanowienia się: po refaktoringu elementy powinny mieć dostęp do obiektów SplFileInfo
         foreach ($this->getIterator($absolutePathname) as $node) {
             $element = $reader->read($node);
-            $targetPath = $this->getTargetPath($node);
+            $targetPath = $targetPathService->getTargetPath($node);
 
             if ($node->isFile()) {
                 $tracks[] = [
@@ -106,7 +107,7 @@ class BrowseController extends AbstractController
                     'node' => $node,
                     'targetPath' => $targetPath,
                 ];
-            } else if ($node->isDir()) {
+            } elseif ($node->isDir()) {
                 $directories[] = [
                     'directory' => $element,
                     'node' => $node,
@@ -115,8 +116,8 @@ class BrowseController extends AbstractController
             }
         }
 
-        usort($tracks, function($data1, $data2) {
-        	return strnatcasecmp($data1['track']->pathname, $data2['track']->pathname);
+        usort($tracks, function ($data1, $data2) {
+            return strnatcasecmp($data1['track']->pathname, $data2['track']->pathname);
         });
 
         $childrens = [
@@ -161,8 +162,8 @@ class BrowseController extends AbstractController
             ->findBy([ 'parent' => $directory->guid ], [ 'sort' => [ 'guid' => 1 ]]);
 
         return [
-            'directories' => iterator_to_array($directories),
-            'tracks' => iterator_to_array($tracks),
+            'directories' => $directories,
+            'tracks' => $tracks,
         ];
     }
 

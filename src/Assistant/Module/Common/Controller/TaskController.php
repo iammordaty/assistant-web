@@ -7,7 +7,7 @@ use Cocur\BackgroundProcess\BackgroundProcess;
 
 class TaskController extends Common\Controller\AbstractController
 {
-    use Common\Extension\Traits\GetTargetPath;
+    use Common\Extension\Traits\TargetPathService;
 
     public function calculateAudioData()
     {
