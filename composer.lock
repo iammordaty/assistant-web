@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "c02c1a8d908413907127179056f10677",
+    "content-hash": "6e270165c9579cf6bdaeed6aee8aeab2",
     "packages": [
         {
             "name": "cocur/background-process",
@@ -215,54 +215,6 @@
                 "tags"
             ],
             "time": "2019-12-17T21:17:26+00:00"
-        },
-        {
-            "name": "jimmiw/php-time-ago",
-            "version": "3.1.0",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/jimmiw/php-time-ago.git",
-                "reference": "3ff6c3e92966035b6e6194eedf8577e5f4f550d7"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/jimmiw/php-time-ago/zipball/3ff6c3e92966035b6e6194eedf8577e5f4f550d7",
-                "reference": "3ff6c3e92966035b6e6194eedf8577e5f4f550d7",
-                "shasum": ""
-            },
-            "require": {
-                "php": ">=5.6"
-            },
-            "require-dev": {
-                "phpmd/phpmd": "@stable",
-                "phpunit/phpunit": "^6",
-                "squizlabs/php_codesniffer": "^3.3"
-            },
-            "type": "library",
-            "autoload": {
-                "psr-4": {
-                    "Westsworld\\": "src/Westsworld/"
-                }
-            },
-            "notification-url": "https://packagist.org/downloads/",
-            "license": [
-                "MIT"
-            ],
-            "authors": [
-                {
-                    "name": "Jimmi Westerberg",
-                    "homepage": "http://www.westsworld.dk",
-                    "role": "Developer"
-                }
-            ],
-            "description": "Simple module, that displays the date in a \"time ago\" format",
-            "homepage": "https://github.com/jimmiw/php-time-ago",
-            "keywords": [
-                "distance of time",
-                "time ago",
-                "time ago in words"
-            ],
-            "time": "2019-08-14T09:58:29+00:00"
         },
         {
             "name": "khill/php-duration",

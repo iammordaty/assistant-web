@@ -103,8 +103,8 @@ class AdvancedSearchController extends SimpleSearchController
             }
         }
 
-        if ($indexed_date = $request->get('indexed_date')) {
-            $minMaxInfo = DateTimeMinMaxExpressionParser::parse($indexed_date);
+        if ($indexedDate = $request->get('indexed_date')) {
+            $minMaxInfo = DateTimeMinMaxExpressionParser::parse($indexedDate);
 
             if ($minMaxInfo) {
                 $criteria['indexed_date'] = MinMaxExpressionInfoToDbQuery::convert($minMaxInfo);

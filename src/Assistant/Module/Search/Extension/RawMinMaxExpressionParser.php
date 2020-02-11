@@ -20,7 +20,7 @@ class RawMinMaxExpressionParser
         // "value" - "value"
 
         $matches = [];
-        $isMatched = preg_match('/^([\d.-\/]+)-([\d.-\/]+)$$/', $value, $matches) === 1;
+        $isMatched = preg_match('/^([\d.-\/]+)-([\d.-\/]+)$/', $value, $matches) === 1;
 
         if ($isMatched) {
             return [

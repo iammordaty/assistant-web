@@ -2,6 +2,7 @@
 
 namespace Assistant\Module\Search\Extension;
 
+use Carbon\Carbon;
 use MongoDB\BSON\UTCDateTime;
 
 class DateTimeMinMaxExpressionParser extends RawMinMaxExpressionParser
@@ -33,6 +34,10 @@ class DateTimeMinMaxExpressionParser extends RawMinMaxExpressionParser
     public static function parse(string $expression): ?array
     {
         $minMaxInfo = parent::parse($expression);
+
+        if ($minMaxInfo === null) {
+            return null;
+        }
 
         [ $min, $max ] = array_values($minMaxInfo);
 

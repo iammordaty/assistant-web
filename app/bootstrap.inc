@@ -7,8 +7,6 @@ use Slim\Slim;
 use Slim\Views\TwigExtension as SlimTwigExtension;
 use Twig\Extension\DebugExtension as TwigDebugExtension;
 use Twig\Extensions\TextExtension as TwigTextExtension;
-use Westsworld\TimeAgo;
-use Westsworld\TimeAgo\Translations\Pl as TimeAgoPolishTranslation;
 
 /* @var $app Slim */
 
@@ -75,13 +73,8 @@ foreach ($modules as $name => $path) {
     unset($name, $path, $templatesPath);
 }
 
-$translation = new TimeAgoPolishTranslation();
-$timeAgo = new TimeAgo($translation);
-
-$duration = new Duration();
-
 $view->parserExtensions = [
-    new CustomTwigExtension($timeAgo, $duration),
+    new CustomTwigExtension(new Duration()),
     new SlimTwigExtension(),
     new TwigTextExtension(),
 ];
@@ -94,4 +87,4 @@ if ($app->config('debug')) {
 
 $app->view($view);
 
-unset($view, $translation, $timeAgo, $duration);
+unset($view);

@@ -22,7 +22,7 @@
                                 <a href="">Gatunek <i class="fa fa-caret-{% if sort.genre == -1 %}down{% else %}up{% endif %} pull-right"></i></a>
                             </th>
                             <th>
-                                <a href="">Długość<i class="fa fa-caret-{% if sort.genre == -1 %}down{% else %}up{% endif %} pull-right"></i></a>
+                                <a href="">Wydawca<i class="fa fa-caret-{% if sort.genre == -1 %}down{% else %}up{% endif %} pull-right"></i></a>
                             </th>
                             <th>
                                 <a href="">Rok <i class="fa fa-caret-{% if sort.year == -1 %}down{% else %}up{% endif %} pull-right"></i></a>
@@ -32,9 +32,6 @@
                             </th>
                             <th>
                                 <a href="">BPM <i class="fa fa-caret-{% if sort.bpm == -1 %}down{% else %}up{% endif %} pull-right"></i></a>
-                            </th>
-                            <th>
-                                <a href="">Dodany <i class="fa fa-caret-{% if sort.indexed == -1 %}down{% else %}up{% endif %} pull-right"></i></a>
                             </th>
                         </tr>
                     </thead>
@@ -50,8 +47,10 @@
                                 <td class="col-xs-2">
                                     <a class="undecorated" href="{{ urlFor('search.advanced.index') }}?genre={{ track.genre }}">{{ track.genre }}</a>
                                 </td>
-                                <td class="col-xs-1">
-                                    {{ track.length|format_duration }}
+                                <td class="col-xs-2">
+                                    <span class="ellipsis">
+                                        <a class="undecorated" href="{{ urlFor('search.advanced.index') }}?publisher={{ track.publisher }}">{{ track.publisher }}</a>
+                                    </span>
                                 </td>
                                 <td class="col-xs-1">
                                     <a class="undecorated" href="{{ urlFor('search.advanced.index') }}?year={{ track.year }}">{{ track.year }}</a>
@@ -61,10 +60,6 @@
                                 </td>
                                 <td class="col-xs-1">
                                     <a class="undecorated" href="{{ urlFor('search.advanced.index') }}?bpm={{ track.bpm }}">{{ track.bpm }}</a>
-                                </td>
-                                <td class="col-xs-1 ellipsis">
-                                    {% set timeAgo = track.indexed_date.toDateTime|time_ago %}
-                                    <span class="time-ago" title="{{ timeAgo }}">{{ timeAgo }}</span>
                                 </td>
                             </tr>
                         {% endfor %}
