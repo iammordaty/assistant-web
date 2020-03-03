@@ -34,7 +34,7 @@ class CamelotKeyCode extends BaseProvider
      */
     protected function setup()
     {
-        $keyTools = new KeyTools([ 'notation' => KeyTools::NOTATION_CAMELOT_KEY ]);
+        $keyTools = KeyTools::fromNotation(KeyTools::NOTATION_CAMELOT_KEY);
 
         foreach (KeyTools::NOTATION_KEYS_CAMELOT_KEY as $keyCode) {
             $this->similarityMap[$keyCode] = [

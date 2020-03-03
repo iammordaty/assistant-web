@@ -81,7 +81,7 @@ class TrackController extends AbstractController
      */
     private function getTrackKeyInfo(TrackModel $track)
     {
-        $keyTools = new KeyTools([ 'notation' => KeyTools::NOTATION_CAMELOT_KEY ]);
+        $keyTools = KeyTools::fromNotation(KeyTools::NOTATION_CAMELOT_KEY);
 
         if (!$keyTools->isValidKey($track->initial_key)) {
             return null;

@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "6e270165c9579cf6bdaeed6aee8aeab2",
+    "content-hash": "b61b7fbe9ac22c0122558858f92823a5",
     "packages": [
         {
             "name": "cocur/background-process",
@@ -106,16 +106,16 @@
         },
         {
             "name": "iammordaty/key-tools",
-            "version": "0.6",
+            "version": "0.8.2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/iammordaty/key-tools.git",
-                "reference": "74061cedce0bb2ad396d29c8ea4e487ec251388e"
+                "reference": "303a5b9f31229b5bfb0b3b273a24c5a38d1cf0f8"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/iammordaty/key-tools/zipball/74061cedce0bb2ad396d29c8ea4e487ec251388e",
-                "reference": "74061cedce0bb2ad396d29c8ea4e487ec251388e",
+                "url": "https://api.github.com/repos/iammordaty/key-tools/zipball/303a5b9f31229b5bfb0b3b273a24c5a38d1cf0f8",
+                "reference": "303a5b9f31229b5bfb0b3b273a24c5a38d1cf0f8",
                 "shasum": ""
             },
             "require": {
@@ -151,7 +151,7 @@
                 "key",
                 "rekordbox"
             ],
-            "time": "2019-12-31T12:07:47+00:00"
+            "time": "2020-03-03T14:37:45+00:00"
         },
         {
             "name": "james-heinrich/getid3",
