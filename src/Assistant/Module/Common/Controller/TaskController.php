@@ -7,8 +7,6 @@ use Cocur\BackgroundProcess\BackgroundProcess;
 
 class TaskController extends Common\Controller\AbstractController
 {
-    use Common\Extension\Traits\TargetPathService;
-
     public function calculateAudioData()
     {
         $pathname = $this->app->request()->post('pathname');
