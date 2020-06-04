@@ -2,21 +2,31 @@
 
 namespace Assistant\Module\Track\Extension\Similarity\Provider;
 
-use Assistant\Module\Track\Extension\Similarity\Provider as BaseProvider;
 use Assistant\Module\Track\Model\Track;
 use KeyTools\KeyTools;
 
-class CamelotKeyCode extends BaseProvider
+// @todo: Zmienić nazwę na CamelotKey
+class CamelotKeyCode extends AbstractProvider
 {
     /**
      * {@inheritDoc}
      */
-    const METADATA_FIELD = 'initial_key';
+    public const NAME = 'CamelotKeyCode';
 
     /**
      * {@inheritDoc}
      */
-    public function getSimilarity(Track $baseTrack, Track $comparedTrack)
+    protected const SIMILARITY_FIELD = 'initial_key';
+
+    public function __construct()
+    {
+        $this->setup();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function getSimilarityValue(Track $baseTrack, Track $comparedTrack): int
     {
         return $this->similarityMap[$baseTrack->initial_key][$comparedTrack->initial_key] ?? 0;
     }
@@ -24,15 +34,17 @@ class CamelotKeyCode extends BaseProvider
     /**
      * {@inheritDoc}
      */
-    public function getCriteria(Track $baseTrack)
+    public function getCriteria(Track $baseTrack): array
     {
-        return [ '$in' => array_keys($this->similarityMap[$baseTrack->initial_key]) ];
+        $similarKeys = array_keys($this->similarityMap[$baseTrack->initial_key]);
+
+        return [ '$in' => $similarKeys ];
     }
 
     /**
-     * {@inheritDoc}
+     * Przygotowuje dostawcę do użycia
      */
-    protected function setup()
+    private function setup(): void
     {
         $keyTools = KeyTools::fromNotation(KeyTools::NOTATION_CAMELOT_KEY);
 

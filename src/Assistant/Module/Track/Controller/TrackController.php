@@ -6,7 +6,7 @@ use Assistant\Module\Common;
 use Assistant\Module\Common\Controller\AbstractController;
 use Assistant\Module\Common\Extension\PathBreadcrumbsGenerator;
 use Assistant\Module\Track\Extension\Similarity;
-use Assistant\Module\Track\Model\Track as TrackModel;
+use Assistant\Module\Track\Model\Track;
 use Assistant\Module\Track\Repository\TrackRepository;
 use KeyTools\KeyTools;
 
@@ -47,12 +47,12 @@ class TrackController extends AbstractController
     /**
      * Zwraca utwory podobne do podanego utworu
      *
-     * @param TrackModel $baseTrack
+     * @param Track $baseTrack
      * @param array $baseParameters
      * @param array|null $customParameters
      * @return array
      */
-    private function getSimilarTracks(TrackModel $baseTrack, array $baseParameters, ?array $customParameters)
+    private function getSimilarTracks(Track $baseTrack, array $baseParameters, ?array $customParameters)
     {
         $track = $baseTrack;
         $parameters = $baseParameters;
@@ -76,10 +76,10 @@ class TrackController extends AbstractController
     /**
      * Zwraca klucze podobne do klucza podanego utworu
      *
-     * @param TrackModel $track
+     * @param Track $track
      * @return array|null
      */
-    private function getTrackKeyInfo(TrackModel $track)
+    private function getTrackKeyInfo(Track $track)
     {
         $keyTools = KeyTools::fromNotation(KeyTools::NOTATION_CAMELOT_KEY);
 

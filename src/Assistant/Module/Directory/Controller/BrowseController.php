@@ -42,13 +42,13 @@ class BrowseController extends AbstractController
         $getGroupName = function ($name) {
             $parts = explode(DIRECTORY_SEPARATOR, ltrim($name, '/'), 4);
 
-            return sprintf('%s/%s', $parts[1], $parts[2]);
+            return sprintf('%s/%s', $parts[1] ?? '', $parts[2] ?? '');
         };
 
         $recent = [];
 
         $tracks = (new TrackRepository($this->app->container['db']))
-            ->findBy([ ], [ 'limit' => 1000, 'sort' => [ 'modified_date' => -1 ] ]);
+            ->findBy([ ], [ 'limit' => 1000, 'sort' => [ 'indexed_date' => -1 ] ]);
 
         $repository = new DirectoryRepository($this->app->container['db']);
 

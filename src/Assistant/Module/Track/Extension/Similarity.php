@@ -2,32 +2,52 @@
 
 namespace Assistant\Module\Track\Extension;
 
-use Assistant\Module\Track;
+use Assistant\Module\Track\Extension\Similarity\Provider\Bpm;
+use Assistant\Module\Track\Extension\Similarity\Provider\CamelotKeyCode;
+use Assistant\Module\Track\Extension\Similarity\Provider\Genre;
+use Assistant\Module\Track\Extension\Similarity\Provider\Musly;
+use Assistant\Module\Track\Extension\Similarity\Provider\ProviderInterface;
+use Assistant\Module\Track\Extension\Similarity\Provider\Year;
+use Assistant\Module\Track\Model\Track;
+use Assistant\Module\Track\Repository\TrackRepository;
 
 /**
  * Moduł podobieństwa
  */
 class Similarity
 {
+    private TrackRepository $repository;
+
     /**
-     * Lista nazw używanych dostawców podobieństwa
+     * Lista dostępnych dostawców podobieństwa
      *
      * @var array
      */
-    private $providerNames = [ ];
+    private array $availableProviders = [
+        Bpm::class,
+        CamelotKeyCode::class,
+        Genre::class,
+        Musly::class,
+        Year::class,
+    ];
 
     /**
-     * Lista dostawców podobieństwa
+     * Lista obiektów dostawców podobieństwa
      *
      * @see setup()
-     * @see $providerNames
-     *
-     * @var Similarity\Provider[]
+     * @var ProviderInterface[]
      */
-    private $providers = [ ];
+    private array $providers = [];
 
     /**
-     * Liczba dostawców
+     * Wagi dostawców podobieństwa
+     *
+     * @var array
+     */
+    private array $providerWeights = [];
+
+    /**
+     * Liczba dostępnych dostawców
      *
      * @see $providers
      * @var integer
@@ -35,38 +55,20 @@ class Similarity
     private $providersCount;
 
     /**
-     * @var Track\Repository\TrackRepository
-     */
-    private $repository;
-
-    /**
      * Parametry modułu
      *
      * @var array
      */
-    private $parameters;
-
-    /**
-     * Wagi dostawców podobieństwa
-     *
-     * @var array
-     */
-    private $weights;
+    private array $parameters;
 
     /**
      * Maksymalna, uwzględniająca wagi dostawców, wartość podobieństwa, która może zostać zwrócona
      *
-     * @var integer
+     * @var int
      */
     private $maxSimilarityValue;
 
-    /**
-     * Konstruktor
-     *
-     * @param Track\Repository\TrackRepository $repository
-     * @param array $parameters
-     */
-    public function __construct(Track\Repository\TrackRepository $repository, array $parameters)
+    public function __construct(TrackRepository $repository, array $parameters)
     {
         $this->repository = $repository;
         $this->parameters = $parameters;
@@ -77,38 +79,33 @@ class Similarity
     /**
      * Zwraca utwory podobne do podanego
      *
-     * @param Track\Model\Track $baseTrack
+     * @param Track $baseTrack
      * @return array
      */
-    public function getSimilarTracks(Track\Model\Track $baseTrack)
+    public function getSimilarTracks(Track $baseTrack): array
     {
+        $criteria = $this->getSimilarityCriteria($baseTrack);
+        $similarTracks = $this->repository->findBy($criteria);
+
+        // @todo: być może foreach będzie bardziej czytelny niż map, slice i filter
+
         $similarTracks = array_map(
-            function ($similarTrack) use ($baseTrack) {
-                return [
-                    'track' => $similarTrack,
-                    'value' => $this->getSimilarityValue($baseTrack, $similarTrack),
-                ];
-            },
-            iterator_to_array(
-                $this->repository->findBy(
-                    $this->getSimilarityCriteria($baseTrack)
-                )
-            )
+            fn($similarTrack) => [
+                'track' => $similarTrack,
+                'value' => $this->getSimilarityValue($baseTrack, $similarTrack),
+            ],
+            iterator_to_array($similarTracks)
         );
 
         // odrzuć wartości poniżej progu i/lub odrzuć nadmiarowe
-        $result = array_slice(
-            array_filter(
-                $similarTracks,
-                function ($similar) {
-                    return $similar['value'] > $this->parameters['limit']['value'];
-                }
-            ),
-            0,
-            $this->parameters['limit']['tracks']
-        );
 
-        unset($similarTracks);
+        [ 'limit' => $limit ] = $this->parameters;
+
+        $result = array_slice(
+            array_filter($similarTracks, fn($similar) => $similar['value'] > $limit['value']),
+            0,
+            $limit['tracks']
+        );
 
         return $this->sort($result);
     }
@@ -116,17 +113,19 @@ class Similarity
     /**
      * Oblicza podobieństwo pomiędzy utworami
      *
-     * @param Track\Model\Track $baseTrack
-     * @param Track\Model\Track $comparedTrack
+     * @param Track $baseTrack
+     * @param Track $comparedTrack
      * @return int
      */
-    public function getSimilarityValue(Track\Model\Track $baseTrack, Track\Model\Track $comparedTrack)
+    public function getSimilarityValue(Track $baseTrack, Track $comparedTrack): int
     {
         $similarity = 0;
 
-        foreach ($this->providerNames as $providerName) {
-            $similarity += $this->providers[$providerName]
-                ->getSimilarity($baseTrack, $comparedTrack) * $this->weights[$providerName];
+        foreach ($this->providers as $provider) {
+            $providerSimilarity = $provider->getSimilarityValue($baseTrack, $comparedTrack);
+            $providerWeight = $this->getProviderWeight($provider);
+
+            $similarity += ($providerSimilarity * $providerWeight);
         }
 
         return round(
@@ -137,48 +136,73 @@ class Similarity
     /**
      * Przygotowuje moduł podobieństwa do użycia
      */
-    private function setup()
+    private function setup(): void
     {
-        $this->providerNames = $this->parameters['providers']['names'];
-        $this->providersCount = count($this->providerNames);
+        $enabledProviders = array_filter(
+            $this->availableProviders,
+            fn($providerClass) => in_array($providerClass, $this->parameters['providers']['enabled'], true)
+        );
 
-        $this->weights = [];
-        $this->maxSimilarityValue = 0;
+        foreach ($enabledProviders as $providerClass) {
+            $providerParameters = $this->parameters['providers']['parameters'][$providerClass] ?? null;
 
-        foreach ($this->providerNames as $providerName) {
-            $providerClassName = sprintf('%s\Similarity\Provider\%s', __NAMESPACE__, ucfirst($providerName));
+            /** @var ProviderInterface $provider */
+            $provider = new $providerClass($providerParameters);
 
-            $providerParameters = isset($this->parameters['providers']['parameters'][$providerName])
-                ? $this->parameters['providers']['parameters'][$providerName]
-                : null;
+            if (empty($provider->getName())) {
+                $message = sprintf('Provider class "%s" has invalid name (name can not be empty)', $providerClass);
 
-            $this->providers[$providerName] = new $providerClassName($providerParameters);
-            $this->weights[$providerName] = $providerParameters['weight'];
+                throw new \RuntimeException($message);
+            }
 
-            $this->maxSimilarityValue += ($providerClassName::MAX_SIMILARITY_VALUE * $this->weights[$providerName]);
+            if (empty($provider->getSimilarityField())) {
+                throw new \RuntimeException(sprintf('Provider "%s" has invalid similarity field', $provider->getName()));
+            }
 
-            unset($providerName, $providerClassName, $providerParameters, $providerName);
+            $this->providers[] = $provider;
+
+            unset($providerClass, $providerParameters, $provider);
         }
 
-        $this->maxSimilarityValue /= $this->providersCount;
+        $this->providersCount = count($this->providers);
+
+        if ($this->providersCount === 0) {
+            throw new \RuntimeException('At least one similarity provider should be enabled');
+        }
+
+        $this->providerWeights = $this->parameters['providers']['weights'];
+
+        $maxSimilarityValue = array_reduce(
+            $this->providers,
+            function ($previousValue, ProviderInterface $provider) {
+                $providerClass = get_class($provider);
+                $previousValue += $provider->getMaxSimilarityValue() * $this->providerWeights[$providerClass];
+
+                return $previousValue;
+            },
+            0
+        );
+
+        $this->maxSimilarityValue = $maxSimilarityValue / $this->providersCount;
     }
 
     /**
      * Zwraca kryteria, które muszą zostać spełnione, aby w trybie wyszukiwania
      * uznać utwór za podobny do podanego (i został pobrany z repozytorium)
      *
-     * @param Track\Model\Track $baseTrack
+     * @param Track $baseTrack
      * @return array
      */
-    private function getSimilarityCriteria(Track\Model\Track $baseTrack)
+    private function getSimilarityCriteria(Track $baseTrack): array
     {
         $criteria = [
             'guid' => [ '$ne' => $baseTrack->guid ]
         ];
 
-        foreach ($this->providerNames as $providerName) {
-            $field = $this->providers[$providerName]->getMetadataField();
-            $criteria[$field] = $this->providers[$providerName]->getCriteria($baseTrack);
+        foreach ($this->providers as $provider) {
+            // @todo: zastanowić się nad rezygnacją z getSimilarityField na rzecz zwracania całości w getCriteria
+            $field = $provider->getSimilarityField();
+            $criteria[$field] = $provider->getCriteria($baseTrack);
         }
 
         return $criteria;
@@ -190,36 +214,48 @@ class Similarity
      * @param array $result
      * @return array
      */
-    private function sort(array $result)
+    private function sort(array $result): array
     {
-        $compare = function ($a, $b) {
-            return $a === $b ? 0 : ($a > $b ? -1 : 1);
+        $compare = static function ($first, $second) {
+            // podobieństwo malejąco
+
+            $result = $first['value'] <=> $second['value'];
+
+            if ($result !== 0) {
+                return $result * -1;
+            }
+
+            // rok malejąco
+
+            $result = $first['track']->year <=> $second['track']->year;
+
+            if ($result !== 0) {
+                return $result * -1;
+            }
+
+            // guid rosnąco
+
+            $result = $first['track']->guid <=> $second['track']->guid;
+
+            if ($result !== 0) {
+                return $result;
+            }
+
+            return 0;
         };
 
-        usort(
-            $result,
-            function ($first, $second) use ($compare) {
-                // podobieństwo malejąco
-                if (($result = $compare($first['value'], $second['value'])) !== 0) {
-                    return $result;
-                }
-
-                // rok malejąco
-                if (($result = $compare($first['track']->year, $second['track']->year)) !== 0) {
-                    return $result;
-                }
-
-                // guid rosnąco
-                if (($result = $compare($first['track']->guid, $second['track']->guid)) !== 0) {
-                    return $result * -1;
-                }
-
-                return 0;
-            }
-        );
+        usort($result, $compare);
 
         unset($compare);
 
         return $result;
+    }
+
+    private function getProviderWeight(ProviderInterface $provider): float
+    {
+        $providerClass = get_class($provider);
+        $providerWeight = $this->providerWeights[$providerClass];
+
+        return $providerWeight;
     }
 }

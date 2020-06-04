@@ -2,20 +2,24 @@
 
 namespace Assistant\Module\Track\Extension\Similarity\Provider;
 
-use Assistant\Module\Track\Extension\Similarity\Provider as BaseProvider;
-use Assistant\Module\Track;
+use Assistant\Module\Track\Model\Track;
 
-class Bpm extends BaseProvider
+class Bpm extends AbstractProvider
 {
     /**
      * {@inheritDoc}
      */
-    const METADATA_FIELD = 'bpm';
+    public const NAME = 'BPM';
 
     /**
      * {@inheritDoc}
      */
-    protected $similarityMap = [
+    protected const SIMILARITY_FIELD = 'bpm';
+
+    /**
+     * {@inheritDoc}
+     */
+    protected array $similarityMap = [
         0 => self::MAX_SIMILARITY_VALUE,
         1 => 98,
         2 => 93,
@@ -24,13 +28,20 @@ class Bpm extends BaseProvider
         5 => 30,
     ];
 
+    private array $parameters;
+
+    public function __construct(array $parameters)
+    {
+        $this->parameters = $parameters;
+    }
+
     /**
      * {@inheritDoc}
      */
-    public function getSimilarity(Track\Model\Track $baseTrack, Track\Model\Track $comparedTrack)
+    public function getSimilarityValue(Track $baseTrack, Track $comparedTrack): int
     {
         $distance = (int) round(abs($baseTrack->bpm - $comparedTrack->bpm));
-        $similarity = isset($this->similarityMap[$distance]) ? $this->similarityMap[$distance] : 0;
+        $similarity = $this->similarityMap[$distance] ?? 0;
 
         // echo $baseTrack->bpm, ' vs. ', $comparedTrack->bpm, ' = ', $similarity, " ($distance)", PHP_EOL;
 
@@ -40,7 +51,7 @@ class Bpm extends BaseProvider
     /**
      * {@inheritDoc}
      */
-    public function getCriteria(Track\Model\Track $baseTrack)
+    public function getCriteria(Track $baseTrack): array
     {
         return [
             '$in' => range(

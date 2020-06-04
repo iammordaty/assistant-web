@@ -2,49 +2,55 @@
 
 namespace Assistant\Module\Track\Extension\Similarity\Provider;
 
-use Assistant\Module\Track\Extension\Similarity\Provider as BaseProvider;
-use Assistant\Module\Track;
-use Assistant\Module\Common;
+use Assistant\Module\Common\Extension\Backend\Client as BackendClient;
+use Assistant\Module\Common\Extension\Backend\Exception\Exception as BackendException;
+use Assistant\Module\Track\Model\Track;
 
-class Musly extends BaseProvider
+class Musly extends AbstractProvider
 {
     /**
      * {@inheritDoc}
      */
-    const METADATA_FIELD = 'pathname';
-
-    /**
-     * @var array|null
-     */
-    private $similarTracks = null;
+    public const NAME = 'Musly';
 
     /**
      * {@inheritDoc}
      */
-    public function getSimilarity(Track\Model\Track $baseTrack, Track\Model\Track $comparedTrack)
+    protected const SIMILARITY_FIELD = 'pathname';
+
+    private BackendClient $backendClient;
+
+    private ?array $similarTracks = null;
+
+    public function __construct()
+    {
+        $this->backendClient = new BackendClient();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function getSimilarityValue(Track $baseTrack, Track $comparedTrack): int
     {
         if ($this->similarTracks === null) {
             try {
-                $this->similarTracks = (new Common\Extension\Backend\Client())->getSimilarTracks($baseTrack);
-            } catch (Common\Extension\Backend\Exception\Exception $e) {
+                $this->similarTracks = $this->backendClient->getSimilarTracks($baseTrack);
+            } catch (BackendException $e) {
+                // @todo: usunąć try-catch i łapać wyżej?
                 unset($e);
 
                 $this->similarTracks = [];
             }
         }
 
-        return isset($this->similarTracks[$comparedTrack->pathname])
-            ? $this->similarTracks[$comparedTrack->pathname]
-            : 0;
+        return $this->similarTracks[$comparedTrack->pathname] ?? 0;
     }
 
     /**
      * {@inheritDoc}
      */
-    public function getCriteria(Track\Model\Track $baseTrack)
+    public function getCriteria(Track $baseTrack): array
     {
-        unset($baseTrack);
-
         return [
             '$exists' => true
         ];

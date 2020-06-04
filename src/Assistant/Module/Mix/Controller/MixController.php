@@ -3,11 +3,15 @@
 namespace Assistant\Module\Mix\Controller;
 
 use Assistant\Module\Common\Controller\AbstractController;
+use Assistant\Module\Mix\Extension\ArrangedMix;
+use Assistant\Module\Mix\Extension\Strategy\MostSimilarTrackStrategy;
 use Assistant\Module\Track\Extension\Similarity;
 use Assistant\Module\Track\Model\Track;
 use Assistant\Module\Track\Repository\TrackRepository;
 use Cocur\Slugify\Slugify;
+use Cocur\Slugify\SlugifyInterface;
 use MongoDB\BSON\Regex;
+use Slim\Helper\Set as Container;
 
 class MixController extends AbstractController
 {
@@ -16,64 +20,78 @@ class MixController extends AbstractController
         $request = $this->app->request();
 
         if ($request->isPost()) {
-            $tracks = [];
-
             $listing = explode(PHP_EOL, $request->post('listing'));
 
-            $similarity = new Similarity(
-                new TrackRepository($this->app->container['db']),
-                $this->app->container->parameters['track']['similarity']
-            );
-
-            $previousTrack = null;
-
-            foreach ($listing as $trackName) {
-                if (($track = $this->getTrackByName($trackName))) {
-                    $tracks[] = [
-                        'track' => $track,
-                        'similarityValue' => $previousTrack !== null
-                            ? $similarity->getSimilarityValue($previousTrack, $track)
-                            : null
-                    ];
-
-                    $previousTrack = $track;
-                }
-            }
-
-            $matrix = [];
-
-            foreach ($tracks as $track) {
-                $row = [
-                    'track' => $track['track'],
-                    'tracks' => [ ],
-                ];
-
-                foreach ($tracks as $track2) {
-                    $row['tracks'][$track2['track']->guid] = [
-                        'track' => $track2['track'],
-                        'similarityValue' => $track['track']->guid !== $track2['track']->guid
-                            ? $similarity->getSimilarityValue($track['track'], $track2['track'])
-                            : null
-                    ];
-                }
-
-                $matrix[$track['track']->guid] = $row;
-            }
+            [ $mix, $matrix ] = self::getMixInfo($this->app->container, $listing);
         }
 
-        return $this->app->render(
-            '@mix/index.twig',
-            [
-                'menu' => 'mix',
-                'listing' => $request->post('listing'),
-                'tracks' => !empty($tracks) ? $tracks : [ ],
-                'matrix' => !empty($matrix) ? $matrix : [ ],
-                'mix' => !empty($matrix) ? $this->rearrange($matrix) : [ ],
-            ]
-        );
+        return $this->app->render('@mix/index.twig', [
+            'menu' => 'mix',
+            'form' => $request->post(),
+            'matrix' => $matrix ?? [],
+            'mix' => $mix ?? [],
+        ]);
     }
 
-    private function getTrackByName(string $name): ?Track
+    /**
+     * @param Container $container
+     * @param string[] $listing
+     * @return array
+     */
+    private static function getMixInfo(Container $container, array $listing): array
+    {
+        $repository = new TrackRepository($container['db']);
+        $similarity = new Similarity($repository, $container['parameters']['track']['similarity']);
+
+        $strategy = new MostSimilarTrackStrategy($similarity);
+        $tracks = self::getTracks($similarity, $repository, new Slugify(), $listing);
+
+        //@todo: dodać strategię, która dobierze najlepszy pierwszy kawałek dla MostSimilarTrackStrategy
+        //@todo: dodać strategię, która dobierze najbardziej podobny następny kawałek (także do kolejnego),
+        //       jeśli najlepiej różnica do następnego będzie większa od zadanej
+
+        $arrangedMix = new ArrangedMix($strategy, $tracks);
+        $mix = $arrangedMix->getMix();
+        $matrix = $arrangedMix->getMatrix();
+
+        return [ $mix, $matrix ];
+    }
+
+    /**
+     * @todo: Wydzielić do osobnej klasy (łącznie z getTrackByName)
+     *
+     * @param Similarity $similarity
+     * @param TrackRepository $repository
+     * @param SlugifyInterface $slugify
+     * @param array $listing
+     * @return array
+     */
+    private static function getTracks(Similarity $similarity, TrackRepository $repository, SlugifyInterface $slugify, array $listing): array
+    {
+        $tracks = [];
+
+        $previousTrack = null;
+
+        foreach ($listing as $trackName) {
+            $track = self::getTrackByName($repository, $slugify, $trackName);
+
+            if (!$track) {
+                // @todo: brak wyszukanego utworu powinien być komunikowany na froncie
+                continue;
+            }
+
+            $tracks[] = [
+                'track' => $track,
+                'similarityValue' => $previousTrack ? $similarity->getSimilarityValue($previousTrack, $track) : null
+            ];
+
+            $previousTrack = $track;
+        }
+
+        return $tracks;
+    }
+
+    private static function getTrackByName(TrackRepository $repository, SlugifyInterface $slugify, string $name): ?Track
     {
         $trimmedName = trim($name);
 
@@ -81,62 +99,18 @@ class MixController extends AbstractController
             return null;
         }
 
-        $slugify = new Slugify();
-
         $query = new Regex($trimmedName, 'i');
         $guidQuery = new Regex($slugify->slugify($trimmedName), 'i');
 
-        $track = (new TrackRepository($this->app->container['db']))->findOneBy(
-            [
-                '$or' => [
-                    [ 'artist' => $query ],
-                    [ 'title' => $query ],
-                    [ 'guid' => $guidQuery ],
-                ]
+        $track = $repository->findOneBy([
+            '$or' => [
+                [ 'artist' => $query ],
+                [ 'title' => $query ],
+                [ 'guid' => $guidQuery ],
             ]
-        );
+        ]);
 
         /** @var Track|null $track */
         return $track;
-    }
-
-    private function rearrange(array $matrix)
-    {
-        $track = reset($matrix);
-
-        $sorted = [ $track ];
-        $this->remove($track, $matrix);
-
-        do {
-            $track = $this->getMostSimilarTrack($matrix[$track['track']->guid]['tracks']);
-
-            if ($track !== null) {
-                $this->remove($track, $matrix);
-                $sorted[] = $track;
-            }
-
-        } while (!empty($track['track']));
-
-        return $sorted;
-    }
-
-    private function getMostSimilarTrack(array $tracks)
-    {
-        $mostSimilar = null;
-
-        foreach ($tracks as $track) {
-            if ($mostSimilar === null || $track['similarityValue'] > $mostSimilar['similarityValue']) {
-                $mostSimilar = $track;
-            }
-        }
-
-        return $mostSimilar;
-    }
-
-    private function remove($track, &$matrix)
-    {
-        foreach ($matrix as &$row) {
-            unset($row['tracks'][$track['track']->guid]);
-        }
     }
 }

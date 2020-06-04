@@ -144,6 +144,10 @@
               class="form-horizontal {% if not form %} hide {% endif %}">
             <div class="form-group">
                 <div class="col-xs-4 col-sm-2">
+                    {#
+                        Do przemyślenia, czy elementy i atrybuty html mogą wychodzić z PHP-a,
+                        bo w tej formie jest to mało generyczne. Uwzględnić
+                    #}
                     <label class="checkbox-inline" for="provider-musly">
                           <input type="checkbox" id="provider-musly" name="similarity[providers][names][]" value="musly"
                                 {% if not form or 'musly' in form.providers.names|default %} checked="checked" {% endif %}> Musly

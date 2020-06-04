@@ -91,7 +91,7 @@ abstract class AbstractObjectRepository extends AbstractRepository
      *
      * @param array $conditions
      * @param array $options
-     * @return \Traversable|ModelInterface
+     * @return \Traversable|ModelInterface[]
      */
     public function findBy(array $conditions, array $options = []): \Traversable
     {

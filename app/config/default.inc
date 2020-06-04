@@ -1,5 +1,10 @@
 <?php
 
+use Assistant\Module\Track\Extension\Similarity\Provider\Bpm;
+use Assistant\Module\Track\Extension\Similarity\Provider\CamelotKeyCode;
+use Assistant\Module\Track\Extension\Similarity\Provider\Genre;
+use Assistant\Module\Track\Extension\Similarity\Provider\Musly;
+use Assistant\Module\Track\Extension\Similarity\Provider\Year;
 use Monolog\Logger;
 use Monolog\Handler\StreamHandler;
 use Monolog\Formatter\LineFormatter;
@@ -71,32 +76,34 @@ $app->container->parameters = [
 
         'similarity' => [
             'providers' => [
-                'names' => [
-                    'bpm',
-                    'camelotKeyCode',
-                    'genre',
-                    'musly',
-                    'year',
+                'enabled' => [
+                    Bpm::class,
+                    CamelotKeyCode::class,
+                    Genre::class,
+                    Musly::class,
+                    Year::class,
                 ],
                 'parameters' => [
-                    'bpm' => [
+                    Bpm::class => [
                         'tolerance' => 5,
-                        'weight' => 0.70,
                     ],
-                    'camelotKeyCode' => [
-                        'weight' => 0.90,
+                    CamelotKeyCode::class => [
                     ],
-                    'genre' => [
-                        'weight' => 0.75,
+                    Genre::class => [
                     ],
-                    'musly' => [
-                        'weight' => 1,
+                    Musly::class => [
                     ],
-                    'year' => [
+                    Year::class => [
                         'tolerance' => 2,
-                        'weight' => 0.60,
                     ],
-                ]
+                ],
+                'weights' => [
+                    Bpm::class => 0.70,
+                    CamelotKeyCode::class => 0.90,
+                    Genre::class => 0.75,
+                    Musly::class => 1,
+                    Year::class => 0.60,
+                ],
             ],
             'limit' => [
                 'tracks' => 200,
