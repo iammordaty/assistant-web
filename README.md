@@ -1,26 +1,25 @@
 # assistant
-My web-based music collection assistant
+My web-based music collection assistant (under high development and BC changes)
 
 ## features
 - search
 - browse
 - find similar tracks (based on track similarity* and metadata fields: initial_key, bpm, genre, year)
-- rearrange mix by similarity (experimental)
+- rearrange mix by similarity (based on track similarity module)
 
 \* Thanks to [Musly - Music Similarity Library](https://github.com/dominikschnitzer/musly)
 
 ## plans
 - find inconsistencies / mismatches in track metadata ("Watermät" vs "Watermat", "The Disciples" vs. "Disciples", and so on)
 - i18n
-- custom tags in the track view
+- custom tags and links to other tracks in the track view
 - integrate Indexer with [Essentia](https://github.com/MTG/essentia) (which is "library for audio and music analysis, description and synthesis")
 - opt-out of a backend written in go
-- upgrade to PHP7
 - ...?
 
 ## requirements
-- PHP >= 5.6
-- PHP MongoDB Extension (php5-mongo) >= 1.6.0
+- PHP >= 7.4
+- MongoDB PHP Driver (ext-mongodb) >= 1.6.0
 - MongoDB >= 3.x (2.x should works too)
 - nginx / Apache
 
