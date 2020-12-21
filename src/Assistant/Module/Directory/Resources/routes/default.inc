@@ -13,6 +13,7 @@ $app->group('/directory', function () use ($app) {
     )->name('directory.browse.recent');
 
     // TODO: /browse/incoming/(:guid+)
+    //      (ocb? chodzi o /browse/incoming/(:pathname+) ?
     $app->get(
         '/browse/incoming(:pathname+)',
         function ($pathnameParts = null) use ($app) {
@@ -20,9 +21,10 @@ $app->group('/directory', function () use ($app) {
 
             (new Directory\Controller\BrowseController($app))->incoming($pathname);
         }
-    )->name('directory.browse.incoming');
+        )->name('directory.browse.incoming');
 
     // TODO: /browse/collection/(:guid+)
+    // TODO: chodzi o zmianę na /browse/collection/(:guid+) ?
     $app->get(
         '/(:guid+)',
         function ($guidParts = null) use ($app) {

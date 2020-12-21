@@ -62,7 +62,24 @@ class TrackController extends AbstractController
         }
 
         if (!empty($customParameters['providers']['names'])) {
-            $parameters['providers']['names'] = $customParameters['providers']['names'];
+            // TODO: Do poprawienia: Dane formularza, takie jak nazwy powinny pochodzić z PHP-a,
+            //       co rozwiązuje problem mapowania nazw, wygody i zdublowanego kodu (np. nazw providerów).
+
+            $nameToClassname = [
+                'musly' => Similarity\Provider\Musly::class,
+                'bpm' => Similarity\Provider\Bpm::class,
+                'year' => Similarity\Provider\Year::class,
+                'genre' => Similarity\Provider\Genre::class,
+                'camelotKeyCode' => Similarity\Provider\CamelotKeyCode::class,
+            ];
+
+            $enabledProviders = array_filter(
+                $nameToClassname,
+                fn($providerName) => in_array($providerName, $customParameters['providers']['names'], true),
+                ARRAY_FILTER_USE_KEY
+            );
+
+            $parameters['providers']['enabled'] = array_values($enabledProviders);
         }
 
         $similarity = new Similarity(

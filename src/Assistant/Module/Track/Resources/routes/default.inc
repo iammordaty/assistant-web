@@ -19,4 +19,11 @@ $app->group('/track', function () use ($app) {
             (new Track\Controller\Track\ContentsController($app))->get($guid);
         }
     )->name('track.contents.get');
+
+    $app->get(
+        '/:pathname/edit',
+        function ($pathname) use ($app) {
+            (new Track\Controller\Track\EditController($app))->edit($pathname);
+        }
+    )->name('track.edit.edit');
 });

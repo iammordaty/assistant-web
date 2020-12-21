@@ -1,8 +1,10 @@
 {% extends '@common/layout.twig' %}
 
-{% block title %}{{ directory.pathname|trim(constant('DIRECTORY_SEPARATOR'))|default('Przeglądaj kolekcję') }}{% endblock %}
+{% set directoryWithoutSeparator = directory.pathname|trim(constant('DIRECTORY_SEPARATOR')) %}
+{% block title %}Przeglądanie kolekcji {% if directoryWithoutSeparator %}– {{ directoryWithoutSeparator }}{% endif %}{% endblock %}
 
 {% block contentBlock %}
+
     <div class="directory-info">
         <ol class="breadcrumb">
             <li><a href="{{ urlFor('directory.browse.index') }}" class="undecorated"><i class="fa fa-home fa-lg fa-fw"></i></a></li>

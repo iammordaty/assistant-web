@@ -116,6 +116,8 @@ class BrowseController extends AbstractController
             }
         }
 
+        sort($directories);
+
         usort($tracks, function ($data1, $data2) {
             return strnatcasecmp($data1['track']->pathname, $data2['track']->pathname);
         });
@@ -162,8 +164,8 @@ class BrowseController extends AbstractController
             ->findBy([ 'parent' => $directory->guid ], [ 'sort' => [ 'guid' => 1 ]]);
 
         return [
-            'directories' => $directories,
-            'tracks' => $tracks,
+            'directories' => iterator_to_array($directories),
+            'tracks' => iterator_to_array($tracks),
         ];
     }
 

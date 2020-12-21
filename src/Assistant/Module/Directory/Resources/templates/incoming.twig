@@ -1,6 +1,6 @@
 {% extends '@common/layout.twig' %}
 
-{% block title %}{{ pathname|default('Przeglądaj') }}{% endblock %}
+{% block title %}Przeglądanie oczekujących {% if pathname %}– {{ pathname }}{% endif %}{% endblock %}
 
 {% block contentBlock %}
     <script src="/js/incoming.js" type="text/javascript"></script>
@@ -111,6 +111,13 @@
                                 <button type="button" class="btn btn-sm btn-default"
                                     data-role="incoming-tracks:move" title="Przenieś do {{ track.targetPath }}">
                                     <i class="fa fa-folder-open"></i>
+                                </button>
+                                <a
+                                    type="button"
+                                    class="btn btn-sm btn-default"
+                                    title="Edytuj metadane"
+                                    href="{{ urlFor('track.edit.edit', { pathname: track.node.relativePathname|url_encode } )}}">
+                                    <i class="fa fa-pencil"></i>
                                 </button>
                             </td>
                         </tr>

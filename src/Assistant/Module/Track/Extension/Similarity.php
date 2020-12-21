@@ -85,6 +85,7 @@ class Similarity
     public function getSimilarTracks(Track $baseTrack): array
     {
         $criteria = $this->getSimilarityCriteria($baseTrack);
+
         $similarTracks = $this->repository->findBy($criteria);
 
         // @todo: być może foreach będzie bardziej czytelny niż map, slice i filter
