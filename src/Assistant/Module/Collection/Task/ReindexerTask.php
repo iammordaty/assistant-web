@@ -35,7 +35,7 @@ class ReindexerTask extends AbstractTask
     /**
      * Rozpoczyna proces reindeksowania kolekcji
      */
-    protected function execute(InputInterface $input, OutputInterface $output)
+    protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $this->app->log->info('Task executed');
 
@@ -55,6 +55,6 @@ class ReindexerTask extends AbstractTask
 
         $this->app->log->info('Task finished');
 
-        unset($input, $output);
+        return self::SUCCESS;
     }
 }

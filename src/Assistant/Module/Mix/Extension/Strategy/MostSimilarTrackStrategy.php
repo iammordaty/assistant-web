@@ -21,9 +21,9 @@ final class MostSimilarTrackStrategy implements NextTrackStrategy
         $nextTrack = reset($matrix);
 
         while ($nextTrack) {
-            static::addToMix($nextTrack, $mix, $matrix);
+            self::addToMix($nextTrack, $mix, $matrix);
 
-            $nextTrack = static::computeNextTrack($matrix[$nextTrack['track']->guid]['tracks']);
+            $nextTrack = self::computeNextTrack($matrix[$nextTrack['track']->guid]['tracks']);
         }
 
         return $mix;

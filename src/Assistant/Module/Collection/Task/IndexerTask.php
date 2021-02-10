@@ -122,7 +122,7 @@ class IndexerTask extends AbstractTask
 
         $this->app->log->info('Task finished', $this->stats);
 
-        unset($input, $output, $reader, $writer);
+        return self::SUCCESS;
     }
 
     /**

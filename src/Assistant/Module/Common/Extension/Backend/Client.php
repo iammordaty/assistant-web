@@ -2,6 +2,8 @@
 
 namespace Assistant\Module\Common\Extension\Backend;
 
+use Assistant\Module\Common\Extension\Backend\Exception\AudioDataCalculatorException;
+use Assistant\Module\Common\Extension\Backend\Exception\SimilarCollectionException;
 use Assistant\Module\File\Extension\SplFileInfo;
 use Assistant\Module\Track;
 
@@ -36,7 +38,7 @@ class Client
     /**
      * @param SplFileInfo $node
      * @return array
-     * @throws Exception\AudioDataCalculatorException
+     * @throws AudioDataCalculatorException
      */
     public function calculateAudioData(SplFileInfo $node)
     {
@@ -58,7 +60,7 @@ class Client
                 $message .= $response->message;
             }
 
-            throw new Exception\AudioDataCalculatorException(
+            throw new AudioDataCalculatorException(
                 $message ?: $this->curl->errorMessage,
                 $this->curl->errorCode ?: 500
             );
@@ -70,7 +72,7 @@ class Client
     /**
      * @param Track\Model\Track $track
      * @return bool
-     * @throws Exception\SimilarCollectionException
+     * @throws SimilarCollectionException
      */
     public function addToSimilarCollection(Track\Model\Track $track)
     {
@@ -80,8 +82,8 @@ class Client
         );
 
         if ($this->curl->error === true) {
-            throw new Exception\SimilarCollectionException(
-                isset($response->message) ? $response->message : $this->curl->errorMessage,
+            throw new SimilarCollectionException(
+                $response->message ?? $this->curl->errorMessage,
                 $this->curl->errorCode ?: 500
             );
         }
@@ -92,7 +94,7 @@ class Client
     /**
      * @param Track\Model\Track $track
      * @return array
-     * @throws Exception\SimilarCollectionException
+     * @throws SimilarCollectionException
      */
     public function getSimilarTracks(Track\Model\Track $track)
     {
@@ -106,8 +108,8 @@ class Client
         );
 
         if ($this->curl->error === true) {
-            throw new Exception\SimilarCollectionException(
-                isset($response->message) ? $response->message : $this->curl->errorMessage,
+            throw new SimilarCollectionException(
+                $response->message ?? $this->curl->errorMessage,
                 $this->curl->errorCode ?: 500
             );
         }

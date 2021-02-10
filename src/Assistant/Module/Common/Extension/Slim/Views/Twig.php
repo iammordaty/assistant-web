@@ -12,7 +12,7 @@ class Twig extends \Slim\View
     public $parserOptions = [];
 
     /**
-     * @var TwigExtension The Twig extensions you want to load
+     * @var \Twig_Extension The Twig extensions you want to load
      */
     public $parserExtensions = [];
 
@@ -22,7 +22,7 @@ class Twig extends \Slim\View
     public $loaderPathNamespaces = [];
 
     /**
-     * @var TwigEnvironment The Twig environment for rendering templates.
+     * @var \Twig_Environment The Twig environment for rendering templates.
      */
     private $parserInstance = null;
 

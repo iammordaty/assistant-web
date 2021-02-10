@@ -2,7 +2,6 @@
 
 namespace Assistant\Module\Search\Extension;
 
-use Carbon\Carbon;
 use MongoDB\BSON\UTCDateTime;
 
 class DateTimeMinMaxExpressionParser extends RawMinMaxExpressionParser

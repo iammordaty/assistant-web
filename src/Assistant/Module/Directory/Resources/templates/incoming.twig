@@ -7,10 +7,6 @@
     <div class="directory-info" data-role="element" data-element-pathname="{{ pathname }}">
         <div class="pull-right" style="display: inline-block">
             <button type="button" class="btn btn-sm btn-default"
-                data-role="incoming-tracks:clean" title="Oczyść">
-                <i class="fa fa-eraser"></i>
-            </button>
-            <button type="button" class="btn btn-sm btn-default"
                 data-role="incoming-tracks:calculate-audio-data" title="Oblicz BPM i tonację">
                 <i class="fa fa-calculator"></i>
             </button>
@@ -50,10 +46,6 @@
                         </td>
                         <td class="col-xs-2 text-right">
                             <button type="button" class="btn btn-sm btn-default"
-                                data-role="incoming-tracks:clean" title="Oczyść">
-                                <i class="fa fa-eraser"></i>
-                            </button>
-                            <button type="button" class="btn btn-sm btn-default"
                                 data-role="incoming-tracks:calculate-audio-data" title="Oblicz BPM i tonację">
                                 <i class="fa fa-calculator"></i>
                             </button>
@@ -91,7 +83,9 @@
                     {% for track in childrens.tracks %}
                         <tr data-role="element" data-element-pathname="{{ track.node.relativePathname }}" data-element-target-pathname="{{ track.targetPath }}">
                             <td class="col-xs-8">
-                                {{ track.node.basename }}
+                                <a class="undecorated" href="{{ urlFor('track.edit.edit', { pathname: track.node.relativePathname|url_encode } )}}">
+                                    {{ track.node.basename }}
+                                </a>
                             </td>
                             <td class="col-xs-1">
                                 {{ track.track.initial_key }}
@@ -100,10 +94,6 @@
                                 {{ track.track.bpm }}
                             </td>
                             <td class="col-xs-2 text-right">
-                                <button type="button" class="btn btn-sm btn-default"
-                                    data-role="incoming-tracks:clean" title="Oczyść">
-                                    <i class="fa fa-eraser"></i>
-                                </button>
                                 <button type="button" class="btn btn-sm btn-default"
                                     data-role="incoming-tracks:calculate-audio-data" title="Oblicz BPM i tonację">
                                     <i class="fa fa-calculator"></i>

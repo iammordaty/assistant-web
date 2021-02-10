@@ -6,7 +6,7 @@ use Khill\Duration\Duration;
 use Twig\Extension\AbstractExtension;
 use Twig\TwigFilter;
 
-class CustomTwigExtension extends AbstractExtension
+class DurationTwigExtension extends AbstractExtension
 {
     private Duration $duration;
 
@@ -15,12 +15,20 @@ class CustomTwigExtension extends AbstractExtension
         $this->duration = $duration;
     }
 
+    public static function factory(?Duration $duration = null): DurationTwigExtension
+    {
+        $duration = $duration ?: new Duration();
+
+        return new self($duration);
+    }
+
     /**
      * {@inheritdoc}
      */
-    public function getFilters()
+    public function getFilters(): array
     {
         return [
+            /** @uses getFormattedDuration */
             new TwigFilter('format_duration', [ $this, 'getFormattedDuration' ]),
         ];
     }
@@ -34,13 +42,5 @@ class CustomTwigExtension extends AbstractExtension
         }
 
         return $formatted;
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function getName()
-    {
-        return 'custom_twig_extension';
     }
 }

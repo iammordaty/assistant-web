@@ -19,18 +19,6 @@ class TaskController extends Common\Controller\AbstractController
         ))->run();
     }
 
-    public function clean()
-    {
-        $pathname = $this->app->request()->post('pathname');
-
-        // TODO: "/data" configa
-        // TODO: "/collection" configa
-
-        (new BackgroundProcess(
-            sprintf('php /data/app/console.php track:clean -r "/collection/%s"', ltrim($pathname, '/'))
-        ))->run();
-    }
-
     public function move()
     {
         $data = $this->app->request->post();

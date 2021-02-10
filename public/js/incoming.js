@@ -1,14 +1,6 @@
 $(document).ready(function() {
 //    $.post = console.log;
 
-    $('[data-role="incoming-tracks:clean"]').click(function (e) {
-        var pathname = $(e.target).parents('[data-role="element"]').data('element-pathname');
-
-        $.post('/common/task/clean', {
-            pathname: pathname
-        });
-    });
-
     $('[data-role="incoming-tracks:calculate-audio-data"]').click(function (e) {
         var pathname = $(e.target).parents('[data-role="element"]').data('element-pathname');
 

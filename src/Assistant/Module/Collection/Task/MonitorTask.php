@@ -6,7 +6,6 @@ use Assistant\Module\Common\Task\AbstractTask;
 use Assistant\Module\File\Extension\RecursiveDirectoryIterator;
 use Assistant\Module\File\Extension\PathFilterIterator;
 use Assistant\Module\File\Extension\IgnoredPathIterator;
-
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 
@@ -67,11 +66,15 @@ class MonitorTask extends AbstractTask
             }
 
             foreach ($events as $event) {
-                $this->comment(sprintf('%d/%d: ', $event, $events), false);
+                $this->comment(sprintf('[debug] %d/%d: ', $event, $events), false);
 
                 $pathname = sprintf('%s/%s', $descriptors[$event['wd']], $event['name']);
 
                 switch ($event['mask']) {
+                    case IN_ALL_EVENTS:
+                        $this->info(sprintf('[debug] IN_ALL_EVENTS: %s', $pathname));
+                        break;
+
                     case IN_CREATE | IN_ISDIR:
                         $this->info(sprintf('IN_CREATE | IN_ISDIR: %s', $pathname));
                         $this->index($pathname);

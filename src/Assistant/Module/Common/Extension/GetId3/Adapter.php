@@ -14,10 +14,7 @@ use getid3_writetags;
 
 class Adapter
 {
-    /**
-     * @var array
-     */
-    private $id3ReaderOptions = [
+    private array $id3ReaderOptions = [
         'encoding' => 'UTF-8',
         'option_tag_id3v1' => false,
         'option_tag_id3v2' => true,
@@ -30,19 +27,13 @@ class Adapter
         'option_md5_data' => false,
     ];
 
-    /**
-     * @var array
-     */
-    private $id3WriterOptions = [
+    private array $id3WriterOptions = [
         'tag_encoding' => 'UTF-8',
         'tagformats' => [ 'id3v2.3' ],
         'remove_other_tags' => false,
     ];
 
-    /**
-     * @var getID3
-     */
-    protected $id3Reader;
+    protected getID3 $id3Reader;
 
     /**
      * @var getid3_writetags
@@ -59,10 +50,7 @@ class Adapter
      */
     protected $rawInfo;
 
-    /**
-     * Konstruktor
-     */
-    public function __construct(SplFileInfo $file = null, $id3ReaderOptions = null, $id3WriterOptions = null)
+    public function __construct(SplFileInfo $file = null, ?array $id3ReaderOptions = null, ?array $id3WriterOptions = null)
     {
         $this->id3Reader = new getID3();
 
@@ -142,14 +130,14 @@ class Adapter
 
     /**
      * Zapisuje podane metadane w pliku (utworze muzycznym)
-     * TODO: $mode = 'overwrite' / 'append'
+     * TODO: $mode = 'overwrite' / 'append', lub - najlepiej - dwie osobne metody publiczne
      *
      * @param array $metadata
      * @param bool $overwrite
      * @return bool
-     * @throws Exception\WriterException
+     * @throws WriterException
      */
-    public function writeId3v2Metadata(array $metadata, $overwrite = false)
+    public function writeId3v2Metadata(array $metadata, $overwrite = false): bool
     {
         $this->id3Writer->warnings = [];
         $this->id3Writer->errors = [];

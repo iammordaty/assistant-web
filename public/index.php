@@ -1,16 +1,12 @@
 <?php
 
-ini_set('display_errors', 'on');
+use Slim\Slim;
 
-error_reporting(E_ALL ^ E_DEPRECATED);
-
-setlocale(LC_TIME, 'pl_PL.utf8');
-
-define('BASE_DIR', dirname(__DIR__) . '');
+define('BASE_DIR', dirname(__DIR__));
 
 require_once BASE_DIR . '/vendor/autoload.php';
 
-$app = new \Slim\Slim();
+$app = new Slim();
 $app->setName('assistant');
 
 // bootstrap app

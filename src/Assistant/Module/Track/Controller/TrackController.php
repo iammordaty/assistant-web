@@ -66,11 +66,11 @@ class TrackController extends AbstractController
             //       co rozwiązuje problem mapowania nazw, wygody i zdublowanego kodu (np. nazw providerów).
 
             $nameToClassname = [
-                'musly' => Similarity\Provider\Musly::class,
-                'bpm' => Similarity\Provider\Bpm::class,
-                'year' => Similarity\Provider\Year::class,
-                'genre' => Similarity\Provider\Genre::class,
-                'camelotKeyCode' => Similarity\Provider\CamelotKeyCode::class,
+                'musly' => \Assistant\Module\Track\Extension\Similarity\Provider\Musly::class,
+                'bpm' => \Assistant\Module\Track\Extension\Similarity\Provider\Bpm::class,
+                'year' => \Assistant\Module\Track\Extension\Similarity\Provider\Year::class,
+                'genre' => \Assistant\Module\Track\Extension\Similarity\Provider\Genre::class,
+                'camelotKeyCode' => \Assistant\Module\Track\Extension\Similarity\Provider\CamelotKeyCode::class,
             ];
 
             $enabledProviders = array_filter(

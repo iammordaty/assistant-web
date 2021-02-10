@@ -9,7 +9,7 @@
                         title="{{ line.message }}"
                     {% endif %}
                 >
-                    {{ line.message|truncate(200) }}
+                    {{ line.message|u.truncate(200, '...', false) }}
                     {% if line.pathname %}"<span title="{{ line.pathname.full }}">{{ line.pathname.short }}"</span>{% endif %}
                 </td>
                 <td class="col-xs-2">{{ line.task }}</td>

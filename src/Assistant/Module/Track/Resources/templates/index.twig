@@ -25,7 +25,7 @@
             <div class="col-xs-12 {% if keyInfo %}col-sm-8 col-md-9{% endif %}">
                 <div class="row">
                     <span class="col-xs-4 col-sm-3 col-md-2 text-right">
-                        <strong>{% if track.artists|length == 1%}Wykonawca{% else %}Wykonawcy{% endif %}</strong>
+                        <strong>{% if track.artists|length == 1 %}Wykonawca{% else %}Wykonawcy{% endif %}</strong>
                     </span>
                     <span class="col-xs-8 col-sm-9 col-md-10">
                        {%- for artist in track.artists -%}
@@ -228,7 +228,7 @@
                                 <td class="col-xs-5">
                                     <span class="ellipsis track-name">
                                        {% set name = similarTrack.track.artist ~ ' - ' ~ similarTrack.track.title %}
-                                        <a href="{{ urlFor('track.track.index', { guid: similarTrack.track.guid } )}}" title="{{ name }}">{{ name }}</a>
+                                       <a href="{{ urlFor('track.track.index', { guid: similarTrack.track.guid } )}}" title="{{ name }}">{{ name }}</a>
                                     </span>
                                 </td>
                                 <td class="col-xs-2">

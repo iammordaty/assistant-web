@@ -19,12 +19,19 @@
 
     "require": {
         "php": "~7.4",
+        "ext-inotify": "*",
         "ext-json": "*",
         "ext-mongodb": "~1.6.1",
+        "cache/filesystem-adapter": "^1.1",
+        "cache/simple-cache-bridge": "^1.1",
         "cocur/background-process": "^0.5.0",
         "cocur/slugify": "*",
+        "danielstjules/stringy": "^3.1",
+        "guzzlehttp/guzzle": "6.5.5",
+        "iammordaty/beatport-oauth-middleware": "^1.0",
         "iammordaty/key-tools": "^0.8.2",
         "james-heinrich/getid3": "^1.9",
+        "kevinrob/guzzle-cache-middleware": "^3.3",
         "khill/php-duration": "^1.0",
         "mongodb/mongodb": "^1.5",
         "monolog/monolog": "^1.17",
@@ -34,7 +41,9 @@
         "slim/slim": "2.*",
         "slim/views": "0.1.*",
         "symfony/console": "*",
-        "twig/extensions": "^1.5",
-        "twig/twig": "~2.0"
+        "symfony/finder": "^5.2",
+        "twig/string-extra": "^3.2",
+        "twig/twig": "~2.0",
+        "vlucas/phpdotenv": "^5.2"
     }
 }

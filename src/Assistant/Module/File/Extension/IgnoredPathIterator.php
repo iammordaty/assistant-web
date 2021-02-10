@@ -2,8 +2,13 @@
 
 namespace Assistant\Module\File\Extension;
 
+use Twig\Node\Node;
+
 /**
  * Iterator oznaczający elementy kolekcji jako ignorowane
+ *
+ * @TODO: Do usunięcia, nie jest używane
+ * @deprecated
  */
 class IgnoredPathIterator extends \RecursiveIteratorIterator
 {

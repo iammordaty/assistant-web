@@ -82,10 +82,12 @@ class BrowseController extends AbstractController
 
     public function incoming($pathname)
     {
+        $incomingDefaultDir = '/_new';
+
         $absolutePathname = sprintf(
             '%s%s',
             $this->app->container->parameters['collection']['root_dir'],
-            $pathname
+            $pathname ?: $incomingDefaultDir
         );
 
         // TODO: Czy to muszą być dwie zmienne? Może da się to uprościć bez dużej straty w widoku

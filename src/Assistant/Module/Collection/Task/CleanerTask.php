@@ -89,7 +89,7 @@ class CleanerTask extends AbstractTask
 
         $this->app->log->info('Task finished', $this->stats);
 
-        unset($searchCondition, $input, $output);
+        return self::SUCCESS;
     }
 
     /**

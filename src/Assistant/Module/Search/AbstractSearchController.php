@@ -6,6 +6,8 @@ use Assistant\Module\Common\Controller\AbstractController;
 
 /**
  * Bazowy kontroler wyszukiwania
+ * 
+ * @todo: w pierwszym kroku zamienić dziedziczenie na kompozycję
  */
 abstract class AbstractSearchController extends AbstractController
 {

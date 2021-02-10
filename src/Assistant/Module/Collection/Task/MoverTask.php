@@ -86,7 +86,7 @@ class MoverTask extends AbstractTask
             throw new \RuntimeException("Target {$target->getPathname()} already exists!");
         }
 
-        if (file_exists($target->getPath()) === false && mkdir($target->getPath(), 0777, true) === false) {
+        if (file_exists($target->getPath()) === false && !mkdir($concurrentDirectory = $target->getPath(), 0777, true) && !is_dir($concurrentDirectory)) {
             throw new \RuntimeException("Can\'t create directory {$target->getPath()}.");
         }
 

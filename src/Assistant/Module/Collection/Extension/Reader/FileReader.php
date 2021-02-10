@@ -17,12 +17,6 @@ class FileReader extends AbstractReader
 
     private MetadataParser $metadataParser;
 
-    /**
-     * FileReader constructor.
-     *
-     * @param Id3Adapter $id3Adapter
-     * @param MetadataParser $metadataParser
-     */
     public function __construct(Id3Adapter $id3Adapter, MetadataParser $metadataParser)
     {
         parent::__construct();

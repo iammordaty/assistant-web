@@ -4,6 +4,7 @@ namespace Assistant\Module\Common\Extension;
 
 use Assistant\Module\File\Extension\PathFilterIterator;
 use Assistant\Module\File\Extension\RecursiveDirectoryIterator;
+use Twig\Node\Node;
 
 /**
  * @todo Dokończyć; niech "Singles" i "Other" przekazywane będą z widoku, bez zgadywania
@@ -19,7 +20,7 @@ class TargetPathService
     /**
      * Zwraca ścieżkę katalogu, w którym powinien znaleźć się podany utwór
      *
-     * @param Model $node
+     * @param Node $node
      * @return string
      */
     public function getTargetPath($node)

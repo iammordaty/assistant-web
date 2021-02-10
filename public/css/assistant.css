@@ -206,3 +206,21 @@ pre.raw {
 table .popover {
     max-width: none;
 }
+
+.base-track-info {
+    margin-bottom: 0;
+    padding-top: 5px;
+    padding-bottom: 5px;
+}
+.base-track-info div { line-height: 20px }
+.base-track-info div > span + span::before {
+    padding: 0 1px 0 3px;
+    color: #bbb;
+    content: "/\00a0";
+}
+
+.base-track-info .fa { padding-left: 4px }
+
+.metadata-options {
+    margin-top: 20px;
+}

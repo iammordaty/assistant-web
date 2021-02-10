@@ -3,5 +3,145 @@
 {% block title %}{{ track.artist }} - {{ track.title }}{% endblock %}
 
 {% block contentBlock %}
-    {{ pathname }}
+    <div
+        data-role="track-suggestions:suggestions"
+        data-suggestions="{{ suggestions|json_encode }}"
+    ></div>
+
+    <form
+        method="GET"
+        action="{{ urlFor('track.edit.edit', { pathname: pathname|url_encode }) }}"
+        class="form-horizontal"
+        role="form"
+        autocomplete="off"
+    >
+        <legend>{{ track.artist }} - {{ track.title }}</legend>
+
+        <div class="form-group">
+            <label class="col-sm-2 control-label">
+                <span class="ellipsis"><span>Zapytanie</span></span>
+            </label>
+            <div class="col-sm-8">
+                <div class="input-group">
+                    <input type="text" name="query" value="{{ query }}" class="form-control">
+                    <span class="input-group-btn">
+                        <button class="btn btn-default" type="submit" title="Wyszukaj ponownie" tabindex="-1">
+                            <i class="fa fa-refresh"></i>
+                        </button>
+                        <a
+                            href="https://www.google.com/search?q={{ query|url_encode }}"
+                            target="_blank"
+                            title="Otwórz wyszukiwanie w Google w nowej karcie"
+                            class="btn btn-default"
+                            tabindex="-1"
+                        >
+                            <i class="fa fa-google"></i>
+                        </a>
+                    </span>
+                </div>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label class="col-sm-2 control-label">
+                <span class="ellipsis"><span>Znalezione utwory</span></span>
+            </label>
+            <div class="col-sm-8">
+                <select
+                    {% if not suggestions %}disabled {% endif %} class="{% if not suggestions %}disabled {% endif %}form-control"
+                    data-role="track-suggestions:base-track-selector"
+                >
+                    <!-- TODO: Dobrze byłoby mieć tę listę posortowaną: alfabetycznie albo po dacie wydania) -->
+                    <!-- update: a najlepiej: radiobutton, który tym steruje -->
+
+                    {% for suggestion in suggestions %}
+                        {% with %}
+                            {% set track = suggestion.track %}
+                            <option value="{{ suggestion.track.id }}">
+                                {{ track.artists|join(', ') }} - {{ track.title }}
+                                [
+                                    {{- track.release.name -}},&nbsp
+                                    {{- track.releaseDate|date('d.m.Y') -}},&nbsp
+                                    {{- track.label -}}
+                                ]
+                            </option>
+                        {% endwith %}
+                    {% endfor %}
+                </select>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <div class="col-sm-offset-2 col-sm-8">
+                {% if suggestions %}
+                    <div class="well well-sm small base-track-info" data-role="track-suggestions:base-track-info">
+                        <div>
+                            <a data-role="track-url" class="undecorated" target="_blank" tabindex="-1">
+                                <span data-role="track"></span>
+                                <i class="fa fa-external-link" aria-hidden="true"></i>
+                            </a>
+                        </div>
+                        <div>
+                            <span data-role="year"></span>
+                            <span>
+                                <a data-role="release-url" class="undecorated" target="_blank" tabindex="-1">
+                                    <span data-role="release"></span>
+                                    <i class="fa fa-external-link" aria-hidden="true"></i>
+                                </a>
+                            </span>
+                            <span data-role="label"></span>
+                        </div>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </form>
+
+    <form method="POST" action="{{ urlFor('track.edit.save', { pathname: pathname|url_encode }) }}" class="form-horizontal" style="padding-bottom: 100px" role="form">
+        <legend>Edycja metadanych</legend>
+
+        <!-- Fajnie byłoby mieć przycisk (przycisk, nic z automatu), który przepisze pojedyncze sugestie do pustych inputów -->
+
+        {% for fieldInfo in metadata.fields %}
+            <div class="form-group">
+                <label class="col-sm-2 control-label">
+                    <span class="ellipsis"><span>{{ fieldInfo.title }}</span></span>
+                </label>
+                <div class="col-sm-5">
+                    <div data-role="track-suggestions:suggestion" data-suggestion-type="{{ fieldInfo.field }}" class="input-group">
+                        <input type="text" name="{{ fieldInfo.field }}" value="{{ track[fieldInfo.field] }}" class="form-control" />
+                        <div class="input-group-btn">
+                            <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown" tabindex="-1">
+                                <span class="caret"></span>
+                            </button>
+                            <ul class="dropdown-menu dropdown-menu-right">
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        {% endfor %}
+
+        <div class="form-group metadata-options">
+            {% for fieldInfo in metadata.options %}
+                <div class="col-sm-offset-2 col-sm-5">
+                    <div class="checkbox">
+                        <label>
+                            <input type="checkbox" name="{{ fieldInfo.option }}" value="true"> {{ fieldInfo.title }}
+                        </label>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+
+        <footer style="padding-top: 50px">
+            <div class="pull-right">
+                <button type="submit" name="save" value="true" class="btn btn-success">Zapisz</button>
+                {# dodać return_url #}
+                <a href="@todo" class="btn btn-default">Anuluj</a>
+            </div>
+        </footer>
+    </form>
+
+    <script src="/js/track-edit.js" type="text/javascript"></script>
 {% endblock %}

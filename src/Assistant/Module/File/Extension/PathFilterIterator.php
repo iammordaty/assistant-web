@@ -2,6 +2,8 @@
 
 namespace Assistant\Module\File\Extension;
 
+use Twig\Node\Node;
+
 /**
  * Iterator filtrujący elementy według podanych ścieżek
  */

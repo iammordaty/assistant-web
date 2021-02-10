@@ -215,7 +215,7 @@ class AudioDataCalculatorTask extends AbstractTask
 
         $this->app->log->info('Task finished', $this->stats);
 
-        unset($input, $output, $id3, $iterator);
+        return self::SUCCESS;
     }
 
     /**

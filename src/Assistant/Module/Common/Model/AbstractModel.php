@@ -26,6 +26,7 @@ abstract class AbstractModel implements ModelInterface
     /**
      * Ustawia jedną lub więcej wartość właściwości obiektu
      *
+     * @deprecated Używać setterów
      * @param string|array $name
      * @param mixed $value
      * @return self
@@ -58,6 +59,7 @@ abstract class AbstractModel implements ModelInterface
     /**
      * Zwraca zadaną wartość właściwości lub wszystkie, jeśli nie podano nazwy właściwości
      *
+     * @deprecated Używać getterów
      * @param string|null $name
      * @return mixed
      *

@@ -46,7 +46,7 @@ class Genre extends AbstractProvider
         ['Techno', 'Hard Trance', 85],
         ['Trance', 'Hard House', 85],
         ['Techno', 'Minimal', 85],
-        ['Techno', 'Deep Dance', 55],
+        ['Techno', 'Deep House', 55],
         ['Techno', 'Indie Dance', 50],
         ['Techno', 'Electronic', 50],
 

@@ -29,7 +29,8 @@ class SplFileInfo extends \SplFileInfo
     private $dot;
 
     /**
-     * Konstruktor
+     * @deprecated Na rzecz symfony/finder oraz Symfony\Component\Finder\SplFileInfo
+     * @link https://symfony.com/doc/current/components/finder.html
      *
      * @param string $filename
      * @param string $relativePathname
@@ -61,6 +62,9 @@ class SplFileInfo extends \SplFileInfo
     /**
      * Zwraca informację, czy element jest ignorowany
      *
+     * @todo Nieużywane, do usunięcia
+     *
+     * @deprecated
      * @return bool
      */
     public function isIgnored()
