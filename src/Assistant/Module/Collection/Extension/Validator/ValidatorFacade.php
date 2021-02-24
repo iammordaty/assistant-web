@@ -8,12 +8,12 @@ use Assistant\Module\Directory\Model\Directory;
 use Assistant\Module\Directory\Repository\DirectoryRepository;
 use Assistant\Module\Track\Model\Track;
 use Assistant\Module\Track\Repository\TrackRepository;
-use MongoDB\Database;
+use Slim\Helper\Set as Container;
 
 /**
  * Fasada dla walidatorów plików oraz katalogów mających zostać dodanych do kolekcji
  */
-class ValidatorFacade
+final class ValidatorFacade
 {
     /**
      * Obiekt walidatora katalogów
@@ -29,50 +29,40 @@ class ValidatorFacade
      */
     private TrackValidator $trackValidator;
 
-    public function __construct(Database $database, array $parameters)
+    public function __construct(DirectoryValidator $directoryValidator, TrackValidator $trackValidator)
     {
-        $this->directoryValidator = new DirectoryValidator(
-            new DirectoryRepository($database),
+        $this->directoryValidator = $directoryValidator;
+        $this->trackValidator = $trackValidator;
+    }
+
+    public static function factory(Container $container): ValidatorFacade
+    {
+        $directoryValidator = new DirectoryValidator(
+            new DirectoryRepository($container['db'])
         );
 
-        $this->trackValidator = new TrackValidator(
-            new TrackRepository($database),
-            new Id3Adapter(),
-            $parameters['collection']['root_dir']
+        $trackValidator = new TrackValidator(
+            new TrackRepository($container['db']),
+            new Id3Adapter()
         );
+
+        return new self($directoryValidator, $trackValidator);
     }
 
     /**
-     * @param ModelInterface|Track|Directory $item
+     * @param ModelInterface|Track|Directory $node
      * @return void
      */
-    public function validate(ModelInterface $item): void
+    public function validate(ModelInterface $node): void
     {
-        $itemType = static::getItemType($item);
+        $nodeClassname = get_class($node);
 
-        if ($itemType === 'directory') {
-            $this->directoryValidator->validate($item);
-
-            return;
+        if ($nodeClassname === Directory::class) {
+            $this->directoryValidator->validate($node);
         }
 
-        if ($itemType === 'track') {
-            $this->trackValidator->validate($item);
+        if ($nodeClassname === Track::class) {
+            $this->trackValidator->validate($node);
         }
-    }
-
-    /**
-     * Zwraca typ podanego elementu kolekcji
-     *
-     * @todo Chyba bardziej właściwe byłoby, gdyby to model zwracał informację o typie via getType()
-     *
-     * @param ModelInterface|Track|Directory $item
-     * @return string
-     */
-    private static function getItemType(ModelInterface $item): string
-    {
-        $parts = explode('\\', get_class($item));
-
-        return lcfirst(array_pop($parts));
     }
 }

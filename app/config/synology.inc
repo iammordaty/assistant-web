@@ -13,21 +13,18 @@ $app->configureMode(
 
         $app->config('debug', true);
 
-        $parameters = [
-            'collection' => [
-                'excluded_dirs' => [
-                    '/_new',
-                    '/Albums',
-                    '/Tools',
-                    '/Sets',
-                    '@eaDir',
-                ]
-            ]
-        ];
+        $parameters = $app->container['parameters'];
 
-        $app->container->parameters = array_merge_recursive(
-            $app->container->parameters,
-            $parameters
-        );
+        $collectionRootDir = $parameters['collection']['root_dir'];
+
+        $parameters['collection'] = array_merge($parameters['collection'], [
+            'indexed_dirs' => [
+                $collectionRootDir . '/Singles',
+                $collectionRootDir . '/Other',
+            ],
+            'incoming_dir' => $collectionRootDir . '/_new',
+        ]);
+
+        $app->container['parameters'] = $parameters;
     }
 );

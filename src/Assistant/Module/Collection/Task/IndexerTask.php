@@ -2,6 +2,7 @@
 
 namespace Assistant\Module\Collection\Task;
 
+use Assistant\Module\Collection\Extension\Finder;
 use Assistant\Module\Collection\Extension\Reader\ReaderFacade;
 use Assistant\Module\Collection\Extension\Validator\Exception\DuplicatedElementException;
 use Assistant\Module\Collection\Extension\Validator\Exception\EmptyMetadataException;
@@ -9,39 +10,30 @@ use Assistant\Module\Collection\Extension\Validator\ValidatorFacade;
 use Assistant\Module\Collection\Extension\Writer\WriterFacade;
 use Assistant\Module\Common\Extension\Backend\Exception\Exception as BackendException;
 use Assistant\Module\Common\Task\AbstractTask;
-use Assistant\Module\File\Extension\IgnoredPathIterator;
-use Assistant\Module\File\Extension\PathFilterIterator;
-use Assistant\Module\File\Extension\RecursiveDirectoryIterator;
-use Assistant\Module\File\Extension\SplFileInfo;
 use Exception;
-use RecursiveArrayIterator;
+use SplFileInfo;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 
 /**
- * Task indeksujący utwory znajdujące się w kolekcji
+ * Task indeksujący utwory oraz katalogi znajdujące się w kolekcji
  */
-class IndexerTask extends AbstractTask
+final class IndexerTask extends AbstractTask
 {
-    /**
-     * Tablica asocjacyjna zawierająca statystyki zadania
-     *
-     * @var array
-     */
-    private $stats;
+    private ReaderFacade $reader;
 
-    /**
-     * @var array
-     */
-    private $parameters;
+    private ValidatorFacade $validator;
 
-    /**
-     * {@inheritDoc}
-     */
-    protected function configure()
+    private WriterFacade $writer;
+
+    private array $stats;
+
+    private array $parameters;
+
+    protected function configure(): void
     {
-        $this->parameters = $this->app->container->parameters['collection'];
+        $collectionRootDir = $this->app->container['parameters']['collection']['root_dir'];
 
         $this
             ->setName('collection:index')
@@ -50,16 +42,20 @@ class IndexerTask extends AbstractTask
                 'pathname',
                 InputArgument::OPTIONAL,
                 'Pathname to index',
-                $this->parameters['root_dir']
-            );
+                $collectionRootDir
+            )
+            ->addOption('ensure-collection-root-dir');
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    protected function initialize(InputInterface $input, OutputInterface $output)
+    protected function initialize(InputInterface $input, OutputInterface $output): void
     {
         parent::initialize($input, $output);
+
+        $this->parameters = $this->app->container['parameters']['collection'];
+
+        $this->reader = ReaderFacade::factory($this->app->container);
+        $this->validator = ValidatorFacade::factory($this->app->container);
+        $this->writer = WriterFacade::factory($this->app->container);
 
         $this->stats = [
             'added' => [ 'file' => 0, 'dir' => 0 ],
@@ -74,22 +70,25 @@ class IndexerTask extends AbstractTask
      *
      * @param InputInterface $input
      * @param OutputInterface $output
+     * @return int
      */
-    protected function execute(InputInterface $input, OutputInterface $output)
+    protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $this->app->log->info('Task executed', array_merge($input->getArguments(), $input->getOptions()));
 
-        $reader = new ReaderFacade($this->app->container->parameters);
-        $validator = new ValidatorFacade($this->app->container['db'], $this->app->container->parameters);
-        $writer = new WriterFacade($this->app->container['db']);
+        $nodesToIndex = $this->getNodesToIndex(
+            $input->getArgument('pathname'),
+            $input->getOption('ensure-collection-root-dir')
+        );
 
-        foreach ($this->getIterator($input->getArgument('pathname')) as $node) {
+        foreach ($nodesToIndex as $node) {
             $this->app->log->info('Processing node', [ 'pathname' => $node->getPathname() ]);
 
             try {
-                $element = $reader->read($node);
-                $validator->validate($element);
-                $writer->save($element);
+                $element = $this->reader->read($node);
+                $this->validator->validate($element);
+
+                $this->writer->save($element);
 
                 $this->stats['added'][$node->getType()]++;
 
@@ -99,9 +98,7 @@ class IndexerTask extends AbstractTask
 
                 $this->app->log->warn('Track does not contains metadata');
             } catch (DuplicatedElementException $e) {
-                if ($node->isDot() === false) {
-                    $this->stats['duplicated']++;
-                }
+                $this->stats['duplicated']++;
 
                 $this->app->log->debug($e->getMessage());
             } catch (BackendException $e) {
@@ -127,29 +124,30 @@ class IndexerTask extends AbstractTask
 
     /**
      * @param string $pathname
-     * @return IgnoredPathIterator
+     * @param bool $ensureCollectionRootDir
+     * @return Finder|SplFileInfo[]
      */
-    private function getIterator($pathname)
+    private function getNodesToIndex(string $pathname, bool $ensureCollectionRootDir): Finder
     {
-        if (is_file($pathname)) {
-            $relativePathname = str_replace(sprintf('%s/', $this->parameters['root_dir']), '', $pathname);
+        $finder = Finder::create([
+            'pathname' => $pathname,
+            'recursive' => is_dir($pathname),
+            'restrict' => $this->parameters['indexed_dirs'],
+            'skip_self' => false,
+        ]);
 
-            $iterator = new RecursiveArrayIterator(
-                [ new SplFileInfo($pathname, $relativePathname) ]
-            );
-        } else {
-            $iterator = new RecursiveDirectoryIterator($pathname);
+        // ta flaga jest trochę słaba, bo powinno to zostać rozwiązane bardziej systemowo po stronie Findera
+        // oraz listy katalogów dozwolonych / ignorowanych. Jednakże wszystkie próby dodania katalogu głównego
+        // do listy indeksowanych plików sprawiały że indeksowane były także katalogi niechciane -
+        // /collection/Albums, /collection/_new, /collection/Tools, itp. Być może zostanie to rozwiązane
+        // po stronie biblioteki w przyszłości, bo podobne issue wiszą na githubie:
+        // - https://github.com/symfony/symfony/issues/28158
+        // - https://github.com/symfony/symfony/issues/34894
+
+        if ($ensureCollectionRootDir) {
+            $finder->append([ $this->parameters['root_dir'] ]);
         }
 
-        return new IgnoredPathIterator(
-            new PathFilterIterator(
-                $iterator,
-                $this->parameters['root_dir'],
-                $this->parameters['excluded_dirs']
-            ),
-            $this->parameters['ignored_dirs'],
-            IgnoredPathIterator::SELF_FIRST,
-            IgnoredPathIterator::CATCH_GET_CHILD
-        );
+        return $finder;
     }
 }

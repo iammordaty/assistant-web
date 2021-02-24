@@ -4,14 +4,14 @@ namespace Assistant\Module\Collection\Extension\Reader;
 
 use Assistant\Module\Common\Extension\GetId3\Adapter as Id3Adapter;
 use Assistant\Module\File\Extension\Parser as MetadataParser;
-use Assistant\Module\File\Extension\SplFileInfo;
 use Assistant\Module\Track\Model\Track;
 use MongoDB\BSON\UTCDateTime;
+use SplFileInfo;
 
 /**
  * Klasa, której zadaniem jest przetwarzanie plików (utworów muzycznych) znajdujących się w kolekcji
  */
-class FileReader extends AbstractReader
+final class FileReader extends AbstractReader
 {
     private Id3Adapter $id3Adapter;
 
@@ -42,10 +42,9 @@ class FileReader extends AbstractReader
         $track->guid = $this->getGuid($node, $metadata);
         $track->length = $this->id3Adapter->getTrackLength();
         $track->metadata_md5 = md5(json_encode($data));
-        $track->parent = $this->slugifyPath(dirname($node->getRelativePathname()));
-        $track->pathname = $node->getRelativePathname();
-        $track->ignored = $node->isIgnored();
-        $track->modified_date = new UTCDateTime($node->getMTime());
+        $track->parent = $this->slugifyPath(dirname($node->getPathname()));
+        $track->pathname = $node->getPathname();
+        $track->modified_date = new UTCDateTime($node->getMTime() * 1000);
         $track->indexed_date = new UTCDateTime();
 
         return $track;

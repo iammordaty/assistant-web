@@ -2,43 +2,33 @@
 
 namespace Assistant\Module\Track\Task;
 
-use Assistant\Module\Common;
-use Assistant\Module\Common\Task\AbstractTask;
-use Assistant\Module\Common\Extension\GetId3\Exception\WriterException;
+use Assistant\Module\Collection\Extension\Finder;
+use Assistant\Module\Common\Extension\Backend\Client as BackendClient;
 use Assistant\Module\Common\Extension\Backend\Exception\AudioDataCalculatorException;
-use Assistant\Module\File\Extension\PathFilterIterator;
-use Assistant\Module\File\Extension\RecursiveDirectoryIterator;
-use Assistant\Module\File\Extension\SplFileInfo;
-
+use Assistant\Module\Common\Extension\GetId3\Adapter as Id3Adapter;
+use Assistant\Module\Common\Extension\GetId3\Exception\WriterException;
+use Assistant\Module\Common\Task\AbstractTask;
+use SplFileInfo;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 
 /**
- * Task mający za zadanie obliczenie tonacji oraz liczby uderzeń na mintutę
+ * Task mający za zadanie obliczenie tonacji oraz liczby uderzeń na minutę
  * w zadanym pliku (utworze muzycznym)
  */
-class AudioDataCalculatorTask extends AbstractTask
+final class AudioDataCalculatorTask extends AbstractTask
 {
-    /**
-     * Tablica asocjacyjna zawierająca statystyki zadania
-     *
-     * @var array
-     */
-    private $stats;
+    private Id3Adapter $id3;
 
-    /**
-     * @var array
-     */
-    private $parameters;
+    private BackendClient $backend;
 
-    /**
-     * {@inheritDoc}
-     */
-    protected function configure()
+    private array $stats;
+
+    protected function configure(): void
     {
-        $this->parameters = $this->app->container->parameters['collection'];
+        $collectionRootDir = $this->app->container['parameters']['collection']['root_dir'];
 
         $this
             ->setName('track:calculate-audio-data')
@@ -47,7 +37,7 @@ class AudioDataCalculatorTask extends AbstractTask
                 'pathname',
                 InputArgument::OPTIONAL,
                 'Pathname to search tracks to calculate BPM and initial key',
-                $this->parameters['root_dir']
+                $collectionRootDir
             )->addOption(
                 'skip-calculated',
                 's',
@@ -57,15 +47,15 @@ class AudioDataCalculatorTask extends AbstractTask
             ->addOption('write-data', 'w', InputOption::VALUE_NONE, 'Write BPM and initial key to track metadata');
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    protected function initialize(InputInterface $input, OutputInterface $output)
+    protected function initialize(InputInterface $input, OutputInterface $output): void
     {
         parent::initialize($input, $output);
 
+        $this->id3 = new Id3Adapter();
+        $this->backend = new BackendClient();
+
         $this->stats = [
-            'processed' => [ 'file' => 0, 'dir' => 0 ],
+            'processed' => 0,
             'updated' => 0,
             'mismatch' => [ 'initial_key' => 0, 'bpm' => 0 ],
             'skipped' => [ 'too_long' => 0,  'already_calculated' => 0, 'same_data' => 0 ],
@@ -75,46 +65,45 @@ class AudioDataCalculatorTask extends AbstractTask
 
     /**
      * Rozpoczyna proces indeksowania kolekcji
+     *
+     * @param InputInterface $input
+     * @param OutputInterface $output
+     * @return int
      */
-    protected function execute(InputInterface $input, OutputInterface $output)
+    protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $this->app->log->info('Task executed', array_merge($input->getArguments(), $input->getOptions()));
-
-        $id3 = new Common\Extension\GetId3\Adapter();
-        $backend = new Common\Extension\Backend\Client();
 
         $skipCalculated = $input->getOption('skip-calculated');
         $writeData = $input->getOption('write-data');
 
-        $iterator = $this->getIterator($input->getArgument('pathname'), $input->getOption('recursive'));
+        $files = $this->getFiles(
+            $input->getArgument('pathname'),
+            $input->getOption('recursive')
+        );
 
-        foreach ($iterator as $node) {
-            if ($node->isDir() === true) {
-                $this->stats['processed']['dir']++;
+        foreach ($files as $file) {
+            $this->app->log->debug('Processing track', [ 'pathname' => $file->getPathname() ]);
 
-                unset($node);
+            $this->stats['processed']++;
 
-                continue;
-            }
-
-            $this->app->log->debug('Processing track', [ 'pathname' => $node->getPathname() ]);
-
-            $this->stats['processed']['file']++;
+            // @todo: użyć klasy TrackBuilder, poniżej korzystać już tylko z modelu Track
+            //        $track = ($this->app->container[TrackBuilder::class])->fromFile($file->getPathname());
 
             try {
-                $metadata = $id3
-                    ->setFile($node)
+                $metadata = $this->id3
+                    ->setFile($file)
                     ->readId3v2Metadata();
 
-                if ($id3->getTrackLength() / 60 > 20) {
+                if ($this->id3->getTrackLength() / 60 > 20) {
                     $this->stats['skipped']['too_long']++;
 
                     $this->app->log->debug(
                         'Track is too long, skipping...',
-                        [ 'length' => $id3->getTrackLength() / 60 ]
+                        [ 'length' => $this->id3->getTrackLength() / 60 ]
                     );
 
-                    unset($node, $metadata);
+                    unset($file, $metadata);
 
                     continue;
                 }
@@ -130,19 +119,19 @@ class AudioDataCalculatorTask extends AbstractTask
                         [ 'bpm' => $metadata['bpm'], 'initial_key' => $metadata['initial_key'] ]
                     );
 
-                    unset($node, $metadata);
+                    unset($file, $metadata);
 
                     continue;
                 }
 
-                $audioData = $backend->calculateAudioData($node);
+                $audioData = $this->backend->calculateAudioData($file);
 
                 if ($this->isTrackHasSameData($metadata, $audioData) === true) {
                     $this->stats['skipped']['same_data']++;
 
                     $this->app->log->debug('Track has the same audio data, update is not necessary', $audioData);
 
-                    unset($node, $metadata, $audioData);
+                    unset($file, $metadata, $audioData);
 
                     continue;
                 }
@@ -166,10 +155,10 @@ class AudioDataCalculatorTask extends AbstractTask
                 );
 
                 if ($writeData === true) {
-                    $id3->writeId3v2Metadata($audioData);
+                    $this->id3->writeId3v2Metadata($audioData);
 
-                    if ($id3->getWriterWarnings()) {
-                        $this->app->log->warning('Track metadata saved with warnings', $id3->getWriterWarnings());
+                    if ($this->id3->getWriterWarnings()) {
+                        $this->app->log->warning('Track metadata saved with warnings', $this->id3->getWriterWarnings());
                     }
 
                     $this->stats['updated']++;
@@ -181,7 +170,7 @@ class AudioDataCalculatorTask extends AbstractTask
 
                 $this->app->log->error(
                     $e->getMessage(),
-                    [ 'pathname' => $node->getPathname(), 'metadata' => $metadata ]
+                    [ 'pathname' => $file->getPathname(), 'metadata' => $metadata ]
                 );
             } catch (WriterException $e) {
                 $this->stats['error']['tags']++;
@@ -189,11 +178,11 @@ class AudioDataCalculatorTask extends AbstractTask
                 $this->app->log->error(
                     $e->getMessage(),
                     [
-                        'pathname' => $node->getPathname(),
+                        'pathname' => $file->getPathname(),
                         'metadata' => $metadata,
                         'audioData' => $audioData,
-                        'id3WriterErrors' => $id3->getWriterErrors(),
-                        'id3WriterWarnings' => $id3->getWriterWarnings(),
+                        'id3WriterErrors' => $this->id3->getWriterErrors(),
+                        'id3WriterWarnings' => $this->id3->getWriterWarnings(),
                     ]
                 );
             } catch (\Exception $e) {
@@ -202,14 +191,14 @@ class AudioDataCalculatorTask extends AbstractTask
                 $this->app->log->critical(
                     $e->getMessage(),
                     [
-                        'pathname' => $node->getPathname(),
+                        'pathname' => $file->getPathname(),
                         'metadata' => $metadata,
                         'audioData' => $audioData,
                         'exception' => $e,
                     ]
                 );
             } finally {
-                unset($node, $metadata, $audioData);
+                unset($file, $metadata, $audioData);
             }
         }
 
@@ -219,48 +208,32 @@ class AudioDataCalculatorTask extends AbstractTask
     }
 
     /**
-     * @param string $pathname
-     * @param bool $recursive
-     * @return PathFilterIterator|\RecursiveIteratorIterator|\ArrayIterator
-     */
-    private function getIterator($pathname, $recursive)
-    {
-        if (is_file($pathname)) {
-            $relativePathname = str_replace(sprintf('%s/', $this->parameters['root_dir']), '', $pathname);
-
-            return new \ArrayIterator([ new SplFileInfo($pathname, $relativePathname) ]);
-        }
-
-        $iterator = new PathFilterIterator(
-            new RecursiveDirectoryIterator($pathname),
-            $this->parameters['root_dir'],
-            [ ]
-        );
-
-        if ($recursive === true) {
-            $iterator = new \RecursiveIteratorIterator(
-                $iterator,
-                \RecursiveIteratorIterator::SELF_FIRST,
-                \RecursiveIteratorIterator::CATCH_GET_CHILD
-            );
-        }
-
-        return $iterator;
-    }
-
-    /**
      * Określa, czy dane zawarte w metadanych pliku są takie same jak te obliczone przez backend
      *
      * @param array|null $metadata
      * @param array $audioData
      * @return bool
      */
-    private function isTrackHasSameData($metadata, array $audioData)
+    private function isTrackHasSameData(?array $metadata, array $audioData): bool
     {
         if (isset($metadata['bpm']) === false || isset($metadata['initial_key']) === false) {
             return false;
         }
 
         return (string) $metadata['bpm'] === (string) $audioData['bpm'] && $metadata['initial_key'] === $audioData['initial_key'];
+    }
+
+    /**
+     * @param string $pathname
+     * @param bool $recursive
+     * @return Finder|SplFileInfo[]
+     */
+    private function getFiles(string $pathname, bool $recursive): Finder
+    {
+        return Finder::create([
+            'pathname' => $pathname,
+            'mode' => Finder::MODE_FILES_ONLY,
+            'recursive' => $recursive,
+        ]);
     }
 }

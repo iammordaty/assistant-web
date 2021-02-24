@@ -2,15 +2,13 @@
 
 namespace Assistant\Module\Common\Extension;
 
-use Assistant\Module\File\Extension\PathFilterIterator;
-use Assistant\Module\File\Extension\RecursiveDirectoryIterator;
-use Twig\Node\Node;
+use SplFileInfo;
 
 /**
  * @todo Dokończyć; niech "Singles" i "Other" przekazywane będą z widoku, bez zgadywania
  * @todo Zmienić na klasę z metodami statycznymi
  */
-class TargetPathService
+final class TargetPathService
 {
     public static function factory(): TargetPathService
     {
@@ -18,16 +16,16 @@ class TargetPathService
     }
 
     /**
-     * Zwraca ścieżkę katalogu, w którym powinien znaleźć się podany utwór
+     * Zwraca ścieżkę katalogu, w którym powinien znaleźć się podany utwór lub katalog
      *
-     * @param Node $node
+     * @param SplFileInfo $node
      * @return string
      */
-    public function getTargetPath($node)
+    public function getTargetPath(SplFileInfo $node): string
     {
-        // TODO: Do przemyślenia: getTargetPath musi przyjmować SplFileInfo, ponieważ funkcja move wymaga docelowej nazwy (włącznie z katalogiem / plikiem przenoszonym)
-        // TODO: Uspójnić; możliwe, że trzeba będzie przenieść do odrębnej klasy
+        return 'not-implemented!';
 
+        /*
         if ($node->isFile()) {
             $subdir = strftime('%Y/%m. %B', $node->getMTime());
 
@@ -62,5 +60,6 @@ class TargetPathService
 
         // TODO: "Singles" powinno być w konfigu
         return sprintf('/%s/%s/%s', 'Singles', $subdir, $node->getBasename());
+        */
     }
 }

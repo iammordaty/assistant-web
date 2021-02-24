@@ -3,12 +3,12 @@
 namespace Assistant\Module\Track\Model;
 
 use Assistant\Module\Common\Model\AbstractModel;
-use Assistant\Module\File\Extension\SplFileInfo;
 use MongoDB\BSON\ObjectId;
 use MongoDB\BSON\UTCDateTime;
 use MongoDB\Model\BSONArray;
+use SplFileInfo;
 
-class Track extends AbstractModel
+final class Track extends AbstractModel
 {
     /**
      * @var ObjectId
@@ -91,15 +91,6 @@ class Track extends AbstractModel
     protected $pathname;
 
     /**
-     * @todo Nieużywane, do usunięcia
-     * @see /app/config/parameters.php: ignored_dirs
-     * @deprecated
-     *
-     * @var bool
-     */
-    protected $ignored;
-
-    /**
     * @var UTCDateTime
     */
     protected $modified_date;
@@ -116,9 +107,6 @@ class Track extends AbstractModel
 
     private ?SplFileInfo $file = null;
 
-    /**
-     * @return ObjectId
-     */
     public function getId(): ObjectId
     {
         return $this->_id;
@@ -277,33 +265,11 @@ class Track extends AbstractModel
 
     public function getPathname(): string
     {
-        $pathname = $this->pathname;
-
-        // @todo: zamienić na zwykły getter
-        // @fixme: tymczasowo, do czasu poprawienia settera
-        // @fixme: do czasu poprawienia w bazie
-        // @fixme: do czasu poprawienia w kodzie, $track->pathname -> $track->getPathname()
-
-        $tempRootDit = '/collection';
-
-        if (strpos($pathname, $tempRootDit) !== 0) {
-            $pathname = $tempRootDit . $pathname;
-        }
-
-        return $pathname;
+        return $this->pathname;
     }
 
     public function setPathname(string $pathname): void
     {
-        // @todo: zamienić na zwykły setter
-        // @fixme: tymczasowo
-
-        $tempRootDit = '/collection';
-
-        if (strpos($pathname, $tempRootDit) !== 0) {
-            $pathname = $tempRootDit . $pathname;
-        }
-
         $this->pathname = $pathname;
     }
 
@@ -370,13 +336,7 @@ class Track extends AbstractModel
     public function getFile(): SplFileInfo
     {
         if (!$this->file) {
-            // @fixme: tymczasowo, do czasu poprawienia settera
-            // @fixme: do czasu poprawienia w bazie
-            // @fixme: do czasu poprawienia w kodzie, $track->pathname -> $track->getPathname()
-            $pathname = $this->getPathname();
-            $relativePathname = str_replace(sprintf('%s/', '/collection'), '', $pathname);
-            // -- dotąd
-            $this->file = new SplFileInfo($pathname, $relativePathname);
+            $this->file = new SplFileInfo($this->pathname);
         }
 
         return $this->file;

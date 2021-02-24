@@ -3,13 +3,13 @@
 namespace Assistant\Module\Collection\Extension\Reader;
 
 use Assistant\Module\Directory\Model\Directory;
-use Assistant\Module\File\Extension\SplFileInfo;
 use MongoDB\BSON\UTCDateTime;
+use SplFileInfo;
 
 /**
  * Klasa, której zadaniem jest przetwarzanie katalogów znajdujących się w kolekcji
  */
-class DirectoryReader extends AbstractReader
+final class DirectoryReader extends AbstractReader
 {
     /**
      * {@inheritDoc}
@@ -20,12 +20,11 @@ class DirectoryReader extends AbstractReader
     {
         $directory = new Directory();
 
-        $directory->guid = $this->slugifyPath($node->getRelativePathname());
+        $directory->guid = $this->slugifyPath($node->getPathname());
         $directory->name = $node->getBasename();
-        $directory->parent = $this->slugifyPath(dirname($node->getRelativePathname()));
-        $directory->pathname = $node->getRelativePathname();
-        $directory->ignored = $node->isIgnored();
-        $directory->modified_date = new UTCDateTime($node->getMTime());
+        $directory->parent = $this->slugifyPath(dirname($node->getPathname()));
+        $directory->pathname = $node->getPathname();
+        $directory->modified_date = new UTCDateTime($node->getMTime() * 1000);
         $directory->indexed_date = new UTCDateTime();
 
         return $directory;

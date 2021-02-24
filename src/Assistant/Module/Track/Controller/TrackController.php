@@ -4,7 +4,7 @@ namespace Assistant\Module\Track\Controller;
 
 use Assistant\Module\Common;
 use Assistant\Module\Common\Controller\AbstractController;
-use Assistant\Module\Common\Extension\PathBreadcrumbsGenerator;
+use Assistant\Module\Common\Extension\PathBreadcrumbs;
 use Assistant\Module\Track\Extension\Similarity;
 use Assistant\Module\Track\Model\Track;
 use Assistant\Module\Track\Repository\TrackRepository;
@@ -14,6 +14,7 @@ class TrackController extends AbstractController
 {
     public function index($guid)
     {
+        /** @var Track $track */
         $track = (new TrackRepository($this->app->container['db']))->findOneByGuid($guid);
 
         if ($track === null) {
@@ -22,8 +23,8 @@ class TrackController extends AbstractController
                 404
             );
         }
-
-        $pathBreadcrumbs = PathBreadcrumbsGenerator::factory()->getPathBreadcrumbs(dirname($track->pathname));
+        
+        $pathBreadcrumbs = PathBreadcrumbs::factory()->get(dirname($track->getPathname()));
 
         $form = $this->app->request->get('similarity');
 

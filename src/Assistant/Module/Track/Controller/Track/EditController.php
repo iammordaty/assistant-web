@@ -2,14 +2,10 @@
 
 namespace Assistant\Module\Track\Controller\Track;
 
-use Assistant\Module\Collection\Extension\Reader\FileReader;
 use Assistant\Module\Common\Controller\AbstractController;
 use Assistant\Module\Common\Extension\GetId3\Adapter as Id3Adapter;
-use Assistant\Module\File\Extension\Parser as MetadataParser;
 use Assistant\Module\Track\Extension\TrackBuilder;
-use Assistant\Module\Track\Repository\TrackRepository;
 use Cocur\BackgroundProcess\BackgroundProcess;
-use Slim\Helper\Set as Container;
 
 class EditController extends AbstractController
 {
@@ -22,7 +18,7 @@ class EditController extends AbstractController
      */
     public function edit($pathname)
     {
-        $track = self::createTrackBuilder($this->app->container)->fromFile($pathname);
+        $track = $this->app->container[TrackBuilder::class]->fromFile($pathname);
 
         if (!$track) {
             $this->app->redirect(
@@ -60,11 +56,11 @@ class EditController extends AbstractController
      */
     public function save(string $pathname)
     {
-        $track = self::createTrackBuilder($this->app->container)->fromFile($pathname);
+        $track = $this->app->container[TrackBuilder::class]->fromFile($pathname);
 
         if (!$track) {
             $this->app->redirect(
-            // TODO: tylko dla filename, ew. powrót do głównego incoming
+                // TODO: tylko dla filename, ew. powrót do głównego incoming
                 sprintf('%s?query=%s', $this->app->urlFor('search.simple.index'), str_replace(DIRECTORY_SEPARATOR, ' ', $pathname)),
                 404
             );
@@ -167,15 +163,5 @@ class EditController extends AbstractController
             [ 'option' => 'remove-other-tags', 'title' => 'Usuń pozostałe metadane zapisane w pliku' ],
             [ 'option' => 'task:calculate-audio-data', 'title' => 'Oblicz tonację i BPM utworu' ],
         ];
-    }
-
-    private static function createTrackBuilder(Container $container): TrackBuilder
-    {
-        $metadataParserParams = $container['parameters']['track']['metadata']['parser'];
-
-        $fileReader = new FileReader(new Id3Adapter(), new MetadataParser($metadataParserParams));
-        $builder = new TrackBuilder($fileReader, new TrackRepository($container['db']));
-
-        return $builder;
     }
 }

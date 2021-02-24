@@ -83,9 +83,14 @@
                 <div class="row">
                     <span class="col-xs-4 col-sm-3 col-md-2 text-right"><strong>Położenie</strong></span>
                     <span class="col-xs-8 col-sm-9 col-md-10">
+                        <!-- @todo: wynieść do zewnętrznego szablonu i uspójnić z innymi -->
                         <ol class="breadcrumb">
-                           <li><a href="{{ urlFor('directory.browse.index') }}" class="undecorated"><i class="fa fa-home fa-lg"></i></a></li>
-                           {% for path in pathBreadcrumbs %}
+                           <li>
+                               <a href="{{ urlFor('directory.browse.index', { guid: (pathBreadcrumbs|first).guid }) }}" class="undecorated">
+                                   <i class="fa fa-home fa-lg"></i>
+                               </a>
+                           </li>
+                           {% for path in pathBreadcrumbs[1:] %}
                                 <li><a href="{{ urlFor('directory.browse.index', { guid: path.guid } )}}" class="undecorated">{{ path.path }}</a></li>
                            {% endfor %}
                         </ol>

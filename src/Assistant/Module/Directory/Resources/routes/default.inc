@@ -2,13 +2,13 @@
 
 /* @var $app \Slim\Slim */
 
-use Assistant\Module\Directory;
+use Assistant\Module\Directory\Controller\BrowseController;
 
 $app->group('/directory', function () use ($app) {
     $app->get(
         '/browse/recent',
         function () use ($app) {
-            (new Directory\Controller\BrowseController($app))->recent();
+            (new BrowseController($app))->recent();
         }
     )->name('directory.browse.recent');
 
@@ -19,18 +19,16 @@ $app->group('/directory', function () use ($app) {
         function ($pathnameParts = null) use ($app) {
             $pathname = $pathnameParts ? implode(DIRECTORY_SEPARATOR, $pathnameParts) : null;
 
-            (new Directory\Controller\BrowseController($app))->incoming($pathname);
+            (new BrowseController($app))->incoming($pathname);
         }
-        )->name('directory.browse.incoming');
+    )->name('directory.browse.incoming');
 
-    // TODO: /browse/collection/(:guid+)
-    // TODO: chodzi o zmianę na /browse/collection/(:guid+) ?
     $app->get(
         '/(:guid+)',
         function ($guidParts = null) use ($app) {
             $guid = $guidParts ? implode(DIRECTORY_SEPARATOR, $guidParts) : null;
 
-            (new Directory\Controller\BrowseController($app))->index($guid);
+            (new BrowseController($app))->index($guid);
         }
     )->name('directory.browse.index');
 });

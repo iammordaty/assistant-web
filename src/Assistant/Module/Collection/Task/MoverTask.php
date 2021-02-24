@@ -3,7 +3,7 @@
 namespace Assistant\Module\Collection\Task;
 
 use Assistant\Module\Common\Task\AbstractTask;
-use Assistant\Module\File\Extension\SplFileInfo;
+use SplFileInfo;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
@@ -20,18 +20,8 @@ class MoverTask extends AbstractTask
      */
     private array $stats;
 
-    /**
-     * @var array
-     */
-    private array $parameters;
-
-    /**
-     * {@inheritDoc}
-     */
-    protected function configure()
+    protected function configure(): void
     {
-        $this->parameters = $this->app->container->parameters['collection'];
-
         $this
             ->setName('collection:move')
             ->setDescription('Move new and tagged tracks to target directories')
@@ -46,10 +36,7 @@ class MoverTask extends AbstractTask
             );
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    protected function initialize(InputInterface $input, OutputInterface $output)
+    protected function initialize(InputInterface $input, OutputInterface $output): int
     {
         parent::initialize($input, $output);
 
@@ -62,25 +49,17 @@ class MoverTask extends AbstractTask
      * @param InputInterface $input
      * @param OutputInterface $output
      */
-    protected function execute(InputInterface $input, OutputInterface $output)
+    protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $this->app->log->info('Task executed', array_merge($input->getArguments(), $input->getOptions()));
 
-        $rootDir = $this->parameters['root_dir'];
-
-        $element = new SplFileInfo(
-            $input->getArgument('pathname'),
-            str_replace(sprintf('%s/', $rootDir), '', $input->getArgument('pathname'))
-        );
+        $element = new SplFileInfo($input->getArgument('pathname'));
 
         if (file_exists($element->getPathname()) === false) {
             throw new \RuntimeException("Element {$element->getPathname()} does not exists!");
         }
 
-        $target = new SplFileInfo(
-            $input->getArgument('targetPathname'),
-            str_replace(sprintf('%s/', $rootDir), '', $input->getArgument('targetPathname'))
-        );
+        $target = new SplFileInfo($input->getArgument('targetPathname'));
 
         if ($target->isFile() === true && file_exists($target->getPathname()) === true) {
             throw new \RuntimeException("Target {$target->getPathname()} already exists!");
@@ -95,5 +74,7 @@ class MoverTask extends AbstractTask
         }
 
         $this->app->log->info('Task finished', $this->stats);
+
+        return AbstractTask::SUCCESS;
     }
 }

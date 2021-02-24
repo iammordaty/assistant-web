@@ -37,10 +37,10 @@ class TrackWriter implements WriterInterface
     public function save($track)
     {
         /* @var $indexedTrack Track */
-        $indexedTrack = $this->repository->findOneBy([ 'pathname' => $track->pathname ]);
+        $indexedTrack = $this->repository->findOneBy([ 'pathname' => $track->getPathname() ]);
 
         if ($indexedTrack === null) {
-            $track->guid = $this->getUniqueGuid($track);
+            $track->setGuid($this->getUniqueGuid($track));
 
             $result = $this->repository->insert($track);
 
@@ -48,13 +48,11 @@ class TrackWriter implements WriterInterface
                 $this->backendClient->addToSimilarCollection($track);
             }
         } else {
-            $track->_id = $indexedTrack->_id;
-            $track->modified_date = $indexedTrack->indexed_date;
+            $track->setId($indexedTrack->getId());
+            $track->setModifiedDate($indexedTrack->getModifiedDate());
 
             $this->repository->update($track);
         }
-
-        unset($indexedTrack);
 
         return $track;
     }
@@ -67,13 +65,13 @@ class TrackWriter implements WriterInterface
      */
     private function getUniqueGuid(Track $track): string
     {
-        $count = $this->repository->count([ 'guid' => new Regex(sprintf('^%s(?:-\d+)?$', $track->guid), 'i') ]);
+        $count = $this->repository->count([ 'guid' => new Regex(sprintf('^%s(?:-\d+)?$', $track->getGuid()), 'i') ]);
 
         if ($count === 0) {
-            return $track->guid;
+            return $track->getGuid();
         }
 
-        $guid = $track->guid .= sprintf('-%d', $count + 1);
+        $guid = sprintf('%s-%d', $track->getGuid(), $count + 1);
 
         return $guid;
     }

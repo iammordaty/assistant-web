@@ -8,12 +8,12 @@ use Assistant\Module\Directory\Model\Directory;
 use Assistant\Module\Directory\Repository\DirectoryRepository;
 use Assistant\Module\Track\Model\Track;
 use Assistant\Module\Track\Repository\TrackRepository;
-use MongoDB\Database;
+use Slim\Helper\Set as Container;
 
 /**
  * Fasada dla writerów zajmujących się zapisywaniem elementów w kolekcji
  */
-class WriterFacade
+final class WriterFacade
 {
     /**
      * Obiekt klasy odpowiedzialnej za zapis katalogów w bazie danych
@@ -29,21 +29,24 @@ class WriterFacade
      */
     private TrackWriter $trackWriter;
 
-    /**
-     * Konstruktor
-     *
-     * @param Database $database
-     */
-    public function __construct(Database $database)
+    public function __construct(DirectoryWriter $directoryWriter, TrackWriter $trackWriter)
     {
-        $this->directoryWriter = new DirectoryWriter(
-            new DirectoryRepository($database),
+        $this->directoryWriter = $directoryWriter;
+        $this->trackWriter = $trackWriter;
+    }
+
+    public static function factory(Container $container): WriterFacade
+    {
+        $directoryWriter = new DirectoryWriter(
+            new DirectoryRepository($container['db']),
         );
 
-        $this->trackWriter = new TrackWriter(
-            new TrackRepository($database),
+        $trackWriter = new TrackWriter(
+            new TrackRepository($container['db']),
             new BackendClient(),
         );
+
+        return new self($directoryWriter, $trackWriter);
     }
 
     /**
@@ -54,7 +57,7 @@ class WriterFacade
      */
     public function save(ModelInterface $item): void
     {
-        $itemType = static::getItemType($item);
+        $itemType = self::getItemType($item);
 
         if ($itemType === 'directory') {
             $this->directoryWriter->save($item);

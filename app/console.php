@@ -27,8 +27,8 @@ Environment::mock([
 $app = new Slim();
 $app->setName('assistant-console');
 
-// add additional configuration
-require_once sprintf('%s/app/config/%s.inc', BASE_DIR, getenv('SLIM_MODE'));
+// bootstrap app
+require_once BASE_DIR . '/app/bootstrap.inc';
 
 // prepare tasks and console app
 $console = new Console\Application();

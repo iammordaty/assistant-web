@@ -2,10 +2,9 @@
 
 namespace Assistant\Module\Collection\Task;
 
+use Assistant\Module\Collection\Extension\Finder;
 use Assistant\Module\Common\Task\AbstractTask;
-use Assistant\Module\File\Extension\RecursiveDirectoryIterator;
-use Assistant\Module\File\Extension\PathFilterIterator;
-use Assistant\Module\File\Extension\IgnoredPathIterator;
+use SplFileInfo;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 
@@ -42,7 +41,7 @@ class MonitorTask extends AbstractTask
 
         $descriptors = [];
 
-        foreach ($this->getIterator() as $node) {
+        foreach ($this->getNodesToMonitor() as $node) {
             if ($node->isFile()) {
                 continue;
             }
@@ -135,20 +134,15 @@ class MonitorTask extends AbstractTask
     }
 
     /**
-     * @return IgnoredPathIterator
+     * @return Finder|SplFileInfo[]
      */
-    private function getIterator()
+    private function getNodesToMonitor(): Finder
     {
-        return new IgnoredPathIterator(
-            new PathFilterIterator(
-                new RecursiveDirectoryIterator($this->parameters['root_dir'], RecursiveDirectoryIterator::SKIP_DOTS),
-                $this->parameters['root_dir'],
-                $this->parameters['excluded_dirs']
-            ),
-            $this->parameters['ignored_dirs'],
-            IgnoredPathIterator::SELF_FIRST,
-            IgnoredPathIterator::CATCH_GET_CHILD
-        );
+        return Finder::create([
+            'pathname' => $this->parameters['root_dir'],
+            'recursive' => true,
+            'restrict' => $this->parameters['indexed_dirs'],
+        ]);
     }
 
     /**

@@ -23,9 +23,7 @@ final class GoogleBeatportSearchTracks
      */
     public function __invoke(string $query): array
     {
-        $query = trim($query);
-
-        $response = $this->client->search($query);
+        $response = $this->client->search(trim($query));
 
         $results = array_map(
             static fn($rawResult) => GoogleBeatportSearchResult::factory($rawResult),

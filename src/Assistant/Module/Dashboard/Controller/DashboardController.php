@@ -4,7 +4,6 @@ namespace Assistant\Module\Dashboard\Controller;
 
 use Assistant\Module\Common\Controller\AbstractController;
 use Assistant\Module\Stats\Repository\StatsRepository;
-use Assistant\Module\Track\Repository\TrackRepository;
 
 class DashboardController extends AbstractController
 {

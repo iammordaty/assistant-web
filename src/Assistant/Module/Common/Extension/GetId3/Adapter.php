@@ -4,10 +4,10 @@ namespace Assistant\Module\Common\Extension\GetId3;
 
 use Assistant\Module\Common\Extension\GetId3\Adapter\Metadata\Id3v2;
 use Assistant\Module\Common\Extension\GetId3\Exception\WriterException;
-use Assistant\Module\File\Extension\SplFileInfo;
 use getID3;
 use getid3_write_id3v2;
 use getid3_writetags;
+use SplFileInfo;
 
 // TODO: Zobaczyć dlaczego nie działa usuwanie tagów APE
 // TODO: Poprawić settery ustawiania opcji
@@ -130,7 +130,7 @@ class Adapter
 
     /**
      * Zapisuje podane metadane w pliku (utworze muzycznym)
-     * TODO: $mode = 'overwrite' / 'append', lub - najlepiej - dwie osobne metody publiczne
+     * @todo $mode = 'overwrite' / 'append', lub - najlepiej - dwie osobne metody publiczne
      *
      * @param array $metadata
      * @param bool $overwrite
@@ -142,7 +142,7 @@ class Adapter
         $this->id3Writer->warnings = [];
         $this->id3Writer->errors = [];
 
-        $fileModificationTime = $this->file->getMTime();
+        $fileModificationTime = \DateTime::createFromFormat('U', $this->file->getMTime());
 
         if ($overwrite) {
             $this->rawInfo = [];
@@ -163,7 +163,13 @@ class Adapter
 
         $result = $this->id3Writer->WriteTags();
 
-        touch($this->file->getPathname(), $fileModificationTime);
+        // obejście warninga (podnoszonego do wyjątku) generowanego przez funkcję touch():
+        // touch(): Utime failed: Operation not permitted
+        exec(sprintf(
+            'touch --no-create -d "%s" "%s"',
+            $fileModificationTime->format('Y-m-d H:i'),
+            $this->file->getPathname()
+        ));
 
         if ($result === false) {
             throw new WriterException(
@@ -171,7 +177,7 @@ class Adapter
             );
         }
 
-        return $result;
+        return true;
     }
 
     /**

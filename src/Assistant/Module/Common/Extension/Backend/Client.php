@@ -4,49 +4,51 @@ namespace Assistant\Module\Common\Extension\Backend;
 
 use Assistant\Module\Common\Extension\Backend\Exception\AudioDataCalculatorException;
 use Assistant\Module\Common\Extension\Backend\Exception\SimilarCollectionException;
-use Assistant\Module\File\Extension\SplFileInfo;
-use Assistant\Module\Track;
-
+use Assistant\Module\Track\Model\Track;
+use Assistant\Module\Track\Task\AudioDataCalculatorTask;
 use Curl\Curl;
+use SplFileInfo;
 
-class Client
+final class Client
 {
     /**
      * Obiekt klasy Curl
      *
+     * @todo Zamienić na guzzle
      * @var Curl
      */
     private $curl;
 
-    /**
-     * Konstruktor
-     */
     public function __construct()
     {
         $this->curl = new Curl();
         $this->curl->setTimeout(3 * 60);
     }
 
-    /**
-     * Destruktor
-     */
     public function __destruct()
     {
         $this->curl->close();
     }
 
     /**
+     * @todo To powinno przyjmować obiekt Track
+     * @see AudioDataCalculatorTask::execute()
+     *
      * @param SplFileInfo $node
      * @return array
      * @throws AudioDataCalculatorException
      */
-    public function calculateAudioData(SplFileInfo $node)
+    public function calculateAudioData(SplFileInfo $node): array
     {
+        // @fixme: do czasu poprawienia w backendzie
+        $tempRootDir = '/collection';
+        $tempPathname = str_replace($tempRootDir, '', $node->getPathname());
+
         $response = $this->curl->get(
             sprintf(
                 '%s/track/%s',
                 'http://backend',
-                rawurlencode(ltrim($node->getRelativePathname(), DIRECTORY_SEPARATOR))
+                rawurlencode(ltrim($tempPathname, DIRECTORY_SEPARATOR))
             )
         );
 
@@ -70,15 +72,19 @@ class Client
     }
 
     /**
-     * @param Track\Model\Track $track
+     * @param Track $track
      * @return bool
      * @throws SimilarCollectionException
      */
-    public function addToSimilarCollection(Track\Model\Track $track)
+    public function addToSimilarCollection(Track $track): bool
     {
+        // @fixme: do czasu poprawienia w backendzie
+        $tempRootDir = '/collection';
+        $tempPathname = str_replace($tempRootDir, '', $track->getPathname());
+
         $response = (array) $this->curl->post(
             sprintf('%s/%s', 'http://backend', 'musly/collection/tracks'),
-            json_encode([ 'pathname' => $track->pathname ])
+            json_encode([ 'pathname' => $tempPathname ])
         );
 
         if ($this->curl->error === true) {
@@ -92,18 +98,22 @@ class Client
     }
 
     /**
-     * @param Track\Model\Track $track
+     * @param Track $track
      * @return array
      * @throws SimilarCollectionException
      */
-    public function getSimilarTracks(Track\Model\Track $track)
+    public function getSimilarTracks(Track $track): array
     {
+        // @fixme: do czasu poprawienia w backendzie
+        $tempRootDir = '/collection';
+        $tempPathname = str_replace($tempRootDir, '', $track->getPathname());
+
         $response = $this->curl->get(
             sprintf(
                 '%s/%s%s',
                 'http://backend',
                 'musly/similar',
-                rawurlencode($track->pathname)
+                rawurlencode($tempPathname)
             )
         );
 
@@ -117,7 +127,10 @@ class Client
         $similarTracks = [];
 
         foreach ($response as $similarTrack) {
-            $similarTracks[$similarTrack->pathname] = $similarTrack->similarity;
+            // @fixme: do czasu poprawienia w backendzie
+            $tempPathname = $tempRootDir . $similarTrack->pathname;
+
+            $similarTracks[$tempPathname] = $similarTrack->similarity;
         }
 
         return $similarTracks;

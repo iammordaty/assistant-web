@@ -34,11 +34,6 @@ class Directory extends AbstractModel
     protected string $pathname;
 
     /**
-     * @var bool
-     */
-    protected bool $ignored;
-
-    /**
      * @var UTCDateTime
      */
     protected UTCDateTime $modified_date;

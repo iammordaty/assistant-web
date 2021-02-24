@@ -5,7 +5,7 @@ namespace Assistant\Module\Common\Extension;
 use Cocur\Slugify\Slugify;
 use Cocur\Slugify\SlugifyInterface;
 
-class PathBreadcrumbsGenerator
+final class PathBreadcrumbs
 {
     private SlugifyInterface $slugify;
 
@@ -14,7 +14,7 @@ class PathBreadcrumbsGenerator
         $this->slugify = $slugify;
     }
 
-    public static function factory(): PathBreadcrumbsGenerator
+    public static function factory(): PathBreadcrumbs
     {
         $slugify = new Slugify();
 
@@ -27,7 +27,7 @@ class PathBreadcrumbsGenerator
      * @param string $path
      * @return array
      */
-    public function getPathBreadcrumbs(string $path): array
+    public function get(string $path): array
     {
         if (strpos($path, DIRECTORY_SEPARATOR) === 0) {
             $path = ltrim($path, DIRECTORY_SEPARATOR);
@@ -45,6 +45,9 @@ class PathBreadcrumbsGenerator
         foreach ($parts as $part) {
             $guid = $this->slugify->slugify($part);
             $treeParts[] = $guid;
+
+            // @todo: dodać url; pozwoli to na użycie klasy także w incoming (uelastycznia klasę)
+            // @todo: pomyśleć nad przekształceniem tego w tablicę value object-ów
 
             $breadcrumbs[] = [
                 'guid' => implode(DIRECTORY_SEPARATOR, $treeParts),

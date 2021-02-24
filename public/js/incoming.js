@@ -1,22 +1,19 @@
-$(document).ready(function() {
-//    $.post = console.log;
+/*global $*/
 
-    $('[data-role="incoming-tracks:calculate-audio-data"]').click(function (e) {
-        var pathname = $(e.target).parents('[data-role="element"]').data('element-pathname');
+$(document).ready(function() {
+    // $.post = console.log;
+
+    $('[data-role="incoming-tracks:calculate-audio-data"]').on('click', function (e) {
+        var pathname = $(this).parents('[data-role="element"]').data('element-pathname');
 
         $.post('/common/task/calculate-audio-data', {
             pathname: pathname
         });
     });
 
-    $('[data-role="incoming-tracks:move"]').click(function (e) {
-        var pathname = $(e.target).parents('[data-role="element"]').data('element-pathname'),
-            targetPathname = $(e.target).parents('[data-role="element"]').data('element-target-pathname');
-
-        console.log({
-            pathname: pathname,
-            targetPathname: targetPathname,
-        });
+    $('[data-role="incoming-tracks:move"]').on('click', function (e) {
+        var pathname = $(this).parents('[data-role="element"]').data('element-pathname'),
+            targetPathname = $(this).parents('[data-role="element"]').data('element-target-pathname');
 
         $.post('/common/task/move', {
             pathname: pathname,

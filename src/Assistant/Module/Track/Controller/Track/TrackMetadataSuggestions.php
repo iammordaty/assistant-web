@@ -65,9 +65,10 @@ final class TrackMetadataSuggestions
         // --- wyszukiwanie utworów
 
         // to jako tablica, którą w foreachu wywołuję się poprzez invoke z query jako parametrem?
+        // https://github.com/Respect/Validation/blob/master/library/Rules/AbstractComposite.php#L40
         $tracksFoundByBeatportSearch = $beatportSearchTracks($query);
         $tracksFoundByGoogleSearch = $googleBeatportSearchTracks($query);
-        // var_dump($tracksFoundByGoogleSearch);exit;
+        // var_dump($tracksFoundByBeatportSearch ?? null, $tracksFoundByGoogleSearch ?? null); exit;
 
         $beatportTracks = (new BeatportUniqueTracks())
             ->add($tracksFoundByBeatportSearch)

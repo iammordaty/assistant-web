@@ -2,8 +2,9 @@
 
 namespace Assistant\Module\Collection\Extension\Reader;
 
-use Assistant\Module\File\Extension\SplFileInfo;
 use Cocur\Slugify\Slugify;
+use Cocur\Slugify\SlugifyInterface;
+use SplFileInfo;
 
 /**
  * Klasa, której zadaniem jest przetwarzanie katalogów znajdujących się w kolekcji
@@ -13,13 +14,13 @@ abstract class AbstractReader
     /**
      * Obiekt klasy Slugify
      *
-     * @var Slugify
+     * @var SlugifyInterface
      */
-    protected Slugify $slugify;
+    protected SlugifyInterface $slugify;
 
-    public function __construct()
+    public function __construct(?SlugifyInterface $slugify = null)
     {
-        $this->slugify = new Slugify();
+        $this->slugify = $slugify ?: new Slugify();
     }
 
     /**

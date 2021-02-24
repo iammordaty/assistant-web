@@ -23,5 +23,5 @@ class DirectoryRepository extends AbstractObjectRepository
     /**
      * {@inheritDoc}
      */
-    protected static array $baseConditions = [ 'ignored' => false ];
+    protected static array $baseConditions = [ ];
 }
