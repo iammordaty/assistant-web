@@ -3,6 +3,7 @@
 namespace Assistant\Module\Collection\Task;
 
 use Assistant\Module\Common\Task\AbstractTask;
+use Monolog\Logger;
 use SplFileInfo;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
@@ -51,7 +52,7 @@ class MoverTask extends AbstractTask
      */
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
-        $this->app->log->info('Task executed', array_merge($input->getArguments(), $input->getOptions()));
+        $this->app->container[Logger::class]->info('Task executed', array_merge($input->getArguments(), $input->getOptions()));
 
         $element = new SplFileInfo($input->getArgument('pathname'));
 
@@ -73,7 +74,7 @@ class MoverTask extends AbstractTask
             throw new \RuntimeException("Can\'t move {$element->getPathname()} to {$target->getPathname()}.");
         }
 
-        $this->app->log->info('Task finished', $this->stats);
+        $this->app->container[Logger::class]->info('Task finished', $this->stats);
 
         return AbstractTask::SUCCESS;
     }

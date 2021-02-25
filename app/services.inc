@@ -54,16 +54,7 @@ $app->view($view);
 
 unset($view);
 
-$app->container->singleton('db', function () use ($app) {
-    [ 'connection_uri' => $connectionUri, 'database' => $database ] = $app->container->servers['db'];
-
-    $client = new MongoDBClient($connectionUri);
-    $database = $client->selectDatabase($database);
-
-    return $database;
-});
-
-$app->container->singleton('log', function () use ($app) {
+$app->container->singleton(Logger::class, function () use ($app) {
     $logsDir = sprintf('%s/app/logs', $app->config('base_dir'));
 
     $logger = new Logger(sprintf('%s-logger', $app->getName()));
@@ -77,6 +68,15 @@ $app->container->singleton('log', function () use ($app) {
     ]);
 
     return $logger;
+});
+
+$app->container->singleton('db', function () use ($app) {
+    [ 'connection_uri' => $connectionUri, 'database' => $database ] = $app->container->servers['db'];
+
+    $client = new MongoDBClient($connectionUri);
+    $database = $client->selectDatabase($database);
+
+    return $database;
 });
 
 $app->container->singleton(TrackBuilder::class, function () use ($app) {

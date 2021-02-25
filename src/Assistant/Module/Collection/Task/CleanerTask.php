@@ -9,6 +9,7 @@ use Assistant\Module\Directory\Repository\DirectoryRepository;
 use Assistant\Module\Track\Model\Track;
 use Assistant\Module\Track\Repository\TrackRepository;
 use MongoDB\BSON\Regex;
+use Monolog\Logger;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
@@ -61,7 +62,7 @@ final class CleanerTask extends AbstractTask
      */
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
-        $this->app->log->info('Task executed', array_merge($input->getArguments(), $input->getOptions()));
+        $this->app->container[Logger::class]->info('Task executed', array_merge($input->getArguments(), $input->getOptions()));
 
         $force = (bool) $input->getOption('force');
         $pathname = $input->getArgument('pathname');
@@ -80,7 +81,7 @@ final class CleanerTask extends AbstractTask
             $force
         );
 
-        $this->app->log->info('Task finished', $this->stats);
+        $this->app->container[Logger::class]->info('Task finished', $this->stats);
 
         return self::SUCCESS;
     }

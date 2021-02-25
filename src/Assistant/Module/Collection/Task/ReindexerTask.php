@@ -4,6 +4,7 @@ namespace Assistant\Module\Collection\Task;
 
 use Assistant\Module\Common\Task\AbstractTask;
 
+use Monolog\Logger;
 use Symfony\Component\Console\Input\ArrayInput;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
@@ -37,23 +38,23 @@ class ReindexerTask extends AbstractTask
      */
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
-        $this->app->log->info('Task executed');
+        $this->app->container[Logger::class]->info('Task executed');
 
-        $this->app->log->info('Executing \"collection:clean -f\"');
+        $this->app->container[Logger::class]->info('Executing \"collection:clean -f\"');
 
         (new CleanerTask($this->app))->run(
             new ArrayInput([ '--force' => true ]),
             $output
         );
 
-        $this->app->log->info('Executing \"collection:index"');
+        $this->app->container[Logger::class]->info('Executing \"collection:index"');
 
         (new IndexerTask($this->app))->run(
             new ArrayInput([ ]),
             $output
         );
 
-        $this->app->log->info('Task finished');
+        $this->app->container[Logger::class]->info('Task finished');
 
         return self::SUCCESS;
     }

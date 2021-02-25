@@ -11,6 +11,7 @@ use Assistant\Module\Collection\Extension\Writer\WriterFacade;
 use Assistant\Module\Common\Extension\Backend\Exception\Exception as BackendException;
 use Assistant\Module\Common\Task\AbstractTask;
 use Exception;
+use Monolog\Logger;
 use SplFileInfo;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
@@ -74,7 +75,7 @@ final class IndexerTask extends AbstractTask
      */
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
-        $this->app->log->info('Task executed', array_merge($input->getArguments(), $input->getOptions()));
+        $this->app->container[Logger::class]->info('Task executed', array_merge($input->getArguments(), $input->getOptions()));
 
         $nodesToIndex = $this->getNodesToIndex(
             $input->getArgument('pathname'),
@@ -82,7 +83,7 @@ final class IndexerTask extends AbstractTask
         );
 
         foreach ($nodesToIndex as $node) {
-            $this->app->log->info('Processing node', [ 'pathname' => $node->getPathname() ]);
+            $this->app->container[Logger::class]->info('Processing node', [ 'pathname' => $node->getPathname() ]);
 
             try {
                 $element = $this->reader->read($node);
@@ -92,32 +93,32 @@ final class IndexerTask extends AbstractTask
 
                 $this->stats['added'][$node->getType()]++;
 
-                $this->app->log->info('Node processing completed successfully');
+                $this->app->container[Logger::class]->info('Node processing completed successfully');
             } catch (EmptyMetadataException $e) {
                 $this->stats['empty_metadata']++;
 
-                $this->app->log->warn('Track does not contains metadata');
+                $this->app->container[Logger::class]->warn('Track does not contains metadata');
             } catch (DuplicatedElementException $e) {
                 $this->stats['duplicated']++;
 
-                $this->app->log->debug($e->getMessage());
+                $this->app->container[Logger::class]->debug($e->getMessage());
             } catch (BackendException $e) {
                 $this->stats['error']++;
 
-                $this->app->log->error(
+                $this->app->container[Logger::class]->error(
                     $e->getMessage(),
                     [ 'element' => isset($element) ? $element->toArray() : null ]
                 );
             } catch (Exception $e) {
                 $this->stats['error']++;
 
-                $this->app->log->error($e->getMessage());
+                $this->app->container[Logger::class]->error($e->getMessage());
             } finally {
                 unset($node, $element);
             }
         }
 
-        $this->app->log->info('Task finished', $this->stats);
+        $this->app->container[Logger::class]->info('Task finished', $this->stats);
 
         return self::SUCCESS;
     }

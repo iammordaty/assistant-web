@@ -8,6 +8,7 @@ use Assistant\Module\Common\Extension\Backend\Exception\AudioDataCalculatorExcep
 use Assistant\Module\Common\Extension\GetId3\Adapter as Id3Adapter;
 use Assistant\Module\Common\Extension\GetId3\Exception\WriterException;
 use Assistant\Module\Common\Task\AbstractTask;
+use Monolog\Logger;
 use SplFileInfo;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
@@ -72,7 +73,7 @@ final class AudioDataCalculatorTask extends AbstractTask
      */
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
-        $this->app->log->info('Task executed', array_merge($input->getArguments(), $input->getOptions()));
+        $this->app->container[Logger::class]->info('Task executed', array_merge($input->getArguments(), $input->getOptions()));
 
         $skipCalculated = $input->getOption('skip-calculated');
         $writeData = $input->getOption('write-data');
@@ -83,7 +84,7 @@ final class AudioDataCalculatorTask extends AbstractTask
         );
 
         foreach ($files as $file) {
-            $this->app->log->debug('Processing track', [ 'pathname' => $file->getPathname() ]);
+            $this->app->container[Logger::class]->debug('Processing track', [ 'pathname' => $file->getPathname() ]);
 
             $this->stats['processed']++;
 
@@ -98,7 +99,7 @@ final class AudioDataCalculatorTask extends AbstractTask
                 if ($this->id3->getTrackLength() / 60 > 20) {
                     $this->stats['skipped']['too_long']++;
 
-                    $this->app->log->debug(
+                    $this->app->container[Logger::class]->debug(
                         'Track is too long, skipping...',
                         [ 'length' => $this->id3->getTrackLength() / 60 ]
                     );
@@ -114,7 +115,7 @@ final class AudioDataCalculatorTask extends AbstractTask
                 if ($skipCalculated === true && $hasInitialKey === true && $hasBpm === true) {
                     $this->stats['skipped']['already_calculated']++;
 
-                    $this->app->log->debug(
+                    $this->app->container[Logger::class]->debug(
                         'Track is already calculated (bpm and initial_key exists), skipping',
                         [ 'bpm' => $metadata['bpm'], 'initial_key' => $metadata['initial_key'] ]
                     );
@@ -129,7 +130,7 @@ final class AudioDataCalculatorTask extends AbstractTask
                 if ($this->isTrackHasSameData($metadata, $audioData) === true) {
                     $this->stats['skipped']['same_data']++;
 
-                    $this->app->log->debug('Track has the same audio data, update is not necessary', $audioData);
+                    $this->app->container[Logger::class]->debug('Track has the same audio data, update is not necessary', $audioData);
 
                     unset($file, $metadata, $audioData);
 
@@ -143,7 +144,7 @@ final class AudioDataCalculatorTask extends AbstractTask
                     $this->stats['mismatch']['bpm']++;
                 }
 
-                $this->app->log->debug(
+                $this->app->container[Logger::class]->debug(
                     sprintf('%s track audio data', ($writeData === true) ? 'Updating' : 'Calculated'),
                     [
                         'audioData' => $audioData,
@@ -158,24 +159,24 @@ final class AudioDataCalculatorTask extends AbstractTask
                     $this->id3->writeId3v2Metadata($audioData);
 
                     if ($this->id3->getWriterWarnings()) {
-                        $this->app->log->warning('Track metadata saved with warnings', $this->id3->getWriterWarnings());
+                        $this->app->container[Logger::class]->warning('Track metadata saved with warnings', $this->id3->getWriterWarnings());
                     }
 
                     $this->stats['updated']++;
                 }
 
-                $this->app->log->debug('Track processing completed successfully');
+                $this->app->container[Logger::class]->debug('Track processing completed successfully');
             } catch (AudioDataCalculatorException $e) {
                 $this->stats['error']['backend']++;
 
-                $this->app->log->error(
+                $this->app->container[Logger::class]->error(
                     $e->getMessage(),
                     [ 'pathname' => $file->getPathname(), 'metadata' => $metadata ]
                 );
             } catch (WriterException $e) {
                 $this->stats['error']['tags']++;
 
-                $this->app->log->error(
+                $this->app->container[Logger::class]->error(
                     $e->getMessage(),
                     [
                         'pathname' => $file->getPathname(),
@@ -188,7 +189,7 @@ final class AudioDataCalculatorTask extends AbstractTask
             } catch (\Exception $e) {
                 $this->stats['error']['other']++;
 
-                $this->app->log->critical(
+                $this->app->container[Logger::class]->critical(
                     $e->getMessage(),
                     [
                         'pathname' => $file->getPathname(),
@@ -202,7 +203,7 @@ final class AudioDataCalculatorTask extends AbstractTask
             }
         }
 
-        $this->app->log->info('Task finished', $this->stats);
+        $this->app->container[Logger::class]->info('Task finished', $this->stats);
 
         return self::SUCCESS;
     }

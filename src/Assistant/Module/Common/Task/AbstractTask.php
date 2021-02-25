@@ -2,6 +2,7 @@
 
 namespace Assistant\Module\Common\Task;
 
+use Monolog\Logger;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
@@ -61,7 +62,7 @@ abstract class AbstractTask extends Command
 
         $procId = uniqid('procId', true);
 
-        $this->app->log
+        $this->app->container[Logger::class]
             ->pushProcessor(new MemoryUsageProcessor())
             ->pushProcessor(function ($record) use ($procId) {
                 $record['extra']['task'] = $this->getName();
