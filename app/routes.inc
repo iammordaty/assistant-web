@@ -1,32 +1,8 @@
 <?php
 
-/** @noinspection PhpIncludeInspection */
-
-$modulesIterator = new \FilesystemIterator(BASE_DIR . '/src/Assistant/Module/', \FilesystemIterator::SKIP_DOTS);
-
-foreach ($modulesIterator as $moduleNode) {
-    $routesPath = sprintf('%s/Resources/routes/', $moduleNode->getPathname());
-    $hasRoutes = is_dir($routesPath);
-
-    if (!$hasRoutes) {
-        continue;
-    }
-
-    $iterator = new \RecursiveIteratorIterator(
-        new \RecursiveDirectoryIterator($routesPath, \RecursiveDirectoryIterator::SKIP_DOTS),
-        \RecursiveIteratorIterator::SELF_FIRST,
-        \RecursiveIteratorIterator::CATCH_GET_CHILD
-    );
-
-    foreach ($iterator as $node) {
-        if ($node->isFile() && $node->getExtension() === 'inc') {
-            require_once $node->getPathname();
-        }
-
-        unset($node);
-    }
-
-    unset($routesPath, $hasRoutes, $iterator);
-}
-
-unset($modulesIterator);
+require BASE_DIR . '/src/Assistant/Module/Common/Resources/routes/default.inc';
+require BASE_DIR . '/src/Assistant/Module/Dashboard/Resources/routes/default.inc';
+require BASE_DIR . '/src/Assistant/Module/Directory/Resources/routes/default.inc';
+require BASE_DIR . '/src/Assistant/Module/Mix/Resources/routes/default.inc';
+require BASE_DIR . '/src/Assistant/Module/Search/Resources/routes/default.inc';
+require BASE_DIR . '/src/Assistant/Module/Track/Resources/routes/default.inc';

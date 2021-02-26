@@ -13,7 +13,7 @@ $app->setName('assistant');
 require_once BASE_DIR . '/app/bootstrap.inc';
 
 // require routes
-require_once sprintf('%s/app/routes.inc', BASE_DIR);
+require_once BASE_DIR . '/app/routes.inc';
 
 // start app
 $app->run();
