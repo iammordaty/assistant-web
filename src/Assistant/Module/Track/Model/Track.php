@@ -324,7 +324,7 @@ final class Track extends AbstractModel
     }
 
     /**
-     * @fixme To powinno przyjmować \DateTime()
+     * @fixme To powinno przyjmować array
      *
      * @param array|BSONArray $tags
      */

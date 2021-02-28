@@ -9,10 +9,6 @@ interface NextTrackStrategy
     public function computeMix(array $matrix): array;
 
     /**
-     * @todo: dla zadanych utworów siatka podobieństwa, niezależnie od kolejności, jest taka sama
-     *        a więc ta metoda nie powinna być częścią strategii i interfejsu, choć jako pomocnicza metoda
-     *        prywatna może istnieć
-     *
      * @param Track[] $listing
      * @return array
      */
