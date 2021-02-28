@@ -12,8 +12,5 @@ $app->setName('assistant');
 // bootstrap app
 require_once BASE_DIR . '/app/bootstrap.inc';
 
-// require routes
-require_once BASE_DIR . '/app/routes.inc';
-
 // start app
 $app->run();
