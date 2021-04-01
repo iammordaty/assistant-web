@@ -7,7 +7,6 @@ use Assistant\Module\Search\Extension\NumberMinMaxExpressionParser;
 use Assistant\Module\Search\Extension\MinMaxExpressionInfoToDbQuery;
 use Assistant\Module\Search\Extension\YearMinMaxExpressionParser;
 use MongoDB\BSON\Regex;
-use MongoDB\BSON\UTCDateTime;
 
 /**
  * Kontroler pozwalający na wyszukiwanie utworów po metadanych

@@ -3,14 +3,14 @@
 namespace Assistant\Module\Collection\Extension\Validator;
 
 use Assistant\Module\Collection\Extension\Validator\Exception\DuplicatedElementException;
-use Assistant\Module\Common\Model\ModelInterface;
+use Assistant\Module\Common\Model\CollectionItemInterface;
 use Assistant\Module\Directory\Model\Directory;
 use Assistant\Module\Directory\Repository\DirectoryRepository;
 
 /**
  * Walidator elementów będących katalogami
  */
-class DirectoryValidator implements ValidatorInterface
+final class DirectoryValidator implements ValidatorInterface
 {
     private DirectoryRepository $repository;
 
@@ -22,16 +22,22 @@ class DirectoryValidator implements ValidatorInterface
     /**
      * Waliduje katalog pod kątem możliwości dodania go do bazy danych
      *
-     * @param Directory|ModelInterface $directory
+     * @param CollectionItemInterface $collectionItem
      * @return void
+     *
      * @throws DuplicatedElementException
      */
-    public function validate(ModelInterface $directory): void
+    public function validate(CollectionItemInterface $collectionItem): void
     {
-        $indexedDirectory = $this->repository->findOneBy([ 'pathname' => $directory->pathname ]);
+        /** @var Directory $directory */
+        $directory = $collectionItem;
+
+        $indexedDirectory = $this->repository->getByPathname($directory);
 
         if ($indexedDirectory !== null) {
-            throw new DuplicatedElementException(sprintf('Directory "%s" is already in database.', $directory->guid));
+            $message = sprintf('Directory "%s" is already in database.', $directory->getGuid());
+
+            throw new DuplicatedElementException($message);
         }
     }
 }

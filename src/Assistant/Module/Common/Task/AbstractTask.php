@@ -3,6 +3,7 @@
 namespace Assistant\Module\Common\Task;
 
 use Monolog\Logger;
+use Slim\Slim;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
@@ -14,38 +15,38 @@ abstract class AbstractTask extends Command
     /**
      * Obiekt klasy Slim
      *
-     * @var \Slim\Slim
+     * @var Slim
      */
     protected $app;
 
     /**
      * Obiekt klasy Logger
      *
-     * @var \Monolog\Logger
+     * @var Logger
      */
     protected $log;
 
     /**
      * Obiekt InputInterface
      *
-     * @var \Symfony\Component\Console\Input\InputInterface
+     * @var InputInterface
      */
     protected $input;
 
     /**
      * Obiekt OutputInterface
      *
-     * @var \Symfony\Component\Console\Output\OutputInterface
+     * @var OutputInterface
      */
     protected $output;
 
     /**
      * Konstruktor
      *
-     * @param \Slim\Slim $app
+     * @param Slim $app
      * @param string $name
      */
-    public function __construct(\Slim\Slim $app, $name = null)
+    public function __construct(Slim $app, $name = null)
     {
         $this->app = $app;
 

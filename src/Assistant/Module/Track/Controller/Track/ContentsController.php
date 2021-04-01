@@ -3,15 +3,23 @@
 namespace Assistant\Module\Track\Controller\Track;
 
 use Assistant\Module\Common\Controller\AbstractController;
-use Assistant\Module\Track\Model\Track;
 use Assistant\Module\Track\Repository\TrackRepository;
+use Slim\Slim;
 
 class ContentsController extends AbstractController
 {
+    private TrackRepository $trackRepository;
+
+    public function __construct(Slim $app)
+    {
+        parent::__construct($app);
+
+        $this->trackRepository = $app->container[TrackRepository::class];
+    }
+
     public function get($guid)
     {
-        /** @var Track $track */
-        $track = (new TrackRepository($this->app->container['db']))->findOneByGuid($guid);
+        $track = $this->trackRepository->getByGuid($guid);
 
         if (!$track || !is_readable($track->getPathname())) {
             return $this->app->notFound();

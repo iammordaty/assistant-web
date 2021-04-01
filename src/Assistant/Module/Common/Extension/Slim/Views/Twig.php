@@ -2,7 +2,9 @@
 
 namespace Assistant\Module\Common\Extension\Slim\Views;
 
-class Twig extends \Slim\View
+use Slim\View;
+
+class Twig extends View
 {
     /**
      * http://www.twig-project.org/book/03-Twig-for-Developers
@@ -65,7 +67,7 @@ class Twig extends \Slim\View
             );
 
             foreach ($this->parserExtensions as $ext) {
-                $extension = is_object($ext) ? $ext : new $ext;
+                $extension = is_object($ext) ? $ext : new $ext();
                 $this->parserInstance->addExtension($extension);
             }
         }

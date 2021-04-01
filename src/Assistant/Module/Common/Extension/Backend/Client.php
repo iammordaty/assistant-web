@@ -12,12 +12,9 @@ use SplFileInfo;
 final class Client
 {
     /**
-     * Obiekt klasy Curl
-     *
      * @todo Zamienić na guzzle
-     * @var Curl
      */
-    private $curl;
+    private Curl $curl;
 
     public function __construct()
     {
@@ -36,6 +33,7 @@ final class Client
      *
      * @param SplFileInfo $node
      * @return array
+     *
      * @throws AudioDataCalculatorException
      */
     public function calculateAudioData(SplFileInfo $node): array
@@ -74,6 +72,7 @@ final class Client
     /**
      * @param Track $track
      * @return bool
+     *
      * @throws SimilarCollectionException
      */
     public function addToSimilarCollection(Track $track): bool
@@ -100,6 +99,7 @@ final class Client
     /**
      * @param Track $track
      * @return array
+     *
      * @throws SimilarCollectionException
      */
     public function getSimilarTracks(Track $track): array

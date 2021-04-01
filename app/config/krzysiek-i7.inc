@@ -1,10 +1,13 @@
 <?php
 
-/* @var $app \Slim\Slim */
+/* @var $app Slim */
 
 /*
  * Konfiguracja "krzysiek-i7"
  */
+
+use Slim\Slim;
+
 $app->configureMode(
     'krzysiek-i7',
     function () use ($app) {

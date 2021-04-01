@@ -2,55 +2,102 @@
 
 namespace Assistant\Module\Directory\Model;
 
-use Assistant\Module\Common\Model\AbstractModel;
-use MongoDB\BSON\ObjectId;
-use MongoDB\BSON\UTCDateTime;
+use Assistant\Module\Common\Model\CollectionItemInterface;
+use DateTime;
+use SplFileInfo;
 
-class Directory extends AbstractModel
+final class Directory implements CollectionItemInterface
 {
-    /**
-     * @var ObjectId
-     */
-    protected ObjectId $_id;
+    private ?string $id;
+    private string $guid;
+    private string $name;
+    private ?string $parent;
+    private string $pathname;
+    private DateTime $modifiedDate;
+    private DateTime $indexedDate;
+    private ?SplFileInfo $file = null;
 
-    /**
-     * @var string|null
-     */
-    protected ?string $guid;
+    public function __construct(
+        ?string $id,
+        string $guid,
+        string $name,
+        ?string $parent,
+        string $pathname,
+        DateTime $modifiedDate,
+        DateTime $indexedDate
+    ) {
+        $this->id = $id;
+        $this->guid = $guid;
+        $this->name = $name;
+        $this->parent = $parent;
+        $this->pathname = $pathname;
+        $this->modifiedDate = $modifiedDate;
+        $this->indexedDate = $indexedDate;
+    }
 
-    /**
-     * @var string
-     */
-    protected string $name;
-
-    /**
-     * @var string|null
-     */
-    protected ?string $parent;
-
-    /**
-     * @var string
-     */
-    protected string $pathname;
-
-    /**
-     * @var UTCDateTime
-     */
-    protected UTCDateTime $modified_date;
-
-    /**
-     * @var UTCDateTime
-     */
-    protected UTCDateTime $indexed_date;
-
-    /**
-     * {@inheritDoc}
-     */
-    public function __construct($data = null)
+    public static function fromDto(DirectoryDto $dto): self
     {
-        $data['guid'] ??= null;
-        $data['parent'] ??= null;
+        $directory = new self(
+            (string) $dto->getObjectId(),
+            $dto->getGuid(),
+            $dto->getName(),
+            $dto->getParent(),
+            $dto->getPathname(),
+            $dto->getModifiedDate()->toDateTime(),
+            $dto->getIndexedDate()->toDateTime(),
+        );
 
-        parent::__construct($data);
+        return $directory;
+    }
+
+    public function toDto(): DirectoryDto
+    {
+        $dto = DirectoryDto::fromModel($this);
+
+        return $dto;
+    }
+
+    public function getId(): ?string
+    {
+        return $this->id;
+    }
+
+    public function getGuid(): ?string
+    {
+        return $this->guid;
+    }
+
+    public function getName(): string
+    {
+        return $this->name;
+    }
+
+    public function getParent(): ?string
+    {
+        return $this->parent;
+    }
+
+    public function getPathname(): string
+    {
+        return $this->pathname;
+    }
+
+    public function getModifiedDate(): DateTime
+    {
+        return $this->modifiedDate;
+    }
+
+    public function getIndexedDate(): DateTime
+    {
+        return $this->indexedDate;
+    }
+
+    public function getFile(): SplFileInfo
+    {
+        if (!$this->file) {
+            $this->file = new SplFileInfo($this->pathname);
+        }
+
+        return $this->file;
     }
 }

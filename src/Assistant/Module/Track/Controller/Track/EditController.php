@@ -4,7 +4,7 @@ namespace Assistant\Module\Track\Controller\Track;
 
 use Assistant\Module\Common\Controller\AbstractController;
 use Assistant\Module\Common\Extension\GetId3\Adapter as Id3Adapter;
-use Assistant\Module\Track\Extension\TrackBuilder;
+use Assistant\Module\Track\Extension\TrackService;
 use Cocur\BackgroundProcess\BackgroundProcess;
 
 class EditController extends AbstractController
@@ -14,11 +14,11 @@ class EditController extends AbstractController
      * @todo Wyciągnąć z kontrolera i przerzucić do innej klasy
      * @todo Część klas (m.in. BeatportApiClient) przerzucić do containera dla wygodniejszej inicjalizacji
      *
-     * @param $pathname
+     * @param string $pathname
      */
-    public function edit($pathname)
+    public function edit(string $pathname)
     {
-        $track = $this->app->container[TrackBuilder::class]->fromFile($pathname);
+        $track = $this->app->container[TrackService::class]->createFromFile($pathname);
 
         if (!$track) {
             $this->app->redirect(
@@ -45,18 +45,19 @@ class EditController extends AbstractController
             ],
             'pathname' => $pathname,
             'query' => $query,
-            'track' => $track->toArray(),
+            'track' => $track,
         ]);
     }
 
     /**
-     * @param string $pathname
      * @todo Na tyle ile pozwala biblioteka, opcja usuwania innych tagów powinna usuwać zdjęcie, tag id3v1, lyrics,
      *       ape (oraz inne) oraz niewspierane pola z id3v2
+     *
+     * @param string $pathname
      */
     public function save(string $pathname)
     {
-        $track = $this->app->container[TrackBuilder::class]->fromFile($pathname);
+        $track = $this->app->container[TrackService::class]->createFromFile($pathname);
 
         if (!$track) {
             $this->app->redirect(

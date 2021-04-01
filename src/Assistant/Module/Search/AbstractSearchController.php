@@ -3,6 +3,7 @@
 namespace Assistant\Module\Search;
 
 use Assistant\Module\Common\Controller\AbstractController;
+use Pagerfanta\Pagerfanta;
 
 /**
  * Bazowy kontroler wyszukiwania
@@ -14,7 +15,7 @@ abstract class AbstractSearchController extends AbstractController
     /**
      * Maksymalna liczba wyszukanych utworów na stronie
      *
-     * @var integer
+     * @var int
      */
     protected const MAX_TRACKS_PER_PAGE = 50;
 
@@ -82,9 +83,9 @@ abstract class AbstractSearchController extends AbstractController
      * Zwraca obiekt paginatora lub null, jeśli paginator nie jest wymagany
      *
      * @see MAX_TRACKS_PER_PAGE
-     * @param integer $page
-     * @param integer $count
-     * @return \Pagerfanta\Pagerfanta|null
+     * @param int $page
+     * @param int $count
+     * @return Pagerfanta|null
      */
     abstract protected function getPaginator($page, $count);
 
@@ -93,7 +94,7 @@ abstract class AbstractSearchController extends AbstractController
      *
      * @param array $form
      * @param array $results
-     * @param \Pagerfanta\Pagerfanta|null $paginator
+     * @param Pagerfanta|null $paginator
      */
     protected function handleRequest($form, $results, $paginator)
     {

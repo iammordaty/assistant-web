@@ -2,9 +2,10 @@
 
 namespace Assistant\Module\Common\Extension;
 
-use Cocur\Slugify\Slugify;
 use Cocur\Slugify\SlugifyInterface;
+use Slim\Helper\Set as Container;
 
+// a może Breadcrumbs?
 final class PathBreadcrumbs
 {
     private SlugifyInterface $slugify;
@@ -14,9 +15,9 @@ final class PathBreadcrumbs
         $this->slugify = $slugify;
     }
 
-    public static function factory(): PathBreadcrumbs
+    public static function factory(Container $container): PathBreadcrumbs
     {
-        $slugify = new Slugify();
+        $slugify = $container[SlugifyService::class];
 
         return new self($slugify);
     }

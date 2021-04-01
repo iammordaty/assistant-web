@@ -1,8 +1,9 @@
 <?php
 
-/* @var $app \Slim\Slim */
+/* @var $app Slim */
 
 use Assistant\Module\Directory\Controller\BrowseController;
+use Slim\Slim;
 
 $app->group('/directory', function () use ($app) {
     $app->get(

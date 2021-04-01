@@ -1,8 +1,9 @@
 <?php
 
-/* @var $app \Slim\Slim */
+/* @var $app Slim */
 
 use Assistant\Module\Search\Controller;
+use Slim\Slim;
 
 $app->group('/search', function () use ($app) {
 

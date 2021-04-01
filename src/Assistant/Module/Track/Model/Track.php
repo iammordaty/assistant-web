@@ -2,119 +2,137 @@
 
 namespace Assistant\Module\Track\Model;
 
-use Assistant\Module\Common\Model\AbstractModel;
-use MongoDB\BSON\ObjectId;
-use MongoDB\BSON\UTCDateTime;
-use MongoDB\Model\BSONArray;
+use Assistant\Module\Common\Model\CollectionItemInterface;
+use DateTime;
 use SplFileInfo;
 
-final class Track extends AbstractModel
+final class Track implements CollectionItemInterface
 {
-    /**
-     * @var ObjectId
-     */
-    protected $_id;
+    private ?string $id;
+    private string $guid;
+    private string $artist;
+    private array $artists;
+    private string $title;
+    private ?string $album;
+    private ?int $trackNumber;
+    private ?int $year;
+    private string $genre;
+    private ?string $publisher;
 
     /**
-     * @var string
+     * @fixme nulle dla bpm i klucza dozwolone tylko tymczasowo, ze względu na to że niektóre kawałki ich nie mają
+     *        (np. Laidback Luke - 05 - Break Down The House [Acapella]). To powinno być ograne w jakoś inaczej,
+     *        ale bez zezwolenia na pustą wartość, np. poprzez wcześniejszą walidację w IndexerTask.
+     *        Zerknąć też na komentarz na FileReader::read(), to musi być oddzielone od przeglądania nowych (jak?)
+     * @see \Assistant\Module\Collection\Extension\Reader\FileReader::read()
+     *
+     * @var float|null
      */
-    protected $guid;
+    private ?float $bpm;
 
     /**
-     * @var string
+     * @fixme jak wyżej
+     *
+     * @var string|null
      */
-    protected $artist;
-
-    /**
-     * @var BSONArray|array
-     */
-    protected $artists = [];
-
-    /**
-     * @var string
-     */
-    protected $title;
-
-    /**
-     * @var string
-     */
-    protected $album;
-
-    /**
-     * @var int
-     */
-    protected $track_number;
-
-    /**
-     * @var int
-     */
-    protected $year;
-
-    /**
-     * @var string
-     */
-    protected $genre;
-
-    /**
-     * @var string
-     */
-    protected $publisher;
-
-    /**
-     * @var float
-     */
-    protected $bpm;
-
-    /**
-     * @var string
-     */
-    protected $initial_key;
-
-    /**
-     * @var int
-     */
-    protected $length;
-
-    /**
-     * @var string
-     */
-    protected $metadata_md5;
-
-    /**x`
-     * @var string
-     */
-    protected $parent;
-
-    /**
-     * @var string
-     */
-    protected $pathname;
-
-    /**
-    * @var UTCDateTime
-    */
-    protected $modified_date;
-
-    /**
-     * @var UTCDateTime|null
-     */
-    protected $indexed_date;
-
-    /**
-     * @var BSONArray|array
-     */
-    protected $tags = [];
-
+    private ?string $initialKey;
+    private int $length;
+    private array $tags;
+    private string $metadataMd5;
+    private string $parent;
+    private string $pathname;
+    private DateTime $modifiedDate;
+    private DateTime $indexedDate;
     private ?SplFileInfo $file = null;
 
-    public function getId(): ObjectId
-    {
-        return $this->_id;
+    /** @noinspection DuplicatedCode */
+    public function __construct(
+        ?string $id,
+        string $guid,
+        string $artist,
+        array $artists,
+        string $title,
+        ?string $album,
+        ?int $trackNumber,
+        ?int $year,
+        string $genre,
+        ?string $publisher,
+        ?float $bpm,
+        ?string $initialKey,
+        int $length,
+        array $tags,
+        string $metadataMd5,  // być może to powinno być wyliczane w modelu
+        string $parent,
+        string $pathname,
+        DateTime $modifiedDate,
+        DateTime $indexedDate
+    ) {
+        $this->id = $id;
+        $this->guid = $guid;
+        $this->artist = $artist;
+        $this->artists = $artists;
+        $this->title = $title;
+        $this->album = $album;
+        $this->trackNumber = $trackNumber;
+        $this->year = $year;
+        $this->genre = $genre;
+        $this->publisher = $publisher;
+        $this->bpm = $bpm;
+        $this->initialKey = $initialKey;
+        $this->length = $length;
+        $this->tags = $tags;
+        $this->metadataMd5 = $metadataMd5;
+        $this->parent = $parent;
+        $this->pathname = $pathname;
+        $this->modifiedDate = $modifiedDate;
+        $this->indexedDate = $indexedDate;
     }
 
-    public function setId(ObjectId $id): void
+    public static function fromDto(TrackDto $dto): self
     {
-        $this->_id = $id;
+        $track = new self(
+            (string) $dto->getObjectId(),
+            $dto->getGuid(),
+            $dto->getArtist(),
+            $dto->getArtists()->getArrayCopy(),
+            $dto->getTitle(),
+            $dto->getAlbum() ,
+            $dto->getTrackNumber() ,
+            $dto->getYear(),
+            $dto->getGenre(),
+            $dto->getPublisher() ,
+            $dto->getBpm(),
+            $dto->getInitialKey(),
+            $dto->getLength(),
+            $dto->getTags()->getArrayCopy(),
+            $dto->getMetadataMd5(),
+            $dto->getParent(),
+            $dto->getPathname(),
+            $dto->getModifiedDate()->toDateTime(),
+            $dto->getIndexedDate()->toDateTime(),
+        );
+
+        return $track;
+    }
+
+    public function toDto(): TrackDto
+    {
+        $dto = TrackDto::fromModel($this);
+
+        return $dto;
+    }
+
+    public function getId(): ?string
+    {
+        return $this->id;
+    }
+
+    public function withId(string $id): self
+    {
+        $clone = clone $this;
+        $clone->id = $id;
+
+        return $clone;
     }
 
     public function getGuid(): string
@@ -122,9 +140,12 @@ final class Track extends AbstractModel
         return $this->guid;
     }
 
-    public function setGuid(string $guid): void
+    public function withGuid(string $guid): self
     {
-        $this->guid = $guid;
+        $clone = clone $this;
+        $clone->guid = $guid;
+
+        return $clone;
     }
 
     public function getArtist(): string
@@ -132,25 +153,9 @@ final class Track extends AbstractModel
         return $this->artist;
     }
 
-    public function setArtist(string $artist): void
-    {
-        $this->artist = $artist;
-    }
-
-    /**
-     * @return array|BSONArray
-     */
-    public function getArtists()
+    public function getArtists(): array
     {
         return $this->artists;
-    }
-
-    /**
-     * @param array|BSONArray $artists
-     */
-    public function setArtists($artists): void
-    {
-        $this->artists = $artists;
     }
 
     public function getTitle(): string
@@ -158,39 +163,27 @@ final class Track extends AbstractModel
         return $this->title;
     }
 
-    public function setTitle(string $title): void
-    {
-        $this->title = $title;
-    }
-
-    public function getAlbum(): string
+    public function getAlbum(): ?string
     {
         return $this->album;
     }
 
-    public function setAlbum(string $album): void
+    public function getTrackNumber(): ?int
     {
-        $this->album = $album;
+        return $this->trackNumber;
     }
 
-    public function getTrackNumber(): int
-    {
-        return $this->track_number;
-    }
-
-    public function setTrackNumber(int $track_number): void
-    {
-        $this->track_number = $track_number;
-    }
-
-    public function getYear(): int
+    public function getYear(): ?int
     {
         return $this->year;
     }
 
-    public function setYear(int $year): void
+    public function withYear(int $year): self
     {
-        $this->year = $year;
+        $clone = clone $this;
+        $clone->year = $year;
+
+        return $clone;
     }
 
     public function getGenre(): string
@@ -198,39 +191,43 @@ final class Track extends AbstractModel
         return $this->genre;
     }
 
-    public function setGenre(string $genre): void
+    public function withGenre(string $genre): self
     {
-        $this->genre = $genre;
+        $clone = clone $this;
+        $clone->genre = $genre;
+
+        return $clone;
     }
 
-    public function getPublisher(): string
+    public function getPublisher(): ?string
     {
         return $this->publisher;
     }
 
-    public function setPublisher(string $publisher): void
-    {
-        $this->publisher = $publisher;
-    }
-
-    public function getBpm(): ?float
+    public function getBpm(): float
     {
         return $this->bpm;
     }
 
-    public function setBpm(float $bpm): void
+    public function withBpm(float $bpm): self
     {
-        $this->bpm = $bpm;
+        $clone = clone $this;
+        $clone->bpm = $bpm;
+
+        return $clone;
     }
 
-    public function getInitialKey(): ?string
+    public function getInitialKey(): string
     {
-        return $this->initial_key;
+        return $this->initialKey;
     }
 
-    public function setInitialKey(string $initialKey): void
+    public function withInitialKey(string $initialKey): self
     {
-        $this->initial_key = $initialKey;
+        $clone = clone $this;
+        $clone->initialKey = $initialKey;
+
+        return $clone;
     }
 
     public function getLength(): int
@@ -238,19 +235,14 @@ final class Track extends AbstractModel
         return $this->length;
     }
 
-    public function setLength(int $length): void
+    public function getTags(): array
     {
-        $this->length = $length;
+        return $this->tags;
     }
 
     public function getMetadataMd5(): string
     {
-        return $this->metadata_md5;
-    }
-
-    public function setMetadataMd5(string $metadataMd5): void
-    {
-        $this->metadata_md5 = $metadataMd5;
+        return $this->metadataMd5;
     }
 
     public function getParent(): string
@@ -258,79 +250,27 @@ final class Track extends AbstractModel
         return $this->parent;
     }
 
-    public function setParent(string $parent): void
-    {
-        $this->parent = $parent;
-    }
-
     public function getPathname(): string
     {
         return $this->pathname;
     }
 
-    public function setPathname(string $pathname): void
+    public function getModifiedDate(): DateTime
     {
-        $this->pathname = $pathname;
+        return $this->modifiedDate;
     }
 
-    /**
-     * @fixme To powinno zwracać \DateTime()
-     *
-     * @return UTCDateTime
-     */
-    public function getModifiedDate(): UTCDateTime
+    public function withModifiedDate(DateTime $modifiedDate): self
     {
-        return $this->modified_date;
+        $clone = clone $this;
+        $clone->modifiedDate = $modifiedDate;
+
+        return $clone;
     }
 
-    /**
-     * @fixme To powinno przyjmować \DateTime()
-     *
-     * @param UTCDateTime $modifiedDate
-     */
-    public function setModifiedDate(UTCDateTime $modifiedDate): void
+    public function getIndexedDate(): DateTime
     {
-        $this->modified_date = $modifiedDate;
-    }
-
-    /**
-     * @fixme To powinno zwracać \DateTime()
-     *
-     * @return UTCDateTime|null
-     */
-    public function getIndexedDate(): ?UTCDateTime
-    {
-        return $this->indexed_date;
-    }
-
-    /**
-     * @fixme To powinno przyjmować \DateTime()
-     *
-     * @param UTCDateTime|null $indexedDate
-     */
-    public function setIndexedDate(?UTCDateTime $indexedDate): void
-    {
-        $this->indexed_date = $indexedDate;
-    }
-
-    /**
-     * @fixme To powinno zwracać array
-     *
-     * @return array|BSONArray
-     */
-    public function getTags()
-    {
-        return $this->tags;
-    }
-
-    /**
-     * @fixme To powinno przyjmować array
-     *
-     * @param array|BSONArray $tags
-     */
-    public function setTags($tags): void
-    {
-        $this->tags = $tags;
+        return $this->indexedDate;
     }
 
     public function getFile(): SplFileInfo

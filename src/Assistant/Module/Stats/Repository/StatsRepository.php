@@ -2,92 +2,104 @@
 
 namespace Assistant\Module\Stats\Repository;
 
-use Assistant\Module\Common\Repository\AbstractRepository;
+use Assistant\Module\Common\Repository\Storage;
+use MongoDB\Database;
 use MongoDB\Driver\Cursor;
 
 /**
  * Repozytorium zawierające metody statystyczne
  */
-class StatsRepository extends AbstractRepository
+final class StatsRepository
 {
-    /**
-     * {@inheritDoc}
-     */
-    protected const COLLECTION = 'tracks';
+    private const COLLECTION_NAME = 'tracks';
+
+    private const FIELD_TYPE_ARRAY = 'array';
+
+    private const FIELD_TYPE_STRING = 'string';
+
+    private Storage $storage;
+
+    public function __construct(Storage $storage)
+    {
+        $this->storage = $storage;
+    }
+
+    public static function factory(Database $database): self
+    {
+        $collection = $database->selectCollection(self::COLLECTION_NAME);
+        $storage = new Storage($collection);
+
+        $repository = new self($storage);
+
+        return $repository;
+    }
 
     /**
      * Zwraca liczbę utworów w podziale na gatunki
      *
-     * @param array $sort
-     * @param integer $limit
+     * @param int|null $limit
+     * @param array|null $sort
      * @return array
      */
-    public function getTrackCountByGenre(array $sort = [], $limit = 10)
+    public function getTrackCountByGenre(?int $limit, ?array $sort = null): array
     {
-        return $this->aggregateBy('genre', 'string', $sort, $limit);
+        return $this->aggregateBy('genre', self::FIELD_TYPE_STRING, $limit, $sort);
     }
 
     /**
      * Zwraca liczbę utworów w podziale na artystów
      *
-     * @param array $sort
-     * @param integer $limit
+     * @param int|null $limit
+     * @param array|null $sort
      * @return array
      */
-    public function getTrackCountByArtist(array $sort = [], $limit = 10)
+    public function getTrackCountByArtist(?int $limit = null, ?array $sort = null): array
     {
-        return $this->aggregateBy('artists', 'array', $sort, $limit);
+        return $this->aggregateBy('artists', self::FIELD_TYPE_ARRAY, $limit, $sort);
     }
 
-    /**
-     * @param int $limit
-     * @return Cursor
-     */
-    public function getRecentlyAddedTracks(int $limit = 10)
+    public function getRecentlyAddedTracks(?int $limit = null): Cursor
     {
-        return $this->findBy([ ], [ 'limit' => $limit, 'sort' => [ 'indexed_date' => -1 ] ]);
+        return $this->storage->findBy([ ], [ 'limit' => $limit, 'sort' => [ 'indexed_date' => Storage::SORT_DESC ] ]);
     }
 
     /**
      * Agreguje dokumenty w bazie danych na podstawie przekazanych parametrów
      *
-     * @param string $field
+     * @param string $fieldName
      * @param string $fieldType
-     * @param array $sort
-     * @param integer $limit
+     * @param int|null $limit
+     * @param array|null $sort
      * @return array
      */
-    private function aggregateBy($field, $fieldType, array $sort = [], $limit = 10)
+    private function aggregateBy(string $fieldName, string $fieldType, ?int $limit, ?array $sort = null): array
     {
         if (empty($sort)) {
-            $sort = [ 'count' => -1 ];
+            $sort = [ 'count' => Storage::SORT_DESC ];
         }
 
-        $ops = [
-            [
-                '$group' => [
-                    '_id' => [ $field => '$' . $field ],
-                    'count' => [ '$sum' => 1 ],
-                ],
-            ],
-            [
-                '$sort' => $sort,
-            ],
-            [
-                '$limit' => $limit,
-            ],
+        $group = [
+            '_id' => [ $fieldName => '$' . $fieldName ],
+            'count' => [ '$sum' => 1 ],
         ];
 
-        if ($fieldType === 'array') {
-            array_unshift($ops, [ '$unwind' => '$' . $field ]);
+        $pipeline = [
+            [ '$group' => $group, ],
+            [ '$sort' => $sort, ],
+            [ '$limit' => $limit, ],
+        ];
+
+        if ($fieldType === self::FIELD_TYPE_ARRAY) {
+            array_unshift($pipeline, [ '$unwind' => '$' . $fieldName ]);
         }
 
-        $rawData = $this->aggregate($ops);
+        // zamienić na array_map
+        $rawData = $this->storage->aggregate($pipeline);
 
         $result = [];
 
         foreach ($rawData as $group) {
-            $result[$group['_id'][$field]] = $group['count'];
+            $result[$group['_id'][$fieldName]] = $group['count'];
         }
 
         return $result;

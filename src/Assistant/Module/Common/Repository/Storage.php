@@ -1,50 +1,23 @@
 <?php
 
+// @todo Repository -> Storage
 namespace Assistant\Module\Common\Repository;
 
 use MongoDB\Collection;
-use MongoDB\Database;
 use MongoDB\BSON\ObjectId;
-use MongoDB\DeleteResult;
 use MongoDB\Driver\Cursor;
-use MongoDB\InsertOneResult;
 use MongoDB\Model\BSONDocument;
-use MongoDB\UpdateResult;
 
-/**
- * Bazowa klasa dla repozytoriów
- */
-abstract class AbstractRepository
+final class Storage
 {
-    /**
-     * Nazwa kolekcji, na której operuje repozytorium
-     *
-     * @var string
-     */
-    protected const COLLECTION = '';
+    public const SORT_ASC = 1;
+    public const SORT_DESC = -1;
 
-    /**
-     * Obiekt kolekcji, na której operuje repozytorium
-     *
-     * @var Collection
-     */
-    protected Collection $collection;
+    private Collection $collection;
 
-    /**
-     * Konstruktor
-     *
-     * @param Database $database
-     * @throws \RuntimeException
-     */
-    public function __construct(Database $database)
+    public function __construct(Collection $collection)
     {
-        // TODO: Przyjmować Collection, dodać metodę factory(Database $database)
-
-        if (empty(static::COLLECTION)) {
-            throw new \RuntimeException('Constant COLLECTION can not be empty.');
-        }
-
-        $this->collection = $database->selectCollection(static::COLLECTION);
+        $this->collection = $collection;
     }
 
     /**
@@ -54,7 +27,7 @@ abstract class AbstractRepository
      * @param array $options
      * @return BSONDocument|null
      */
-    public function findOneBy(array $conditions, array $options = [])
+    public function findOneBy(array $conditions, array $options = []): ?BSONDocument
     {
         $document = $this->collection->findOne(
             $conditions,
@@ -72,7 +45,7 @@ abstract class AbstractRepository
      * @param array $options
      * @return BSONDocument|null
      */
-    public function findOneById($id, array $options = [])
+    public function findOneById($id, array $options = []): ?BSONDocument
     {
         return $this->findOneBy(
             [ '_id' => $this->idToObjectId($id) ],
@@ -87,7 +60,7 @@ abstract class AbstractRepository
      * @param array $options
      * @return Cursor
      */
-    public function findBy(array $conditions, array $options = [])
+    public function findBy(array $conditions, array $options = []): Cursor
     {
         return $this->collection->find(
             $conditions,
@@ -114,37 +87,39 @@ abstract class AbstractRepository
      * Dodaje dokument do bazy danych
      *
      * @param array $data
-     * @return InsertOneResult
+     * @return int
      */
-    public function insert($data): InsertOneResult
+    public function insert(array $data): int
     {
         $filtered = $this->filter($data);
 
-        return $this->collection->insertOne($filtered);
+        $result = $this->collection->insertOne($filtered);
+
+        return $result->getInsertedCount();
     }
-    
+
     /**
      * Aktualizuje dokument na podstawie przekazanych kryteriów
      *
      * @param array $conditions
      * @param array $data
-     * @return UpdateResult
+     * @return int
      */
-    public function update(): UpdateResult
+    public function update(array $conditions, array $data): int
     {
-        [ $conditions, $data ] = func_get_args();
-
         if (array_key_exists('_id', $data) === true) {
             unset($data['_id']);
         }
 
         $filtered = $this->filter($data);
 
-        return $this->collection
+        $result = $this->collection
             ->updateOne(
                 $conditions,
                 [ '$set' => $filtered ]
             );
+
+        return $result->getModifiedCount();
     }
 
     /**
@@ -161,18 +136,20 @@ abstract class AbstractRepository
             $data
         );
 
-        return $result->getModifiedCount() === 1;
+        return $result === 1;
     }
 
     /**
      * Usuwa dokumenty na podstawie podanych kryteriów
      *
      * @param array $conditions
-     * @return DeleteResult
+     * @return int
      */
-    public function removeBy(array $conditions = []): DeleteResult
+    public function removeBy(array $conditions = []): int
     {
-        return $this->collection->deleteMany($conditions);
+        $result = $this->collection->deleteMany($conditions);
+
+        return $result->getDeletedCount();
     }
 
     /**
@@ -187,7 +164,7 @@ abstract class AbstractRepository
             [ '_id' => $this->idToObjectId($id) ]
         );
 
-        return $result->getDeletedCount() === 1;
+        return $result === 1;
     }
 
     /**

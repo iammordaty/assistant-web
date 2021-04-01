@@ -2,6 +2,7 @@
 
 namespace Assistant\Module\Collection\Extension\Writer;
 
+use Assistant\Module\Common\Model\CollectionItemInterface;
 use Assistant\Module\Directory\Model\Directory;
 use Assistant\Module\Directory\Repository\DirectoryRepository;
 
@@ -20,13 +21,13 @@ class DirectoryWriter implements WriterInterface
     /**
      * Zapisuje katalog zawierający utwory muzyczne w bazie danych
      *
-     * @param Directory $directory
+     * @param Directory|CollectionItemInterface $collectionItem
      * @return Directory
      */
-    public function save($directory)
+    public function save(CollectionItemInterface $collectionItem): Directory
     {
-        $this->repository->insert($directory);
+        $this->repository->save($collectionItem);
 
-        return $directory;
+        return $collectionItem;
     }
 }

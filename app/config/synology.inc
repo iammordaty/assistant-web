@@ -1,10 +1,13 @@
 <?php
 
-/* @var $app \Slim\Slim */
+/* @var $app Slim */
 
 /*
  * Konfiguracja synology
  */
+
+use Slim\Slim;
+
 $app->configureMode(
     'synology',
     function () use ($app) {

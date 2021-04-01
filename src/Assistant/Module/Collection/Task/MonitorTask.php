@@ -11,19 +11,20 @@ use Symfony\Component\Console\Output\OutputInterface;
 /**
  * Task monitorujący zmiany w strukturze kolekcji
  */
-class MonitorTask extends AbstractTask
+final class MonitorTask extends AbstractTask
 {
-    /**
-     * @var array
-     */
-    private $parameters;
+    private array $parameters;
 
-    /**
-     * {@inheritDoc}
-     */
+    public function isEnabled(): bool
+    {
+        // FIXME: Task wymaga dokończenia i przetestowania
+
+        return false;
+    }
+
     protected function configure()
     {
-        $this->parameters = $this->app->container->parameters['collection'];
+        $this->parameters = $this->app->container['parameters']['collection'];
 
         $this
             ->setName('collection:monitor')
@@ -32,8 +33,12 @@ class MonitorTask extends AbstractTask
 
     /**
      * Rozpoczyna proces monitorowania zmian w kolekcji
+     *
+     * @param InputInterface $input
+     * @param OutputInterface $output
+     * @return int
      */
-    protected function execute(InputInterface $input, OutputInterface $output)
+    protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $fd = inotify_init();
 
@@ -131,6 +136,8 @@ class MonitorTask extends AbstractTask
         fclose($fd);
 
         unset($input, $output);
+
+        return self::SUCCESS;
     }
 
     /**
@@ -146,11 +153,11 @@ class MonitorTask extends AbstractTask
     }
 
     /**
-     * Uruchamia task zapisujący tonację oraz liczbę uderzeń na mintutę do metadancych utworu muzycznego
+     * Uruchamia task zapisujący tonację oraz liczbę uderzeń na minutę do metadanych utworu muzycznego
      *
      * @param string $pathname
      */
-    private function calculateAudioData($pathname)
+    private function calculateAudioData(string $pathname)
     {
         /*
         (new \Cocur\BackgroundProcess\BackgroundProcess(
@@ -164,7 +171,7 @@ class MonitorTask extends AbstractTask
      *
      * @param string $pathname
      */
-    private function index($pathname)
+    private function index(string $pathname)
     {
         /*
         (new \Cocur\BackgroundProcess\BackgroundProcess(
@@ -178,7 +185,7 @@ class MonitorTask extends AbstractTask
      *
      * @param string $pathname
      */
-    private function delete($pathname)
+    private function delete(string $pathname)
     {
         /*
         (new \Cocur\BackgroundProcess\BackgroundProcess(

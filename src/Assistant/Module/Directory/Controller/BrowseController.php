@@ -6,11 +6,12 @@ use Assistant\Module\Collection\Extension\Finder;
 use Assistant\Module\Collection\Extension\Reader\ReaderFacade;
 use Assistant\Module\Common\Controller\AbstractController;
 use Assistant\Module\Common\Extension\PathBreadcrumbs;
+use Assistant\Module\Common\Extension\SlugifyService;
 use Assistant\Module\Common\Extension\TargetPathService;
+use Assistant\Module\Common\Model\CollectionItemInterface;
 use Assistant\Module\Directory\Model\Directory;
 use Assistant\Module\Directory\Repository\DirectoryRepository;
 use Assistant\Module\Track\Repository\TrackRepository;
-use Cocur\Slugify\Slugify;
 use Slim\Slim;
 use SplFileInfo;
 
@@ -25,14 +26,14 @@ class BrowseController extends AbstractController
     {
         parent::__construct($app);
 
-        $this->directoryRepository = new DirectoryRepository($app->container['db']);
-        $this->trackRepository = new TrackRepository($app->container['db']);
+        $this->directoryRepository = $app->container[DirectoryRepository::class];
+        $this->trackRepository = $app->container[TrackRepository::class];
     }
 
     public function index($guid = null)
     {
         if (!$guid) {
-            $slugify = new Slugify();
+            $slugify = $this->app->container[SlugifyService::class];
 
             $guid = $slugify->slugify($this->app->container['parameters']['collection']['root_dir']);
             $redirectUrl = $this->app->urlFor('directory.browse.index', [ 'guid' => $guid ]);
@@ -40,13 +41,13 @@ class BrowseController extends AbstractController
             $this->app->redirect($redirectUrl);
         }
 
-        $directory = $this->directoryRepository->findOneByGuid($guid);
+        $directory = $this->directoryRepository->getByGuid($guid);
 
         if ($directory === null) {
             $this->app->notFound();
         }
 
-        $pathBreadcrumbs = $this->app->container[PathBreadcrumbs::class]->get($directory->pathname);
+        $pathBreadcrumbs = $this->app->container[PathBreadcrumbs::class]->get($directory->getPathname());
 
         return $this->app->render('@directory/index.twig', [
             'menu' => 'browse',
@@ -105,6 +106,7 @@ class BrowseController extends AbstractController
         $targetPathService = TargetPathService::factory();
 
         foreach ($this->getNodes($pathname) as $node) {
+            /** @var CollectionItemInterface $element */
             $element = $reader->read($node);
             $targetPath = $targetPathService->getTargetPath($node);
 
@@ -125,9 +127,10 @@ class BrowseController extends AbstractController
 
         sort($directories);
 
-        usort($tracks, static fn($data1, $data2): int => (
-            strnatcasecmp($data1['track']->pathname, $data2['track']->pathname))
-        );
+        /** @uses Track::getPathname() */
+        usort($tracks, static function ($data1, $data2): int {
+            return strnatcasecmp($data1['track']->getPathname(), $data2['track']->getPathname());
+        });
 
         $children = [
             'directories' => $directories,
@@ -152,15 +155,8 @@ class BrowseController extends AbstractController
      */
     private function getChildren(Directory $directory): array
     {
-        $directories = $this->directoryRepository->findBy(
-            [ 'parent' => $directory->guid ],
-            [ 'sort' => [ 'guid' => 1 ]]
-        );
-
-        $tracks = $this->trackRepository->findBy(
-            [ 'parent' => $directory->guid ],
-            [ 'sort' => [ 'guid' => 1 ]]
-        );
+        $directories = $this->directoryRepository->getChildren($directory);
+        $tracks = $this->trackRepository->getChildren($directory);
 
         return [
             'directories' => iterator_to_array($directories),

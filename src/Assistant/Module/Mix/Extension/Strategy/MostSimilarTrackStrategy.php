@@ -3,40 +3,72 @@
 namespace Assistant\Module\Mix\Extension\Strategy;
 
 use Assistant\Module\Track\Extension\Similarity;
+use Assistant\Module\Track\Extension\SimilarTracksVO;
 use Assistant\Module\Track\Model\Track;
 
 final class MostSimilarTrackStrategy implements NextTrackStrategy
 {
     private Similarity $similarity;
 
+    private array $mix;
+
+    private array $similarityGrid;
+
     public function __construct(Similarity $similarity)
     {
         $this->similarity = $similarity;
     }
 
-    public function computeMix(array $matrix): array
+    public function compute(array $listing): void
     {
+        $this->similarityGrid = $this->computeSimilarityGrid($listing);
+
+        $this->mix = $this->computeMix();
+    }
+
+    public function getMix(): array
+    {
+        return $this->mix;
+    }
+
+    public function getSimilarityGrid(): array
+    {
+        return $this->similarityGrid;
+    }
+
+    private function computeMix(): array
+    {
+        $similarityGrid = $this->similarityGrid;
+
         $mix = [];
 
-        $nextTrack = reset($matrix);
+        $nextTrack = reset($similarityGrid);
 
         while ($nextTrack) {
-            self::addToMix($nextTrack, $mix, $matrix);
+            self::addToMix($nextTrack, $mix, $similarityGrid);
 
-            $nextTrack = self::computeNextTrack($matrix[$nextTrack['track']->guid]['tracks']);
+            /** @var Track $track */
+            $track = $nextTrack['track'];
+
+            $nextTrack = self::computeNextTrack($similarityGrid[$track->getGuid()]['tracks']);
         }
 
         return $mix;
     }
 
     /**
+     * 1. Do przemyślenia czy da się to osiągnąć bardziej czytelnie i elegancko.
+     *    Zerknąć na SimilarTrackVO, pewnie da się wykorzystać
      *
-     * @param Track[] $listing
+     * 2. Może należałoby rozdzielić tworzenie tablicy wielowymiarowej i wyliczania podobieństwa między ścieżkami?
+     *
+     * @param Track[][] $listing
      * @return array
+     * @see SimilarTracksVO
      */
-    public function computeMatrix(array $listing): array
+    private function computeSimilarityGrid(array $listing): array
     {
-        $matrix = [];
+        $grid = [];
 
         foreach ($listing as $trackOne) {
             $row = [
@@ -44,19 +76,25 @@ final class MostSimilarTrackStrategy implements NextTrackStrategy
                 'tracks' => [],
             ];
 
+            /** @uses Track::getGuid() */
+            $trackOneGuid = $trackOne['track']->getGuid();
+
             foreach ($listing as $trackTwo) {
-                $row['tracks'][$trackTwo['track']->guid] = [
+                /** @uses Track::getGuid() */
+                $trackTwoGuid = $trackTwo['track']->getGuid();
+
+                $row['tracks'][$trackTwoGuid] = [
                     'track' => $trackTwo['track'],
-                    'similarityValue' => $trackOne['track']->guid !== $trackTwo['track']->guid
+                    'similarityValue' => $trackOneGuid !== $trackTwoGuid
                         ? $this->similarity->getSimilarityValue($trackOne['track'], $trackTwo['track'])
                         : null
                 ];
             }
 
-            $matrix[$trackOne['track']->guid] = $row;
+            $grid[$trackOneGuid] = $row;
         }
 
-        return $matrix;
+        return $grid;
     }
 
     private static function computeNextTrack(array $tracks): ?array
@@ -85,7 +123,8 @@ final class MostSimilarTrackStrategy implements NextTrackStrategy
         $mix[] = $track;
 
         foreach ($matrix as &$row) {
-            unset($row['tracks'][$track['track']->guid]);
+            /** @uses Track::getGuid() */
+            unset($row['tracks'][$track['track']->getGuid()]);
         }
     }
 }

@@ -66,7 +66,7 @@ class Genre extends AbstractProvider
      */
     public function getSimilarityValue(Track $baseTrack, Track $comparedTrack): int
     {
-        if ($comparedTrack->genre === $baseTrack->genre) {
+        if ($comparedTrack->getGenre() === $baseTrack->getGenre()) {
             return static::MAX_SIMILARITY_VALUE;
         }
 
@@ -75,14 +75,14 @@ class Genre extends AbstractProvider
         foreach ($this->similarityMap as $map) {
             [ $baseGenre, $comparedGenre, $genreSimilarity ] = $map;
 
-            if ($baseTrack->genre === $baseGenre && $comparedTrack->genre === $comparedGenre) {
+            if ($baseTrack->getGenre() === $baseGenre && $comparedTrack->getGenre() === $comparedGenre) {
                 $similarity = $genreSimilarity;
 
                 break;
             }
         }
 
-        // echo $baseTrack->genre, ' vs. ', $comparedTrack->genre, ' = ', $similarity, PHP_EOL;
+        // echo $baseTrack->$this->getGenre(), ' vs. ', $comparedTrack->$this->getGenre(), ' = ', $similarity, PHP_EOL;
 
         return $similarity;
     }
@@ -95,14 +95,14 @@ class Genre extends AbstractProvider
         $genres = [];
 
         foreach ($this->similarityMap as $map) {
-            if ($baseTrack->genre === $map[0]) {
+            if ($baseTrack->getGenre() === $map[0]) {
                 $genres[] = $map[1];
             }
         }
 
-        // $baseTrack->genre jest innym, niewymienionym gatunkiem (np. hardstyle, hard house)
+        // $baseTrack->$this->getGenre() jest innym, niewymienionym gatunkiem (np. hardstyle, hard house)
         if (empty($genres)) {
-            $genres[] = $baseTrack->genre;
+            $genres[] = $baseTrack->getGenre();
         }
 
         return [

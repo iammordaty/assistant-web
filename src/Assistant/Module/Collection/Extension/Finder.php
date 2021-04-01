@@ -30,6 +30,12 @@ final class Finder implements IteratorAggregate, Countable
         $this->service = $service;
     }
 
+    /**
+     * @todo Dopisać testy oraz uprościć poniższą logikę, jeśli się da
+     *
+     * @param array $params
+     * @return Finder
+     */
     public static function create(array $params): Finder
     {
         /** @todo Tablicę $params zamienić na value object */
@@ -53,7 +59,9 @@ final class Finder implements IteratorAggregate, Countable
         }
 
         if (isset($params['recursive']) && $params['recursive'] === false) {
-            $service->depth(0);
+            $depth = $skipSelf === true ? 0 : 1; // :/
+
+            $service->depth($depth);
         }
 
         if (!empty($params['restrict'])) {

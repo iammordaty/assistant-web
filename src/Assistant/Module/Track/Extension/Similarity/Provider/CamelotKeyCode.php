@@ -28,7 +28,7 @@ class CamelotKeyCode extends AbstractProvider
      */
     public function getSimilarityValue(Track $baseTrack, Track $comparedTrack): int
     {
-        return $this->similarityMap[$baseTrack->initial_key][$comparedTrack->initial_key] ?? 0;
+        return $this->similarityMap[$baseTrack->getInitialKey()][$comparedTrack->getInitialKey()] ?? 0;
     }
 
     /**
@@ -36,7 +36,7 @@ class CamelotKeyCode extends AbstractProvider
      */
     public function getCriteria(Track $baseTrack): array
     {
-        $similarKeys = array_keys($this->similarityMap[$baseTrack->initial_key]);
+        $similarKeys = array_keys($this->similarityMap[$baseTrack->getInitialKey()]);
 
         return [ '$in' => $similarKeys ];
     }

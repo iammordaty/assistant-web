@@ -3,9 +3,14 @@
 namespace Assistant\Module\Search\Controller;
 
 use Assistant\Module\Search\AbstractSearchController;
-use Assistant\Module\Track;
+use Assistant\Module\Track\Model\Track;
+use Assistant\Module\Track\Repository\TrackRepository;
 use Cocur\Slugify\Slugify;
 use MongoDB\BSON\Regex;
+use Pagerfanta\Adapter\NullAdapter;
+use Pagerfanta\Exception\NotValidCurrentPageException;
+use Pagerfanta\Pagerfanta;
+use Pagerfanta\View\TwitterBootstrap3View;
 
 /**
  * Kontroler pozwalający na wyszukiwanie utworów po nazwie lub artyście
@@ -57,10 +62,12 @@ class SimpleSearchController extends AbstractSearchController
      */
     protected function getResults(array $criteria, array $options)
     {
-        $repository = new Track\Repository\TrackRepository($this->app->container['db']);
+        $repository = $this->app->container[TrackRepository::class];
+
+        [ 'sort' => $sort, 'limit' => $limit, 'skip' => $skip ] = $options; // przekazywać poziom wyżej
 
         $results = [
-            'tracks' => $repository->findBy($criteria, $options),
+            'tracks' => iterator_to_array($repository->findBy($criteria, $sort, $limit, $skip)),
             'count' => $repository->count($criteria),
         ];
 
@@ -76,12 +83,12 @@ class SimpleSearchController extends AbstractSearchController
             return null;
         }
 
-        $paginator = new \Pagerfanta\Pagerfanta(new \Pagerfanta\Adapter\NullAdapter($totalCount));
+        $paginator = new Pagerfanta(new NullAdapter($totalCount));
         $paginator->setMaxPerPage(static::MAX_TRACKS_PER_PAGE);
 
         try {
             $paginator->setCurrentPage($pageNo);
-        } catch (\Pagerfanta\Exception\NotValidCurrentPageException $e) {
+        } catch (NotValidCurrentPageException $e) {
             $paginator = null;
 
             unset($e);
@@ -91,7 +98,7 @@ class SimpleSearchController extends AbstractSearchController
             return null;
         }
 
-        return (new \Pagerfanta\View\TwitterBootstrap3View())->render(
+        return (new TwitterBootstrap3View())->render(
             $paginator,
             function($page) {
                 return sprintf(
@@ -115,9 +122,11 @@ class SimpleSearchController extends AbstractSearchController
     protected function handleRequest($form, $results, $paginator)
     {
         if ($this->getSearchFormType() === self::SEARCH_FORM_TYPE && $results['count'] === 1) {
-            return $this->app->redirect(
-                $this->app->urlFor('track.track.index', [ 'guid' => $results['tracks']->current()->guid])
-            );
+            /** @var Track $track */
+            $track = reset($results['tracks']);
+            $redirectUrl = $this->app->urlFor('track.track.index', [ 'guid' => $track->getGuid() ]);
+
+            return $this->app->redirect($redirectUrl);
         }
 
         return parent::handleRequest($form, $results, $paginator);

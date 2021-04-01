@@ -6,11 +6,13 @@ use Assistant\Module\Track\Model\Track;
 
 interface NextTrackStrategy
 {
-    public function computeMix(array $matrix): array;
-
     /**
      * @param Track[] $listing
-     * @return array
+     * @return void
      */
-    public function computeMatrix(array $listing): array;
+    public function compute(array $listing): void;
+
+    public function getMix(): array;
+
+    public function getSimilarityGrid(): array;
 }

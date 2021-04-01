@@ -1,8 +1,9 @@
 <?php
 
-/* @var $app \Slim\Slim */
+/* @var $app Slim */
 
 use Assistant\Module\Dashboard\Controller;
+use Slim\Slim;
 
 $app->get(
     '/',

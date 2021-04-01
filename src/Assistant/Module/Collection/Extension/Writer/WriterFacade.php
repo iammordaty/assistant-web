@@ -3,7 +3,7 @@
 namespace Assistant\Module\Collection\Extension\Writer;
 
 use Assistant\Module\Common\Extension\Backend\Client as BackendClient;
-use Assistant\Module\Common\Model\ModelInterface;
+use Assistant\Module\Common\Model\CollectionItemInterface;
 use Assistant\Module\Directory\Model\Directory;
 use Assistant\Module\Directory\Repository\DirectoryRepository;
 use Assistant\Module\Track\Model\Track;
@@ -38,11 +38,11 @@ final class WriterFacade
     public static function factory(Container $container): WriterFacade
     {
         $directoryWriter = new DirectoryWriter(
-            new DirectoryRepository($container['db']),
+            $container[DirectoryRepository::class],
         );
 
         $trackWriter = new TrackWriter(
-            new TrackRepository($container['db']),
+            $container[TrackRepository::class],
             new BackendClient(),
         );
 
@@ -52,34 +52,17 @@ final class WriterFacade
     /**
      * Zapisuje element kolekcji
      *
-     * @param ModelInterface|Track|Directory $item
-     * @return void
+     * @param Directory|Track|CollectionItemInterface $collectionItem
+     * @return Directory|Track|CollectionItemInterface
      */
-    public function save(ModelInterface $item): void
+    public function save(CollectionItemInterface $collectionItem): CollectionItemInterface
     {
-        $itemType = self::getItemType($item);
-
-        if ($itemType === 'directory') {
-            $this->directoryWriter->save($item);
+        if ($collectionItem instanceof Directory) {
+            return $this->directoryWriter->save($collectionItem);
         }
 
-        if ($itemType === 'track') {
-            $this->trackWriter->save($item);
-        }
-    }
+        assert($collectionItem instanceof Track);
 
-    /**
-     * Zwraca typ podanego elementu kolekcji
-     *
-     * @todo Chyba bardziej właściwe byłoby, gdyby to model zwracał informację o typie via getType()
-     *
-     * @param ModelInterface|Track|Directory $item
-     * @return string
-     */
-    private static function getItemType(ModelInterface $item): string
-    {
-        $parts = explode('\\', get_class($item));
-
-        return lcfirst(array_pop($parts));
+        return $this->trackWriter->save($collectionItem);
     }
 }

@@ -12,7 +12,7 @@ use Symfony\Component\Console\Output\OutputInterface;
 /**
  * Task przenoszący gotowe (otagowane) utwory do odpowiednich katalogów
  */
-class MoverTask extends AbstractTask
+final class MoverTask extends AbstractTask
 {
     /**
      * Tablica asocjacyjna zawierająca statystyki zadania
@@ -20,6 +20,13 @@ class MoverTask extends AbstractTask
      * @var array
      */
     private array $stats;
+
+    public function isEnabled(): bool
+    {
+        // FIXME: Task wymaga dokończenia i przetestowania
+
+        return false;
+    }
 
     protected function configure(): void
     {
@@ -37,7 +44,7 @@ class MoverTask extends AbstractTask
             );
     }
 
-    protected function initialize(InputInterface $input, OutputInterface $output): int
+    protected function initialize(InputInterface $input, OutputInterface $output): void
     {
         parent::initialize($input, $output);
 
@@ -49,6 +56,7 @@ class MoverTask extends AbstractTask
      *
      * @param InputInterface $input
      * @param OutputInterface $output
+     * @return int
      */
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
@@ -76,6 +84,6 @@ class MoverTask extends AbstractTask
 
         $this->app->container[Logger::class]->info('Task finished', $this->stats);
 
-        return AbstractTask::SUCCESS;
+        return self::SUCCESS;
     }
 }

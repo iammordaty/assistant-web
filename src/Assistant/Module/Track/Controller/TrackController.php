@@ -6,16 +6,30 @@ use Assistant\Module\Common;
 use Assistant\Module\Common\Controller\AbstractController;
 use Assistant\Module\Common\Extension\PathBreadcrumbs;
 use Assistant\Module\Track\Extension\Similarity;
+use Assistant\Module\Track\Extension\Similarity\Provider\Bpm;
+use Assistant\Module\Track\Extension\Similarity\Provider\CamelotKeyCode;
+use Assistant\Module\Track\Extension\Similarity\Provider\Genre;
+use Assistant\Module\Track\Extension\Similarity\Provider\Musly;
+use Assistant\Module\Track\Extension\Similarity\Provider\Year;
 use Assistant\Module\Track\Model\Track;
 use Assistant\Module\Track\Repository\TrackRepository;
 use KeyTools\KeyTools;
+use Slim\Slim;
 
 class TrackController extends AbstractController
 {
+    private TrackRepository $trackRepository;
+
+    public function __construct(Slim $app)
+    {
+        parent::__construct($app);
+
+        $this->trackRepository = $app->container[TrackRepository::class];
+    }
+
     public function index($guid)
     {
-        /** @var Track $track */
-        $track = (new TrackRepository($this->app->container['db']))->findOneByGuid($guid);
+        $track = $this->trackRepository->getByGuid($guid);
 
         if ($track === null) {
             $this->app->redirect(
@@ -23,70 +37,84 @@ class TrackController extends AbstractController
                 404
             );
         }
-        
-        $pathBreadcrumbs = PathBreadcrumbs::factory()->get(dirname($track->getPathname()));
 
+        $pathBreadcrumbs = $this->app->container[PathBreadcrumbs::class]->get(dirname($track->getPathname()));
         $form = $this->app->request->get('similarity');
 
-        return $this->app->render(
-            '@track/index.twig',
-            [
-                'menu' => 'track',
-                'track' => $track->toArray(),
-                'keyInfo' => $this->getTrackKeyInfo($track),
-                'pathBreadcrumbs' => $pathBreadcrumbs,
-                'form' => $form,
-                'similarTracks' => $this->getSimilarTracks(
-                    $track,
-                    $this->app->container->parameters['track']['similarity'],
-                    $form
-                ),
-            ]
-        );
+        return $this->app->render('@track/index.twig', [
+            'menu' => 'track',
+            'track' => $track,
+            'keyInfo' => $this->getTrackKeyInfo($track),
+            'pathBreadcrumbs' => $pathBreadcrumbs,
+            'form' => $form,
+            'similarTracksList' => $this->getSimilarTracks(
+                $track,
+                $this->app->container['parameters']['track']['similarity'],
+                $form
+            ),
+        ]);
     }
 
     /**
      * Zwraca utwory podobne do podanego utworu
      *
      * @param Track $baseTrack
-     * @param array $baseParameters
-     * @param array|null $customParameters
+     * @param array $similarityParameters
+     * @param array|null $customSimilarityParameters
      * @return array
      */
-    private function getSimilarTracks(Track $baseTrack, array $baseParameters, ?array $customParameters)
-    {
+    private function getSimilarTracks(
+        Track $baseTrack,
+        array $similarityParameters,
+        ?array $customSimilarityParameters
+    ): array {
         $track = $baseTrack;
-        $parameters = $baseParameters;
+        $parameters = $similarityParameters;
 
-        if (!empty($customParameters['track'])) {
-            $track = $track->set($customParameters['track']);
+        $customTrackParams = $customSimilarityParameters['track'] ?? null;
+
+        if ($customTrackParams) {
+            if (isset($customTrackParams['year'])) {
+                $track = $track->withYear($customTrackParams['year']);
+            }
+
+            if (isset($customTrackParams['genre'])) {
+                $track = $track->withGenre($customTrackParams['genre']);
+            }
+
+            if (isset($customTrackParams['bpm'])) {
+                $track = $track->withBpm($customTrackParams['bpm']);
+            }
+
+            if (isset($customTrackParams['initial_key'])) {
+                $track = $track->withInitialKey($customTrackParams['initial_key']);
+            }
         }
 
-        if (!empty($customParameters['providers']['names'])) {
+        $customProviders = $customSimilarityParameters['providers']['names'] ?? null;
+
+        if ($customProviders) {
             // TODO: Do poprawienia: Dane formularza, takie jak nazwy powinny pochodzić z PHP-a,
             //       co rozwiązuje problem mapowania nazw, wygody i zdublowanego kodu (np. nazw providerów).
 
             $nameToClassname = [
-                'musly' => \Assistant\Module\Track\Extension\Similarity\Provider\Musly::class,
-                'bpm' => \Assistant\Module\Track\Extension\Similarity\Provider\Bpm::class,
-                'year' => \Assistant\Module\Track\Extension\Similarity\Provider\Year::class,
-                'genre' => \Assistant\Module\Track\Extension\Similarity\Provider\Genre::class,
-                'camelotKeyCode' => \Assistant\Module\Track\Extension\Similarity\Provider\CamelotKeyCode::class,
+                'musly' => Musly::class,
+                'bpm' => Bpm::class,
+                'year' => Year::class,
+                'genre' => Genre::class,
+                'camelotKeyCode' => CamelotKeyCode::class,
             ];
 
             $enabledProviders = array_filter(
                 $nameToClassname,
-                fn($providerName) => in_array($providerName, $customParameters['providers']['names'], true),
+                static fn($providerName) => in_array($providerName, $customSimilarityParameters['providers']['names'], true),
                 ARRAY_FILTER_USE_KEY
             );
 
             $parameters['providers']['enabled'] = array_values($enabledProviders);
         }
 
-        $similarity = new Similarity(
-            new TrackRepository($this->app->container['db']),
-            $parameters
-        );
+        $similarity = new Similarity($this->trackRepository, $parameters);
 
         return $similarity->getSimilarTracks($track);
     }
@@ -94,25 +122,27 @@ class TrackController extends AbstractController
     /**
      * Zwraca klucze podobne do klucza podanego utworu
      *
+     * @todo Przenieść do zewnętrznej klasy powiązanej z widokiem
+     *
      * @param Track $track
      * @return array|null
      */
-    private function getTrackKeyInfo(Track $track)
+    private function getTrackKeyInfo(Track $track): ?array
     {
         $keyTools = KeyTools::fromNotation(KeyTools::NOTATION_CAMELOT_KEY);
 
-        if (!$keyTools->isValidKey($track->initial_key)) {
+        $initialKey = $track->getInitialKey();
+
+        if (!$keyTools->isValidKey($initialKey)) {
             return null;
         }
 
-        $implode = function ($lines) {
-            return implode('<br  />', $lines);
-        };
+        $implode = static fn($lines) => implode('<br  />', $lines);
 
         return [
             'relativeMinorToMajor' => [
-                'title' => sprintf('To %s', $keyTools->isMinorKey($track->initial_key) ? 'major' : 'minor'),
-                'value' => $keyTools->relativeMinorToMajor($track->initial_key),
+                'title' => sprintf('To %s', $keyTools->isMinorKey($initialKey) ? 'major' : 'minor'),
+                'value' => $keyTools->relativeMinorToMajor($initialKey),
                 'description' => $implode([
                     'This combination will likely sound good because the notes of both scales are the same,',
                     'but the root note is different. The energy of the room will change dramatically.',
@@ -120,7 +150,7 @@ class TrackController extends AbstractController
             ],
             'perfectFourth' => [
                 'title' => 'Perfect fourth',
-                'value' => $keyTools->perfectFourth($track->initial_key),
+                'value' => $keyTools->perfectFourth($initialKey),
                 'description' => $implode([
                     'I like to say this type of mix will take the crowd deeper.',
                     'It won\'t raise the energy necessarily but will give your listeners goosebumps!',
@@ -128,12 +158,12 @@ class TrackController extends AbstractController
             ],
             'perfectFifth' => [
                 'title' => 'Perfect fifth',
-                'value' => $keyTools->perfectFifth($track->initial_key),
+                'value' => $keyTools->perfectFifth($initialKey),
                 'description' => 'This will raise the energy in the room.',
             ],
             'minorThird' => [
                 'title' => 'Minor third',
-                'value' => $keyTools->minorThird($track->initial_key),
+                'value' => $keyTools->minorThird($initialKey),
                 'description' => $implode([
                     'While these scales have 3 notes that are different,',
                     'I\'ve found that they still sound good played together',
@@ -142,7 +172,7 @@ class TrackController extends AbstractController
             ],
             'halfStep' => [
                 'title' => 'Half step',
-                'value' => $keyTools->halfStep($track->initial_key),
+                'value' => $keyTools->halfStep($initialKey),
                 'description' => $implode([
                     'While these two scales have almost no notes in common,',
                     'musically they shouldn’t sound good together but I\'ve found if you plan it right',
@@ -153,7 +183,7 @@ class TrackController extends AbstractController
             ],
             'wholeStep' => [
                 'title' => 'Whole step',
-                'value' => $keyTools->wholeStep($track->initial_key),
+                'value' => $keyTools->wholeStep($initialKey),
                 'description' => $implode([
                     'This will raise the energy of the room. I like to call it "hands in the air" mixing,',
                     'and others might call it "Energy Boost mixing".',
@@ -161,7 +191,7 @@ class TrackController extends AbstractController
             ],
             'dominantRelative' => [
                 'title' => 'Dominant relative',
-                'value' => $keyTools->dominantRelative($track->initial_key),
+                'value' => $keyTools->dominantRelative($initialKey),
                 'description' => $implode([
                     'I\'ve found this is the best way to go from Major to Minor keys',
                     'and from Minor to Major because the scales only have one note difference',

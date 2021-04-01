@@ -2,12 +2,12 @@
 
 namespace Assistant\Module\Collection\Extension\Validator;
 
-use Assistant\Module\Common\Model\ModelInterface;
+use Assistant\Module\Common\Model\CollectionItemInterface;
 
 /**
  * Interfejs dla walidatorów
  */
 interface ValidatorInterface
 {
-    public function validate(ModelInterface $track): void;
+    public function validate(CollectionItemInterface $collectionItem): void;
 }

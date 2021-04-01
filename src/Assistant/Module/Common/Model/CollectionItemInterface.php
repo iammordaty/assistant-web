@@ -2,7 +2,7 @@
 
 namespace Assistant\Module\Common\Model;
 
-interface ModelInterface
+interface CollectionItemInterface
 {
 
 }

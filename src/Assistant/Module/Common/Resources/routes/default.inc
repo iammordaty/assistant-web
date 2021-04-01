@@ -1,9 +1,10 @@
 <?php
 
-/* @var $app \Slim\Slim */
+/* @var $app Slim */
 
 use Assistant\Module\Common;
 use Assistant\Module\Common\Controller\LogController;
+use Slim\Slim;
 
 $app->group('/common', function () use ($app) {
     $app->post(

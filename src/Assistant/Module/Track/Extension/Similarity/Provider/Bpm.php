@@ -40,10 +40,10 @@ class Bpm extends AbstractProvider
      */
     public function getSimilarityValue(Track $baseTrack, Track $comparedTrack): int
     {
-        $distance = (int) round(abs($baseTrack->bpm - $comparedTrack->bpm));
+        $distance = (int) round(abs($baseTrack->getBpm() - $comparedTrack->getBpm()));
         $similarity = $this->similarityMap[$distance] ?? 0;
 
-        // echo $baseTrack->bpm, ' vs. ', $comparedTrack->bpm, ' = ', $similarity, " ($distance)", PHP_EOL;
+        // echo $baseTrack->getBpm(), ' vs. ', $comparedTrack->getBpm(), ' = ', $similarity, " ($distance)", PHP_EOL;
 
         return $similarity;
     }
@@ -55,8 +55,8 @@ class Bpm extends AbstractProvider
     {
         return [
             '$in' => range(
-                round($baseTrack->bpm) - $this->parameters['tolerance'],
-                round($baseTrack->bpm) + $this->parameters['tolerance']
+                round($baseTrack->getBpm()) - $this->parameters['tolerance'],
+                round($baseTrack->getBpm()) + $this->parameters['tolerance']
             )
         ];
     }

@@ -5,10 +5,9 @@ namespace Assistant\Module\Collection\Extension\Validator;
 use Assistant\Module\Collection\Extension\Validator\Exception\DuplicatedElementException;
 use Assistant\Module\Collection\Extension\Validator\Exception\EmptyMetadataException;
 use Assistant\Module\Common\Extension\GetId3\Adapter as Id3Adapter;
-use Assistant\Module\Common\Model\ModelInterface;
+use Assistant\Module\Common\Model\CollectionItemInterface;
 use Assistant\Module\Track\Model\Track;
 use Assistant\Module\Track\Repository\TrackRepository;
-use SplFileInfo;
 
 /**
  * Walidator elementów będących plikami
@@ -28,18 +27,21 @@ class TrackValidator implements ValidatorInterface
     /**
      * Weryfikuje czy plik (utwór muzyczny) może zostać dodany do bazy danych kolekcji
      *
-     * @param Track|ModelInterface $track
+     * @param CollectionItemInterface $collectionItem
      * @return void
      */
-    public function validate(ModelInterface $track): void
+    public function validate(CollectionItemInterface $collectionItem): void
     {
+        /** @var Track $track */
+        $track = $collectionItem;
+
         /* @var $indexedTrack Track */
-        $indexedTrack = $this->repository->findOneBy([ 'pathname' => $track->getPathname() ]);
+        $indexedTrack = $this->repository->getByPathname($track);
 
         if ($indexedTrack !== null && $track->getMetadataMd5() === $indexedTrack->getMetadataMd5()) {
-            throw new DuplicatedElementException(
-                sprintf('Track "%s" is already in database.', $track->getGuid())
-            );
+            $message = sprintf('Track "%s" is already in database.', $track->getGuid());
+
+            throw new DuplicatedElementException($message);
         }
 
         $metadata = $this->id3Adapter

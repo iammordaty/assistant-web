@@ -43,7 +43,7 @@ class Musly extends AbstractProvider
             }
         }
 
-        return $this->similarTracks[$comparedTrack->pathname] ?? 0;
+        return $this->similarTracks[$comparedTrack->getPathname()] ?? 0;
     }
 
     /**

@@ -10,12 +10,12 @@ use Assistant\Module\Collection\Extension\Validator\ValidatorFacade;
 use Assistant\Module\Collection\Extension\Writer\WriterFacade;
 use Assistant\Module\Common\Extension\Backend\Exception\Exception as BackendException;
 use Assistant\Module\Common\Task\AbstractTask;
-use Exception;
 use Monolog\Logger;
 use SplFileInfo;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
+use Throwable;
 
 /**
  * Task indeksujący utwory oraz katalogi znajdujące się w kolekcji
@@ -97,7 +97,7 @@ final class IndexerTask extends AbstractTask
             } catch (EmptyMetadataException $e) {
                 $this->stats['empty_metadata']++;
 
-                $this->app->container[Logger::class]->warn('Track does not contains metadata');
+                $this->app->container[Logger::class]->warning('Track does not contains metadata');
             } catch (DuplicatedElementException $e) {
                 $this->stats['duplicated']++;
 
@@ -105,14 +105,23 @@ final class IndexerTask extends AbstractTask
             } catch (BackendException $e) {
                 $this->stats['error']++;
 
+                /** @uses Track::toDto() */
+                /** @uses Directory::toDto() */
                 $this->app->container[Logger::class]->error(
                     $e->getMessage(),
-                    [ 'element' => isset($element) ? $element->toArray() : null ]
+                    [ 'element' => isset($element) ? $element->toDto() : null ]
                 );
-            } catch (Exception $e) {
+            } catch (Throwable $e) {
                 $this->stats['error']++;
 
-                $this->app->container[Logger::class]->error($e->getMessage());
+                /** @uses Track::toDto() */
+                /** @uses Directory::toDto() */
+                $this->app->container[Logger::class]->critical($e->getMessage(), [
+                    'element' => isset($element) ? $element->toDto() : null,
+                    'stacktrace' => debug_backtrace(),
+                ]);
+
+                return self::FAILURE;
             } finally {
                 unset($node, $element);
             }

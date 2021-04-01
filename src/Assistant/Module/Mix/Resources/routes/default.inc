@@ -1,8 +1,9 @@
 <?php
 
-/* @var $app \Slim\Slim */
+/* @var $app Slim */
 
 use Assistant\Module\Mix;
+use Slim\Slim;
 
 $app->group('/mix', function () use ($app) {
 

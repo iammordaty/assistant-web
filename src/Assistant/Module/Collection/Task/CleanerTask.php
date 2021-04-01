@@ -3,7 +3,6 @@
 namespace Assistant\Module\Collection\Task;
 
 use Assistant\Module\Common\Task\AbstractTask;
-use Assistant\Module\Common\Repository\AbstractObjectRepository;
 use Assistant\Module\Directory\Model\Directory;
 use Assistant\Module\Directory\Repository\DirectoryRepository;
 use Assistant\Module\Track\Model\Track;
@@ -45,8 +44,8 @@ final class CleanerTask extends AbstractTask
     {
         parent::initialize($input, $output);
 
-        $this->directoryRepository = new DirectoryRepository($this->app->container['db']);
-        $this->trackRepository = new TrackRepository($this->app->container['db']);
+        $this->directoryRepository = $this->app->container[DirectoryRepository::class];
+        $this->trackRepository = $this->app->container[TrackRepository::class];
 
         $this->stats = [
             'removed' => [ 'file' => 0, 'dir' => 0 ],
@@ -89,19 +88,21 @@ final class CleanerTask extends AbstractTask
     /**
      * Usuwa nieistniejące elementy z kolekcji
      *
-     * @param AbstractObjectRepository $repository
+     * @param DirectoryRepository|TrackRepository $repository
      * @param array $conditions
      * @param bool $force
      * @return int
      */
-    private function remove(AbstractObjectRepository $repository, array $conditions, bool $force): int
+    private function remove($repository, array $conditions, bool $force): int
     {
         $removed = 0;
 
         /** @var Directory|Track $element */
         foreach ($repository->findBy($conditions) as $element) {
-            if ($force === true || file_exists($element->pathname) === false) {
-                $repository->remove($element);
+            /** @uses Track::getPathname() */
+            /** @uses Directory::getPathname() */
+            if ($force === true || file_exists($element->getPathname()) === false) {
+                $repository->delete($element);
 
                 $removed++;
             }

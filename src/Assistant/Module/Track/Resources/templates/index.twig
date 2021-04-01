@@ -2,6 +2,8 @@
 
 {% block title %}{{ track.artist }} - {{ track.title }}{% endblock %}
 
+{# TODO: Porozbijać ten szablon na części, bo nie da się tego czytać #}
+
 {% block contentBlock %}
     <div id="wave-progress" class="text-center"><i class="fa fa-cog fa-spin fa-5x"></i></div>
     <div id="wave-container" data-track-url="{{ urlFor('track.contents.get', { guid: track.guid }) }}">
@@ -77,7 +79,7 @@
 
                 <div class="row">
                     <span class="col-xs-4 col-sm-3 col-md-2 text-right"><strong>Tonacja</strong></span>
-                    <span class="col-xs-8 col-sm-9 col-md-10"><a href="{{ urlFor('search.advanced.index') }}?initial_key={{ track.initial_key }}" class="undecorated">{{ track.initial_key }}</a></span>
+                    <span class="col-xs-8 col-sm-9 col-md-10"><a href="{{ urlFor('search.advanced.index') }}?initial_key={{ track.initialKey }}" class="undecorated">{{ track.initialKey }}</a></span>
                 </div>
 
                 <div class="row">
@@ -102,7 +104,7 @@
                 <div class="col-xs-12 col-sm-4 col-md-3">
                     <div class="panel panel-info ">
                         <div class="panel-heading">
-                            <a href="{{ urlFor('search.advanced.index') }}?initial_key={{ track.initial_key }}" class="undecorated">{{ track.initial_key }}</a> - informacje
+                            <a href="{{ urlFor('search.advanced.index') }}?initial_key={{ track.initialKey }}" class="undecorated">{{ track.initialKey }}</a> - informacje
                         </div>
                         <div class="panel-body">
                            {% for info, data in keyInfo %}
@@ -202,8 +204,8 @@
                                     {% if not form or 'camelotKeyCode' in form.providers.names|default %} checked="checked" {% endif %}> Tonacja
                         </label>
                         <div class="additional-info {% if form and 'camelotKeyCode' not in form.providers.names|default %} hide {% endif %}">
-                              <input type="text" name="similarity[track][initial_key]" value="{{ form.track.initial_key|default(track.initial_key) }}"
-                                     class="form-control input-sm" placeholder="{{ track.initial_key }}">
+                              <input type="text" name="similarity[track][initial_key]" value="{{ form.track.initial_key|default(track.initialKey) }}"
+                                     class="form-control input-sm" placeholder="{{ track.initialKey }}">
                         </div>
                     </span>
                 </div>
@@ -213,7 +215,9 @@
             </div>
         </form>
 
-       {% if similarTracks %}
+       {% if similarTracksList %}
+           {% set softLimit = 50 %}
+
             <div class="table-responsive">
                 <table class="table table-hover">
                     <thead>
@@ -228,40 +232,46 @@
                         </tr>
                     </thead>
                     <tbody>
-                       {% for similarTrack in similarTracks %}
-                            <tr class="{% if loop.index >= 50 %}hide{% endif %}">
+                       {% for similarTracks in similarTracksList %}
+                            {% set similarTrack = similarTracks.secondTrack %}
+                            {% set similarityValue = similarTracks.similarityValue %}
+
+                            <tr class="{% if loop.index >= softLimit %}hide{% endif %}">
                                 <td class="col-xs-5">
                                     <span class="ellipsis track-name">
-                                       {% set name = similarTrack.track.artist ~ ' - ' ~ similarTrack.track.title %}
-                                       <a href="{{ urlFor('track.track.index', { guid: similarTrack.track.guid } )}}" title="{{ name }}">{{ name }}</a>
+                                       {% set name = similarTrack.artist ~ ' - ' ~ similarTrack.title %}
+                                       <a href="{{ urlFor('track.track.index', { guid: similarTrack.guid } )}}" title="{{ name }}">{{ name }}</a>
                                     </span>
                                 </td>
                                 <td class="col-xs-2">
-                                    <a class="undecorated" href="{{ urlFor('search.advanced.index') }}?genre={{ similarTrack.track.genre }}">{{ similarTrack.track.genre }}</a>
+                                    <a class="undecorated" href="{{ urlFor('search.advanced.index') }}?genre={{ similarTrack.genre }}">{{ similarTrack.genre }}</a>
                                 </td>
                                 <td class="col-xs-1">
-                                   {{ similarTrack.track.length|format_duration }}
+                                   {{ similarTrack.length|format_duration }}
                                 </td>
                                 <td class="col-xs-1">
-                                    <a class="undecorated" href="{{ urlFor('search.advanced.index') }}?year={{ similarTrack.track.year }}">{{ similarTrack.track.year }}</a>
+                                    <a class="undecorated" href="{{ urlFor('search.advanced.index') }}?year={{ similarTrack.year }}">{{ similarTrack.year }}</a>
                                 </td>
                                 <td class="col-xs-1">
-                                    <a class="undecorated" href="{{ urlFor('search.advanced.index') }}?initial_key={{ similarTrack.track.initial_key }}">{{ similarTrack.track.initial_key }}</a>
+                                    <a class="undecorated" href="{{ urlFor('search.advanced.index') }}?initial_key={{ similarTrack.initialKey }}">{{ similarTrack.initialKey }}</a>
                                 </td>
                                 <td class="col-xs-1">
-                                    <a class="undecorated" href="{{ urlFor('search.advanced.index') }}?bpm={{ similarTrack.track.bpm }}">{{ similarTrack.track.bpm }}</a>
+                                    <a class="undecorated" href="{{ urlFor('search.advanced.index') }}?bpm={{ similarTrack.bpm }}">{{ similarTrack.bpm }}</a>
                                 </td>
                                 <td class="col-xs-1">
-                                   {{ similarTrack.value }}%
+                                   {{ similarityValue }}%
                                 </td>
                             </tr>
                        {% endfor %}
                     </tbody>
                 </table>
             </div>
-            <div class="text-center">
-                <button type="button" class="btn btn-default" data-role="similar-tracks:show-more">Pokaż więcej</button>
-            </div>
+
+            {% if similarTracks|length > softLimit %}
+                <div class="text-center">
+                    <button type="button" class="btn btn-default" data-role="similar-tracks:show-more">Pokaż więcej</button>
+                </div>
+            {% endif %}
        {% else %}
             <p class="lead text-center text-muted">Nie znaleziono podobnych utworów</p>
        {% endif %}

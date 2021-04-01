@@ -15,17 +15,10 @@ use Symfony\Component\Console\Output\OutputInterface;
 class ReindexerTask extends AbstractTask
 {
     /**
-     * @var array
-     */
-    private $parameters;
-
-    /**
      * {@inheritDoc}
      */
     protected function configure()
     {
-        $this->parameters = $this->app->container->parameters['collection'];
-
         $this
             ->setName('collection:reindex')
             ->setDescription(
@@ -35,19 +28,25 @@ class ReindexerTask extends AbstractTask
 
     /**
      * Rozpoczyna proces reindeksowania kolekcji
+     *
+     * @param InputInterface $input
+     * @param OutputInterface $output
+     * @return int
+     *
+     * @throws \Exception
      */
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $this->app->container[Logger::class]->info('Task executed');
 
-        $this->app->container[Logger::class]->info('Executing \"collection:clean -f\"');
+        $this->app->container[Logger::class]->info('Executing "collection:clean -f"');
 
         (new CleanerTask($this->app))->run(
             new ArrayInput([ '--force' => true ]),
             $output
         );
 
-        $this->app->container[Logger::class]->info('Executing \"collection:index"');
+        $this->app->container[Logger::class]->info('Executing "collection:index"');
 
         (new IndexerTask($this->app))->run(
             new ArrayInput([ ]),

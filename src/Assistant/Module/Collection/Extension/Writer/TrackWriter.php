@@ -3,6 +3,7 @@
 namespace Assistant\Module\Collection\Extension\Writer;
 
 use Assistant\Module\Common\Extension\Backend\Client as BackendClient;
+use Assistant\Module\Common\Model\CollectionItemInterface;
 use Assistant\Module\Track\Model\Track;
 use Assistant\Module\Track\Repository\TrackRepository;
 use MongoDB\BSON\Regex;
@@ -31,30 +32,35 @@ class TrackWriter implements WriterInterface
     /**
      * Zapisuje utwór muzyczny w bazie danych
      *
-     * @param Track $track
+     * @param Track|CollectionItemInterface $collectionItem
      * @return Track
      */
-    public function save($track)
+    public function save(CollectionItemInterface $collectionItem): Track
     {
         /* @var $indexedTrack Track */
-        $indexedTrack = $this->repository->findOneBy([ 'pathname' => $track->getPathname() ]);
+        $indexedTrack = $this->repository->getByPathname($collectionItem);
+
+        // może odtąd* powinno zostać przeniesione do serwisu lub repo?
 
         if ($indexedTrack === null) {
-            $track->setGuid($this->getUniqueGuid($track));
+            $collectionItem = $collectionItem->withGuid($this->getUniqueGuid($collectionItem));
 
-            $result = $this->repository->insert($track);
-
-            if ($result->getInsertedCount() === 1) {
-                $this->backendClient->addToSimilarCollection($track);
-            }
+            $result = $this->repository->save($collectionItem);
         } else {
-            $track->setId($indexedTrack->getId());
-            $track->setModifiedDate($indexedTrack->getModifiedDate());
+            $collectionItem = $collectionItem
+                ->withId($indexedTrack->getId())
+                ->withModifiedDate($indexedTrack->getModifiedDate());
 
-            $this->repository->update($track);
+            $result = $this->repository->save($collectionItem);
         }
 
-        return $track;
+        // -- *dotąd
+
+        if (!$indexedTrack && $result) {
+            $this->backendClient->addToSimilarCollection($collectionItem);
+        }
+
+        return $collectionItem;
     }
 
     /**

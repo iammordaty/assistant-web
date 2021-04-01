@@ -3,49 +3,66 @@
 namespace Assistant\Module\Collection\Extension\Reader;
 
 use Assistant\Module\Common\Extension\GetId3\Adapter as Id3Adapter;
+use Assistant\Module\Common\Extension\SlugifyService;
 use Assistant\Module\File\Extension\Parser as MetadataParser;
 use Assistant\Module\Track\Model\Track;
-use MongoDB\BSON\UTCDateTime;
 use SplFileInfo;
 
 /**
- * Klasa, której zadaniem jest przetwarzanie plików (utworów muzycznych) znajdujących się w kolekcji
+ * Klasa, której zadaniem jest odczytywanie plików (utworów muzycznych) znajdujących się w kolekcji
  */
-final class FileReader extends AbstractReader
+final class FileReader implements ReaderInterface
 {
     private Id3Adapter $id3Adapter;
 
     private MetadataParser $metadataParser;
 
-    public function __construct(Id3Adapter $id3Adapter, MetadataParser $metadataParser)
-    {
-        parent::__construct();
+    private SlugifyService $slugify;
 
+    public function __construct(Id3Adapter $id3Adapter, MetadataParser $metadataParser, SlugifyService $slugify)
+    {
         $this->id3Adapter = $id3Adapter;
         $this->metadataParser = $metadataParser;
+        $this->slugify = $slugify;
     }
 
-    /**
-     * {@inheritDoc}
-     *
-     * @return Track
-     */
-    public function read(SplFileInfo $node)
+    public function read(SplFileInfo $node): Track
     {
         $metadata = $this->id3Adapter
             ->setFile($node)
             ->readId3v2Metadata();
 
-        $data = array_merge($metadata, $this->metadataParser->parse($metadata));
+        $parsedMetadata = $this->metadataParser->parse($metadata);
 
-        $track = new Track($data);
-        $track->guid = $this->getGuid($node, $metadata);
-        $track->length = $this->id3Adapter->getTrackLength();
-        $track->metadata_md5 = md5(json_encode($data));
-        $track->parent = $this->slugifyPath(dirname($node->getPathname()));
-        $track->pathname = $node->getPathname();
-        $track->modified_date = new UTCDateTime($node->getMTime() * 1000);
-        $track->indexed_date = new UTCDateTime();
+        $modifiedTimestamp = (new \DateTime())->setTimestamp($node->getMTime());
+        $indexedTimestamp = new \DateTime();
+
+        // jeśli poszczególne pola w tablicy metadata okażą się puste (np. w widoku przeglądania oczekujących)
+        // tymczasowo ustawiać fallback w postaci null-i, pustych stringów, itp
+        // i zastanowić się jak to rozwiązać docelowo. poprzez nowy model (np. IncomingTrack?), który zezwala na
+        // puste wartości? może jakoś inaczej?
+
+        $track = new Track(
+            null,
+            $this->getGuid($node, $metadata),
+            $metadata['artist'],
+            $parsedMetadata['artists'],
+            $metadata['title'],
+            $metadata['album'] ?? null,
+            $metadata['track_number'] ?? null,
+            $metadata['year'],
+            $metadata['genre'],
+            $metadata['publisher'] ?? null,
+            $metadata['bpm'],
+            $metadata['initial_key'],
+            $this->id3Adapter->getTrackLength(),
+            [],
+            md5(json_encode($metadata)),
+            $node->getPath(),
+            $node->getPathname(),
+            $modifiedTimestamp,
+            $indexedTimestamp,
+        );
 
         return $track;
     }

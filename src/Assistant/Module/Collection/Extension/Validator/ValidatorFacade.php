@@ -3,7 +3,7 @@
 namespace Assistant\Module\Collection\Extension\Validator;
 
 use Assistant\Module\Common\Extension\GetId3\Adapter as Id3Adapter;
-use Assistant\Module\Common\Model\ModelInterface;
+use Assistant\Module\Common\Model\CollectionItemInterface;
 use Assistant\Module\Directory\Model\Directory;
 use Assistant\Module\Directory\Repository\DirectoryRepository;
 use Assistant\Module\Track\Model\Track;
@@ -16,14 +16,14 @@ use Slim\Helper\Set as Container;
 final class ValidatorFacade
 {
     /**
-     * Obiekt walidatora katalogów
+     * Obiekt klasy walidującej katalogi
      *
      * @var DirectoryValidator
      */
     private DirectoryValidator $directoryValidator;
 
     /**
-     * Obiekt walidatora plików (utworów muzycznych)
+     * Obiekt klasy walidujący pliki (utwory muzyczne)
      *
      * @var TrackValidator
      */
@@ -38,11 +38,11 @@ final class ValidatorFacade
     public static function factory(Container $container): ValidatorFacade
     {
         $directoryValidator = new DirectoryValidator(
-            new DirectoryRepository($container['db'])
+            $container[DirectoryRepository::class]
         );
 
         $trackValidator = new TrackValidator(
-            new TrackRepository($container['db']),
+            $container[TrackRepository::class],
             new Id3Adapter()
         );
 
@@ -50,18 +50,16 @@ final class ValidatorFacade
     }
 
     /**
-     * @param ModelInterface|Track|Directory $node
+     * @param CollectionItemInterface|Track|Directory $node
      * @return void
      */
-    public function validate(ModelInterface $node): void
+    public function validate(CollectionItemInterface $node): void
     {
-        $nodeClassname = get_class($node);
-
-        if ($nodeClassname === Directory::class) {
+        if ($node instanceof Directory) {
             $this->directoryValidator->validate($node);
         }
 
-        if ($nodeClassname === Track::class) {
+        if ($node instanceof Track) {
             $this->trackValidator->validate($node);
         }
     }

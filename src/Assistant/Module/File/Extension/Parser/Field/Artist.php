@@ -4,36 +4,30 @@ namespace Assistant\Module\File\Extension\Parser\Field;
 
 use Assistant\Module\File\Extension\Parser\Field as BaseField;
 
-class Artist extends BaseField
+final class Artist extends BaseField
 {
     /**
      * Lista wyjątków, które nie są rozdzielane
      *
      * @var array
      */
-    private $exceptions = [ ];
+    private $exceptions = [];
 
-    /**
-     * {@inheritDoc}
-     */
-    public function parse($artist)
+    public function parse(string $value): array
     {
-        if (in_array($artist, $this->parameters['exceptions'])) {
-            return [ $artist ];
+        if (in_array($value, $this->parameters['exceptions'])) {
+            return [ $value ];
         }
 
         $artists = $this->explode(
             $this->parameters['delimiters'],
-            str_replace($this->parameters['exceptions'], $this->exception['placeholders'], $artist)
+            str_replace($this->parameters['exceptions'], $this->exceptions['placeholders'], $value)
         );
 
-        return str_replace($this->exception['placeholders'], $this->parameters['exceptions'], $artists);
+        return str_replace($this->exceptions['placeholders'], $this->parameters['exceptions'], $artists);
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    protected function setup()
+    protected function setup(): void
     {
         $this->exceptions = [
             'values' => $this->parameters['exceptions'],
@@ -41,14 +35,11 @@ class Artist extends BaseField
         ];
 
         foreach ($this->parameters['exceptions'] as $exception) {
-            $this->exception['placeholders'][] = str_replace(' ', '-', $exception);
+            $this->exceptions['placeholders'][] = str_replace(' ', '-', $exception);
         }
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    private function explode($delimiters, $artist)
+    private function explode($delimiters, $artist): array
     {
         $artists = explode(
             $delimiters[0],

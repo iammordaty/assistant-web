@@ -4,16 +4,8 @@ namespace Assistant\Module\File\Extension\Parser;
 
 abstract class Field
 {
-    /**
-     * @var array
-     */
-    protected $parameters;
+    protected array $parameters;
 
-    /**
-     * Konstruktor
-     *
-     * @param array|null $parameters
-     */
     public function __construct(array $parameters = null)
     {
         if ($parameters !== null) {
@@ -27,12 +19,12 @@ abstract class Field
      * Parsuje wartość tagu
      *
      * @param string $value
-     * @return string|integer|array
+     * @return string|int|array
      */
-    abstract public function parse($value);
+    abstract public function parse(string $value);
 
     /**
      * Przygotowuje parser do użycia
      */
-    abstract protected function setup();
+    abstract protected function setup(): void;
 }

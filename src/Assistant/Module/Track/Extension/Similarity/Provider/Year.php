@@ -40,14 +40,14 @@ class Year extends AbstractProvider
      */
     public function getSimilarityValue(Track $baseTrack, Track $comparedTrack): int
     {
-        if ($comparedTrack->year === $baseTrack->year) {
+        if ($comparedTrack->getYear() === $baseTrack->getYear()) {
             return static::MAX_SIMILARITY_VALUE;
         }
 
-        $distance = abs($baseTrack->year - $comparedTrack->year);
+        $distance = abs($baseTrack->getYear() - $comparedTrack->getYear());
         $similarity = $this->similarityMap[$distance] ?? 0;
 
-        // echo $baseTrack->year, ' vs. ', $comparedTrack->year, ' = ', $similarity, " ($distance)", PHP_EOL;
+        // echo $baseTrack->$this->getYear(), ' vs. ', $comparedTrack->$this->getYear(), ' = ', $similarity, " ($distance)", PHP_EOL;
 
         return $similarity;
     }
@@ -58,8 +58,8 @@ class Year extends AbstractProvider
     public function getCriteria(Track $baseTrack): array
     {
         $range = range(
-            $baseTrack->year - $this->parameters['tolerance'],
-            $baseTrack->year + $this->parameters['tolerance']
+            $baseTrack->getYear() - $this->parameters['tolerance'],
+            $baseTrack->getYear() + $this->parameters['tolerance']
         );
 
         $currentYear = (new \DateTime())->format('Y');

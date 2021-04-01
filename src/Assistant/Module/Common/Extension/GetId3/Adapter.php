@@ -135,6 +135,7 @@ class Adapter
      * @param array $metadata
      * @param bool $overwrite
      * @return bool
+     *
      * @throws WriterException
      */
     public function writeId3v2Metadata(array $metadata, $overwrite = false): bool

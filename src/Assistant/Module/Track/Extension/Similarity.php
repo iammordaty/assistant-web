@@ -8,6 +8,7 @@ use Assistant\Module\Track\Extension\Similarity\Provider\Genre;
 use Assistant\Module\Track\Extension\Similarity\Provider\Musly;
 use Assistant\Module\Track\Extension\Similarity\Provider\ProviderInterface;
 use Assistant\Module\Track\Extension\Similarity\Provider\Year;
+use Assistant\Module\Track\Extension\SimilarTracksVO as SimilarTrack;
 use Assistant\Module\Track\Model\Track;
 use Assistant\Module\Track\Repository\TrackRepository;
 
@@ -50,7 +51,7 @@ class Similarity
      * Liczba dostępnych dostawców
      *
      * @see $providers
-     * @var integer
+     * @var int
      */
     private $providersCount;
 
@@ -86,29 +87,36 @@ class Similarity
     {
         $criteria = $this->getSimilarityCriteria($baseTrack);
 
+        // @fixme Przerzucić do repozytorium jako wyspecjalizowana metoda. Do przemyślenia jak to będzie najlepiej.
+
         $similarTracks = $this->repository->findBy($criteria);
 
         // @todo: być może foreach będzie bardziej czytelny niż map, slice i filter
 
         $similarTracks = array_map(
-            fn($similarTrack) => [
-                'track' => $similarTrack,
-                'value' => $this->getSimilarityValue($baseTrack, $similarTrack),
-            ],
+            fn(Track $similarTrack) => new SimilarTrack(
+                $baseTrack,
+                $similarTrack,
+                $this->getSimilarityValue($baseTrack, $similarTrack)
+            ),
             iterator_to_array($similarTracks)
         );
 
-        // odrzuć wartości poniżej progu i/lub odrzuć nadmiarowe
+        // odrzuć wartości poniżej progu
 
-        [ 'limit' => $limit ] = $this->parameters;
+        $similarityValueLimit = $this->parameters['limit']['value'];
 
-        $result = array_slice(
-            array_filter($similarTracks, fn($similar) => $similar['value'] > $limit['value']),
-            0,
-            $limit['tracks']
+        $similarTracks = array_filter(
+            $similarTracks,
+            static fn(SimilarTrack $similarTrack) => $similarTrack->getSimilarityValue() > $similarityValueLimit
         );
 
-        return $this->sort($result);
+        //  odrzuć nadmiarowe
+
+        $tracksLimit = $this->parameters['limit']['tracks'];
+        $similarTracks = array_slice($similarTracks, 0, $tracksLimit);
+
+        return $this->sort($similarTracks);
     }
 
     /**
@@ -129,9 +137,7 @@ class Similarity
             $similarity += ($providerSimilarity * $providerWeight);
         }
 
-        return round(
-            ($similarity / $this->providersCount * 100) / $this->maxSimilarityValue
-        );
+        return round(($similarity / $this->providersCount * 100) / $this->maxSimilarityValue);
     }
 
     /**
@@ -197,7 +203,7 @@ class Similarity
     private function getSimilarityCriteria(Track $baseTrack): array
     {
         $criteria = [
-            'guid' => [ '$ne' => $baseTrack->guid ]
+            'guid' => [ '$ne' => $baseTrack->getGuid() ]
         ];
 
         foreach ($this->providers as $provider) {
@@ -217,10 +223,10 @@ class Similarity
      */
     private function sort(array $result): array
     {
-        $compare = static function ($first, $second) {
+        $compare = static function (SimilarTrack $first, SimilarTrack $second) {
             // podobieństwo malejąco
 
-            $result = $first['value'] <=> $second['value'];
+            $result = $first->getSimilarityValue() <=> $second->getSimilarityValue();
 
             if ($result !== 0) {
                 return $result * -1;
@@ -228,7 +234,7 @@ class Similarity
 
             // rok malejąco
 
-            $result = $first['track']->year <=> $second['track']->year;
+            $result = $first->getSecondTrack()->getYear() <=> $second->getSecondTrack()->getYear();
 
             if ($result !== 0) {
                 return $result * -1;
@@ -236,7 +242,7 @@ class Similarity
 
             // guid rosnąco
 
-            $result = $first['track']->guid <=> $second['track']->guid;
+            $result = $first->getSecondTrack()->getYear() <=> $second->getSecondTrack()->getYear();
 
             if ($result !== 0) {
                 return $result;

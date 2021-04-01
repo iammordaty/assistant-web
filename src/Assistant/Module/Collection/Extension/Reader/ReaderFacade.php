@@ -3,6 +3,7 @@
 namespace Assistant\Module\Collection\Extension\Reader;
 
 use Assistant\Module\Common\Extension\GetId3\Adapter as Id3Adapter;
+use Assistant\Module\Common\Extension\SlugifyService;
 use Assistant\Module\Directory\Model\Directory;
 use Assistant\Module\File\Extension\Parser as MetadataParser;
 use Assistant\Module\Track\Model\Track;
@@ -31,6 +32,7 @@ final class ReaderFacade
         $fileReader = new FileReader(
             new Id3Adapter(),
             new MetadataParser($container['parameters']['track']['metadata']['parser']),
+            $container[SlugifyService::class],
         );
 
         return new self($directoryReader, $fileReader);
@@ -42,12 +44,12 @@ final class ReaderFacade
      */
     public function read(SplFileInfo $node)
     {
-        if ($node->isFile()) {
-            return $this->fileReader->read($node);
-        }
-
         if ($node->isDir()) {
             return $this->directoryReader->read($node);
         }
+
+        assert($node->isFile());
+
+        return $this->fileReader->read($node);
     }
 }
