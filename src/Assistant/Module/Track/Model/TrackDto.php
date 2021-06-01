@@ -9,67 +9,28 @@ use stdClass;
 
 final class TrackDto
 {
-    private ?ObjectId $objectId;
-    private string $guid;
-    private string $artist;
-    private BSONArray $artists;
-    private string $title;
-    private ?string $album;
-    private ?int $trackNumber;
-    private ?int $year;
-    private string $genre;
-    private ?string $publisher;
-    private float $bpm;
-    private string $initialKey;
-    private int $length;
-    private string $metadataMd5;
-    private string $parent;
-    private string $pathname;
-    private UTCDateTime $modifiedDate;
-    private UTCDateTime $indexedDate;
-    private BSONArray $tags;
-
     /** @noinspection DuplicatedCode */
     public function __construct(
-        ?ObjectId $objectId,
-        string $guid,
-        string $artist,
-        BSONArray $artists,
-        string $title,
-        ?string $album,
-        ?int $trackNumber,
-        ?int $year,
-        string $genre,
-        ?string $publisher,
-        float $bpm,
-        string $initialKey,
-        int $length,
-        BSONArray $tags,
-        string $metadataMd5,
-        string $parent,
-        string $pathname,
-        UTCDateTime $modifiedDate,
-        UTCDateTime $indexedDate
+        private ?ObjectId $objectId,
+        private string $guid,
+        private string $artist,
+        private BSONArray $artists,
+        private string $title,
+        private ?string $album,
+        private ?int $trackNumber,
+        private ?int $year,
+        private string $genre,
+        private ?string $publisher,
+        private float $bpm,
+        private string $initialKey,
+        private int $length,
+        private BSONArray $tags,
+        private string $metadataMd5,
+        private string $parent,
+        private string $pathname,
+        private UTCDateTime $modifiedDate,
+        private UTCDateTime $indexedDate
     ) {
-        $this->objectId = $objectId;
-        $this->guid = $guid;
-        $this->artist = $artist;
-        $this->artists = $artists;
-        $this->title = $title;
-        $this->album = $album;
-        $this->trackNumber = $trackNumber;
-        $this->year = $year;
-        $this->genre = $genre;
-        $this->publisher = $publisher;
-        $this->bpm = $bpm;
-        $this->initialKey = $initialKey;
-        $this->length = $length;
-        $this->tags = $tags;
-        $this->metadataMd5 = $metadataMd5;
-        $this->parent = $parent;
-        $this->pathname = $pathname;
-        $this->modifiedDate = $modifiedDate;
-        $this->indexedDate = $indexedDate;
     }
 
     public static function fromStorage(stdClass $document): self

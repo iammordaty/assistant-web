@@ -4,7 +4,7 @@ namespace Assistant\Module\Track\Extension\Similarity\Provider;
 
 use Assistant\Module\Track\Model\Track;
 
-class Bpm extends AbstractProvider
+final class Bpm extends AbstractProvider
 {
     /**
      * {@inheritDoc}
@@ -53,11 +53,11 @@ class Bpm extends AbstractProvider
      */
     public function getCriteria(Track $baseTrack): array
     {
-        return [
-            '$in' => range(
-                round($baseTrack->getBpm()) - $this->parameters['tolerance'],
-                round($baseTrack->getBpm()) + $this->parameters['tolerance']
-            )
+        $criteria = [
+            '$gte' => round($baseTrack->getBpm()) - $this->parameters['tolerance'],
+            '$lte' => round($baseTrack->getBpm()) + $this->parameters['tolerance'],
         ];
+
+        return $criteria;
     }
 }

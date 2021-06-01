@@ -12,7 +12,7 @@
                 <div class="list-group">
                     <span class="list-group-item list-group-item-info">Top 10 gatunków</span>
                     {% for genre, trackCount in trackCountByGenre %}
-                        <a href="{{ urlFor('search.advanced.index') }}?genre={{ genre }}" class="list-group-item">
+                        <a href="{{ url_for('search.advanced.index') }}?genre={{ genre }}" class="list-group-item">
                             <span class="badge">{{ trackCount }}</span>{{ genre }}
                         </a>
                     {% endfor %}
@@ -22,7 +22,7 @@
                 <div class="list-group">
                     <span class="list-group-item list-group-item-info">Top 10 wykonawców</span>
                     {% for artist, trackCount in trackCountByArtist %}
-                        <a href="{{ urlFor('search.advanced.index') }}?artist={{ artist }}" class="list-group-item">
+                        <a href="{{ url_for('search.advanced.index') }}?artist={{ artist }}" class="list-group-item">
                             <span class="badge">{{ trackCount }}</span>{{ artist }}
                         </a>
                     {% endfor %}
@@ -31,10 +31,10 @@
             <div class="col-lg-4">
                 <div class="list-group">
                     <span class="list-group-item list-group-item-info">
-                        <a href="{{ urlFor('directory.browse.recent') }}" title="Pokaż więcej ostatnio dodanych">Ostatnio dodane</a>
+                        <a href="{{ url_for('directory.browse.recent') }}" title="Pokaż więcej ostatnio dodanych">Ostatnio dodane</a>
                     </span>
                     {% for track in recentlyAddedTracks %}
-                        <a href="{{ urlFor('track.track.index', { guid: track.guid } )}}" class="ellipsis list-group-item">
+                        <a href="{{ url_for('track.track.index', { guid: track.guid } )}}" class="ellipsis list-group-item">
                             {% set name = track.artist ~ ' - ' ~ track.title %}
                             <span  title="{{ name }}">
                                 {{ name }}

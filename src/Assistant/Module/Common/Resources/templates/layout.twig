@@ -24,24 +24,24 @@
                 </div>
                 <div id="navbar" class="navbar-collapse collapse">
                     <ul class="nav navbar-nav">
-                        <li {% if menu == "dashboard" %}class="active"{% endif %}><a href="{{ urlFor('dashboard') }}">Dashboard</a></li>
-                        <li {% if menu == "track" %}class="active"{% endif %}><a href="{{ urlFor('search.advanced.index') }}">Utwór</a></li>
+                        <li {% if menu == "dashboard" %}class="active"{% endif %}><a href="{{ url_for('dashboard') }}">Dashboard</a></li>
+                        <li {% if menu == "track" %}class="active"{% endif %}><a href="{{ url_for('search.advanced.index') }}">Utwór</a></li>
                         <li class="dropdown">
                             <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button">Przeglądaj <span class="caret"></span></a>
                             <ul class="dropdown-menu">
-                                <li><a href="{{ urlFor('directory.browse.index') }}">Przeglądaj kolekcję</a></li>
-                                <li><a href="{{ urlFor('directory.browse.recent') }}">Przeglądaj ostatnio dodane</a></li>
+                                <li><a href="{{ url_for('directory.browse.index') }}">Przeglądaj kolekcję</a></li>
+                                <li><a href="{{ url_for('directory.browse.recent') }}">Przeglądaj ostatnio dodane</a></li>
                                 <li role="separator" class="divider"></li>
-                                <li><a href="{{ urlFor('directory.browse.incoming') }}">Przeglądaj oczekujące</a></li>
+                                <li><a href="{{ url_for('directory.browse.incoming') }}">Przeglądaj oczekujące</a></li>
                             </ul>
                         </li>
-                        <li {% if menu == "search" %}class="active"{% endif %}><a href="{{ urlFor('search.advanced.index') }}">Wyszukaj</a></li>
+                        <li {% if menu == "search" %}class="active"{% endif %}><a href="{{ url_for('search.advanced.index') }}">Wyszukaj</a></li>
                         <li {% if menu == "statistics" %}class="active"{% endif %}><a href="#">Statystyki</a></li>
                         <li {% if menu == "mix" %}class="active"{% endif %}><a href="/mix">Uporządkuj miks</a></li>
-                        <li {% if menu == "log" %}class="active"{% endif %}><a href="{{ urlFor('common.log.index') }}">Logi</a></li>
+                        <li {% if menu == "log" %}class="active"{% endif %}><a href="{{ url_for('common.log.index') }}">Logi</a></li>
                     </ul>
                     <div class="navbar-right">
-                        <form method="GET" action="{{ urlFor('search.simple.index') }}" class="navbar-form" role="search">
+                        <form method="GET" action="{{ url_for('search.simple.index') }}" class="navbar-form" role="search">
                             <div class="input-group">
                                 <input type="text" name="query" value="{{ form.query }}" class="form-control" placeholder="Szukaj...">
                                 <div class="input-group-btn">

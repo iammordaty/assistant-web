@@ -3,7 +3,7 @@
 namespace Assistant\Module\Track\Controller;
 
 use Assistant\Module\Common;
-use Assistant\Module\Common\Controller\AbstractController;
+use Assistant\Module\Common\Extension\Config;
 use Assistant\Module\Common\Extension\PathBreadcrumbs;
 use Assistant\Module\Track\Extension\Similarity;
 use Assistant\Module\Track\Extension\Similarity\Provider\Bpm;
@@ -14,49 +14,62 @@ use Assistant\Module\Track\Extension\Similarity\Provider\Year;
 use Assistant\Module\Track\Model\Track;
 use Assistant\Module\Track\Repository\TrackRepository;
 use KeyTools\KeyTools;
-use Slim\Slim;
+use Psr\Http\Message\ResponseInterface as Response;
+use Psr\Http\Message\ServerRequestInterface as Request;
+use Slim\Routing\RouteContext;
+use Slim\Views\Twig;
 
-class TrackController extends AbstractController
+final class TrackController
 {
-    private TrackRepository $trackRepository;
-
-    public function __construct(Slim $app)
-    {
-        parent::__construct($app);
-
-        $this->trackRepository = $app->container[TrackRepository::class];
+    public function __construct(
+        private Config $config,
+        private PathBreadcrumbs $pathBreadcrumbs,
+        private TrackRepository $trackRepository,
+        private Twig $view,
+    ) {
     }
 
-    public function index($guid)
+    public function index(Request $request, Response $response): Response
     {
-        $track = $this->trackRepository->getByGuid($guid);
+        $guid = $request->getAttribute('guid');
+        $track = $this->trackRepository->getOneByGuid($guid);
 
-        if ($track === null) {
-            $this->app->redirect(
-                sprintf('%s?query=%s', $this->app->urlFor('search.simple.index'), str_replace('-', ' ', $guid)),
-                404
-            );
+        if (!$track) {
+            $routeName = 'search.simple.index';
+            $data = [];
+            $queryParams = [ 'query' => str_replace('-', ' ', $guid) ];
+
+            $routeParser = RouteContext::fromRequest($request)->getRouteParser();
+            $redirectUrl = $routeParser->urlFor($routeName, $data, $queryParams);
+
+            $redirect = $response
+                ->withHeader('Location', $redirectUrl)
+                ->withStatus(404);
+
+            return $redirect;
         }
 
-        $pathBreadcrumbs = $this->app->container[PathBreadcrumbs::class]->get(dirname($track->getPathname()));
-        $form = $this->app->request->get('similarity');
+        $pathBreadcrumbs = $this->pathBreadcrumbs->get(dirname($track->getPathname()));
 
-        return $this->app->render('@track/index.twig', [
+        $customSimilarityParameters = $request->getQueryParams()['similarity'] ?? null;
+
+        $similarityParameters = $this->config->get('similarity');
+        $similarTracks = $this->getSimilarTracks($track, $similarityParameters, $customSimilarityParameters);
+
+        return $this->view->render($response, '@track/index.twig', [
             'menu' => 'track',
             'track' => $track,
             'keyInfo' => $this->getTrackKeyInfo($track),
             'pathBreadcrumbs' => $pathBreadcrumbs,
-            'form' => $form,
-            'similarTracksList' => $this->getSimilarTracks(
-                $track,
-                $this->app->container['parameters']['track']['similarity'],
-                $form
-            ),
+            'form' => $customSimilarityParameters,
+            'similarTracksList' => $similarTracks,
         ]);
     }
 
     /**
      * Zwraca utwory podobne do podanego utworu
+     *
+     * @todo Przenieść do zewnętrznej klasy
      *
      * @param Track $baseTrack
      * @param array $similarityParameters
@@ -66,7 +79,7 @@ class TrackController extends AbstractController
     private function getSimilarTracks(
         Track $baseTrack,
         array $similarityParameters,
-        ?array $customSimilarityParameters
+        ?array $customSimilarityParameters,
     ): array {
         $track = $baseTrack;
         $parameters = $similarityParameters;
@@ -114,6 +127,7 @@ class TrackController extends AbstractController
             $parameters['providers']['enabled'] = array_values($enabledProviders);
         }
 
+        // @todo: docelowo powinno być wstrzykiwane poprzez DI (zob. komentarz w container.inc przy Similarity)
         $similarity = new Similarity($this->trackRepository, $parameters);
 
         return $similarity->getSimilarTracks($track);

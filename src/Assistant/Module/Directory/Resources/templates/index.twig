@@ -1,6 +1,7 @@
 {% extends '@common/layout.twig' %}
 
 {% set directoryWithoutSeparator = directory.pathname|trim(constant('DIRECTORY_SEPARATOR')) %}
+
 {% block title %}Przeglądanie kolekcji {% if directoryWithoutSeparator %}– {{ directoryWithoutSeparator }}{% endif %}{% endblock %}
 
 {% block contentBlock %}
@@ -8,12 +9,12 @@
         <!-- @todo: wynieść do zewnętrznego szablonu i uspójnić z innymi -->
         <ol class="breadcrumb">
             <li>
-                <a href="{{ urlFor('directory.browse.index', { guid: (pathBreadcrumbs|first).guid }) }}" class="undecorated">
+                <a href="{{ url_for('directory.browse.index', { guid: (pathBreadcrumbs|first).guid }) }}" class="undecorated">
                     <i class="fa fa-home fa-lg fa-fw"></i>
                 </a>
             </li>
             {% for path in pathBreadcrumbs[1:] %}
-                <li><a href="{{ urlFor('directory.browse.index', { guid: path.guid } )}}" class="undecorated">{{ path.path }}</a></li>
+                <li><a href="{{ url_for('directory.browse.index', { guid: path.guid } )}}" class="undecorated">{{ path.path }}</a></li>
             {% endfor %}
         </ol>
     </div>
@@ -28,13 +29,14 @@
                 </tr>
             </thead>
             <tbody>
-                {% for child in children.directories if (child.parent or child.guid) %}
+{#                {% for child in children.directories if (child.parent or child.guid) %}#}
+                {% for child in children.directories  %}
                     <tr>
                         <td>
                             {% if child == directory %}
-                                <a href="{{ urlFor('directory.browse.index', { guid: child.parent } )}}"><i class="fa fa-level-up"></i> </a>
+                                <a href="{{ url_for('directory.browse.index', { guid: child.parent } )}}"><i class="fa fa-level-up"></i> </a>
                             {% else %}
-                                <a href="{{ urlFor('directory.browse.index', { guid: child.guid } )}}">{{ child.name }}</a>
+                                <a href="{{ url_for('directory.browse.index', { guid: child.guid } )}}">{{ child.name }}</a>
                             {% endif %}
                         </td>
                     </tr>
@@ -74,23 +76,23 @@
                             <td class="col-xs-6">
                                 <span class="ellipsis track-name">
                                     {% set name = track.artist ~ ' - ' ~ track.title %}
-                                    <a href="{{ urlFor('track.track.index', { guid: track.guid } )}}" title="{{ name }}">{{ name }}</a>
+                                    <a href="{{ url_for('track.track.index', { guid: track.guid } )}}" title="{{ name }}">{{ name }}</a>
                                 </span>
                             </td>
                             <td class="col-xs-2">
-                                <a class="undecorated" href="{{ urlFor('search.advanced.index') }}?genre={{ track.genre }}">{{ track.genre }}</a>
+                                <a class="undecorated" href="{{ url_for('search.advanced.index') }}?genre={{ track.genre }}">{{ track.genre }}</a>
                             </td>
                             <td class="col-xs-1">
                                 {{ track.length|format_duration }}
                             </td>
                             <td class="col-xs-1">
-                                <a class="undecorated" href="{{ urlFor('search.advanced.index') }}?year={{ track.year }}">{{ track.year }}</a>
+                                <a class="undecorated" href="{{ url_for('search.advanced.index') }}?year={{ track.year }}">{{ track.year }}</a>
                             </td>
                             <td class="col-xs-1">
-                                <a class="undecorated" href="{{ urlFor('search.advanced.index') }}?initial_key={{ track.initialKey }}">{{ track.initialKey }}</a>
+                                <a class="undecorated" href="{{ url_for('search.advanced.index') }}?initial_key={{ track.initialKey }}">{{ track.initialKey }}</a>
                             </td>
                             <td class="col-xs-1">
-                                <a class="undecorated" href="{{ urlFor('search.advanced.index') }}?bpm={{ track.bpm }}">{{ track.bpm }}</a>
+                                <a class="undecorated" href="{{ url_for('search.advanced.index') }}?bpm={{ track.bpm }}">{{ track.bpm }}</a>
                             </td>
                         </tr>
                     {% endfor %}

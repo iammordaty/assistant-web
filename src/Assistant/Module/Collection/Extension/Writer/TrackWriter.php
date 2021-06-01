@@ -13,20 +13,10 @@ use MongoDB\BSON\Regex;
  */
 class TrackWriter implements WriterInterface
 {
-    private TrackRepository $repository;
-
-    private BackendClient $backendClient;
-
-    /**
-     * TrackWriter constructor.
-     *
-     * @param TrackRepository $repository
-     * @param BackendClient $backendClient
-     */
-    public function __construct(TrackRepository $repository, BackendClient $backendClient)
-    {
-        $this->repository = $repository;
-        $this->backendClient = $backendClient;
+    public function __construct(
+        private TrackRepository $repository,
+        private BackendClient $backendClient
+    ) {
     }
 
     /**
@@ -38,7 +28,7 @@ class TrackWriter implements WriterInterface
     public function save(CollectionItemInterface $collectionItem): Track
     {
         /* @var $indexedTrack Track */
-        $indexedTrack = $this->repository->getByPathname($collectionItem);
+        $indexedTrack = $this->repository->getOneByPathname($collectionItem->getPathname());
 
         // może odtąd* powinno zostać przeniesione do serwisu lub repo?
 
@@ -65,6 +55,8 @@ class TrackWriter implements WriterInterface
 
     /**
      * Zwraca unikalny guid dla podanego utworu
+     *
+     * @fixme: Przerzucić do serwisu
      *
      * @param Track $track
      * @return string

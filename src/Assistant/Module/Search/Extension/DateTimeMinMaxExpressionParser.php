@@ -2,9 +2,9 @@
 
 namespace Assistant\Module\Search\Extension;
 
-use MongoDB\BSON\UTCDateTime;
+use DateTimeInterface;
 
-class DateTimeMinMaxExpressionParser extends RawMinMaxExpressionParser
+final class DateTimeMinMaxExpressionParser extends RawMinMaxExpressionParser
 {
     private const FORMATS = [
         'Y',
@@ -30,7 +30,7 @@ class DateTimeMinMaxExpressionParser extends RawMinMaxExpressionParser
         'last day of december midnight - 1 second',
     ];
 
-    public static function parse(string $expression): ?array
+    public static function parse(string $expression): ?MinMaxInfo
     {
         $minMaxInfo = parent::parse($expression);
 
@@ -38,33 +38,33 @@ class DateTimeMinMaxExpressionParser extends RawMinMaxExpressionParser
             return null;
         }
 
-        [ $min, $max ] = array_values($minMaxInfo);
+        [ $min, $max ] = array_values($minMaxInfo->get());
 
         $dates = [
-            $min ? static::toMinDateTime($min) : null,
-            $max ? static::toMaxDateTime($max) : null,
+            $min ? self::toMinDateTime($min) : null,
+            $max ? self::toMaxDateTime($max) : null,
         ];
 
-        $dateTimeMinMaxInfo = array_combine(array_keys($minMaxInfo), $dates);
+        $dateTimeMinMaxInfo = array_combine(array_keys($minMaxInfo->get()), $dates);
 
-        return $dateTimeMinMaxInfo;
+        return MinMaxInfo::create($dateTimeMinMaxInfo);
     }
 
-    private static function toMinDateTime(?string $value): ?UTCDateTime
+    private static function toMinDateTime(?string $value): ?DateTimeInterface
     {
         $formatToMinModifierMap = array_combine(self::FORMATS, self::MIN_MODIFIERS);
 
         return self::toDateTime($value, $formatToMinModifierMap);
     }
 
-    private static function toMaxDateTime(?string $value): ?UTCDateTime
+    private static function toMaxDateTime(?string $value): ?DateTimeInterface
     {
         $formatToMaxModifierMap = array_combine(self::FORMATS, self::MAX_MODIFIERS);
 
         return self::toDateTime($value, $formatToMaxModifierMap);
     }
 
-    private static function toDateTime(?string $value, array $formatToModifierMap)
+    private static function toDateTime(?string $value, array $formatToModifierMap): \DateTime|null
     {
         $normalizedValue = self::normalizeValue($value);
 
@@ -84,9 +84,7 @@ class DateTimeMinMaxExpressionParser extends RawMinMaxExpressionParser
             }
         }
 
-        return $dateTime
-            ? new UTCDateTime($dateTime->getTimestamp() * 1000)
-            : null;
+        return $dateTime;
     }
 
     private static function normalizeValue(string $value): string

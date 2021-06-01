@@ -4,7 +4,7 @@ namespace Assistant\Module\Track\Extension\Similarity\Provider;
 
 use Assistant\Module\Track\Model\Track;
 
-class Year extends AbstractProvider
+final class Year extends AbstractProvider
 {
     /**
      * {@inheritDoc}
@@ -57,20 +57,16 @@ class Year extends AbstractProvider
      */
     public function getCriteria(Track $baseTrack): array
     {
-        $range = range(
-            $baseTrack->getYear() - $this->parameters['tolerance'],
-            $baseTrack->getYear() + $this->parameters['tolerance']
-        );
+        $fromYear = $baseTrack->getYear() - $this->parameters['tolerance'];
 
         $currentYear = (new \DateTime())->format('Y');
+        $toYear = (int) max($currentYear, $baseTrack->getYear() + $this->parameters['tolerance']);
 
-        $years = array_filter(
-            $range,
-            static fn($year) => $year <= $currentYear
-        );
+        $criteria = [
+            '$gte' => $fromYear,
+            '$lte' => $toYear,
+        ];
 
-        unset($range, $currentYear);
-
-        return [ '$in' => $years ];
+        return $criteria;
     }
 }

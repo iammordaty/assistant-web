@@ -1,27 +1,28 @@
 <?php
 
-/* @var $app Slim */
-
 use Assistant\Module\Track\Controller\Track\ContentsController;
 use Assistant\Module\Track\Controller\Track\EditController;
 use Assistant\Module\Track\Controller\TrackController;
-use Slim\Slim;
+use Slim\App;
+use Slim\Routing\RouteCollectorProxy;
 
-$app->group('/track', function () use ($app) {
+return static function (App $app): void {
+    $app->group('/track', function (RouteCollectorProxy $group) {
 
-    $app
-        ->get('/:guid', fn($guid) => (new TrackController($app))->index($guid))
-        ->name('track.track.index');
+        $group
+            ->get('/{guid}', [ TrackController::class, 'index' ])
+            ->setName('track.track.index');
 
-    $app
-        ->get('/:guid/contents', fn($guid) => (new ContentsController($app))->get($guid))
-        ->name('track.contents.get');
+        $group
+            ->get('/{guid}/contents', [ ContentsController::class, 'get' ])
+            ->setName('track.contents.get');
 
-    $app
-        ->get('/:pathname/edit', fn($pathname) => (new EditController($app))->edit($pathname))
-        ->name('track.edit.edit');
+        $group
+            ->get('/{pathname:.*}/edit', [ EditController::class, 'edit' ])
+            ->setName('track.edit.edit');
 
-    $app
-        ->post('/:pathname/save', fn($pathname) => (new EditController($app))->save($pathname))
-        ->name('track.edit.save');
-});
+        $group
+            ->post('/{pathname:.*}/save', [ EditController::class, 'save' ])
+            ->setName('track.edit.save');
+    });
+};

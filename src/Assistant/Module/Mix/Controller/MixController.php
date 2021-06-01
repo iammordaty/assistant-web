@@ -2,36 +2,32 @@
 
 namespace Assistant\Module\Mix\Controller;
 
-use Assistant\Module\Common\Controller\AbstractController;
 use Assistant\Module\Mix\Extension\MixService;
-use Slim\Slim;
+use Psr\Http\Message\ResponseInterface as Response;
+use Psr\Http\Message\ServerRequestInterface as Request;
+use Slim\Views\Twig;
 
-final class MixController extends AbstractController
+final class MixController
 {
-    private MixService $mixService;
-
-    public function __construct(Slim $app)
+    public function __construct(private MixService $mixService, private Twig $view)
     {
-        parent::__construct($app);
-
-        $this->mixService = $app->container[MixService::class];
     }
 
-    public function index()
+    public function index(Request $request, Response $response): Response
     {
-        $request = $this->app->request();
+        if ($request->getMethod() === 'POST') { // może to powinno zostać rozdzielone?
+            $form = $request->getParsedBody();
 
-        if ($request->isPost()) {
-            $listing = explode(PHP_EOL, $request->post('listing'));
+            $listing = explode(PHP_EOL, $form['listing']);
 
             [ $mix, $matrix ] = $this->mixService->getMixInfo($listing);
         }
 
-        return $this->app->render('@mix/index.twig', [
+        return $this->view->render($response, '@mix/index.twig', [
             'menu' => 'mix',
-            'form' => $request->post(),
-            'matrix' => $matrix ?? [],
-            'mix' => $mix ?? [],
+            'form' => $form ?? null,
+            'matrix' => $matrix ?? null,
+            'mix' => $mix ?? null,
         ]);
     }
 }

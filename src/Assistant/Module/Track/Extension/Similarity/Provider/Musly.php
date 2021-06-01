@@ -6,7 +6,7 @@ use Assistant\Module\Common\Extension\Backend\Client as BackendClient;
 use Assistant\Module\Common\Extension\Backend\Exception\Exception as BackendException;
 use Assistant\Module\Track\Model\Track;
 
-class Musly extends AbstractProvider
+final class Musly extends AbstractProvider
 {
     /**
      * {@inheritDoc}
@@ -37,6 +37,8 @@ class Musly extends AbstractProvider
                 $this->similarTracks = $this->backendClient->getSimilarTracks($baseTrack);
             } catch (BackendException $e) {
                 // @todo: usunąć try-catch i łapać wyżej?
+                // @fixme: błąd powinien być komunikowany na froncie, a nie wyciszany
+
                 unset($e);
 
                 $this->similarTracks = [];

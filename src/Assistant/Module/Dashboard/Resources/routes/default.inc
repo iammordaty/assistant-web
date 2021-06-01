@@ -1,13 +1,10 @@
 <?php
 
-/* @var $app Slim */
+use Assistant\Module\Dashboard\Controller\DashboardController;
+use Slim\App;
 
-use Assistant\Module\Dashboard\Controller;
-use Slim\Slim;
-
-$app->get(
-    '/',
-    function () use ($app) {
-        (new Controller\DashboardController($app))->index();
-    }
-)->name('dashboard');
+return static function (App $app): void {
+    $app
+        ->get('/', [ DashboardController::class, 'index' ])
+        ->setName('dashboard');
+};

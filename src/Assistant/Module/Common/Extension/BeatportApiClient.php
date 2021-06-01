@@ -4,16 +4,16 @@ namespace Assistant\Module\Common\Extension;
 
 use BeatportOauth\AccessTokenProvider;
 use BeatportOauth\OauthMiddlewareFactory;
+use Cache\Adapter\Filesystem\FilesystemCachePool;
 use Cache\Bridge\SimpleCache\SimpleCacheBridge;
 use GuzzleHttp\Client;
 use GuzzleHttp\ClientInterface;
 use GuzzleHttp\HandlerStack;
+use Kevinrob\GuzzleCache\CacheMiddleware;
+use Kevinrob\GuzzleCache\Storage\FlysystemStorage;
 use Kevinrob\GuzzleCache\Strategy\GreedyCacheStrategy;
 use League\Flysystem\Adapter\Local;
 use League\Flysystem\Filesystem;
-use Cache\Adapter\Filesystem\FilesystemCachePool;
-use Kevinrob\GuzzleCache\CacheMiddleware;
-use Kevinrob\GuzzleCache\Storage\FlysystemStorage;
 
 final class BeatportApiClient
 {

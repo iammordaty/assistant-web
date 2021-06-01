@@ -3,49 +3,90 @@
 // Wrzucone na szybko, być może powinno leżeć bliżej modelu
 namespace Assistant\Module\Track\Extension;
 
-use Assistant\Module\Collection\Extension\Reader\FileReader;
+use Assistant\Module\Collection\Extension\Reader\FileReaderFacade;
+use Assistant\Module\Common\Extension\SlugifyService;
+use Assistant\Module\File\Model\IncomingTrack;
+use Assistant\Module\Search\Extension\SearchCriteria;
+use Assistant\Module\Search\Extension\SearchCriteriaFacade;
 use Assistant\Module\Track\Model\Track;
 use Assistant\Module\Track\Repository\TrackRepository;
-use Cocur\Slugify\SlugifyInterface;
-use DateTime;
-use MongoDB\BSON\Regex;
 use SplFileInfo;
+use Traversable;
 
 final class TrackService
 {
-    private FileReader $fileReader;
-
-    private TrackRepository $trackRepository;
-
-    private SlugifyInterface $slugify;
-
-    public function __construct(FileReader $fileReader, TrackRepository $repository, SlugifyInterface $slugify)
-    {
-        $this->fileReader = $fileReader;
-        $this->trackRepository = $repository;
-        $this->slugify = $slugify;
+    public function __construct(
+        private FileReaderFacade $fileReader,
+        private SlugifyService $slugify,
+        private TrackRepository $trackRepository,
+        private TrackLocationArbiter $arbiter,
+    ) {
     }
 
-    public function getTrackByName(string $name): ?Track
+    public function findOneByName(string $name): ?Track
     {
-        $trimmedName = trim($name);
+        $guid = $this->slugify->slugify($name);
 
-        if ($trimmedName === '') {
+        if ($guid === '') {
             return null;
         }
 
-        $guid = new Regex($this->slugify->slugify($trimmedName), 'i');
-        $track = $this->trackRepository->getByGuid($guid);
-
-        if (!$track) {
-            $query = new Regex($trimmedName, 'i');
-            $track = $this->trackRepository->getByName($query);
-        }
+        $searchCriteria = SearchCriteriaFacade::createFromName($name);
+        $track = $this->trackRepository->getOneBy($searchCriteria);
 
         return $track;
     }
 
-    public function createFromFile(string $pathname): ?Track
+    /**
+     * @param SearchCriteria $searchCriteria
+     * @param array|null $sort
+     * @param int|null $limit
+     * @param int|null $skip
+     * @return Track[]|Traversable
+     */
+    public function findBy(
+        SearchCriteria $searchCriteria,
+        ?array $sort = null,
+        ?int $limit = null,
+        ?int $skip = null
+    ): array|Traversable {
+        // rozwiązanie na szybko. najlepiej gdyby SearchCriteria samo slugify'owało nazwę, ale obecnie nie ma
+        // dostępu do klasy slugify; a może nie powinno. Do zastanowienia się.
+        // update 27.05: może do SearchCriteriaFacade::createFromName?
+
+        if ($searchCriteria->getName()) {
+            $name = $this->slugify->slugify($searchCriteria->getName());
+
+            $searchCriteria = $searchCriteria->withName($name);
+        }
+
+        $tracks = $this->trackRepository->getBy($searchCriteria, $sort, $limit, $skip);
+
+        return $tracks;
+    }
+
+    public function count(SearchCriteria $searchCriteria): int
+    {
+        // rozwiązanie na szybko. najlepiej gdyby SearchCriteria samo slugify'owało nazwę, ale obecnie nie ma
+        // dostępu do klasy slugify; a może nie powinno. Do zastanowienia się.
+
+        if ($searchCriteria->getName()) {
+            $name = $this->slugify->slugify($searchCriteria->getName());
+
+            $searchCriteria = $searchCriteria->withName($name);
+        }
+
+        $tracks = $this->trackRepository->countBy($searchCriteria);
+
+        return $tracks;
+    }
+
+    public function getLocationArbiter(): TrackLocationArbiter
+    {
+        return $this->arbiter;
+    }
+
+    public function createFromFile(string $pathname): IncomingTrack|Track|null
     {
         if (!trim($pathname) || !is_readable($pathname)) {
             return null;

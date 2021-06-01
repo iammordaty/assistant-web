@@ -8,7 +8,7 @@ use Assistant\Module\Directory\Model\Directory;
 use Assistant\Module\Directory\Repository\DirectoryRepository;
 use Assistant\Module\Track\Model\Track;
 use Assistant\Module\Track\Repository\TrackRepository;
-use Slim\Helper\Set as Container;
+use Psr\Container\ContainerInterface as Container;
 
 /**
  * Fasada dla walidatorów plików oraz katalogów mających zostać dodanych do kolekcji
@@ -38,29 +38,27 @@ final class ValidatorFacade
     public static function factory(Container $container): ValidatorFacade
     {
         $directoryValidator = new DirectoryValidator(
-            $container[DirectoryRepository::class]
+            $container->get(DirectoryRepository::class)
         );
 
         $trackValidator = new TrackValidator(
-            $container[TrackRepository::class],
-            new Id3Adapter()
+            $container->get(TrackRepository::class),
+            $container->get(Id3Adapter::class),
         );
 
         return new self($directoryValidator, $trackValidator);
     }
 
-    /**
-     * @param CollectionItemInterface|Track|Directory $node
-     * @return void
-     */
-    public function validate(CollectionItemInterface $node): void
+    public function validate(CollectionItemInterface|Directory|Track $node)
     {
         if ($node instanceof Directory) {
             $this->directoryValidator->validate($node);
         }
 
-        if ($node instanceof Track) {
-            $this->trackValidator->validate($node);
-        }
+        // to jest ok, ale FileReader czyta także katalog incoming (zwracając obiekt typu IncomingTrack)
+        // więc może bardziej eleganckie byłoby rzucanie w takiej sytuacji wyjątku w klasie TrackValidator.
+        assert($node instanceof Track);
+
+        $this->trackValidator->validate($node);
     }
 }

@@ -48,9 +48,9 @@ final class DirectoryRepository
 
     /**
      * @param Directory $directory
-     * @return Traversable|Directory[]
+     * @return Directory[]|Traversable
      */
-    public function getChildren(Directory $directory): Traversable
+    public function getChildren(Directory $directory): array|Traversable
     {
         $directories = $this->findBy(
             [ 'parent' => $directory->getGuid() ],
@@ -85,9 +85,9 @@ final class DirectoryRepository
      *
      * @param array $conditions
      * @param array|null $sort
-     * @return Traversable|Directory[]
+     * @return Directory[]|Traversable
      */
-    public function findBy(array $conditions, ?array $sort = []): Traversable
+    public function findBy(array $conditions, ?array $sort = []): array|Traversable
     {
         $options = [];
 

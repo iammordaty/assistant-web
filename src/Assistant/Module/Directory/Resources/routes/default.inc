@@ -1,35 +1,26 @@
 <?php
 
-/* @var $app Slim */
+/** @var App $app */
 
 use Assistant\Module\Directory\Controller\BrowseController;
-use Slim\Slim;
+use Slim\App;
+use Slim\Routing\RouteCollectorProxy;
 
-$app->group('/directory', function () use ($app) {
-    $app->get(
-        '/browse/recent',
-        function () use ($app) {
-            (new BrowseController($app))->recent();
-        }
-    )->name('directory.browse.recent');
+return static function (App $app): void {
+    $app->group('/directory', function (RouteCollectorProxy $group) {
+        $group
+            ->get('/browse/recent', [ BrowseController::class, 'recent' ])
+            ->setName('directory.browse.recent');
 
-    // TODO: /browse/incoming/(:guid+)
-    //      (ocb? chodzi o /browse/incoming/(:pathname+) ?
-    $app->get(
-        '/browse/incoming(:pathname+)',
-        function ($pathnameParts = null) use ($app) {
-            $pathname = $pathnameParts ? implode(DIRECTORY_SEPARATOR, $pathnameParts) : null;
+        $group
+            ->get('/browse/incoming/[{pathname:.*}]', [ BrowseController::class, 'incoming' ])
+            ->setName('directory.browse.incoming');
 
-            (new BrowseController($app))->incoming($pathname);
-        }
-    )->name('directory.browse.incoming');
+        // TODO: Ujednolicić poprzez dodanie prefiksu "browse", tj. /browse/[{guid:.*}],
+        //       a następnie spróbować przenieść "nad" "/browse/recent"
 
-    $app->get(
-        '/(:guid+)',
-        function ($guidParts = null) use ($app) {
-            $guid = $guidParts ? implode(DIRECTORY_SEPARATOR, $guidParts) : null;
-
-            (new BrowseController($app))->index($guid);
-        }
-    )->name('directory.browse.index');
-});
+        $group
+            ->get('/[{guid:.*}]', [ BrowseController::class, 'index' ])
+            ->setName('directory.browse.index');
+    });
+};

@@ -2,42 +2,36 @@
 
 namespace Assistant\Module\Track\Controller\Track;
 
-use Assistant\Module\Common\Controller\AbstractController;
 use Assistant\Module\Track\Repository\TrackRepository;
-use Slim\Slim;
+use Psr\Http\Message\ResponseInterface as Response;
+use Psr\Http\Message\ServerRequestInterface as Request;
+use Slim\Exception\HttpNotFoundException;
+use Slim\Psr7\Factory\StreamFactory;
 
-class ContentsController extends AbstractController
+final class ContentsController
 {
-    private TrackRepository $trackRepository;
-
-    public function __construct(Slim $app)
+    public function __construct(private TrackRepository $trackRepository)
     {
-        parent::__construct($app);
-
-        $this->trackRepository = $app->container[TrackRepository::class];
     }
 
-    public function get($guid)
+    public function get(Request $request, Response $response): Response
     {
-        $track = $this->trackRepository->getByGuid($guid);
+        $guid = $request->getAttribute('guid');
+        $track = $this->trackRepository->getOneByGuid($guid);
 
         if (!$track || !is_readable($track->getPathname())) {
-            return $this->app->notFound();
+            throw new HttpNotFoundException($request);
         }
 
-        $response = $this->app->response();
+        $body = (new StreamFactory())->createStreamFromFile($track->getPathname());
+        $contentDisposition = sprintf('inline; filename="%s - %s"', $track->getArtist(), $track->getTitle());
 
-        $response->header('Cache-Control', 'no-cache');
-        $response->header('Content-Type', 'audio/mpeg');
-        $response->header('Content-Length', filesize($track->getPathname()));
-        $response->header(
-            'Content-Disposition',
-            sprintf('inline; filename="%s - %s"', $track->getArtist(), $track->getTitle())
-        );
+        $response = $response
+            ->withBody($body)
+            ->withHeader('Content-Disposition', $contentDisposition)
+            ->withHeader('Content-Length', filesize($track->getPathname()))
+            ->withHeader('Content-Type', 'audio/mpeg');
 
-        readfile($track->getPathname());
-
-        /** @noinspection PhpUnhandledExceptionInspection */
-        $this->app->stop();
+        return $response;
     }
 }

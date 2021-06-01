@@ -5,11 +5,11 @@
  */
 namespace PHPSTORM_META {
 
-    override(\Slim\Helper\Set::get(0), map([
+    override(\Psr\Container\ContainerInterface::get(0), map([
         '' => '@',
     ]));
 
-    override(new \Slim\Helper\Set, map([
+    override(\DI\Container::get(0), map([
         '' => '@',
     ]));
 }

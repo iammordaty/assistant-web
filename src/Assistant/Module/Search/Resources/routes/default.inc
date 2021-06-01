@@ -1,23 +1,18 @@
 <?php
 
-/* @var $app Slim */
+use Assistant\Module\Search\Controller\AdvancedSearchController;
+use Assistant\Module\Search\Controller\SimpleSearchController;
+use Slim\App as App;
+use Slim\Routing\RouteCollectorProxy;
 
-use Assistant\Module\Search\Controller;
-use Slim\Slim;
+return static function (App $app): void {
+    $app->group('/search', function (RouteCollectorProxy $group) {
+        $group
+            ->get('/simple', [ SimpleSearchController::class, 'index' ])
+            ->setName('search.simple.index');
 
-$app->group('/search', function () use ($app) {
-
-    $app->get(
-        '/simple',
-        function () use ($app) {
-            (new Controller\SimpleSearchController($app))->index();
-        }
-    )->name('search.simple.index');
-
-    $app->get(
-        '/advanced',
-        function () use ($app) {
-            (new Controller\AdvancedSearchController($app))->index();
-        }
-    )->name('search.advanced.index');
-});
+        $group
+            ->get('/advanced', [ AdvancedSearchController::class, 'index' ])
+            ->setName('search.advanced.index');
+    });
+};

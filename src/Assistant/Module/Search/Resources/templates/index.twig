@@ -42,23 +42,23 @@
                                 <td class="col-xs-6">
                                     <span class="ellipsis track-name">
                                         {% set name = track.artist ~ ' - ' ~ track.title %}
-                                        <a href="{{ urlFor('track.track.index', { guid: track.guid } )}}" title="{{ name }}">{{ name }}</a>
+                                        <a href="{{ url_for('track.track.index', { guid: track.guid } )}}" title="{{ name }}">{{ name }}</a>
                                     </span>
                                 </td>
                                 <td class="col-xs-2">
-                                    <a class="undecorated" href="{{ urlFor('search.advanced.index') }}?genre={{ track.genre }}">{{ track.genre }}</a>
+                                    <a class="undecorated" href="{{ url_for('search.advanced.index') }}?genre={{ track.genre }}">{{ track.genre }}</a>
                                 </td>
                                 <td class="col-xs-1">
                                     {{ track.length|format_duration }}
                                 </td>
                                 <td class="col-xs-1">
-                                    <a class="undecorated" href="{{ urlFor('search.advanced.index') }}?year={{ track.year }}">{{ track.year }}</a>
+                                    <a class="undecorated" href="{{ url_for('search.advanced.index') }}?year={{ track.year }}">{{ track.year }}</a>
                                 </td>
                                 <td class="col-xs-1">
-                                    <a class="undecorated" href="{{ urlFor('search.advanced.index') }}?initial_key={{ track.initialKey }}">{{ track.initialKey }}</a>
+                                    <a class="undecorated" href="{{ url_for('search.advanced.index') }}?initial_key={{ track.initialKey }}">{{ track.initialKey }}</a>
                                 </td>
                                 <td class="col-xs-1">
-                                    <a class="undecorated" href="{{ urlFor('search.advanced.index') }}?bpm={{ track.bpm }}">{{ track.bpm }}</a>
+                                    <a class="undecorated" href="{{ url_for('search.advanced.index') }}?bpm={{ track.bpm }}">{{ track.bpm }}</a>
                                 </td>
                             </tr>
                         {% endfor %}

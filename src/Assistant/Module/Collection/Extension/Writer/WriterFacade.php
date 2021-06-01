@@ -8,7 +8,7 @@ use Assistant\Module\Directory\Model\Directory;
 use Assistant\Module\Directory\Repository\DirectoryRepository;
 use Assistant\Module\Track\Model\Track;
 use Assistant\Module\Track\Repository\TrackRepository;
-use Slim\Helper\Set as Container;
+use Psr\Container\ContainerInterface as Container;
 
 /**
  * Fasada dla writerów zajmujących się zapisywaniem elementów w kolekcji
@@ -38,12 +38,12 @@ final class WriterFacade
     public static function factory(Container $container): WriterFacade
     {
         $directoryWriter = new DirectoryWriter(
-            $container[DirectoryRepository::class],
+            $container->get(DirectoryRepository::class),
         );
 
         $trackWriter = new TrackWriter(
-            $container[TrackRepository::class],
-            new BackendClient(),
+            $container->get(TrackRepository::class),
+            $container->get(BackendClient::class),
         );
 
         return new self($directoryWriter, $trackWriter);

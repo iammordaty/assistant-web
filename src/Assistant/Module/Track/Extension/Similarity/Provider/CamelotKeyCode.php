@@ -6,7 +6,7 @@ use Assistant\Module\Track\Model\Track;
 use KeyTools\KeyTools;
 
 // @todo: Zmienić nazwę na CamelotKey
-class CamelotKeyCode extends AbstractProvider
+final class CamelotKeyCode extends AbstractProvider
 {
     /**
      * {@inheritDoc}

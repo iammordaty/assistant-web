@@ -4,17 +4,17 @@ namespace Assistant\Module\Search\Extension;
 
 class RawMinMaxExpressionParser
 {
-    public static function parse(string $expression): ?array
+    public static function parse(string $expression): ?MinMaxInfo
     {
         $value = self::normalizeExpression($expression);
 
         // "value"
 
         if (is_numeric($value)) {
-            return [
+            return MinMaxInfo::create([
                 'gte' => $value,
                 'lte' => $value,
-            ];
+            ]);
         }
 
         // "value" - "value"
@@ -23,10 +23,10 @@ class RawMinMaxExpressionParser
         $isMatched = preg_match('/^([\d.-\/]+)-([\d.-\/]+)$/', $value, $matches) === 1;
 
         if ($isMatched) {
-            return [
+            return MinMaxInfo::create([
                 'gte' => $matches[1],
                 'lte' => $matches[2],
-            ];
+            ]);
         }
 
         // ">= value", "> value", "<= value", "< value"
@@ -44,18 +44,18 @@ class RawMinMaxExpressionParser
         // ">= value", "> value"
 
         if ($matches['op'] === '>') {
-            return [
+            return MinMaxInfo::create([
                 "gt{$equal}" => $value,
                 'lte' => null,
-            ];
+            ]);
         }
 
         // "<= value", "< value"
 
-        return [
+        return MinMaxInfo::create([
             'gt' => null,
             "lt{$equal}" => $value,
-        ];
+        ]);
     }
 
     protected static function normalizeExpression(string $expression): string

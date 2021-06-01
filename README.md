@@ -18,9 +18,8 @@ My web-based music collection assistant (under high development and BC changes)
 - ...?
 
 ## requirements
-- PHP >= 7.4
-- MongoDB PHP Driver (ext-mongodb) >= 1.6.0
-- MongoDB >= 3.x (2.x should works too)
+- PHP >= 8
+- MongoDB >= 4.x
 - nginx / Apache
 
 ## how to start?

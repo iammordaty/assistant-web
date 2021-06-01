@@ -1,13 +1,15 @@
 <?php
 
-// @todo Repository -> Storage
+// @todo Repository -> Storage, (Persistence?)
 namespace Assistant\Module\Common\Repository;
 
-use MongoDB\Collection;
 use MongoDB\BSON\ObjectId;
+use MongoDB\BSON\UTCDateTime;
+use MongoDB\Collection;
 use MongoDB\Driver\Cursor;
 use MongoDB\Model\BSONDocument;
 
+// Persistence?
 final class Storage
 {
     public const SORT_ASC = 1;
@@ -200,6 +202,13 @@ final class Storage
     public function createIndex(array $key, array $options = []): string
     {
         return $this->collection->createIndex($key, $options);
+    }
+
+    public static function toDateTime(\DateTimeInterface $dateTime): UTCDateTime
+    {
+        $utcDateTime = new UTCDateTime($dateTime->getTimestamp() * 1000);
+
+        return $utcDateTime;
     }
 
     /**

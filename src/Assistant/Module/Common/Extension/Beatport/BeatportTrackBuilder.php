@@ -18,8 +18,6 @@ final class BeatportTrackBuilder
 
     public function fromTrackId(int $trackId): ?BeatportTrack
     {
-        $response = $this->client->tracks([ 'id' => $trackId ]);
-
         [ 'results' => $rawTracks ] = $this->client->tracks([ 'id' => $trackId ]);
 
         if (empty($rawTracks)) {

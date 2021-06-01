@@ -2,34 +2,32 @@
 
 namespace Assistant\Module\Dashboard\Controller;
 
-use Assistant\Module\Common\Controller\AbstractController;
 use Assistant\Module\Stats\Repository\StatsRepository;
-use Slim\Slim;
+use Assistant\Module\Track\Repository\TrackRepository;
+use Psr\Http\Message\ResponseInterface as Response;
+use Psr\Http\Message\ServerRequestInterface as Request;
+use Slim\Views\Twig;
 
-final class DashboardController extends AbstractController
+final class DashboardController
 {
     private const MAX_RECENT_TRACKS = 10;
-
     private const MAX_GENRES = 10;
-
     private const MAX_ARTISTS = 10;
 
-    private StatsRepository $statsRepository;
-
-    public function __construct(Slim $app)
-    {
-        parent::__construct($app);
-
-        $this->statsRepository = $app->container[StatsRepository::class];
+    public function __construct(
+        private StatsRepository $statsRepository,
+        private TrackRepository $trackRepository,
+        private Twig $view,
+    ) {
     }
 
-    public function index()
+    public function index(Request $request, Response $response): Response
     {
-        return $this->app->render('@dashboard/index.twig', [
+        return $this->view->render($response, '@dashboard/index.twig', [
             'menu' => 'dashboard',
             'trackCountByGenre' => $this->statsRepository->getTrackCountByGenre(self::MAX_GENRES),
             'trackCountByArtist' => $this->statsRepository->getTrackCountByArtist(self::MAX_ARTISTS),
-            'recentlyAddedTracks' => $this->statsRepository->getRecentlyAddedTracks(self::MAX_RECENT_TRACKS),
+            'recentlyAddedTracks' => $this->trackRepository->getRecent(limit: self::MAX_RECENT_TRACKS),
         ]);
     }
 }

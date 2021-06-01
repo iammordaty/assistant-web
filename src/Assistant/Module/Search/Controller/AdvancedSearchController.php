@@ -2,121 +2,67 @@
 
 namespace Assistant\Module\Search\Controller;
 
-use Assistant\Module\Search\Extension\DateTimeMinMaxExpressionParser;
-use Assistant\Module\Search\Extension\NumberMinMaxExpressionParser;
-use Assistant\Module\Search\Extension\MinMaxExpressionInfoToDbQuery;
-use Assistant\Module\Search\Extension\YearMinMaxExpressionParser;
-use MongoDB\BSON\Regex;
+use Assistant\Module\Search\Extension\SearchCriteriaFacade;
+use Assistant\Module\Search\Extension\TrackSearchService;
+use Psr\Http\Message\ResponseInterface as Response;
+use Psr\Http\Message\ServerRequestInterface as Request;
+use Slim\Routing\RouteContext;
+use Slim\Views\Twig;
 
 /**
  * Kontroler pozwalający na wyszukiwanie utworów po metadanych
  */
-class AdvancedSearchController extends SimpleSearchController
+final class AdvancedSearchController
 {
-    /**
-     * {@inheritDoc}
-     */
-    protected const SEARCH_FORM_TYPE = 'advanced';
-
-    /**
-     * {@inheritDoc}
-     */
-    protected function getQueryCriteria()
-    {
-        $request = $this->app->request();
-
-        $criteria = [];
-
-        if (!empty($request->get('artist'))) {
-            $criteria['artist'] = new Regex(trim($request->get('artist')), 'i');
-        }
-
-        if (!empty($request->get('title'))) {
-            $criteria['title'] = new Regex(trim($request->get('title')), 'i');
-        }
-
-        if (!empty($request->get('genre'))) {
-            $keys = array_map(
-                function ($genre) {
-                    return new Regex('^' . trim($genre) . '$', 'i');
-                },
-                explode(',', $request->get('genre'))
-            );
-
-            $filtered = array_merge(array_unique(array_filter($keys)));
-
-            if (count($filtered) === 1) {
-                $criteria['genre'] = $filtered[0];
-            } else {
-                $criteria['genre'] = [ '$in' => $filtered ];
-            }
-        }
-
-        if (($publisher = $request->get('publisher'))) {
-            $keys = array_map(
-                function ($publisher) {
-                    return new Regex('^' . trim($publisher) . '$', 'i');
-                },
-                explode(',', $publisher)
-            );
-
-            $filtered = array_merge(array_unique(array_filter($keys)));
-
-            if (count($filtered) === 1) {
-                $criteria['publisher'] = $filtered[0];
-            } else {
-                $criteria['publisher'] = [ '$in' => $filtered ];
-            }
-        }
-
-        if (($year = $request->get('year'))) {
-            $minMaxInfo = YearMinMaxExpressionParser::parse($year);
-
-            if ($minMaxInfo) {
-                $criteria['year'] = MinMaxExpressionInfoToDbQuery::convert($minMaxInfo);
-            }
-        }
-
-        if (!empty($request->get('initial_key'))) {
-            $keys = array_map(
-                function ($key) {
-                    return strtoupper(trim($key));
-                },
-                explode(',', $request->get('initial_key'))
-            );
-
-            $filtered = array_merge(array_unique(array_filter($keys)));
-
-            if (count($filtered) === 1) {
-                $criteria['initial_key'] = $filtered[0];
-            } else {
-                $criteria['initial_key'] = [ '$in' => $filtered ];
-            }
-        }
-
-        if ($bpm = $request->get('bpm')) {
-            $minMaxInfo = NumberMinMaxExpressionParser::parse($bpm);
-
-            if ($minMaxInfo) {
-                $criteria['bpm'] = MinMaxExpressionInfoToDbQuery::convert($minMaxInfo);
-            }
-        }
-
-        if ($indexedDate = $request->get('indexed_date')) {
-            $minMaxInfo = DateTimeMinMaxExpressionParser::parse($indexedDate);
-
-            if ($minMaxInfo) {
-                $criteria['indexed_date'] = MinMaxExpressionInfoToDbQuery::convert($minMaxInfo);
-            }
-        }
-
-        return $criteria;
+    public function __construct(
+        private TrackSearchService $searchService,
+        private Twig $view,
+    ) {
     }
 
     /**
-     * {@inheritDoc}
+     * Renderuje stronę wyszukiwania
      */
-    protected function isRequestValid(array $criteria): bool
+    public function index(Request $request, Response $response): Response
+    {
+        $form = $request->getQueryParams();
+
+        $results = [ 'count' => 0 ];
+        $paginator = null;
+
+        if ($this->isRequestValid($form)) {
+            $page = max(1, (int) ($form['page'] ?? 1));
+
+            $searchCriteria = SearchCriteriaFacade::createFromSearchRequest($request);
+            $results = $this->searchService->findBy($searchCriteria, $page);
+
+            if ($results['count'] > TrackSearchService::MAX_TRACKS_PER_PAGE) {
+                $routeParser = RouteContext::fromRequest($request)->getRouteParser();
+
+                $routeGenerator = function ($page) use ($form, $routeParser) {
+                    $routeName = 'search.advanced.index';
+                    $data = [];
+                    $paginatorQueryParams = $form;
+
+                    $baseUrl = $routeParser->urlFor($routeName, $data, $paginatorQueryParams);
+                    $url = sprintf('%s&page=%d', $baseUrl, $page);
+
+                    return $url;
+                };
+
+                $paginator = $this->searchService->getPaginator($page, $results['count'], $routeGenerator);
+            }
+        }
+
+        return $this->view->render($response, '@search/advanced/index.twig', [
+            'menu' => 'search',
+            'form' => $form,
+            'result' => $results,
+            'paginator' => $paginator,
+        ]);
+    }
+
+    private function isRequestValid(array $criteria): bool
     {
         return !empty($criteria) || filter_input(INPUT_GET, 'submit', FILTER_VALIDATE_BOOLEAN) === true;
     }

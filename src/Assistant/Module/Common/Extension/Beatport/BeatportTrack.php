@@ -119,7 +119,7 @@ final class BeatportTrack
             'genres' => $this->genres,
             'subGenres' => $this->subGenres,
             'charts' => $this->charts, // map -> toArray()
-            'releaseDate' => $this->releaseDate->format(\DateTime::ATOM),
+            'releaseDate' => $this->releaseDate->format(\DateTimeInterface::ATOM),
             'label' => $this->label,
             'length' => $this->length,
             'bpm' => $this->bpm,

@@ -4,7 +4,7 @@ namespace Assistant\Module\Track\Extension\Similarity\Provider;
 
 use Assistant\Module\Track\Model\Track;
 
-class Genre extends AbstractProvider
+final class Genre extends AbstractProvider
 {
     /**
      * {@inheritDoc}

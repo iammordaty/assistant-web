@@ -1,16 +1,24 @@
 <?php
 
-use Slim\Slim;
+use DI\Bridge\Slim\Bridge;
+use DI\ContainerBuilder;
 
 define('BASE_DIR', dirname(__DIR__));
 
 require_once BASE_DIR . '/vendor/autoload.php';
 
-$app = new Slim();
-$app->setName('assistant');
+$config = (require_once BASE_DIR . '/app/config.inc')(BASE_DIR);
 
-// bootstrap app
-require_once BASE_DIR . '/app/bootstrap.inc';
+/** @noinspection PhpUnhandledExceptionInspection */
+$container = (new ContainerBuilder())
+    ->addDefinitions((require_once BASE_DIR . '/app/container.inc')(BASE_DIR, $config))
+    ->build();
 
-// start app
+$app = Bridge::create($container);
+
+(require_once BASE_DIR . '/app/middleware.inc')($app);
+(require_once BASE_DIR . '/app/routes.inc')($app);
+
+unset($config, $container);
+
 $app->run();

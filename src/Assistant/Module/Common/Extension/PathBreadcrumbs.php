@@ -2,24 +2,14 @@
 
 namespace Assistant\Module\Common\Extension;
 
-use Cocur\Slugify\SlugifyInterface;
-use Slim\Helper\Set as Container;
-
 // a może Breadcrumbs?
 final class PathBreadcrumbs
 {
-    private SlugifyInterface $slugify;
+    private SlugifyService $slugify;
 
-    public function __construct(SlugifyInterface $slugify)
+    public function __construct(SlugifyService $slugify)
     {
         $this->slugify = $slugify;
-    }
-
-    public static function factory(Container $container): PathBreadcrumbs
-    {
-        $slugify = $container[SlugifyService::class];
-
-        return new self($slugify);
     }
 
     /**
@@ -30,7 +20,7 @@ final class PathBreadcrumbs
      */
     public function get(string $path): array
     {
-        if (strpos($path, DIRECTORY_SEPARATOR) === 0) {
+        if (str_starts_with($path, DIRECTORY_SEPARATOR)) {
             $path = ltrim($path, DIRECTORY_SEPARATOR);
         }
 

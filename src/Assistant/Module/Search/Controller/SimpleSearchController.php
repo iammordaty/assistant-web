@@ -2,133 +2,88 @@
 
 namespace Assistant\Module\Search\Controller;
 
-use Assistant\Module\Search\AbstractSearchController;
+use Assistant\Module\Search\Extension\SearchCriteriaFacade;
+use Assistant\Module\Search\Extension\TrackSearchService;
 use Assistant\Module\Track\Model\Track;
-use Assistant\Module\Track\Repository\TrackRepository;
-use Cocur\Slugify\Slugify;
-use MongoDB\BSON\Regex;
-use Pagerfanta\Adapter\NullAdapter;
-use Pagerfanta\Exception\NotValidCurrentPageException;
-use Pagerfanta\Pagerfanta;
-use Pagerfanta\View\TwitterBootstrap3View;
+use Psr\Http\Message\ResponseInterface as Response;
+use Psr\Http\Message\ServerRequestInterface as Request;
+use Slim\Routing\RouteContext;
+use Slim\Views\Twig;
 
 /**
  * Kontroler pozwalający na wyszukiwanie utworów po nazwie lub artyście
  */
-class SimpleSearchController extends AbstractSearchController
+final class SimpleSearchController
 {
-    /**
-     * {@inheritDoc}
-     */
-    protected const SEARCH_FORM_TYPE = 'simple';
-
-    /**
-     * {@inheritDoc}
-     */
-    protected function getQueryCriteria()
-    {
-        $criteria = [];
-
-        $query = trim($this->app->request()->get('query'));
-
-        if (!empty($query)) {
-            $slugify = new Slugify();
-
-            $query = new Regex($query, 'i');
-            $guidQuery = new Regex($slugify->slugify($query), 'i');
-
-            $criteria = [
-                '$or' => [
-                    [ 'artist' => $query ],
-                    [ 'title' => $query ],
-                    [ 'guid' => $guidQuery ],
-                ]
-            ];
-        }
-
-        return $criteria;
+    public function __construct(
+        private TrackSearchService $searchService,
+        private Twig $view,
+    ) {
     }
 
     /**
-     * {@inheritDoc}
+     * Renderuje stronę wyszukiwania
      */
-    protected function isRequestValid(array $criteria): bool
+    public function index(Request $request, Response $response): Response
     {
-        return !empty($criteria);
-    }
+        $form = $request->getQueryParams();
 
-    /**
-     * {@inheritDoc}
-     */
-    protected function getResults(array $criteria, array $options)
-    {
-        $repository = $this->app->container[TrackRepository::class];
+        $results = [ 'count' => 0 ];
+        $paginator = null;
 
-        [ 'sort' => $sort, 'limit' => $limit, 'skip' => $skip ] = $options; // przekazywać poziom wyżej
+        if ($this->isRequestValid($form)) {
+            $name = $form['query'];
+            $page = max(1, (int) ($form['page'] ?? 1));
 
-        $results = [
-            'tracks' => iterator_to_array($repository->findBy($criteria, $sort, $limit, $skip)),
-            'count' => $repository->count($criteria),
-        ];
+            $searchCriteria = SearchCriteriaFacade::createFromName($name);
+            $results = $this->searchService->findBy($searchCriteria, $page);
 
-        return $results;
-    }
+            if ($results['count'] > TrackSearchService::MAX_TRACKS_PER_PAGE) {
+                $routeParser = RouteContext::fromRequest($request)->getRouteParser();
 
-    /**
-     * {@inheritDoc}
-     */
-    protected function getPaginator($pageNo, $totalCount)
-    {
-        if ($totalCount <= static::MAX_TRACKS_PER_PAGE) {
-            return null;
+                $routeGenerator = function ($page) use ($form, $routeParser) {
+                    $routeName = 'search.simple.index';
+                    $data = [];
+                    $paginatorQueryParams = [ 'query' => str_replace('-', ' ', $form['query']) ];
+
+                    $baseUrl = $routeParser->urlFor($routeName, $data, $paginatorQueryParams);
+                    $url = sprintf('%s&page=%d', $baseUrl, $page);
+
+                    return $url;
+                };
+
+                $paginator = $this->searchService->getPaginator($page, $results['count'], $routeGenerator);
+            }
         }
 
-        $paginator = new Pagerfanta(new NullAdapter($totalCount));
-        $paginator->setMaxPerPage(static::MAX_TRACKS_PER_PAGE);
-
-        try {
-            $paginator->setCurrentPage($pageNo);
-        } catch (NotValidCurrentPageException $e) {
-            $paginator = null;
-
-            unset($e);
-        }
-
-        if ($paginator === null) {
-            return null;
-        }
-
-        return (new TwitterBootstrap3View())->render(
-            $paginator,
-            function($page) {
-                return sprintf(
-                    '%s?%s&page=%d',
-                    $this->app->urlFor($this->getRouteName()),
-                    http_build_query($this->app->request->get()),
-                    $page
-                );
-            },
-            [
-                'proximity' => 2,
-                'previous_message' => 'Poprzednia',
-                'next_message' => 'Następna',
-            ]
-        );
-    }
-    
-    /**
-     * {@inheritDoc}
-     */
-    protected function handleRequest($form, $results, $paginator)
-    {
-        if ($this->getSearchFormType() === self::SEARCH_FORM_TYPE && $results['count'] === 1) {
+        if ($results['count'] === 1) {
             /** @var Track $track */
-            $track = reset($results['tracks']);
-            $redirectUrl = $this->app->urlFor('track.track.index', [ 'guid' => $track->getGuid() ]);
+            $track = $results['tracks']->current();
 
-            return $this->app->redirect($redirectUrl);
+            $routeName = 'track.track.index';
+            $data = [ 'guid' => $track->getGuid() ];
+            $queryParams = [ ];
+
+            $routeParser = RouteContext::fromRequest($request)->getRouteParser();
+            $redirectUrl = $routeParser->urlFor($routeName, $data, $queryParams);
+
+            $redirect = $response
+                ->withHeader('Location', $redirectUrl)
+                ->withStatus(302);
+
+            return $redirect;
         }
 
-        return parent::handleRequest($form, $results, $paginator);
+        return $this->view->render($response, '@search/simple/index.twig', [
+            'menu' => 'search',
+            'form' => $form,
+            'result' => $results,
+            'paginator' => $paginator,
+        ]);
+    }
+
+    private function isRequestValid(array $criteria): bool
+    {
+        return !empty($criteria) === true;
     }
 }

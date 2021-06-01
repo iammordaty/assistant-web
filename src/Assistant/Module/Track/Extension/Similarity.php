@@ -53,7 +53,7 @@ class Similarity
      * @see $providers
      * @var int
      */
-    private $providersCount;
+    private int $providersCount;
 
     /**
      * Parametry modułu
@@ -67,7 +67,7 @@ class Similarity
      *
      * @var int
      */
-    private $maxSimilarityValue;
+    private int $maxSimilarityValue;
 
     public function __construct(TrackRepository $repository, array $parameters)
     {
@@ -163,7 +163,9 @@ class Similarity
             }
 
             if (empty($provider->getSimilarityField())) {
-                throw new \RuntimeException(sprintf('Provider "%s" has invalid similarity field', $provider->getName()));
+                $message = sprintf('Provider "%s" has invalid similarity field', $provider->getName());
+
+                throw new \RuntimeException($message);
             }
 
             $this->providers[] = $provider;

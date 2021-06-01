@@ -4,7 +4,7 @@ namespace Assistant\Module\Directory\Controller;
 
 use Assistant\Module\Collection\Extension\Finder;
 use Assistant\Module\Collection\Extension\Reader\ReaderFacade;
-use Assistant\Module\Common\Controller\AbstractController;
+use Assistant\Module\Common\Extension\Config;
 use Assistant\Module\Common\Extension\PathBreadcrumbs;
 use Assistant\Module\Common\Extension\SlugifyService;
 use Assistant\Module\Common\Extension\TargetPathService;
@@ -12,52 +12,63 @@ use Assistant\Module\Common\Model\CollectionItemInterface;
 use Assistant\Module\Directory\Model\Directory;
 use Assistant\Module\Directory\Repository\DirectoryRepository;
 use Assistant\Module\Track\Repository\TrackRepository;
-use Slim\Slim;
+use Psr\Http\Message\ResponseInterface as Response;
+use Psr\Http\Message\ServerRequestInterface as Request;
+use Slim\Exception\HttpNotFoundException;
+use Slim\Routing\RouteContext;
+use Slim\Views\Twig;
 use SplFileInfo;
 
 // TODO: Uprościć przeglądarkę: ścieżki i katalogi w jednej tablicy
-class BrowseController extends AbstractController
+final class BrowseController
 {
-    private DirectoryRepository $directoryRepository;
-
-    private TrackRepository $trackRepository;
-
-    public function __construct(Slim $app)
-    {
-        parent::__construct($app);
-
-        $this->directoryRepository = $app->container[DirectoryRepository::class];
-        $this->trackRepository = $app->container[TrackRepository::class];
+    public function __construct(
+        private Config $config,
+        private DirectoryRepository $directoryRepository,
+        private PathBreadcrumbs $pathBreadcrumbs,
+        private ReaderFacade $reader,
+        private SlugifyService $slugify,
+        private TrackRepository $trackRepository,
+        private Twig $view,
+    ) {
     }
 
-    public function index($guid = null)
+    public function index(Request $request, Response $response): Response
     {
+        $guid = $request->getAttribute('guid');
+
         if (!$guid) {
-            $slugify = $this->app->container[SlugifyService::class];
+            $guid = $this->slugify->slugify($this->config->get('collection.root_dir'));
 
-            $guid = $slugify->slugify($this->app->container['parameters']['collection']['root_dir']);
-            $redirectUrl = $this->app->urlFor('directory.browse.index', [ 'guid' => $guid ]);
+            $routeName = 'directory.browse.index';
+            $data = [ 'guid' => $guid ];
+            $queryParams = [ ];
 
-            $this->app->redirect($redirectUrl);
+            $routeParser = RouteContext::fromRequest($request)->getRouteParser();
+            $redirectUrl = $routeParser->urlFor($routeName, $data, $queryParams);
+
+            $redirect = $response
+                ->withHeader('Location', $redirectUrl)
+                ->withStatus(302);
+
+            return $redirect;
         }
 
         $directory = $this->directoryRepository->getByGuid($guid);
 
-        if ($directory === null) {
-            $this->app->notFound();
+        if (!$directory) {
+            throw new HttpNotFoundException($request);
         }
 
-        $pathBreadcrumbs = $this->app->container[PathBreadcrumbs::class]->get($directory->getPathname());
-
-        return $this->app->render('@directory/index.twig', [
+        return $this->view->render($response, '@directory/index.twig', [
             'menu' => 'browse',
             'directory' => $directory,
-            'pathBreadcrumbs' => $pathBreadcrumbs,
+            'pathBreadcrumbs' => $this->pathBreadcrumbs->get($directory->getPathname()),
             'children' => $this->getChildren($directory),
         ]);
     }
 
-    public function recent()
+    public function recent(Request $request, Response $response): Response
     {
         $getGroupName = static function ($name): string {
             $parts = explode(DIRECTORY_SEPARATOR, ltrim($name, '/'));
@@ -67,7 +78,7 @@ class BrowseController extends AbstractController
 
         $recent = [];
 
-        foreach ($this->trackRepository->getRecentTracks() as $track) {
+        foreach ($this->trackRepository->getRecent() as $track) {
             $groupName = $getGroupName($track->getPathname());
 
             if (isset($recent[$groupName]) === false) {
@@ -80,34 +91,36 @@ class BrowseController extends AbstractController
             $recent[$groupName]['tracks'][$track->getGuid()] = $track;
         }
 
+        // Sortowanie chyba nie będzie potrzebne jeśli data zaindeksowania w bazie będzie poprawna
         krsort($recent);
 
         foreach ($recent as &$group) {
             ksort($group['tracks']);
         }
 
-        return $this->app->render('@directory/recent.twig', [
+        return $this->view->render($response, '@directory/recent.twig', [
             'menu' => 'browse',
             'recent' => $recent,
         ]);
     }
 
-    public function incoming($pathname)
+    public function incoming(Request $request, Response $response): Response
     {
-        if (!$pathname) {
-            $pathname = $this->app->container['parameters']['collection']['incoming_dir'];
+        $pathname = $request->getAttribute('pathname') ?: $this->config->get('collection.incoming_dir');
+
+        if (!is_readable($pathname)) {
+            throw new HttpNotFoundException($request);
         }
 
         // TODO: Czy to muszą być dwie zmienne? Może da się to uprościć bez dużej straty w widoku
         $tracks = [];
         $directories = [];
 
-        $reader = ReaderFacade::factory($this->app->container);
         $targetPathService = TargetPathService::factory();
 
         foreach ($this->getNodes($pathname) as $node) {
             /** @var CollectionItemInterface $element */
-            $element = $reader->read($node);
+            $element = $this->reader->read($node);
             $targetPath = $targetPathService->getTargetPath($node);
 
             if ($node->isFile()) {
@@ -137,12 +150,10 @@ class BrowseController extends AbstractController
             'tracks' => $tracks,
         ];
 
-        $pathBreadcrumbs = $this->app->container[PathBreadcrumbs::class]->get($pathname);
-
-        return $this->app->render('@directory/incoming.twig', [
+        return $this->view->render($response, '@directory/incoming.twig', [
             'menu' => 'browse',
             'pathname' => $pathname,
-            'pathBreadcrumbs' => $pathBreadcrumbs,
+            'pathBreadcrumbs' => $this->pathBreadcrumbs->get($pathname),
             'children' => $children,
         ]);
     }
@@ -166,9 +177,9 @@ class BrowseController extends AbstractController
 
     /**
      * @param string $pathname
-     * @return Finder|SplFileInfo[]
+     * @return SplFileInfo[]|Finder
      */
-    private function getNodes(string $pathname)
+    private function getNodes(string $pathname): array|Finder
     {
         return Finder::create([
             'pathname' => $pathname,

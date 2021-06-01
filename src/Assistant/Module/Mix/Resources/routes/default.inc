@@ -1,16 +1,11 @@
 <?php
 
-/* @var $app Slim */
-
 use Assistant\Module\Mix;
-use Slim\Slim;
+use Assistant\Module\Mix\Controller\MixController;
+use Slim\App;
 
-$app->group('/mix', function () use ($app) {
-
-    $app->map(
-        '/',
-        function () use ($app) {
-            (new Mix\Controller\MixController($app))->index();
-        }
-    )->via('GET', 'POST')->name('mix.mix.index');
-});
+return static function (App $app): void {
+    $app
+        ->map(['GET', 'POST'], '/mix', [ MixController::class, 'index' ])
+        ->setName('mix.mix.index');
+};

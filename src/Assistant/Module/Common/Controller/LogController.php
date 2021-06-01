@@ -2,37 +2,41 @@
 
 namespace Assistant\Module\Common\Controller;
 
+use Assistant\Module\Common\Extension\Config;
 use PhpExtended\Tail\Tail;
+use Psr\Http\Message\ResponseInterface as Response;
+use Psr\Http\Message\ServerRequestInterface as Request;
+use Slim\Exception\HttpNotFoundException;
+use Slim\Views\Twig;
 
-class LogController extends AbstractController
+final class LogController
 {
-    public function index()
+    private const AVAILABLE_LOGS = [ 'debug', 'error' ];
+
+    private string $baseDir;
+
+    public function __construct(Config $config, private Twig $view)
     {
-        $availableLogs = [ 'debug', 'error' ];
+        $this->baseDir = $config->get('base_dir');
+    }
 
-        $log = $this->app->request()->get('log');
+    public function index(Request $request, Response $response): Response
+    {
+        $log = $request->getQueryParams()['log'] ?? null;
 
-        if ($log && !in_array($log, $availableLogs)) {
-            $this->app->notFound();
+        if ($log && !in_array($log, self::AVAILABLE_LOGS)) {
+            throw new HttpNotFoundException($request);
         }
 
-        $logs = $log ? [ $log ] : $availableLogs;
+        $logs = $log ? [ $log ] : self::AVAILABLE_LOGS;
 
-        $names = array_map(function ($log) {
-            return BASE_DIR . "/app/logs/app.$log.log";
-        }, $logs);
-
+        $names = array_map(fn($log): string => sprintf('%s/app/logs/app.%s.log', $this->baseDir, $log), $logs);
         $maxLines = $log ? 100 : 5;
 
-        $contents = array_map(function ($filename) use ($maxLines) {
-            return $this->read($filename, $maxLines);
-        }, $names);
+        $contents = array_map(fn($filename): array => $this->read($filename, $maxLines), $names);
+        $mtimes = array_map(fn($filename): bool|int => filemtime($filename), $names);
 
-        $mtimes = array_map(function ($filename) {
-            return filemtime($filename);
-        }, $names);
-
-        return $this->app->render('@common/log/index.twig', [
+        return $this->view->render($response, '@common/log/index.twig', [
             'menu' => 'log',
             'maxLines' => $maxLines,
             'availableLogs' => $logs,
@@ -41,29 +45,29 @@ class LogController extends AbstractController
         ]);
     }
 
-    public function ajax()
+    public function ajax(Request $request, Response $response): Response
     {
-        $availableLogs = [ 'debug', 'error' ];
+        $queryParams = $request->getQueryParams();
 
-        $log = $this->app->request()->get('log');
+        $log = $queryParams['log'] ?? null;
 
-        if (!in_array($log, $availableLogs)) {
-            $this->app->notFound();
+        if ($log && !in_array($log, self::AVAILABLE_LOGS)) {
+            throw new HttpNotFoundException($request);
         }
 
-        $filename = BASE_DIR . "/app/logs/app.$log.log";
-        
-        $maxLines = $this->app->request()->get('lines');
+        $filename = sprintf('%s/app/logs/app.%s.log', $this->baseDir, $log);
+
+        $maxLines = $queryParams['lines'] ?? null;
         $logContent = $this->read($filename, $maxLines);
         $logMtime = filemtime($filename);
 
-        return $this->app->render('@common/log/view.twig', [
+        return $this->view->render($response, '@common/log/view.twig', [
             'logContent' => $logContent,
             'logMtime' => $logMtime,
         ]);
     }
 
-    private function read($filename, $maxLines)
+    private function read($filename, $maxLines): array
     {
         $lines = (new Tail($filename))->smart($maxLines + 1);
 
@@ -95,8 +99,8 @@ class LogController extends AbstractController
                 ];
             }
 
-            $task = isset($context['task']) ? $context['task'] : null;
-            $command = isset($context['command']) ? $context['command'] : null;
+            $task = $context['task'] ?? null;
+            $command = $context['command'] ?? null;
 
             $blacklistedKeys = [ 'memory_usage', 'procId', 'pathname', 'task', 'command', 'help', 'quiet', 'verbose', 'version', 'ansi', 'no-ansi', 'no-interaction' ];
 

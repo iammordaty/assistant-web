@@ -2,27 +2,39 @@
 
 namespace Assistant\Module\Common\Controller;
 
+use Assistant\Module\Common\Extension\Config;
 use Cocur\BackgroundProcess\BackgroundProcess;
+use Psr\Http\Message\ResponseInterface as Response;
+use Psr\Http\Message\ServerRequestInterface as Request;
 
-final class TaskController extends AbstractController
+final class TaskController
 {
-    public function calculateAudioData(): void
-    {
-        $pathname = $this->app->request()->post('pathname');
-        $command = sprintf(
-            'php %s/app/console.php track:calculate-audio-data -w "%s"',
-            $this->app->config('base_dir'),
-            $pathname
-        );
+    private string $baseDir;
 
-        (new BackgroundProcess($command))->run();
+    public function __construct(Config $config)
+    {
+        $this->baseDir = $config->get('base_dir');
     }
 
-    public function move(): void
+    public function calculateAudioData(Request $request, Response $response): Response
     {
-        $data = $this->app->request->post();
+        $pathname = $request->getParsedBody()['pathname'] ?? null;
+        $command = sprintf('php %s/app/console.php track:calculate-audio-data -w "%s"', $this->baseDir, $pathname);
 
-        echo $data['targetPathname'];
+        $backgroundProcess = new BackgroundProcess($command);
+        $backgroundProcess->run();
+
+        $response->getBody()->write(json_encode([
+            'command' => $command,
+            'pid' => $backgroundProcess->getPid(),
+        ]));
+
+        return $response->withHeader('Content-Type', 'application/json');
+    }
+
+    public function move(Request $request, Response $response): Response
+    {
+        $post = $request->getParsedBody();
 
         /*
         (new BackgroundProcess(
@@ -33,5 +45,14 @@ final class TaskController extends AbstractController
             )
         ))->run();
         */
+
+        $response->getBody()->write(json_encode([
+            'message' => 'not-implemented :-(',
+            'post' => $post,
+        ]));
+
+        return $response
+            ->withStatus(418)
+            ->withHeader('Content-Type', 'application/json');
     }
 }

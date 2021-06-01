@@ -1,14 +1,8 @@
 <?php
 
-use Assistant\Module\Collection\Task\CleanerTask;
-use Assistant\Module\Collection\Task\IndexerTask;
-use Assistant\Module\Collection\Task\MonitorTask;
-use Assistant\Module\Collection\Task\MoverTask;
-use Assistant\Module\Collection\Task\ReindexerTask;
-use Assistant\Module\Track\Task\AudioDataCalculatorTask;
-use Slim\Environment;
-use Slim\Slim;
-use Symfony\Component\Console;
+use DI\Bridge\Slim\Bridge;
+use DI\ContainerBuilder;
+use Symfony\Component\Console\Application;
 
 setlocale(LC_TIME, 'pl_PL.utf8');
 
@@ -16,30 +10,25 @@ define('BASE_DIR', dirname(__DIR__));
 
 require_once BASE_DIR . '/vendor/autoload.php';
 
-// prepare app
+// require config and set up dependencies
 
-Environment::mock([
-    'REQUEST_METHOD' => 'CLI',
-    'REQUEST_URI' => '',
-    'PATH_INFO' => ''
-]);
+$config = (require_once BASE_DIR . '/app/config.inc')(BASE_DIR);
 
-$app = new Slim();
-$app->setName('assistant-console');
+/** @noinspection PhpUnhandledExceptionInspection */
+$container = (new ContainerBuilder())
+    ->addDefinitions((require_once BASE_DIR . '/app/container.inc')(BASE_DIR, $config))
+    ->build();
 
-// bootstrap app
-require_once BASE_DIR . '/app/bootstrap.inc';
+$app = Bridge::create($container);
+
+(require_once BASE_DIR . '/app/middleware.inc')($app);
 
 // prepare tasks and console app
-$console = new Console\Application();
-$console->addCommands([
-    new CleanerTask($app),
-    new IndexerTask($app),
-    new MoverTask($app),
-    new ReindexerTask($app),
-    new AudioDataCalculatorTask($app),
-    new MonitorTask($app),
-]);
+
+$console = new Application();
+$console->addCommands((require_once BASE_DIR . '/app/tasks.inc')($container));
+
+unset($app, $container);
 
 /** @noinspection PhpUnhandledExceptionInspection */
 $console->run();

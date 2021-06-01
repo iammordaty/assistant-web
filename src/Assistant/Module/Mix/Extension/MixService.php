@@ -7,29 +7,13 @@ use Assistant\Module\Track\Extension\Similarity;
 use Assistant\Module\Track\Extension\SimilarTracksVO;
 use Assistant\Module\Track\Extension\TrackService;
 use Assistant\Module\Track\Model\Track;
-use Assistant\Module\Track\Repository\TrackRepository;
-use Slim\Helper\Set as Container;
 
 final class MixService
 {
-    private Similarity $similarity;
-
-    private TrackService $trackService;
-
-    public function __construct(Similarity $similarity, TrackService $trackService)
-    {
-        $this->similarity = $similarity;
-        $this->trackService = $trackService;
-    }
-
-    public static function factory(Container $container): self
-    {
-        $similarity = new Similarity(
-            $container[TrackRepository::class],
-            $container['parameters']['track']['similarity']
-        );
-
-        return new self($similarity, $container[TrackService::class]);
+    public function __construct(
+        private Similarity $similarity,
+        private TrackService $trackService
+    ) {
     }
 
     /**
@@ -70,19 +54,23 @@ final class MixService
         /** @see SimilarTracksVO */
 
         foreach ($listing as $trackName) {
-            $track = $this->trackService->getTrackByName($trackName);
+            $track = $this->trackService->findOneByName($trackName);
 
             if (!$track) {
                 // @todo: brak wyszukanego utworu powinien być komunikowany na froncie
                 continue;
             }
 
+            $similarityValue = $previousTrack ? $this->similarity->getSimilarityValue($previousTrack, $track) : null;
+
             $tracks[] = [
                 'track' => $track,
-                'similarityValue' => $previousTrack ? $this->similarity->getSimilarityValue($previousTrack, $track) : null
+                'similarityValue' => $similarityValue,
             ];
 
             $previousTrack = $track;
+
+            unset($track, $similarityValue);
         }
 
         return $tracks;

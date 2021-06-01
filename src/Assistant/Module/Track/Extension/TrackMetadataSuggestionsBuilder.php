@@ -193,7 +193,7 @@ final class TrackMetadataSuggestionsBuilder
         if ($remixers) {
             $suggestions[] = sprintf('%s (%s Remix)', $titleCase, implode(', ', $remixers));
             $suggestions[] = sprintf('%s (%s Remix)', $releaseNameWithoutBrackets, implode(', ', $remixers));
-            
+
             // dla świętego spokoju tutaj przydałaby się jeszcze jedna sugestia, zamieniająca ") (" na " / "
             // wynikająca z takiego przykładu.
             // In The Air Tonight (Club Remixes) (Passenger 10 Remix)

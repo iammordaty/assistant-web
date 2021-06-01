@@ -10,13 +10,12 @@ use Assistant\Module\Common\Extension\TrackSearch\BeatportUniqueTracks;
 use Assistant\Module\Common\Extension\TrackSearch\GoogleBeatportSearchTracks;
 use Assistant\Module\Common\Extension\TrackSearch\GoogleSearchApiClient;
 use Assistant\Module\Track\Extension\TrackMetadataSuggestionsBuilder;
-use Slim\Helper\Set as Container;
 
 // Wszystko co się tutaj dzieje ma związek z kawałkami z Beatportu, więc trzeba
 // jeszcze lekko przemyśleć jak nazwać / podzielić tę klasę
 final class TrackMetadataSuggestions
 {
-    public static function factory(Container $container): self
+    public static function factory(): self
     {
         return new self();
     }
@@ -64,11 +63,18 @@ final class TrackMetadataSuggestions
 
         // --- wyszukiwanie utworów
 
-        // to jako tablica, którą w foreachu wywołuję się poprzez invoke z query jako parametrem?
-        // https://github.com/Respect/Validation/blob/master/library/Rules/AbstractComposite.php#L40
-        $tracksFoundByBeatportSearch = $beatportSearchTracks($query);
-        $tracksFoundByGoogleSearch = $googleBeatportSearchTracks($query);
-        // var_dump($tracksFoundByBeatportSearch ?? null, $tracksFoundByGoogleSearch ?? null); exit;
+        try {
+            // to jako tablica, którą w foreachu wywołuję się poprzez invoke z query jako parametrem?
+            // https://github.com/Respect/Validation/blob/master/library/Rules/AbstractComposite.php#L40
+
+            $tracksFoundByBeatportSearch = $beatportSearchTracks($query);
+            $tracksFoundByGoogleSearch = $googleBeatportSearchTracks($query);
+
+            // var_dump($tracksFoundByBeatportSearch ?? null, $tracksFoundByGoogleSearch ?? null); exit;
+        } catch (\Exception $e) {
+            $tracksFoundByBeatportSearch = [];
+            $tracksFoundByGoogleSearch = [];
+        }
 
         $beatportTracks = (new BeatportUniqueTracks())
             ->add($tracksFoundByBeatportSearch)
@@ -82,7 +88,7 @@ final class TrackMetadataSuggestions
         }
 
         // -- budowanie sugestii na podstawie znalezionych utworów
-        
+
         $suggestionsBuilder = new TrackMetadataSuggestionsBuilder(new BackendClient());
 
         $suggestions = array_map(

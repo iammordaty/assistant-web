@@ -55,23 +55,23 @@
                             <td class="col-xs-5">
                                 <span class="ellipsis track-name">
                                     {% set name = track.track.artist ~ ' - ' ~ track.track.title %}
-                                    <a href="{{ urlFor('track.track.index', { guid: track.track.guid } )}}" title="{{ name }}">{{ name }}</a>
+                                    <a href="{{ url_for('track.track.index', { guid: track.track.guid } )}}" title="{{ name }}">{{ name }}</a>
                                 </span>
                             </td>
                             <td class="col-xs-2">
-                                <a class="undecorated" href="{{ urlFor('search.advanced.index') }}?genre={{ track.track.genre }}">{{ track.track.genre }}</a>
+                                <a class="undecorated" href="{{ url_for('search.advanced.index') }}?genre={{ track.track.genre }}">{{ track.track.genre }}</a>
                             </td>
                             <td class="col-xs-1">
                                 {{ track.track.length|format_duration }}
                             </td>
                             <td class="col-xs-1">
-                                <a class="undecorated" href="{{ urlFor('search.advanced.index') }}?year={{ track.track.year }}">{{ track.track.year }}</a>
+                                <a class="undecorated" href="{{ url_for('search.advanced.index') }}?year={{ track.track.year }}">{{ track.track.year }}</a>
                             </td>
                             <td class="col-xs-1">
-                                <a class="undecorated" href="{{ urlFor('search.advanced.index') }}?initial_key={{ track.track.initialKey }}">{{ track.track.initialKey }}</a>
+                                <a class="undecorated" href="{{ url_for('search.advanced.index') }}?initial_key={{ track.track.initialKey }}">{{ track.track.initialKey }}</a>
                             </td>
                             <td class="col-xs-1">
-                                <a class="undecorated" href="{{ urlFor('search.advanced.index') }}?bpm={{ track.track.bpm }}">{{ track.track.bpm }}</a>
+                                <a class="undecorated" href="{{ url_for('search.advanced.index') }}?bpm={{ track.track.bpm }}">{{ track.track.bpm }}</a>
                             </td>
                             <td class="col-xs-1">
                                 {%- if loop.index0 > 0 %} {{ track.similarityValue }}%{% else %}-{% endif %}
@@ -90,7 +90,7 @@
                 {% for row in matrix %}
                     {% set name = row.track.artist ~ ' - ' ~ row.track.title %}
                     <td title="{{ row.track.artist }} - {{ row.track.title}}">
-                        <a href="{{ urlFor('track.track.index', { guid: row.track.guid } )}}"  class="undecorated" title="{{ name }}">{{ row.track.title }}</a>
+                        <a href="{{ url_for('track.track.index', { guid: row.track.guid } )}}"  class="undecorated" title="{{ name }}">{{ row.track.title }}</a>
                     </td>
                 {% endfor %}
             </tr>
@@ -98,7 +98,7 @@
                 <tr>
                     {% set name = row.track.artist ~ ' - ' ~ row.track.title %}
                     <td title="{{ row.track.artist }} - {{ row.track.title}}">
-                        <a href="{{ urlFor('track.track.index', { guid: row.track.guid } )}}"  class="undecorated" title="{{ name }}">{{ row.track.title }}</a>
+                        <a href="{{ url_for('track.track.index', { guid: row.track.guid } )}}"  class="undecorated" title="{{ name }}">{{ row.track.title }}</a>
                     </td>
                     {% for track in row.tracks %}
                         <td class="text-center" {% if track.similarityValue is empty %}style="background-color: #eaeaea"{% endif %}>{{ track.similarityValue|default('-') }}</td>

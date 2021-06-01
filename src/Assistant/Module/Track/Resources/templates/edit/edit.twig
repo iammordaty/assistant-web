@@ -10,7 +10,7 @@
 
     <form
         method="GET"
-        action="{{ urlFor('track.edit.edit', { pathname: pathname|url_encode }) }}"
+        action="{{ url_for('track.edit.edit', { pathname: pathname|url_encode }) }}"
         class="form-horizontal"
         role="form"
         autocomplete="off"
@@ -97,7 +97,7 @@
         </div>
     </form>
 
-    <form method="POST" action="{{ urlFor('track.edit.save', { pathname: pathname|url_encode }) }}" class="form-horizontal" style="padding-bottom: 100px" role="form">
+    <form method="POST" action="{{ url_for('track.edit.save', { pathname: pathname|url_encode }) }}" class="form-horizontal" style="padding-bottom: 100px" role="form">
         <legend>Edycja metadanych</legend>
 
         <!-- Fajnie byłoby mieć przycisk (przycisk, nic z automatu), który przepisze pojedyncze sugestie do pustych inputów -->

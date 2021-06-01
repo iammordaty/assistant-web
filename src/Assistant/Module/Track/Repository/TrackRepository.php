@@ -2,18 +2,22 @@
 
 namespace Assistant\Module\Track\Repository;
 
+use Assistant\Module\Common\Repository\Query;
 use Assistant\Module\Common\Repository\Storage;
 use Assistant\Module\Directory\Model\Directory;
+use Assistant\Module\Search\Extension\SearchCriteria;
 use Assistant\Module\Track\Model\Track;
 use Assistant\Module\Track\Model\TrackDto;
 use DateTime;
 use MongoDB\BSON\Regex;
-use MongoDB\BSON\UTCDateTime;
 use MongoDB\Database;
 use Traversable;
 
 /**
  * Repozytorium obiektów Track
+ *
+ * @todo W niniejszej klasie niech zostanie tylko CRUD. Pozostałe metody (getOneBy[Field], getChildren, itp)
+ *       przenieść do serwisu
  */
 final class TrackRepository
 {
@@ -36,45 +40,52 @@ final class TrackRepository
         return $repository;
     }
 
+    public function getOneBy(SearchCriteria $searchCriteria): ?Track
+    {
+        $query = Query::fromSearchCriteria($searchCriteria);
+        $track = $this->findOneBy($query->toStorage());
+
+        return $track;
+    }
+
     /**
-     * @param string|Regex $guid
-     * @return Track|null
+     * @param SearchCriteria $searchCriteria
+     * @param array|null $sort
+     * @param int|null $limit
+     * @param int|null $skip
+     * @return Track[]|Traversable
      */
-    public function getByGuid($guid): ?Track
+    public function getBy(
+        SearchCriteria $searchCriteria,
+        ?array $sort = null,
+        ?int $limit = null,
+        ?int $skip = null
+    ): array|Traversable {
+        $query = Query::fromSearchCriteria($searchCriteria);
+        $tracks = $this->findBy($query->toStorage(), $sort, $limit, $skip);
+
+        return $tracks;
+    }
+
+    public function getOneByGuid(string|Regex $guid): ?Track
     {
         $track = $this->findOneBy([ 'guid' => $guid ]);
 
         return $track;
     }
 
-    /**
-     * @param string|Regex $name
-     * @return Track|null
-     */
-    public function getByName($name): ?Track
+    public function getOneByPathname(string $pathname): ?Track
     {
-        $track = $this->findOneBy([
-            '$or' => [
-                [ 'artist' => $name ],
-                [ 'title' => $name ],
-            ]
-        ]);
-
-        return $track;
-    }
-
-    public function getByPathname(Track $track): ?Track
-    {
-        $track = $this->findOneBy([ 'pathname' => $track->getPathname() ]);
+        $track = $this->findOneBy([ 'pathname' => $pathname ]);
 
         return $track;
     }
 
     /**
      * @param Directory $directory
-     * @return Traversable|Track[]
+     * @return Track[]|Traversable
      */
-    public function getChildren(Directory $directory): Traversable
+    public function getChildren(Directory $directory): array|Traversable
     {
         $directories = $this->findBy(
             [ 'parent' => $directory->getGuid() ],
@@ -86,9 +97,10 @@ final class TrackRepository
 
     /**
      * @param DateTime|null $from
+     * @param int|null $limit
      * @return Track[]|Traversable
      */
-    public function getRecentTracks(?DateTime $from = null)
+    public function getRecent(?DateTime $from = null, ?int $limit = null): array|Traversable
     {
         if (!$from) {
             $from = new DateTime();
@@ -97,8 +109,9 @@ final class TrackRepository
         }
 
         $tracks = $this->findBy(
-            [ 'indexed_date' => [ '$gte' => new UTCDateTime($from->getTimestamp() * 1000) ] ],
-            [ 'indexed_date' => -1 ]
+            [ 'indexed_date' => [ '$gte' => Storage::toDateTime($from) ] ],
+            [ 'indexed_date' => Storage::SORT_DESC ],
+            $limit
         );
 
         return $tracks;
@@ -131,25 +144,19 @@ final class TrackRepository
      * @param array|null $sort
      * @param int|null $limit
      * @param int|null $skip
-     * @return Traversable|Track[]
+     * @return Track[]|Traversable
      */
-    public function findBy(array $conditions, ?array $sort = [], ?int $limit = null, ?int $skip = null): Traversable
-    {
-        $options = [];
-
-        if ($sort) {
-            $options['sort'] = $sort;
-        }
-
-        if ($limit) {
-            $options['limit'] = $limit;
-        }
-
-        if ($skip) {
-            $options['skip'] = $skip;
-        }
-
-        $documents = $this->storage->findBy($conditions, $options);
+    public function findBy(
+        array $conditions,
+        ?array $sort = [],
+        ?int $limit = null,
+        ?int $skip = null
+    ): array|Traversable {
+        $documents = $this->storage->findBy($conditions, options: [
+            'sort' => $sort,
+            'limit' => $limit,
+            'skip' => $skip,
+        ]);
 
         foreach ($documents as $document) {
             $track = self::createModel($document);
@@ -158,8 +165,18 @@ final class TrackRepository
         }
     }
 
+    public function countBy(SearchCriteria $searchCriteria): int
+    {
+        $criteria = Query::fromSearchCriteria($searchCriteria);
+        $count = $this->count($criteria->toStorage());
+
+        return $count;
+    }
+
     /**
      * Zwraca informację o liczbie dokumentów w kolekcji na podstawie podanych kryteriów
+     *
+     * @deprecated Publiczna tymczasowo, ta metoda powinna być prywatna
      *
      * @param array $conditions
      * @return int

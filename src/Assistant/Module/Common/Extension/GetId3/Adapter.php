@@ -3,7 +3,8 @@
 namespace Assistant\Module\Common\Extension\GetId3;
 
 use Assistant\Module\Common\Extension\GetId3\Adapter\Metadata\Id3v2;
-use Assistant\Module\Common\Extension\GetId3\Exception\WriterException;
+use Assistant\Module\Common\Extension\GetId3\Exception\ReadException;
+use Assistant\Module\Common\Extension\GetId3\Exception\WriteException;
 use getID3;
 use getid3_write_id3v2;
 use getid3_writetags;
@@ -12,7 +13,7 @@ use SplFileInfo;
 // TODO: Zobaczyć dlaczego nie działa usuwanie tagów APE
 // TODO: Poprawić settery ustawiania opcji
 
-class Adapter
+final class Adapter
 {
     private array $id3ReaderOptions = [
         'encoding' => 'UTF-8',
@@ -33,23 +34,16 @@ class Adapter
         'remove_other_tags' => false,
     ];
 
-    protected getID3 $id3Reader;
+    private getID3 $id3Reader;
 
-    /**
-     * @var getid3_writetags
-     */
-    protected $id3Writer;
+    private getid3_writetags $id3Writer;
 
-    /**
-     * @var SplFileInfo $file
-     */
-    protected $file;
+    private SplFileInfo $file;
 
-    /**
-     * @var array
-     */
-    protected $rawInfo;
+    private array $rawInfo = [];
 
+    // @todo: możliwe że jest inne podzielenie parametrów (poprzez settery, a może nową klasę z parametrami),
+    //        bo obecnie korzystanie z niniejszej klasy jest niewygodne
     public function __construct(SplFileInfo $file = null, ?array $id3ReaderOptions = null, ?array $id3WriterOptions = null)
     {
         $this->id3Reader = new getID3();
@@ -74,6 +68,8 @@ class Adapter
 
     /**
      * Analizuje plik (utwór muzyczny) i odczytuje zawarte w nim metadane
+     *
+     * @deprecated Problematyczne, nie używać. Docelowo do usunięcia.
      *
      * @param SplFileInfo $file
      * @return self
@@ -110,10 +106,18 @@ class Adapter
      * Zwraca metadane zawarte w pliku (utworze muzycznym)
      *
      * @return array
+     *
+     * @throws ReadException
      */
     public function readId3v2Metadata()
     {
-        $this->rawInfo = $this->id3Reader->analyze($this->file->getPathname());
+        try {
+            $this->rawInfo = $this->id3Reader->analyze($this->file->getPathname());
+        } catch (\Throwable $e) {
+            $message = sprintf('Unable to read metadata form "%s": %s', $this->file->getPathname(), $e->getMessage());
+
+            throw new ReadException($message);
+        }
 
         return (new Id3v2($this->rawInfo))->getMetadata();
     }
@@ -130,15 +134,16 @@ class Adapter
 
     /**
      * Zapisuje podane metadane w pliku (utworze muzycznym)
+     *
      * @todo $mode = 'overwrite' / 'append', lub - najlepiej - dwie osobne metody publiczne
      *
      * @param array $metadata
      * @param bool $overwrite
      * @return bool
      *
-     * @throws WriterException
+     * @throws WriteException
      */
-    public function writeId3v2Metadata(array $metadata, $overwrite = false): bool
+    public function writeId3v2Metadata(array $metadata, bool $overwrite = false): bool
     {
         $this->id3Writer->warnings = [];
         $this->id3Writer->errors = [];
@@ -173,9 +178,7 @@ class Adapter
         ));
 
         if ($result === false) {
-            throw new WriterException(
-                sprintf('Unable to save metadata to into a "%s"', $this->file->getPathname())
-            );
+            throw new WriteException(sprintf('Unable to save metadata to "%s"', $this->file->getPathname()));
         }
 
         return true;

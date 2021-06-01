@@ -4,7 +4,6 @@ namespace Assistant\Module\Stats\Repository;
 
 use Assistant\Module\Common\Repository\Storage;
 use MongoDB\Database;
-use MongoDB\Driver\Cursor;
 
 /**
  * Repozytorium zawierające metody statystyczne
@@ -41,7 +40,7 @@ final class StatsRepository
      * @param array|null $sort
      * @return array
      */
-    public function getTrackCountByGenre(?int $limit, ?array $sort = null): array
+    public function getTrackCountByGenre(?int $limit = null, ?array $sort = null): array
     {
         return $this->aggregateBy('genre', self::FIELD_TYPE_STRING, $limit, $sort);
     }
@@ -56,11 +55,6 @@ final class StatsRepository
     public function getTrackCountByArtist(?int $limit = null, ?array $sort = null): array
     {
         return $this->aggregateBy('artists', self::FIELD_TYPE_ARRAY, $limit, $sort);
-    }
-
-    public function getRecentlyAddedTracks(?int $limit = null): Cursor
-    {
-        return $this->storage->findBy([ ], [ 'limit' => $limit, 'sort' => [ 'indexed_date' => Storage::SORT_DESC ] ]);
     }
 
     /**

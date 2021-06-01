@@ -9,8 +9,11 @@ use Assistant\Module\Collection\Extension\Validator\Exception\EmptyMetadataExcep
 use Assistant\Module\Collection\Extension\Validator\ValidatorFacade;
 use Assistant\Module\Collection\Extension\Writer\WriterFacade;
 use Assistant\Module\Common\Extension\Backend\Exception\Exception as BackendException;
+use Assistant\Module\Common\Extension\GetId3\Exception\GetId3Exception;
+use Assistant\Module\Common\Extension\Config;
 use Assistant\Module\Common\Task\AbstractTask;
 use Monolog\Logger;
+use Psr\Container\ContainerInterface as Container;
 use SplFileInfo;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
@@ -22,22 +25,43 @@ use Throwable;
  */
 final class IndexerTask extends AbstractTask
 {
-    private ReaderFacade $reader;
-
-    private ValidatorFacade $validator;
-
-    private WriterFacade $writer;
+    protected static $defaultName = 'collection:index';
 
     private array $stats;
 
-    private array $parameters;
+    public function __construct(
+        Logger $logger,
+        private ReaderFacade $reader,
+        private ValidatorFacade $validator,
+        private WriterFacade $writer,
+        private array $parameters,
+    ) {
+        parent::__construct($logger);
+
+        $this->stats = [
+            'added' => [ 'file' => 0, 'dir' => 0 ],
+            'empty_metadata' => 0,
+            'duplicated' => 0,
+            'error' => 0,
+        ];
+    }
+
+    public static function factory(Container $container): self
+    {
+        return new self(
+            $container->get(Logger::class),
+            $container->get(ReaderFacade::class),
+            ValidatorFacade::factory($container),
+            WriterFacade::factory($container),
+            $container->get(Config::class)->get('collection'),
+        );
+    }
 
     protected function configure(): void
     {
-        $collectionRootDir = $this->app->container['parameters']['collection']['root_dir'];
+        $collectionRootDir = $this->parameters['root_dir'];
 
         $this
-            ->setName('collection:index')
             ->setDescription('Indexes tracks and directories in collection')
             ->addArgument(
                 'pathname',
@@ -46,24 +70,6 @@ final class IndexerTask extends AbstractTask
                 $collectionRootDir
             )
             ->addOption('ensure-collection-root-dir');
-    }
-
-    protected function initialize(InputInterface $input, OutputInterface $output): void
-    {
-        parent::initialize($input, $output);
-
-        $this->parameters = $this->app->container['parameters']['collection'];
-
-        $this->reader = ReaderFacade::factory($this->app->container);
-        $this->validator = ValidatorFacade::factory($this->app->container);
-        $this->writer = WriterFacade::factory($this->app->container);
-
-        $this->stats = [
-            'added' => [ 'file' => 0, 'dir' => 0 ],
-            'empty_metadata' => 0,
-            'duplicated' => 0,
-            'error' => 0,
-        ];
     }
 
     /**
@@ -75,7 +81,7 @@ final class IndexerTask extends AbstractTask
      */
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
-        $this->app->container[Logger::class]->info('Task executed', array_merge($input->getArguments(), $input->getOptions()));
+        $this->logger->info('Task executed', array_merge($input->getArguments(), $input->getOptions()));
 
         $nodesToIndex = $this->getNodesToIndex(
             $input->getArgument('pathname'),
@@ -83,7 +89,7 @@ final class IndexerTask extends AbstractTask
         );
 
         foreach ($nodesToIndex as $node) {
-            $this->app->container[Logger::class]->info('Processing node', [ 'pathname' => $node->getPathname() ]);
+            $this->logger->info('Processing node', [ 'pathname' => $node->getPathname() ]);
 
             try {
                 $element = $this->reader->read($node);
@@ -93,21 +99,21 @@ final class IndexerTask extends AbstractTask
 
                 $this->stats['added'][$node->getType()]++;
 
-                $this->app->container[Logger::class]->info('Node processing completed successfully');
-            } catch (EmptyMetadataException $e) {
+                $this->logger->info('Node processing completed successfully');
+            } catch (EmptyMetadataException) {
                 $this->stats['empty_metadata']++;
 
-                $this->app->container[Logger::class]->warning('Track does not contains metadata');
+                $this->logger->warning('Track does not contains metadata');
             } catch (DuplicatedElementException $e) {
                 $this->stats['duplicated']++;
 
-                $this->app->container[Logger::class]->debug($e->getMessage());
-            } catch (BackendException $e) {
+                $this->logger->debug($e->getMessage());
+            } catch (BackendException | GetId3Exception $e) {
                 $this->stats['error']++;
 
                 /** @uses Track::toDto() */
                 /** @uses Directory::toDto() */
-                $this->app->container[Logger::class]->error(
+                $this->logger->error(
                     $e->getMessage(),
                     [ 'element' => isset($element) ? $element->toDto() : null ]
                 );
@@ -116,7 +122,7 @@ final class IndexerTask extends AbstractTask
 
                 /** @uses Track::toDto() */
                 /** @uses Directory::toDto() */
-                $this->app->container[Logger::class]->critical($e->getMessage(), [
+                $this->logger->critical($e->getMessage(), [
                     'element' => isset($element) ? $element->toDto() : null,
                     'stacktrace' => debug_backtrace(),
                 ]);
@@ -127,7 +133,7 @@ final class IndexerTask extends AbstractTask
             }
         }
 
-        $this->app->container[Logger::class]->info('Task finished', $this->stats);
+        $this->logger->info('Task finished', $this->stats);
 
         return self::SUCCESS;
     }
@@ -137,7 +143,7 @@ final class IndexerTask extends AbstractTask
      * @param bool $ensureCollectionRootDir
      * @return Finder|SplFileInfo[]
      */
-    private function getNodesToIndex(string $pathname, bool $ensureCollectionRootDir): Finder
+    private function getNodesToIndex(string $pathname, bool $ensureCollectionRootDir): array|Finder
     {
         $finder = Finder::create([
             'pathname' => $pathname,

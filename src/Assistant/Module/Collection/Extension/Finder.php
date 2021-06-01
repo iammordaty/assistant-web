@@ -59,7 +59,7 @@ final class Finder implements IteratorAggregate, Countable
         }
 
         if (isset($params['recursive']) && $params['recursive'] === false) {
-            $depth = $skipSelf === true ? 0 : 1; // :/
+            $depth = $skipSelf === true || is_file($params['pathname']) ? 0 : 1; // :/
 
             $service->depth($depth);
         }
@@ -81,7 +81,7 @@ final class Finder implements IteratorAggregate, Countable
                 $result = false;
 
                 foreach ($restrictedPaths as $path) {
-                    if (strpos($node->getPathname(), $path) !== false) {
+                    if (str_contains($node->getPathname(), $path)) {
                         $result = true;
                         break;
                     }
@@ -123,7 +123,7 @@ final class Finder implements IteratorAggregate, Countable
         $this->service->append($iterator);
     }
 
-    public function getIterator()
+    public function getIterator(): array|\Traversable|\Iterator|\AppendIterator
     {
         return $this->service->getIterator();
     }

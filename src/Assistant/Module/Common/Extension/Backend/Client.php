@@ -38,15 +38,11 @@ final class Client
      */
     public function calculateAudioData(SplFileInfo $node): array
     {
-        // @fixme: do czasu poprawienia w backendzie
-        $tempRootDir = '/collection';
-        $tempPathname = str_replace($tempRootDir, '', $node->getPathname());
-
         $response = $this->curl->get(
             sprintf(
                 '%s/track/%s',
                 'http://backend',
-                rawurlencode(ltrim($tempPathname, DIRECTORY_SEPARATOR))
+                rawurlencode(ltrim($node->getPathname(), DIRECTORY_SEPARATOR))
             )
         );
 
@@ -77,13 +73,9 @@ final class Client
      */
     public function addToSimilarCollection(Track $track): bool
     {
-        // @fixme: do czasu poprawienia w backendzie
-        $tempRootDir = '/collection';
-        $tempPathname = str_replace($tempRootDir, '', $track->getPathname());
-
         $response = (array) $this->curl->post(
             sprintf('%s/%s', 'http://backend', 'musly/collection/tracks'),
-            json_encode([ 'pathname' => $tempPathname ])
+            json_encode([ 'pathname' => $track->getPathname() ])
         );
 
         if ($this->curl->error === true) {
@@ -104,18 +96,14 @@ final class Client
      */
     public function getSimilarTracks(Track $track): array
     {
-        // @fixme: do czasu poprawienia w backendzie
-        $tempRootDir = '/collection';
-        $tempPathname = str_replace($tempRootDir, '', $track->getPathname());
-
-        $response = $this->curl->get(
-            sprintf(
-                '%s/%s%s',
-                'http://backend',
-                'musly/similar',
-                rawurlencode($tempPathname)
-            )
+        $url = sprintf(
+            '%s/%s%s',
+            'http://backend',
+            'musly/similar/',
+            rawurlencode(ltrim($track->getPathname(), DIRECTORY_SEPARATOR))
         );
+
+        $response = $this->curl->get($url);
 
         if ($this->curl->error === true) {
             throw new SimilarCollectionException(
@@ -127,10 +115,7 @@ final class Client
         $similarTracks = [];
 
         foreach ($response as $similarTrack) {
-            // @fixme: do czasu poprawienia w backendzie
-            $tempPathname = $tempRootDir . $similarTrack->pathname;
-
-            $similarTracks[$tempPathname] = $similarTrack->similarity;
+            $similarTracks[$similarTrack->pathname] = $similarTrack->similarity;
         }
 
         return $similarTracks;

@@ -30,6 +30,9 @@ final class GoogleBeatportSearchTracks
             $response
         );
 
+        // tutaj może dałoby się żądania wysyłać równolegle
+        // https://docs.guzzlephp.org/en/stable/quickstart.html#concurrent-requests
+
         $beatportTracks = array_map(
             fn($result) => $this->trackBuilder->fromGoogleBeatportSearchResult($result),
             $results

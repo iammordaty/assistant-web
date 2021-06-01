@@ -23,8 +23,6 @@ final class Track implements CollectionItemInterface
      * @fixme nulle dla bpm i klucza dozwolone tylko tymczasowo, ze względu na to że niektóre kawałki ich nie mają
      *        (np. Laidback Luke - 05 - Break Down The House [Acapella]). To powinno być ograne w jakoś inaczej,
      *        ale bez zezwolenia na pustą wartość, np. poprzez wcześniejszą walidację w IndexerTask.
-     *        Zerknąć też na komentarz na FileReader::read(), to musi być oddzielone od przeglądania nowych (jak?)
-     * @see \Assistant\Module\Collection\Extension\Reader\FileReader::read()
      *
      * @var float|null
      */
@@ -96,11 +94,11 @@ final class Track implements CollectionItemInterface
             $dto->getArtist(),
             $dto->getArtists()->getArrayCopy(),
             $dto->getTitle(),
-            $dto->getAlbum() ,
-            $dto->getTrackNumber() ,
+            $dto->getAlbum(),
+            $dto->getTrackNumber(),
             $dto->getYear(),
             $dto->getGenre(),
-            $dto->getPublisher() ,
+            $dto->getPublisher(),
             $dto->getBpm(),
             $dto->getInitialKey(),
             $dto->getLength(),

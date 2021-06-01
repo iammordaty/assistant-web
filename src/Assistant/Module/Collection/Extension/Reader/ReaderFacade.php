@@ -2,12 +2,9 @@
 
 namespace Assistant\Module\Collection\Extension\Reader;
 
-use Assistant\Module\Common\Extension\GetId3\Adapter as Id3Adapter;
-use Assistant\Module\Common\Extension\SlugifyService;
 use Assistant\Module\Directory\Model\Directory;
-use Assistant\Module\File\Extension\Parser as MetadataParser;
+use Assistant\Module\File\Model\IncomingTrack;
 use Assistant\Module\Track\Model\Track;
-use Slim\Helper\Set as Container;
 use SplFileInfo;
 
 /**
@@ -15,32 +12,15 @@ use SplFileInfo;
 */
 final class ReaderFacade
 {
-    private DirectoryReader $directoryReader;
-
-    private FileReader $fileReader;
-
-    public function __construct(DirectoryReader $directoryReader, FileReader $fileReader)
-    {
-        $this->directoryReader = $directoryReader;
-        $this->fileReader = $fileReader;
-    }
-
-    public static function factory(Container $container): ReaderFacade
-    {
-        $directoryReader = new DirectoryReader();
-
-        $fileReader = new FileReader(
-            new Id3Adapter(),
-            new MetadataParser($container['parameters']['track']['metadata']['parser']),
-            $container[SlugifyService::class],
-        );
-
-        return new self($directoryReader, $fileReader);
+    public function __construct(
+        private DirectoryReader $directoryReader,
+        private FileReaderFacade $fileReader,
+    ) {
     }
 
     /**
      * @param SplFileInfo $node
-     * @return Directory|Track
+     * @return Directory|Track|IncomingTrack
      */
     public function read(SplFileInfo $node)
     {
