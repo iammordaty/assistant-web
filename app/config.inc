@@ -1,7 +1,7 @@
 <?php
 
 use Assistant\Module\Track\Extension\Similarity\Provider\Bpm;
-use Assistant\Module\Track\Extension\Similarity\Provider\CamelotKeyCode;
+use Assistant\Module\Track\Extension\Similarity\Provider\MusicalKey;
 use Assistant\Module\Track\Extension\Similarity\Provider\Genre;
 use Assistant\Module\Track\Extension\Similarity\Provider\Musly;
 use Assistant\Module\Track\Extension\Similarity\Provider\Year;
@@ -68,8 +68,8 @@ return static function (string $baseDir): array {
             'providers' => [
                 'enabled' => [
                     Bpm::class,
-                    CamelotKeyCode::class,
                     Genre::class,
+                    MusicalKey::class,
                     Musly::class,
                     Year::class,
                 ],
@@ -77,9 +77,9 @@ return static function (string $baseDir): array {
                     Bpm::class => [
                         'tolerance' => 5,
                     ],
-                    CamelotKeyCode::class => [
-                    ],
                     Genre::class => [
+                    ],
+                    MusicalKey::class => [
                     ],
                     Musly::class => [
                     ],
@@ -89,8 +89,8 @@ return static function (string $baseDir): array {
                 ],
                 'weights' => [
                     Bpm::class => 0.70,
-                    CamelotKeyCode::class => 0.90,
                     Genre::class => 0.75,
+                    MusicalKey::class => 0.90,
                     Musly::class => 1,
                     Year::class => 0.60,
                 ],

@@ -3,7 +3,7 @@
 namespace Assistant\Module\Track\Extension;
 
 use Assistant\Module\Track\Extension\Similarity\Provider\Bpm;
-use Assistant\Module\Track\Extension\Similarity\Provider\CamelotKeyCode;
+use Assistant\Module\Track\Extension\Similarity\Provider\MusicalKey;
 use Assistant\Module\Track\Extension\Similarity\Provider\Genre;
 use Assistant\Module\Track\Extension\Similarity\Provider\Musly;
 use Assistant\Module\Track\Extension\Similarity\Provider\ProviderInterface;
@@ -26,8 +26,8 @@ class Similarity
      */
     private array $availableProviders = [
         Bpm::class,
-        CamelotKeyCode::class,
         Genre::class,
+        MusicalKey::class,
         Musly::class,
         Year::class,
     ];

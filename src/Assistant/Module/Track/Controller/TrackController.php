@@ -7,8 +7,8 @@ use Assistant\Module\Common\Extension\Config;
 use Assistant\Module\Common\Extension\PathBreadcrumbs;
 use Assistant\Module\Track\Extension\Similarity;
 use Assistant\Module\Track\Extension\Similarity\Provider\Bpm;
-use Assistant\Module\Track\Extension\Similarity\Provider\CamelotKeyCode;
 use Assistant\Module\Track\Extension\Similarity\Provider\Genre;
+use Assistant\Module\Track\Extension\Similarity\Provider\MusicalKey;
 use Assistant\Module\Track\Extension\Similarity\Provider\Musly;
 use Assistant\Module\Track\Extension\Similarity\Provider\Year;
 use Assistant\Module\Track\Model\Track;
@@ -115,7 +115,7 @@ final class TrackController
                 'bpm' => Bpm::class,
                 'year' => Year::class,
                 'genre' => Genre::class,
-                'camelotKeyCode' => CamelotKeyCode::class,
+                'musicalKey' => MusicalKey::class,
             ];
 
             $enabledProviders = array_filter(

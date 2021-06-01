@@ -199,11 +199,11 @@
                 </div>
                 <div class="col-xs-4 col-sm-2">
                     <span class="additional-info-wrap">
-                        <label class="checkbox-inline" for="provider-camelotKeyCode">
-                              <input type="checkbox" name="similarity[providers][names][]" id="provider-camelotKeyCode" value="camelotKeyCode"
-                                    {% if not form or 'camelotKeyCode' in form.providers.names|default %} checked="checked" {% endif %}> Tonacja
+                        <label class="checkbox-inline" for="provider-musicalKey">
+                              <input type="checkbox" name="similarity[providers][names][]" id="provider-musicalKey" value="musicalKey"
+                                    {% if not form or 'musicalKey' in form.providers.names|default %} checked="checked" {% endif %}> Tonacja
                         </label>
-                        <div class="additional-info {% if form and 'camelotKeyCode' not in form.providers.names|default %} hide {% endif %}">
+                        <div class="additional-info {% if form and 'musicalKey' not in form.providers.names|default %} hide {% endif %}">
                               <input type="text" name="similarity[track][initial_key]" value="{{ form.track.initial_key|default(track.initialKey) }}"
                                      class="form-control input-sm" placeholder="{{ track.initialKey }}">
                         </div>

@@ -5,13 +5,12 @@ namespace Assistant\Module\Track\Extension\Similarity\Provider;
 use Assistant\Module\Track\Model\Track;
 use KeyTools\KeyTools;
 
-// @todo: Zmienić nazwę na CamelotKey
-final class CamelotKeyCode extends AbstractProvider
+final class MusicalKey extends AbstractProvider
 {
     /**
      * {@inheritDoc}
      */
-    public const NAME = 'CamelotKeyCode';
+    public const NAME = 'MusicalKey';
 
     /**
      * {@inheritDoc}
@@ -28,7 +27,9 @@ final class CamelotKeyCode extends AbstractProvider
      */
     public function getSimilarityValue(Track $baseTrack, Track $comparedTrack): int
     {
-        return $this->similarityMap[$baseTrack->getInitialKey()][$comparedTrack->getInitialKey()] ?? 0;
+        $similarity = $this->similarityMap[$baseTrack->getInitialKey()][$comparedTrack->getInitialKey()] ?? 0;
+
+        return $similarity;
     }
 
     /**
@@ -50,7 +51,7 @@ final class CamelotKeyCode extends AbstractProvider
 
         foreach (KeyTools::NOTATION_KEYS_CAMELOT_KEY as $keyCode) {
             $this->similarityMap[$keyCode] = [
-                $keyCode => static::MAX_SIMILARITY_VALUE,
+                $keyCode => self::MAX_SIMILARITY_VALUE,
                 $keyTools->perfectFourth($keyCode) => 95,
                 $keyTools->perfectFifth($keyCode) => 95,
                 $keyTools->dominantRelative($keyCode) => 90,
