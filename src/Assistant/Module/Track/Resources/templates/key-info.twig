@@ -1,0 +1,32 @@
+<div class="col-xs-12 col-sm-4 col-md-3">
+    <div class="panel panel-info key-info">
+        <div class="panel-heading">
+            <a href="{{ url_for('search.advanced.index') }}?initial_key={{ key }}" class="undecorated">{{ title }} - informacje</a>
+        </div>
+        <div class="panel-body">
+            {% if description %}
+                <p>{{ description }}</p>
+            {% endif %}
+
+            {% for key in similarKeys %}
+                <div
+                    class="row"
+                    {% if key.description %}
+                        data-toggle="popover"
+                        data-placement="left"
+                        data-trigger="hover"
+                        data-html="true"
+                        data-content="{{ key.description }}"
+                    {% endif %}
+                >
+                    <span class="col-xs-4 col-sm-8 col-md-7 col-md-offset-1 text-right key-info-key">
+                        <span class="ellipsis"><strong>{{ key.title }}</strong></span>
+                    </span>
+                    <span class="col-xs-8 col-sm-4 key-info-value">
+                        <a href="{{ url_for('search.advanced.index') }}?initial_key={{ key.value }}" class="undecorated">{{ key.value }}</a>
+                    </span>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>

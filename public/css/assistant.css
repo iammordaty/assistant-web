@@ -224,3 +224,16 @@ table .popover {
 .metadata-options {
     margin-top: 20px;
 }
+
+.key-info .row {
+    cursor: default;
+}
+
+.key-info p {
+    border-bottom: 1px solid #bce8f1;
+    padding-bottom: 10px;
+}
+
+.key-info .row:hover .key-info-key {
+    text-decoration: underline;
+}

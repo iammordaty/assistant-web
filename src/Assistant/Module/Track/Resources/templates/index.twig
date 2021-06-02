@@ -98,40 +98,10 @@
                         </ol>
                     </span>
                 </div>
-            </div>
+           </div>
 
            {% if keyInfo %}
-                <div class="col-xs-12 col-sm-4 col-md-3">
-                    <div class="panel panel-info ">
-                        <div class="panel-heading">
-                            <a href="{{ url_for('search.advanced.index') }}?initial_key={{ track.initialKey }}" class="undecorated">{{ track.initialKey }}</a> - informacje
-                        </div>
-                        <div class="panel-body">
-                           {% for info, data in keyInfo %}
-                                <div class="row key-info-{{ info }}">
-                                    <span class="col-xs-4 col-sm-8 col-md-7 col-md-offset-1 text-right info-key">
-                                        <span class="ellipsis"><strong>{{ data.title }}</strong></span>
-                                    </span>
-                                    <span class="col-xs-8 col-sm-4 info-value">
-                                        <a
-                                            href="{{ url_for('search.advanced.index') }}?initial_key={{ data.value }}"
-                                            class="undecorated"
-                                            {% if data.description %}
-                                            data-toggle="popover"
-                                            {% endif %}
-                                            data-placement="bottom"
-                                            data-trigger="hover"
-                                            data-html="true"
-                                            data-content="{{ data.description }}"
-                                        >
-                                           {{ data.value }}
-                                        </a>
-                                    </span>
-                                </div>
-                           {% endfor %}
-                        </div>
-                    </div>
-                </div>
+                {% include '@track/key-info.twig' with keyInfo only %}
            {% endif %}
         </div>
     </div>
@@ -143,7 +113,7 @@
         <!-- TODO: przepisać js-y odpowiedzialne za pokazywanie i ukrywanie input-ów -->
         <legend>
             Podobne utwory
-            <i class="fa fa-angle-double-down pull-right toggle-visibility {% if form %} fa-rotate-180 {% endif %} "
+            <i class="fa fa-angle-double-down pull-right toggle-visibility {% if form %} fa-rotate-180 {% endif %}"
                 data-role="similar-tracks:toggle-visibility"></i>
         </legend>
 
@@ -164,7 +134,7 @@
                     <span class="additional-info-wrap">
                         <label class="checkbox-inline" for="provider-genre">
                               <input type="checkbox" name="similarity[providers][names][]" id="provider-genre" value="genre"
-                                    {% if not form or 'genre' in form.providers.names|default %} checked="checked" {% endif %}> Genre
+                                    {% if not form or 'genre' in form.providers.names|default %} checked="checked" {% endif %}> Gatunek
                         </label>
                         <div class="additional-info {% if form and 'genre' not in form.providers.names|default %} hide {% endif %}">
                               <input type="text" name="similarity[track][genre]" value="{{ form.track.genre|default(track.genre) }}"
@@ -176,7 +146,7 @@
                     <span class="additional-info-wrap">
                         <label class="checkbox-inline" for="provider-year">
                               <input type="checkbox" name="similarity[providers][names][]" id="provider-year" value="year"
-                                    {% if not form or 'year' in form.providers.names|default %} checked="checked" {% endif %}> Year
+                                    {% if not form or 'year' in form.providers.names|default %} checked="checked" {% endif %}> Rok
                         </label>
                         <div class="additional-info {% if form and 'year' not in form.providers.names|default %} hide {% endif %}">
                             <input type="number" name="similarity[track][year]" value="{{ form.track.year|default(track.year) }}" min="1980" max="{{ now|date('Y')}}"

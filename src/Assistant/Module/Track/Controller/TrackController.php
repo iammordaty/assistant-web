@@ -2,7 +2,7 @@
 
 namespace Assistant\Module\Track\Controller;
 
-use Assistant\Module\Common;
+use Assistant\Module\Collection\Extension\MusicalKeyInfo;
 use Assistant\Module\Common\Extension\Config;
 use Assistant\Module\Common\Extension\PathBreadcrumbs;
 use Assistant\Module\Track\Extension\Similarity;
@@ -13,7 +13,6 @@ use Assistant\Module\Track\Extension\Similarity\Provider\Musly;
 use Assistant\Module\Track\Extension\Similarity\Provider\Year;
 use Assistant\Module\Track\Model\Track;
 use Assistant\Module\Track\Repository\TrackRepository;
-use KeyTools\KeyTools;
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
 use Slim\Routing\RouteContext;
@@ -136,82 +135,13 @@ final class TrackController
     /**
      * Zwraca klucze podobne do klucza podanego utworu
      *
-     * @todo Przenieść do zewnętrznej klasy powiązanej z widokiem
-     *
      * @param Track $track
      * @return array|null
      */
     private function getTrackKeyInfo(Track $track): ?array
     {
-        $keyTools = KeyTools::fromNotation(KeyTools::NOTATION_CAMELOT_KEY);
+        $musicalKeyInfo = MusicalKeyInfo::factory(); // faktorka i konstruktor do przemyślenia
 
-        $initialKey = $track->getInitialKey();
-
-        if (!$keyTools->isValidKey($initialKey)) {
-            return null;
-        }
-
-        $implode = static fn($lines) => implode('<br  />', $lines);
-
-        return [
-            'relativeMinorToMajor' => [
-                'title' => sprintf('To %s', $keyTools->isMinorKey($initialKey) ? 'major' : 'minor'),
-                'value' => $keyTools->relativeMinorToMajor($initialKey),
-                'description' => $implode([
-                    'This combination will likely sound good because the notes of both scales are the same,',
-                    'but the root note is different. The energy of the room will change dramatically.',
-                ]),
-            ],
-            'perfectFourth' => [
-                'title' => 'Perfect fourth',
-                'value' => $keyTools->perfectFourth($initialKey),
-                'description' => $implode([
-                    'I like to say this type of mix will take the crowd deeper.',
-                    'It won\'t raise the energy necessarily but will give your listeners goosebumps!',
-                ]),
-            ],
-            'perfectFifth' => [
-                'title' => 'Perfect fifth',
-                'value' => $keyTools->perfectFifth($initialKey),
-                'description' => 'This will raise the energy in the room.',
-            ],
-            'minorThird' => [
-                'title' => 'Minor third',
-                'value' => $keyTools->minorThird($initialKey),
-                'description' => $implode([
-                    'While these scales have 3 notes that are different,',
-                    'I\'ve found that they still sound good played together',
-                    'and tend to raise the energy of a room.',
-                ]),
-            ],
-            'halfStep' => [
-                'title' => 'Half step',
-                'value' => $keyTools->halfStep($initialKey),
-                'description' => $implode([
-                    'While these two scales have almost no notes in common,',
-                    'musically they shouldn’t sound good together but I\'ve found if you plan it right',
-                    'and mix a percussive outro of one song with a percussive intro of another song,',
-                    'and slowly bring in the melody this can have an amazing effect musically and',
-                    'raise the energy of the room dramatically.',
-                ]),
-            ],
-            'wholeStep' => [
-                'title' => 'Whole step',
-                'value' => $keyTools->wholeStep($initialKey),
-                'description' => $implode([
-                    'This will raise the energy of the room. I like to call it "hands in the air" mixing,',
-                    'and others might call it "Energy Boost mixing".',
-                ])
-            ],
-            'dominantRelative' => [
-                'title' => 'Dominant relative',
-                'value' => $keyTools->dominantRelative($initialKey),
-                'description' => $implode([
-                    'I\'ve found this is the best way to go from Major to Minor keys',
-                    'and from Minor to Major because the scales only have one note difference',
-                    'and the combination sounds great.',
-                ])
-            ],
-        ];
+        return $musicalKeyInfo->get($track->getInitialKey());
     }
 }
