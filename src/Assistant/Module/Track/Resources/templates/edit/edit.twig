@@ -109,7 +109,7 @@
                 </label>
                 <div class="col-sm-5">
                     <div data-role="track-suggestions:suggestion" data-suggestion-type="{{ fieldInfo.field }}" class="input-group">
-                        <input type="text" name="{{ fieldInfo.field }}" value="{{ track[fieldInfo.field] }}" class="form-control" />
+                        <input type="text" name="{{ fieldInfo.field }}" value="{{ attribute(track, fieldInfo.field) }}" class="form-control" />
                         <div class="input-group-btn">
                             <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown" tabindex="-1">
                                 <span class="caret"></span>
