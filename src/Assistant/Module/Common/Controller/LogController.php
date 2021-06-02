@@ -102,9 +102,8 @@ final class LogController
             $task = $context['task'] ?? null;
             $command = $context['command'] ?? null;
 
-            $blacklistedKeys = [ 'memory_usage', 'procId', 'pathname', 'task', 'command', 'help', 'quiet', 'verbose', 'version', 'ansi', 'no-ansi', 'no-interaction' ];
-
-            $ctx = array_diff_key(json_decode($matches[4], true) ?: [], array_flip($blacklistedKeys));
+            $ignoredKeys = [ 'pathname', 'task', 'command' ];
+            $ctx = array_diff_key(json_decode($matches[4], true) ?: [], array_flip($ignoredKeys));
 
             return [
                 'raw' => $line,

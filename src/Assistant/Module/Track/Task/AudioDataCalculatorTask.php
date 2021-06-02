@@ -79,7 +79,7 @@ final class AudioDataCalculatorTask extends AbstractTask
 
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
-        $this->logger->info('Task executed', array_merge($input->getArguments(), $input->getOptions()));
+        $this->logger->info('Task executed', self::getInputParams($input));
 
         $skipCalculated = $input->getOption('skip-calculated');
         $writeData = $input->getOption('write-data');
