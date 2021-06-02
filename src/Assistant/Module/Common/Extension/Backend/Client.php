@@ -4,10 +4,9 @@ namespace Assistant\Module\Common\Extension\Backend;
 
 use Assistant\Module\Common\Extension\Backend\Exception\AudioDataCalculatorException;
 use Assistant\Module\Common\Extension\Backend\Exception\SimilarCollectionException;
+use Assistant\Module\File\Model\IncomingTrack;
 use Assistant\Module\Track\Model\Track;
-use Assistant\Module\Track\Task\AudioDataCalculatorTask;
 use Curl\Curl;
-use SplFileInfo;
 
 final class Client
 {
@@ -28,21 +27,18 @@ final class Client
     }
 
     /**
-     * @todo To powinno przyjmować obiekt Track
-     * @see AudioDataCalculatorTask::execute()
-     *
-     * @param SplFileInfo $node
+     * @param Track|IncomingTrack $track
      * @return array
      *
      * @throws AudioDataCalculatorException
      */
-    public function calculateAudioData(SplFileInfo $node): array
+    public function calculateAudioData(Track|IncomingTrack $track): array
     {
         $response = $this->curl->get(
             sprintf(
                 '%s/track/%s',
                 'http://backend',
-                rawurlencode(ltrim($node->getPathname(), DIRECTORY_SEPARATOR))
+                rawurlencode(ltrim($track->getPathname(), DIRECTORY_SEPARATOR))
             )
         );
 

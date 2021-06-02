@@ -9,6 +9,7 @@ use Assistant\Module\Common\Extension\GetId3\Adapter as Id3Adapter;
 use Assistant\Module\Common\Extension\GetId3\Exception\GetId3Exception;
 use Assistant\Module\Common\Extension\Config;
 use Assistant\Module\Common\Task\AbstractTask;
+use Assistant\Module\Track\Extension\TrackService;
 use Monolog\Logger;
 use Psr\Container\ContainerInterface as Container;
 use SplFileInfo;
@@ -29,8 +30,9 @@ final class AudioDataCalculatorTask extends AbstractTask
 
     public function __construct(
         Logger $logger,
-        private Id3Adapter $id3,
         private BackendClient $backend,
+        private Id3Adapter $id3,
+        private TrackService $trackService,
         private array $parameters,
     ) {
         parent::__construct($logger);
@@ -48,8 +50,9 @@ final class AudioDataCalculatorTask extends AbstractTask
     {
         return new self(
             $container->get(Logger::class),
-            $container->get(Id3Adapter::class),
             $container->get(BackendClient::class),
+            $container->get(Id3Adapter::class),
+            $container->get(TrackService::class),
             $container->get(Config::class)->get('collection'),
         );
     }
@@ -91,12 +94,11 @@ final class AudioDataCalculatorTask extends AbstractTask
 
             $this->stats['processed']++;
 
-            // @todo: użyć klasy TrackBuilder, poniżej korzystać już tylko z modelu Track
-            //        $track = ($this->app->container[TrackBuilder::class])->fromFile($file->getPathname());
+            $track = $this->trackService->createFromFile($file->getPathname());
 
             try {
                 $metadata = $this->id3
-                    ->setFile($file)
+                    ->setFile($track->getFile())
                     ->readId3v2Metadata();
 
                 if ($this->id3->getTrackLength() / 60 > 20) {
@@ -107,7 +109,7 @@ final class AudioDataCalculatorTask extends AbstractTask
                         [ 'length' => $this->id3->getTrackLength() / 60 ]
                     );
 
-                    unset($file, $metadata);
+                    unset($file, $track, $metadata);
 
                     continue;
                 }
@@ -123,19 +125,19 @@ final class AudioDataCalculatorTask extends AbstractTask
                         [ 'bpm' => $metadata['bpm'], 'initial_key' => $metadata['initial_key'] ]
                     );
 
-                    unset($file, $metadata);
+                    unset($file, $track, $metadata);
 
                     continue;
                 }
 
-                $audioData = $this->backend->calculateAudioData($file);
+                $audioData = $this->backend->calculateAudioData($track);
 
                 if ($this->isTrackHasSameData($metadata, $audioData) === true) {
                     $this->stats['skipped']['same_data']++;
 
                     $this->logger->debug('Track has the same audio data, update is not necessary', $audioData);
 
-                    unset($file, $metadata, $audioData);
+                    unset($file, $track, $metadata, $audioData);
 
                     continue;
                 }
@@ -171,13 +173,13 @@ final class AudioDataCalculatorTask extends AbstractTask
 
                 $this->logger->error(
                     $e->getMessage(),
-                    [ 'pathname' => $file->getPathname(), 'metadata' => $metadata ?? null]
+                    [ 'pathname' => $track->getPathname(), 'metadata' => $metadata ?? null]
                 );
             } catch (GetId3Exception $e) {
                 $this->stats['error']['tags']++;
 
                 $this->logger->error($e->getMessage(), [
-                    'pathname' => $file->getPathname(),
+                    'pathname' => $track->getPathname(),
                     'metadata' => $metadata ?? null,
                     'audioData' => $audioData ?? null,
                     'id3WriterErrors' => $this->id3->getWriterErrors(),
@@ -187,13 +189,13 @@ final class AudioDataCalculatorTask extends AbstractTask
                 $this->stats['error']['other']++;
 
                 $this->logger->critical($e->getMessage(), [
-                    'pathname' => $file->getPathname(),
+                    'pathname' => $track->getPathname(),
                     'metadata' => $metadata ?? null,
                     'audioData' => $audioData ?? null,
                     'exception' => $e,
                 ]);
             } finally {
-                unset($file, $metadata, $audioData);
+                unset($file, $track, $metadata, $audioData);
             }
         }
 
