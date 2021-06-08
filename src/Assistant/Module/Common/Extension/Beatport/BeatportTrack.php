@@ -4,101 +4,58 @@ namespace Assistant\Module\Common\Extension\Beatport;
 
 final class BeatportTrack
 {
-    private const DOMAIN = 'https://www.beatport.com';
-
     private const DEFAULT_MIX_NAME = 'Original Mix';
 
-    private const ARTIST_TYPE_ARTIST = 'artist';
-    private const ARTIST_TYPE_REMIXER = 'remixer';
-
-    private int $id;
-    private string $url;
-    private array $artists;
-    private string $title;
-    private string $name;
-    private string $mixName;
-    private ?array $remixers;
-    private BeatportRelease $release;
-    private int $trackNumber;
-    private array $genres;
-    private ?array $subGenres;
-    /** @var BeatportChart[]|null */
-    private ?array $charts;
-    private \DateTime $releaseDate;
-    private string $label;
-    private int $length;
-    private int $bpm;
-    private string $key;
-
     public function __construct(
-        int $id,
-        string $type,
-        string $slug,
-        array $rawArtists,
-        string $rawTitle,
-        string $name,
-        string $mixName,
-        array $release,
-        int $trackNumber,
-        array $genres,
-        ?array $subGenres,
-        ?array $rawCharts,
-        \DateTime $releaseDate,
-        string $label,
-        int $length,
-        int $bpm,
-        string $key
+        private int $id,
+        private string $url,
+        private array $artists,
+        private string $title,
+        private string $mixName,
+        private ?array $remixers,
+        private string $name,
+        private BeatportRelease $release,
+        private ?int $trackNumber,
+        private string $genre,
+        private ?string $subGenre,
+        /** @var BeatportChart[]|null */
+        private ?array $charts,
+        private \DateTime $releaseDate,
+        private int $length,
+        private int $bpm,
+        private string $key,
     ) {
-
-        $artists = array_filter($rawArtists, static fn($performer) => (
-            $performer['type'] === self::ARTIST_TYPE_ARTIST)
-        );
-
-        $remixers = array_filter($rawArtists, static fn($performer) => (
-            $performer['type'] === self::ARTIST_TYPE_REMIXER)
-        );
-
-        $charts = array_map(static fn($chart) => BeatportChart::create($chart), $rawCharts);
-
-        $this->id = $id;
-        $this->url = sprintf('%s/%s/%s/%d', self::DOMAIN, $type, $slug, $id);
-        $this->artists = array_merge(array_map(static fn($artist) => $artist['name'], $artists));
-        $this->title = $rawTitle;
-        $this->name = $name;
-        $this->mixName = $mixName ?: self::DEFAULT_MIX_NAME;
-        $this->remixers = array_merge(array_map(static fn($remixer) => $remixer['name'], $remixers)) ?: null;
-        $this->release = BeatportRelease::create($release);
-        $this->trackNumber = $trackNumber;
-        $this->genres = array_map(static fn($genre) => $genre['name'], $genres);
-        $this->subGenres = array_map(static fn($subGenre) => $subGenre['name'], $subGenres) ?: null;
-        $this->charts = $charts ?: null;
-        $this->releaseDate = $releaseDate;
-        $this->label = $label;
-        $this->length = $length;
-        $this->bpm = $bpm;
-        $this->key = $key;
     }
 
-    public static function create($rawTrack): BeatportTrack
+    public static function create($track): BeatportTrack
     {
+        $url = sprintf('%s/%s/%s/%d', Beatport::DOMAIN, Beatport::TYPE_TRACKS, $track['slug'], $track['id']);
+        $artists = array_map(static fn($artist) => $artist['name'], $track['artists']);
+        $remixers = array_map(static fn($remixer) => $remixer['name'], $track['remixers']);
+        $mixName = $track['mix_name'] ?? self::DEFAULT_MIX_NAME;
+        $name = sprintf('%s - %s (%s)', implode(',', $artists), $track['name'], $mixName);
+        $charts = array_map(static fn($chart) => BeatportChart::create($chart), $track['charts']);
+
+        /** @noinspection PhpUnhandledExceptionInspection */
+        $releaseDate = new \DateTime($track['new_release_date']);
+
         $beatportTrack = new BeatportTrack(
-            $rawTrack['id'],
-            $rawTrack['type'],
-            $rawTrack['slug'],
-            $rawTrack['artists'],
-            $rawTrack['title'],
-            $rawTrack['name'],
-            $rawTrack['mixName'],
-            $rawTrack['release'],
-            $rawTrack['trackNumber'],
-            $rawTrack['genres'],
-            $rawTrack['subGenres'],
-            $rawTrack['charts'],
-            new \DateTime($rawTrack['releaseDate']),
-            $rawTrack['label']['name'],
-            $rawTrack['lengthMs'],
-            $rawTrack['bpm'],
-            html_entity_decode($rawTrack['key']['shortName']),
+            id: $track['id'],
+            url: $url,
+            artists: $artists,
+            title: $track['name'],
+            mixName: $mixName,
+            remixers: $remixers,
+            name: $name,
+            release: BeatportRelease::create($track['release']),
+            trackNumber: $track['number'],
+            genre: $track['genre']['name'],
+            subGenre: $track['sub_genre']['name'] ?? null,
+            charts: $charts ?: null,
+            releaseDate: $releaseDate,
+            length: $track['length_ms'],
+            bpm: $track['bpm'],
+            key: $track['key']['name'],
         );
 
         return $beatportTrack;
@@ -111,16 +68,15 @@ final class BeatportTrack
             'url' => $this->url,
             'artists' => $this->artists,
             'title' => $this->title,
-            'name' => $this->name,
             'mixName' => $this->mixName,
             'remixers' => $this->remixers,
+            'name' => $this->name,
             'release' => $this->release->toArray(),
             'trackNumber' => $this->trackNumber,
-            'genres' => $this->genres,
-            'subGenres' => $this->subGenres,
-            'charts' => $this->charts, // map -> toArray()
+            'genres' => $this->genre,
+            'subGenres' => $this->subGenre,
+            'charts' => $this->charts,
             'releaseDate' => $this->releaseDate->format(\DateTimeInterface::ATOM),
-            'label' => $this->label,
             'length' => $this->length,
             'bpm' => $this->bpm,
             'key' => $this->key,
@@ -152,14 +108,19 @@ final class BeatportTrack
         return $this->mixName;
     }
 
-    public function getName(): string
-    {
-        return $this->name;
-    }
-
     public function getRemixers(): ?array
     {
         return $this->remixers;
+    }
+
+    /**
+     * Zwraca nazwę utworu w pełnej postacji, tj. Wykonawca - Tytuł utworu (Nazwa remiksu)
+     *
+     * @return string
+     */
+    public function getName(): string
+    {
+        return $this->name;
     }
 
     public function getRelease(): BeatportRelease
@@ -167,19 +128,19 @@ final class BeatportTrack
         return $this->release;
     }
 
-    public function getTrackNumber(): int
+    public function getTrackNumber(): ?int
     {
         return $this->trackNumber;
     }
 
-    public function getGenres(): array
+    public function getGenre(): string
     {
-        return $this->genres;
+        return $this->genre;
     }
 
-    public function getSubGenres(): ?array
+    public function getSubGenre(): ?string
     {
-        return $this->subGenres;
+        return $this->subGenre;
     }
 
     /**
@@ -193,11 +154,6 @@ final class BeatportTrack
     public function getReleaseDate(): \DateTime
     {
         return $this->releaseDate;
-    }
-
-    public function getLabel(): string
-    {
-        return $this->label;
     }
 
     public function getLength(): int

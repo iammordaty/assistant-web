@@ -58,11 +58,13 @@
                         {% with %}
                             {% set track = suggestion.track %}
                             <option value="{{ suggestion.track.id }}">
-                                {{ track.artists|join(', ') }} - {{ track.title }}
+                                {# @fixme: to powinno przychodzić z phpa, ale przemyśleć jak to zrobić #}
+                                {#         uwaga, to samo jest w track-edit.js:19 #}
+
+                                {{ track.name }}
                                 [
-                                    {{- track.release.name -}},&nbsp
                                     {{- track.releaseDate|date('d.m.Y') -}},&nbsp
-                                    {{- track.label -}}
+                                    {{- track.release.label -}}
                                 ]
                             </option>
                         {% endwith %}

@@ -2,46 +2,49 @@
 
 namespace Assistant\Module\Common\Extension\Beatport;
 
-use Assistant\Module\Common\Extension\BeatportApiClient;
+use Assistant\Module\Common\Extension\BeatportApiClientInterface;
 use Assistant\Module\Common\Extension\TrackSearch\GoogleBeatportSearchResult;
 
 final class BeatportTrackBuilder
 {
-    public const ITEM_TYPE_TRACK = 'track';
+    private BeatportApiClientInterface $client;
 
-    private BeatportApiClient $client;
-
-    public function __construct(BeatportApiClient $client)
+    public function __construct(BeatportApiClientInterface $client)
     {
         $this->client = $client;
     }
 
     public function fromTrackId(int $trackId): ?BeatportTrack
     {
-        [ 'results' => $rawTracks ] = $this->client->tracks([ 'id' => $trackId ]);
+        try {
+            $rawTrack = $this->client->track($trackId);
 
-        if (empty($rawTracks)) {
+            [ 'results' => $rawCharts ] = $this->client->charts([ 'track_id' => $rawTrack['id'] ]);
+            $rawTrack['charts'] = $rawCharts;
+        } catch (\Exception $e) { // yolo, obejście 403 - territory restriction
+            // var_dump($e->getMessage());
+
+            $rawTrack = null;
+        }
+
+        if (empty($rawTrack)) {
             return null;
         }
 
-        $rawTrack = reset($rawTracks);
-        $beatportTrack = $this->fromRawTrack($rawTrack);
+        $beatportTrack = self::createBeatportTrack($rawTrack);
 
         return $beatportTrack;
     }
 
-    public function fromRawTrack(array $rawTrack): ?BeatportTrack
+    public function fromBeatportSearchResult(array $result): ?BeatportTrack
     {
-        if ($rawTrack['type'] !== self::ITEM_TYPE_TRACK) {
-            throw new \RuntimeException('Unsupported type received: ' . $rawTrack['type']);
-        }
+        // Być może to powinien być oddzielny typ (na zasadzie GoogleBeatportSearchResult), ale na tę chwilę
+        // "number" to jedyne pole, którego brakuje do utworzenia pełnego obiektu BeatportTrack... co robić?
+        // Poza tym, wyniki zwracane przez wyszukiwarkę beatport-u są gorszej jakości niż z google-a, więc
+        // warto zastanowić się czy utrzymywać tę metodę
 
-        $chartsIds = array_map(static fn($chart) => $chart['id'], $rawTrack['charts']);
-        [ 'results' => $rawCharts ] = $this->client->charts([ 'ids' => implode(',', $chartsIds) ]);
-
-        $rawTrack['charts'] = $rawCharts;
-
-        $beatportTrack = BeatportTrack::create($rawTrack);
+        $rawTrack = array_merge([ 'number' => null ], $result);
+        $beatportTrack = self::createBeatportTrack($rawTrack);
 
         return $beatportTrack;
     }
@@ -49,6 +52,13 @@ final class BeatportTrackBuilder
     public function fromGoogleBeatportSearchResult(GoogleBeatportSearchResult $result): ?BeatportTrack
     {
         $beatportTrack = $this->fromTrackId($result->getId());
+
+        return $beatportTrack;
+    }
+
+    private static function createBeatportTrack(array $rawTrack): BeatportTrack
+    {
+        $beatportTrack = BeatportTrack::create($rawTrack);
 
         return $beatportTrack;
     }

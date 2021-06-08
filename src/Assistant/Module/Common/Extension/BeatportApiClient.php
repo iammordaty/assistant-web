@@ -2,20 +2,20 @@
 
 namespace Assistant\Module\Common\Extension;
 
-use BeatportOauth\AccessTokenProvider;
-use BeatportOauth\OauthMiddlewareFactory;
-use Cache\Adapter\Filesystem\FilesystemCachePool;
-use Cache\Bridge\SimpleCache\SimpleCacheBridge;
 use GuzzleHttp\Client;
 use GuzzleHttp\ClientInterface;
 use GuzzleHttp\HandlerStack;
+use GuzzleHttp\Middleware;
 use Kevinrob\GuzzleCache\CacheMiddleware;
 use Kevinrob\GuzzleCache\Storage\FlysystemStorage;
 use Kevinrob\GuzzleCache\Strategy\GreedyCacheStrategy;
 use League\Flysystem\Adapter\Local;
-use League\Flysystem\Filesystem;
+use Psr\Http\Message\RequestInterface;
 
-final class BeatportApiClient
+/**
+ * To jest tymczasowa wersja klasy, używana do czasu uzyskania dostępu do https://api.beatport.com/v4/
+ */
+final class BeatportApiClient implements BeatportApiClientInterface
 {
     private ClientInterface $client;
 
@@ -24,21 +24,9 @@ final class BeatportApiClient
         $this->client = $client;
     }
 
-    public static function create(array $oauthParams, string $baseDir): BeatportApiClient
+    public static function create(string $authorization, string $baseDir): self
     {
-        $filesystemAdapter = new Local($baseDir);
-        $filesystem = new Filesystem($filesystemAdapter);
-
-        $cachePool = new FilesystemCachePool($filesystem);
-        $cacheConfig = [ 'key' => 'beatport_access_token_info' ];
-
-        $cache = new SimpleCacheBridge($cachePool);
-
-        $beatportOauthMiddleware = OauthMiddlewareFactory::createWithCachedToken(
-            $oauthParams,
-            $cache,
-            $cacheConfig
-        );
+        $stack = HandlerStack::create();
 
         $cacheMiddleware = new CacheMiddleware(
             new GreedyCacheStrategy(
@@ -47,23 +35,23 @@ final class BeatportApiClient
             )
         );
 
-        $stack = HandlerStack::create();
-
-        $stack->push($beatportOauthMiddleware);
         $stack->push($cacheMiddleware);
 
+        $stack->push(Middleware::mapRequest(function (RequestInterface $request) use ($authorization) {
+            return $request->withHeader('Authorization', $authorization);
+        }));
+
         $client = new Client([
-            'auth' => 'oauth',
-            'base_uri' => AccessTokenProvider::BASE_URI,
+            'base_uri' => 'https://api.beatport.com/v4/',
             'handler' => $stack,
         ]);
 
         return new self($client);
     }
 
-    public function search($query): array
+    public function search(array $query): array
     {
-        $response = $this->client->get('/catalog/3/search', [
+        $response = $this->client->get('/v4/catalog/search', [
             'query' => $query,
         ]);
 
@@ -72,20 +60,19 @@ final class BeatportApiClient
         return $contents;
     }
 
-    public function tracks($query): array
+    public function track(int $trackId): array
     {
-        $response = $this->client->get('catalog/3/tracks', [
-            'query' => $query,
-        ]);
+        $url = '/v4/catalog/tracks/' . $trackId;
+        $response = $this->client->get($url);
 
         $contents = json_decode($response->getBody()->getContents(), true);
 
         return $contents;
     }
 
-    public function charts($query): array
+    public function charts(array $query): array
     {
-        $response = $this->client->get('catalog/3/charts', [
+        $response = $this->client->get('/v4/catalog/charts', [
             'query' => $query,
         ]);
 

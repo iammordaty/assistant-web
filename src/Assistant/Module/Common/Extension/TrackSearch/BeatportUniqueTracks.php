@@ -13,14 +13,8 @@ final class BeatportUniqueTracks
      * @param BeatportTrack[] $beatportTracks
      * @return BeatportUniqueTracks
      */
-    public function add(array $beatportTracks): BeatportUniqueTracks
+    public function add(BeatportTrack ...$beatportTracks): BeatportUniqueTracks
     {
-        foreach ($beatportTracks as $beatportTrack) {
-            if (!($beatportTrack instanceof BeatportTrack)) {
-                throw new \RuntimeException('Unsupported object type: ' . get_class($beatportTrack));
-            }
-        }
-
         array_push($this->beatportTracks, ...$beatportTracks);
 
         return $this;

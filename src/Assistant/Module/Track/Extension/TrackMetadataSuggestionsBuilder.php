@@ -38,27 +38,26 @@ final class TrackMetadataSuggestionsBuilder
         // TODO: Zastanowić się jak ogarnąć powyższe.
 
         $artist = $this->getArtist($beatportTrack->getArtists(), $beatportTrack->getTitle());
+
         $title = $this->getTitle(
             $beatportTrack->getTitle(),
-            $beatportTrack->getName(),
             $beatportTrack->getMixName(),
             $beatportTrack->getRemixers(),
         );
+
         $album = $this->getAlbum($beatportTrack->getRelease()->getName(), $beatportTrack->getRemixers());
         $trackNumber = $this->getTrackNumber($beatportTrack->getTrackNumber());
         $year = $this->getYear($beatportTrack->getReleaseDate());
-        $genre = $this->getGenre(
-            $beatportTrack->getGenres(),
-            $beatportTrack->getSubGenres(),
-        );
-        $publisher = $this->getPublisher($beatportTrack->getLabel());
+        $genre = $this->getGenre($beatportTrack->getGenre(), $beatportTrack->getSubGenre());
+        $publisher = $this->getPublisher($beatportTrack->getRelease()->getLabel());
         $bpm = $this->getBpm();
         $initialKey = $this->getInitialKey();
+
         $tags = $this->getTags(
             $beatportTrack->getArtists(), // artyści wyciągnięci z title jako feat
             $beatportTrack->getRemixers(),
-            $beatportTrack->getGenres(),
-            $beatportTrack->getSubGenres(),
+            $beatportTrack->getGenre(),
+            $beatportTrack->getSubGenre(),
             $beatportTrack->getCharts(),
         );
 
@@ -141,7 +140,7 @@ final class TrackMetadataSuggestionsBuilder
         return $suggestions;
     }
 
-    private function getTitle(string $title, string $name, string $mixName, ?array $remixers): array
+    private function getTitle(string $name, string $mixName, ?array $remixers): array
     {
         $removeFeat = static function (string $title): string {
             $regex = '/(?:\s|\()(?:feat|ft?)\.?\s([\w, &\.]+)\)?/iu';
@@ -152,7 +151,7 @@ final class TrackMetadataSuggestionsBuilder
         $nameTitleCase = $removeFeat(S::toTitleCase($name));
 
         $suggestions = [
-            str_replace(['(', ')'], ['[', ']'], $removeFeat(S::toTitleCase($title))),
+            str_replace(['(', ')'], ['[', ']'], $removeFeat(S::toTitleCase($name))),
             sprintf('%s [%s]', $nameTitleCase, $mixName),
         ];
 
@@ -209,9 +208,13 @@ final class TrackMetadataSuggestionsBuilder
         return $suggestions;
     }
 
-    private function getTrackNumber(int $trackNumber): array
+    private function getTrackNumber(?int $trackNumber): array
     {
-        $suggestions = [ $trackNumber ];
+        $suggestions = [ ];
+
+        if ($trackNumber) {
+            $suggestions[] = $trackNumber;
+        }
 
         return $suggestions;
     }
@@ -223,14 +226,15 @@ final class TrackMetadataSuggestionsBuilder
         return $suggestions;
     }
 
-    private function getGenre(array $genres, ?array $subGenres): array
+    private function getGenre(string $genre, ?string $subGenre): array
     {
-        $beatportGenres = $genres;
+        $beatportGenres = [ $genre ];
 
-        if ($subGenres) {
-            array_push($beatportGenres, ...$subGenres);
+        if ($subGenre) {
+            $beatportGenres[] = $subGenre;
         }
 
+        /** @noinspection SpellCheckingInspection */
         $collectionGenres = [
             'Deep House',
             'Electro House',
@@ -310,21 +314,24 @@ final class TrackMetadataSuggestionsBuilder
     /**
      * @param string[] $artists
      * @param string[]|null $remixers
-     * @param string[] $genres
-     * @param string[]|null $subGenres
+     * @param string $genre
+     * @param string|null $subGenre
      * @param BeatportChart[]|null $charts
      * @return string[]
      */
-    private function getTags(array $artists, ?array $remixers, array $genres, ?array $subGenres, ?array $charts): array
+    private function getTags(array $artists, ?array $remixers, string $genre, ?string $subGenre, ?array $charts): array
     {
         // TODO: To powinno zwracać tablicę obiektów Tag, która może być stringiem (json_encoded) i na wszelki wypadek
         //       powinna zawierać informację o tym czym jest (remixer, artist, genre, itd), a także oddzielenie
         //       nazwy od sluga / guida
 
-        $suggestions = array_merge($artists, $genres);
+        $suggestions = array_merge($artists);
 
-        if ($subGenres) {
-            array_push($suggestions, ...$subGenres);
+        if ($genre) {
+            $suggestions[] = $genre;
+        }
+        if ($subGenre) {
+            $suggestions[] = $subGenre;
         }
 
         if ($remixers) {
@@ -332,14 +339,12 @@ final class TrackMetadataSuggestionsBuilder
         }
 
         if ($charts) {
-            foreach ($charts as $chart) {
+            $officialCharts = array_filter($charts, fn(BeatportChart $chart) => $chart->isOfficial());
+
+            foreach ($officialCharts as $chart) {
                 $suggestions[] = $chart->getArtist();
 
                 array_push($suggestions, ...$chart->getGenres());
-
-                if ($chart->getSubGenres()) {
-                    array_push($suggestions, ...$chart->getSubGenres());
-                }
             }
         }
 
@@ -350,6 +355,7 @@ final class TrackMetadataSuggestionsBuilder
         return $suggestions;
     }
 
+    // rozdzielić. niech to będzie unique(s) i sorted(s), czyli: unique(sorted($array));
     private static function getUniqueSortedSuggestions(array $suggestions): array
     {
         $unique = self::getUniqueSuggestions($suggestions);

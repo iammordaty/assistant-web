@@ -122,11 +122,11 @@ final class EditController
             'artist' => $postData['artist'],
             'title' => $postData['title'],
             'album' => $postData['album'],
-            'track_number' => $postData['track_number'],
+            'track_number' => $postData['trackNumber'],
             'publisher' => $postData['publisher'],
             'genre' => $postData['genre'],
             'year' => $postData['year'],
-            'initial_key' => $postData['initial_key'],
+            'initial_key' => $postData['initialKey'],
             'bpm' => $postData['bpm'],
         ];
 
@@ -206,11 +206,11 @@ final class EditController
             [ 'field' => 'artist', 'title' => 'Wykonawca' ],
             [ 'field' => 'title', 'title' => 'Tytuł utworu' ],
             [ 'field' => 'album', 'title' => 'Album' ],
-            [ 'field' => 'track_number', 'title' => 'Nr ścieżki' ],
+            [ 'field' => 'trackNumber', 'title' => 'Nr ścieżki' ],
             [ 'field' => 'publisher', 'title' => 'Wydawca' ],
             [ 'field' => 'genre', 'title' => 'Gatunek' ],
             [ 'field' => 'year', 'title' => 'Rok' ],
-            [ 'field' => 'initial_key', 'title' => 'Tonacja' ],
+            [ 'field' => 'initialKey', 'title' => 'Tonacja' ],
             [ 'field' => 'bpm', 'title' => 'BPM' ],
         ];
     }

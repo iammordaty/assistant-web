@@ -5,7 +5,7 @@
 var NO_SUGGESTIONS = [{ track: [], suggestions: [] }];
 
 $(document).ready(function() {
-    var rawSuggestions = $('[data-role="track-suggestions:suggestions"]').data('suggestions')
+    var rawSuggestions = $('[data-role="track-suggestions:suggestions"]').data('suggestions');
     var SUGGESTIONS = rawSuggestions.length === 0 ? NO_SUGGESTIONS : rawSuggestions;
 
     var $baseTrackSelector = $('[data-role="track-suggestions:base-track-selector"]');
@@ -16,7 +16,7 @@ $(document).ready(function() {
         var releaseDate = new Date(track.releaseDate);
         var month = releaseDate.getMonth() + 1;
 
-        $baseTrackInfo.find('[data-role="track"]').text(track.artists.join(', ') + ' - ' + track.title);
+        $baseTrackInfo.find('[data-role="track"]').text(track.name);
         $baseTrackInfo.find('[data-role="track-url"]').attr('href', track.url);
         $baseTrackInfo.find('[data-role="year"]').text([
             releaseDate.getDate(),
@@ -25,7 +25,7 @@ $(document).ready(function() {
         ].join('.'))
         $baseTrackInfo.find('[data-role="release"]').text(track.release.name);
         $baseTrackInfo.find('[data-role="release-url"]').attr('href', track.release.url);
-        $baseTrackInfo.find('[data-role="label"]').text(track.label);
+        $baseTrackInfo.find('[data-role="label"]').text(track.release.label);
     });
 
     // --
@@ -76,6 +76,9 @@ $(document).ready(function() {
             if ($suggestions.length === 0) {
                 $element.find('button').addClass('disabled');
             }
+
+            // @todo: Odmienić liczebnik. Na luzie, bo obecny select jest niewygodny i trzeba sugestie ugryźć inaczej.
+            $element.find('input').attr('placeholder', '(podpowiedzi: ' + $suggestions.length + ')');
 
             $element.find('.dropdown-menu').html($suggestions);
 

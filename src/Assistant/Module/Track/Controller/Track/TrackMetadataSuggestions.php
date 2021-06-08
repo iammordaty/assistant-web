@@ -44,6 +44,7 @@ final class TrackMetadataSuggestions
 
         // --- tworzenie obiektów wyszukujących
 
+        /*
         $oauthParams = [
             'consumer_key' => $_ENV['BEATPORT_API_CONSUMER_KEY'],
             'consumer_secret' => $_ENV['BEATPORT_API_CONSUMER_SECRET'],
@@ -51,6 +52,9 @@ final class TrackMetadataSuggestions
             'password' => $_ENV['BEATPORT_API_PASSWORD'],
         ];
         $beatportApiClient = BeatportApiClient::create($oauthParams, BASE_DIR);
+        */
+
+        $beatportApiClient = BeatportApiClient::create($_ENV['BEATPORT_API_AUTHORIZATION'], BASE_DIR);
         $beatportTrackBuilder = new BeatportTrackBuilder($beatportApiClient);
 
         $googleSearchApiClient = new GoogleSearchApiClient(
@@ -64,21 +68,20 @@ final class TrackMetadataSuggestions
         // --- wyszukiwanie utworów
 
         try {
-            // to jako tablica, którą w foreachu wywołuję się poprzez invoke z query jako parametrem?
-            // https://github.com/Respect/Validation/blob/master/library/Rules/AbstractComposite.php#L40
-
-            $tracksFoundByBeatportSearch = $beatportSearchTracks($query);
             $tracksFoundByGoogleSearch = $googleBeatportSearchTracks($query);
+            // $tracksFoundByBeatportSearch = $beatportSearchTracks($query);
 
             // var_dump($tracksFoundByBeatportSearch ?? null, $tracksFoundByGoogleSearch ?? null); exit;
         } catch (\Exception $e) {
             $tracksFoundByBeatportSearch = [];
             $tracksFoundByGoogleSearch = [];
+
+            var_dump($e->getMessage());
         }
 
         $beatportTracks = (new BeatportUniqueTracks())
-            ->add($tracksFoundByBeatportSearch)
-            ->add($tracksFoundByGoogleSearch)
+            ->add(...$tracksFoundByGoogleSearch)
+            // ->add(...$tracksFoundByBeatportSearch)
             ->get();
 
         // foreach ($beatportTracks as $beatportTrack) { var_dump($beatportTrack); } exit;

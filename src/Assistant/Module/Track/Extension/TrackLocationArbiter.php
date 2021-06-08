@@ -47,6 +47,8 @@ final class TrackLocationArbiter
             return self::LOCATION_IN_INCOMING;
         }
         if (str_starts_with($pathname, $this->config->get('collection.root_dir'))) {
+            // tutaj powinno się sprawdzić (dodatkowo albo tylko) collection.indexed_dirs, bo teraz
+            // źle zakłada, że V testy są w kolekcji
             return self::LOCATION_IN_COLLECTION;
         }
 

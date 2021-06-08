@@ -4,20 +4,20 @@ namespace Assistant\Module\Common\Extension\TrackSearch;
 
 use Assistant\Module\Common\Extension\Beatport\BeatportTrackBuilder;
 use Assistant\Module\Common\Extension\Beatport\BeatportTrack;
-use Assistant\Module\Common\Extension\BeatportApiClient;
+use Assistant\Module\Common\Extension\BeatportApiClientInterface;
 use Cocur\Slugify\Slugify;
 use Cocur\Slugify\SlugifyInterface;
 
 final class BeatportSearchTracks
 {
-    private BeatportApiClient $client;
+    private BeatportApiClientInterface $client;
 
     private BeatportTrackBuilder $trackBuilder;
 
     private SlugifyInterface $slugify;
 
     public function __construct(
-        BeatportApiClient $client,
+        BeatportApiClientInterface $client,
         BeatportTrackBuilder $beatportTrackBuilder,
         ?SlugifyInterface $slugify = null
     ) {
@@ -32,16 +32,14 @@ final class BeatportSearchTracks
      */
     public function __invoke(string $query): array
     {
-        $response = $this->client->search([ 'query' => $this->slugify->slugify($query)]);
-
-        $rawTracks = array_filter(
-            $response['results'],
-            static fn ($rawTrack) => $rawTrack['type'] === BeatportTrackBuilder::ITEM_TYPE_TRACK
-        );
+        $response = $this->client->search([
+            'q' => $this->slugify->slugify($query),
+            'type' => 'tracks',
+        ]);
 
         $beatportTracks = array_map(
-            fn($rawTrack) => $this->trackBuilder->fromRawTrack($rawTrack),
-            $rawTracks
+            fn($rawTrack) => $this->trackBuilder->fromBeatportSearchResult($rawTrack),
+            $response['tracks']
         );
 
         return $beatportTracks;

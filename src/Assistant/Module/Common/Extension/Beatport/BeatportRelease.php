@@ -4,43 +4,33 @@ namespace Assistant\Module\Common\Extension\Beatport;
 
 final class BeatportRelease
 {
-    private const DOMAIN = 'https://www.beatport.com';
-
-    private int $id;
-    private string $url;
-    private string $name;
-
-    public function __construct(int $id, string $type, string $slug, string $name)
-    {
-        $this->id = $id;
-        $this->url = sprintf('%s/%s/%s/%d', self::DOMAIN, $type, $slug, $id);
-        $this->name = $name;
+    public function __construct(
+        private string $url,
+        private string $name,
+        private string $label,
+    ) {
     }
 
     public static function create($release): BeatportRelease
     {
+        $url = sprintf('%s/%s/%s/%d', Beatport::DOMAIN, Beatport::TYPE_RELEASE, $release['slug'], $release['id']);
+
         $beatportRelease = new BeatportRelease(
-            $release['id'],
-            $release['type'],
-            $release['slug'],
-            $release['name'],
+            url: $url,
+            name: $release['name'],
+            label: $release['label']['name'],
         );
 
         return $beatportRelease;
     }
 
-    public function toArray()
+    public function toArray(): array
     {
         return [
-            'id' => $this->id,
             'url' => $this->url,
             'name' => $this->name,
+            'label' => $this->label,
         ];
-    }
-
-    public function getId(): int
-    {
-        return $this->id;
     }
 
     public function getUrl(): string
@@ -51,5 +41,10 @@ final class BeatportRelease
     public function getName(): string
     {
         return $this->name;
+    }
+
+    public function getLabel(): string
+    {
+        return $this->label;
     }
 }

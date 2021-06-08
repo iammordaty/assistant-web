@@ -4,50 +4,29 @@ namespace Assistant\Module\Common\Extension\Beatport;
 
 final class BeatportChart
 {
-    private const DOMAIN = 'https://www.beatport.com';
-
-    private int $id;
-    private string $url;
-    private ?string $artist;
-    private string $name;
-    private array $genres;
-    private ?array $subGenres;
-
     public function __construct(
-        int $id,
-        string $type,
-        string $slug,
-        ?array $rawArtist,
-        string $name,
-        array $genres,
-        ?array $subGenres
+        private string $url,
+        private ?string $artist,
+        private bool $isOfficial,
+        private string $name,
+        private array $genres,
     ) {
-        $this->id = $id;
-        $this->url = sprintf('%s/%s/%s/%d', self::DOMAIN, $type, $slug, $id);
-        $this->artist = $rawArtist ? $rawArtist['name'] : null;
-        $this->name = $name;
-        $this->genres = array_map(static fn($genre) => $genre['name'], $genres);
-        $this->subGenres = array_unique(array_map(static fn($subGenre) => $subGenre['name'], $subGenres)) ?: null;
     }
 
     public static function create($chart): BeatportChart
     {
+        $url = sprintf('%s/%s/%s/%d', Beatport::DOMAIN, Beatport::TYPE_CHARTS, $chart['slug'], $chart['id']);
+        $genres = array_map(static fn($genre) => $genre['name'], $chart['genres']);
+
         $beatportChart = new BeatportChart(
-            $chart['id'],
-            $chart['type'],
-            $chart['slug'],
-            $chart['chartOwner'],
-            $chart['name'],
-            $chart['genres'],
-            $chart['subGenres'],
+            url: $url,
+            artist: $chart['artist']['name'] ?? null,
+            isOfficial: isset($chart['artist']),
+            name: $chart['name'],
+            genres: $genres,
         );
 
         return $beatportChart;
-    }
-
-    public function getId(): int
-    {
-        return $this->id;
     }
 
     public function getUrl(): string
@@ -60,6 +39,17 @@ final class BeatportChart
         return $this->artist;
     }
 
+    /**
+     * Określa że lista została stworzona przez DJ-a / producenta / zespół zarejestrowany na beatport (np. Voorna),
+     * a nie "zwykłego" użytkownika portalu
+     *
+     * @return bool
+     */
+    public function isOfficial(): bool
+    {
+        return $this->isOfficial;
+    }
+
     public function getName(): string
     {
         return $this->name;
@@ -68,10 +58,5 @@ final class BeatportChart
     public function getGenres(): array
     {
         return $this->genres;
-    }
-
-    public function getSubGenres(): ?array
-    {
-        return $this->subGenres;
     }
 }

@@ -4,13 +4,8 @@ namespace Assistant\Module\Common\Extension\TrackSearch;
 
 final class GoogleBeatportSearchResult
 {
-    private int $id;
-    private string $url;
-
-    public function __construct(int $id, string $url)
+    public function __construct(private int $id, private string $url)
     {
-        $this->id = $id;
-        $this->url = $url;
     }
 
     public static function factory(\stdClass $result): GoogleBeatportSearchResult
