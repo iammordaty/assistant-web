@@ -6,10 +6,7 @@ use Assistant\Module\Common\Extension\GetId3\Adapter\Metadata as BaseMetadata;
 
 class Id3v2 extends BaseMetadata
 {
-    /**
-     * @var array
-     */
-    private $fields = [
+    private array $fields = [
         'artist',
         'title',
         'album',
@@ -24,7 +21,7 @@ class Id3v2 extends BaseMetadata
     /**
      * {@inheritDoc}
      */
-    public function getMetadata()
+    public function getMetadata(): array
     {
         if (isset($this->rawInfo['tags']['id3v2']) === false) {
             return [];
@@ -33,7 +30,7 @@ class Id3v2 extends BaseMetadata
         $metadata = [ ];
 
         foreach ($this->rawInfo['tags']['id3v2'] as $field => $value) {
-            if (in_array($field, $this->fields) && !empty($value[0]) ) {
+            if (in_array($field, $this->fields) && !empty($value[0])) {
                 switch ($field) {
                     case 'track_number':
                     case 'year':
@@ -57,7 +54,7 @@ class Id3v2 extends BaseMetadata
     /**
      * {@inheritDoc}
      */
-    public function prepareMetadata(array $metadata)
+    public function prepareMetadata(array $metadata): array
     {
         $rawId3v2Info = $this->rawInfo['tags']['id3v2'] ?? [];
 

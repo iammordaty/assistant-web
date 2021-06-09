@@ -7,34 +7,17 @@ namespace Assistant\Module\Common\Extension\GetId3\Adapter;
  */
 abstract class Metadata
 {
-    /**
-     * Surowe dane pochodzące z biblioteki getID3
-     *
-     * @var array
-     */
-    protected $rawInfo;
+    /** Surowe dane pochodzące z biblioteki getID3 */
+    protected array $rawInfo;
 
-    /**
-     * Konstruktor
-     *
-     * @param array $rawInfo
-     */
     public function __construct(array $rawInfo)
     {
         $this->rawInfo = $rawInfo;
     }
 
-    /**
-     * Zwraca metadane zawarte pliku (utworze muzycznym)
-     *
-     * @return array
-     */
-    abstract public function getMetadata();
+    /** Zwraca metadane zawarte pliku (utworze muzycznym) */
+    abstract public function getMetadata(): array;
 
-    /**
-     * Przygotowuje metadane do formatu używanego przez bibliotekę getID3
-     *
-     * @return array
-     */
-    abstract public function prepareMetadata(array $metadata);
+    /** Przygotowuje metadane do formatu używanego przez bibliotekę getID3 */
+    abstract public function prepareMetadata(array $metadata): array;
 }

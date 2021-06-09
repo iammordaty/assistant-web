@@ -44,8 +44,11 @@ final class Adapter
 
     // @todo: możliwe że jest inne podzielenie parametrów (poprzez settery, a może nową klasę z parametrami),
     //        bo obecnie korzystanie z niniejszej klasy jest niewygodne
-    public function __construct(SplFileInfo $file = null, ?array $id3ReaderOptions = null, ?array $id3WriterOptions = null)
-    {
+    public function __construct(
+        SplFileInfo $file = null,
+        ?array $id3ReaderOptions = null,
+        ?array $id3WriterOptions = null,
+    ) {
         $this->id3Reader = new getID3();
 
         $this->id3Writer = new getid3_writetags();
@@ -74,7 +77,7 @@ final class Adapter
      * @param SplFileInfo $file
      * @return self
      */
-    public function setFile(SplFileInfo $file)
+    public function setFile(SplFileInfo $file): self
     {
         $this->rawInfo = [ ];
         $this->file = $file;
@@ -82,7 +85,7 @@ final class Adapter
         return $this;
     }
 
-    public function setId3ReaderOptions(array $id3ReaderOptions)
+    public function setId3ReaderOptions(array $id3ReaderOptions): self
     {
         $this->id3ReaderOptions = $id3ReaderOptions;
 
@@ -91,7 +94,7 @@ final class Adapter
         return $this;
     }
 
-    public function setId3WriterOptions(array $id3WriterOptions)
+    public function setId3WriterOptions(array $id3WriterOptions): self
     {
         $this->id3WriterOptions = $id3WriterOptions;
 
@@ -109,7 +112,7 @@ final class Adapter
      *
      * @throws ReadException
      */
-    public function readId3v2Metadata()
+    public function readId3v2Metadata(): array
     {
         try {
             $this->rawInfo = $this->id3Reader->analyze($this->file->getPathname());
@@ -122,12 +125,8 @@ final class Adapter
         return (new Id3v2($this->rawInfo))->getMetadata();
     }
 
-    /**
-     * Zwraca długość utworu muzycznego w sekundach
-     *
-     * @return int|null
-     */
-    public function getTrackLength()
+    /** Zwraca długość utworu muzycznego w sekundach */
+    public function getTrackLength(): ?int
     {
         return isset($this->rawInfo['playtime_seconds']) ? (int) $this->rawInfo['playtime_seconds'] : null;
     }
@@ -184,22 +183,14 @@ final class Adapter
         return true;
     }
 
-    /**
-     * Zwraca listę niekrytycznych błędów wykrytych podczas zapisywania metadanych w utworze muzycznym
-     *
-     * @return array
-     */
-    public function getWriterWarnings()
+    /** Zwraca listę niekrytycznych błędów wykrytych podczas zapisywania metadanych w utworze muzycznym */
+    public function getWriterWarnings(): array
     {
         return $this->id3Writer->warnings;
     }
 
-    /**
-     * Zwraca listę krytycznych błędów wykrytych podczas zapisywania metadanych w utworze muzycznym
-     *
-     * @return array
-     */
-    public function getWriterErrors()
+    /** Zwraca listę krytycznych błędów wykrytych podczas zapisywania metadanych w utworze muzycznym */
+    public function getWriterErrors(): array
     {
         $errors = [];
 
