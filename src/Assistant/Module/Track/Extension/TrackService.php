@@ -25,13 +25,17 @@ final class TrackService
 
     public function findOneByName(string $name): ?Track
     {
-        $guid = $this->slugify->slugify($name);
-
-        if ($guid === '') {
-            return null;
-        }
+        $name = $this->slugify->slugify($name);
 
         $searchCriteria = SearchCriteriaFacade::createFromName($name);
+        $track = $this->trackRepository->getOneBy($searchCriteria);
+
+        return $track;
+    }
+
+    public function findOneByPathname(string $pathname): ?Track
+    {
+        $searchCriteria = SearchCriteriaFacade::createFromPathname($pathname);
         $track = $this->trackRepository->getOneBy($searchCriteria);
 
         return $track;
@@ -50,32 +54,20 @@ final class TrackService
         ?int $limit = null,
         ?int $skip = null
     ): array|Traversable {
-        // rozwiązanie na szybko. najlepiej gdyby SearchCriteria samo slugify'owało nazwę, ale obecnie nie ma
-        // dostępu do klasy slugify; a może nie powinno. Do zastanowienia się.
-        // update 27.05: może do SearchCriteriaFacade::createFromName?
-
-        if ($searchCriteria->getName()) {
-            $name = $this->slugify->slugify($searchCriteria->getName());
-
-            $searchCriteria = $searchCriteria->withName($name);
-        }
-
         $tracks = $this->trackRepository->getBy($searchCriteria, $sort, $limit, $skip);
 
         return $tracks;
     }
 
+    public function save(Track $track): bool
+    {
+        $result = $this->trackRepository->save($track);
+
+        return $result;
+    }
+
     public function count(SearchCriteria $searchCriteria): int
     {
-        // rozwiązanie na szybko. najlepiej gdyby SearchCriteria samo slugify'owało nazwę, ale obecnie nie ma
-        // dostępu do klasy slugify; a może nie powinno. Do zastanowienia się.
-
-        if ($searchCriteria->getName()) {
-            $name = $this->slugify->slugify($searchCriteria->getName());
-
-            $searchCriteria = $searchCriteria->withName($name);
-        }
-
         $tracks = $this->trackRepository->countBy($searchCriteria);
 
         return $tracks;

@@ -4,44 +4,38 @@ namespace Assistant\Module\Collection\Extension\Writer;
 
 use Assistant\Module\Common\Extension\Backend\Client as BackendClient;
 use Assistant\Module\Common\Model\CollectionItemInterface;
+use Assistant\Module\Common\Repository\Regex;
+use Assistant\Module\Search\Extension\SearchCriteria;
+use Assistant\Module\Track\Extension\TrackService;
 use Assistant\Module\Track\Model\Track;
-use Assistant\Module\Track\Repository\TrackRepository;
-use MongoDB\BSON\Regex;
 
-/**
- * Writer dla elementów będących utworami muzycznymi
- */
-class TrackWriter implements WriterInterface
+/** Writer dla elementów będących utworami muzycznymi */
+final class TrackWriter implements WriterInterface
 {
     public function __construct(
-        private TrackRepository $repository,
-        private BackendClient $backendClient
+        private TrackService $trackService,
+        private BackendClient $backendClient,
     ) {
     }
 
-    /**
-     * Zapisuje utwór muzyczny w bazie danych
-     *
-     * @param Track|CollectionItemInterface $collectionItem
-     * @return Track
-     */
-    public function save(CollectionItemInterface $collectionItem): Track
+    /** Zapisuje utwór muzyczny w bazie danych */
+    public function save(Track|CollectionItemInterface $collectionItem): Track
     {
-        /* @var $indexedTrack Track */
-        $indexedTrack = $this->repository->getOneByPathname($collectionItem->getPathname());
+        $indexedTrack = $this->trackService->findOneByPathname($collectionItem->getPathname());
 
         // może odtąd* powinno zostać przeniesione do serwisu lub repo?
 
+        /** @noinspection PhpIfWithCommonPartsInspection, powyższy komentarz */
         if ($indexedTrack === null) {
             $collectionItem = $collectionItem->withGuid($this->getUniqueGuid($collectionItem));
 
-            $result = $this->repository->save($collectionItem);
+            $result = $this->trackService->save($collectionItem);
         } else {
             $collectionItem = $collectionItem
                 ->withId($indexedTrack->getId())
                 ->withModifiedDate($indexedTrack->getModifiedDate());
 
-            $result = $this->repository->save($collectionItem);
+            $result = $this->trackService->save($collectionItem);
         }
 
         // -- *dotąd
@@ -53,17 +47,13 @@ class TrackWriter implements WriterInterface
         return $collectionItem;
     }
 
-    /**
-     * Zwraca unikalny guid dla podanego utworu
-     *
-     * @fixme: Przerzucić do serwisu
-     *
-     * @param Track $track
-     * @return string
-     */
+    /** Zwraca unikalny guid dla podanego utworu */
     private function getUniqueGuid(Track $track): string
     {
-        $count = $this->repository->count([ 'guid' => new Regex(sprintf('^%s(?:-\d+)?$', $track->getGuid()), 'i') ]);
+        $regex = Regex::create(sprintf('^%s(?:-\d+)?$', $track->getGuid()));
+        $searchCriteria = new SearchCriteria(guid: $regex);
+
+        $count = $this->trackService->count($searchCriteria);
 
         if ($count === 0) {
             return $track->getGuid();

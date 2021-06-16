@@ -5,20 +5,35 @@ namespace Assistant\Module\Common\Repository;
 
 use Assistant\Module\Search\Extension\MinMaxInfo;
 use Assistant\Module\Search\Extension\SearchCriteria;
-use MongoDB\BSON\Regex;
+use MongoDB\BSON\Regex as MongoDBRegex;
 
 final class Query
 {
+    /**
+     * @param Regex|string|null $name
+     * @param Regex|string|null $guid
+     * @param Regex|string|null $artist
+     * @param Regex|string|null $title
+     * @param Regex[]|string[]|null $genres
+     * @param Regex[]|string[]|null $publishers
+     * @param MinMaxInfo|int[]|null $years
+     * @param string[]|null $initialKeys
+     * @param MinMaxInfo|float[]|null $bpm
+     * @param MinMaxInfo|\DateTimeInterface[]|null $indexedDates
+     * @param string|null $pathname
+     */
     public function __construct(
-        private ?string $name,
-        private ?string $artist,
-        private ?string $title,
+        private Regex|string|null $name,
+        private Regex|string|null $guid,
+        private Regex|string|null $artist,
+        private Regex|string|null $title,
         private ?array $genres,
         private ?array $publishers,
         private MinMaxInfo|array|null $years,
         private ?array $initialKeys,
         private MinMaxInfo|array|null $bpm,
         private MinMaxInfo|array|null $indexedDates,
+        private ?string $pathname,
     ) {
     }
 
@@ -26,6 +41,7 @@ final class Query
     {
         $query = new self(
             $criteria->getName(),
+            $criteria->getGuid(),
             $criteria->getArtist(),
             $criteria->getTitle(),
             $criteria->getGenres(),
@@ -34,6 +50,7 @@ final class Query
             $criteria->getInitialKeys(),
             $criteria->getBpm(),
             $criteria->getIndexedDates(),
+            $criteria->getPathname(),
         );
 
         return $query;
@@ -41,80 +58,123 @@ final class Query
 
     public function toStorage(): array
     {
+        // części wspólne wyciągnąć do prywatnych metod
+        // zastanowić się jak ugryźć to, że konwersja MinMaxInfo jest w zewn. klasie, a Regex nie (widać to w use)
+
         $criteria = [];
 
         if ($this->name) {
+            $name = $this->name instanceof Regex
+                ? new MongoDBRegex($this->name->getPattern(), $this->name->getFlags())
+                : $this->name;
+
             $criteria['$or'] = [
-                [ 'artist' => new Regex($this->name, 'i') ],
-                [ 'title' => new Regex($this->name, 'i') ],
-                [ 'guid' => new Regex($this->name, 'i') ],
+                [ 'artist' => $name ],
+                [ 'title' => $name ],
+                [ 'guid' => $name ],
             ];
         }
 
+        if ($this->guid) {
+            $guid = $this->guid instanceof Regex
+                ? new MongoDBRegex($this->guid->getPattern(), $this->guid->getFlags())
+                : $this->guid;
+
+            $criteria['guid'] = $guid;
+        }
+
         if ($this->artist) {
-            $criteria['artist'] = new Regex($this->artist, 'i');
+            $artist = $this->artist instanceof Regex
+                ? new MongoDBRegex($this->artist->getPattern(), $this->artist->getFlags())
+                : $this->artist;
+
+            $criteria['artist'] = $artist;
         }
 
         if ($this->title) {
-            $criteria['title'] = new Regex($this->title, 'i');
+            $title = $this->title instanceof Regex
+                ? new MongoDBRegex($this->title->getPattern(), $this->title->getFlags())
+                : $this->title;
+
+            $criteria['title'] = $title;
         }
 
         if ($this->genres) {
-            $genres = array_map(fn($genre) => new Regex('^' . $genre . '$', 'i'), $this->genres);
+            $genres = array_map(
+                fn ($genre) => $genre instanceof Regex
+                    ? new MongoDBRegex($genre->getPattern(), $genre->getFlags())
+                    : $genre,
+                $this->genres
+            );
 
-            if (count($genres) === 1) {
-                $criteria['genre'] = $genres[0];
-            } else {
-                $criteria['genre'] = [ '$in' => $genres ];
-            }
+            $genre = count($genres) === 1
+                ? $genres[0]
+                : [ '$in' => $genres ];
+
+            $criteria['genre'] = $genre;
         }
 
         if ($this->publishers) {
-            $publishers = array_map(fn($publisher) => new Regex('^' . $publisher . '$', 'i'), $this->publishers);
+            $publishers = array_map(
+                fn ($publisher) => $publisher instanceof Regex
+                    ? new MongoDBRegex($publisher->getPattern(), $publisher->getFlags())
+                    : $publisher,
+                $this->publishers
+            );
 
-            if (count($publishers) === 1) {
-                $criteria['publisher'] = $publishers[0];
-            } else {
-                $criteria['publisher'] = [ '$in' => $publishers ];
-            }
+            $publisher = count($publishers) === 1
+                ? $publishers[0]
+                : [ '$in' => $publishers ];
+
+            $criteria['publisher'] = $publisher;
         }
 
         if ($this->years) {
             if ($this->years instanceof MinMaxInfo) {
-                $criteria['year'] = MinMaxInfoToStorageQuery::toStorage($this->years);
+                $year = MinMaxInfoToStorageQuery::toStorage($this->years);
             } elseif (count($this->years) === 1) {
-                $criteria['year'] = $this->years[0];
+                $year = $this->years[0];
             } else {
-                $criteria['year'] = [ '$in' => $this->years ];
+                $year = [ '$in' => $this->years ];
             }
+
+            $criteria['year'] = $year;
         }
 
         if ($this->initialKeys) {
-            if (count($this->initialKeys) === 1) {
-                $criteria['initial_key'] = $this->initialKeys[0];
-            } else {
-                $criteria['initial_key'] = [ '$in' => $this->initialKeys ];
-            }
+            $initialKey = count($this->initialKeys) === 1
+                ? $this->initialKeys[0]
+                : [ '$in' => $this->initialKeys ];
+
+            $criteria['initial_key'] = $initialKey;
         }
 
         if ($this->bpm) {
             if ($this->bpm instanceof MinMaxInfo) {
-                $criteria['bpm'] = MinMaxInfoToStorageQuery::toStorage($this->bpm);
+                $bpm = MinMaxInfoToStorageQuery::toStorage($this->bpm);
             } elseif (count($this->bpm) === 1) {
-                $criteria['bpm'] = $this->bpm[0];
+                $bpm = $this->bpm[0];
             } else {
-                $criteria['bpm'] = [ '$in' => $this->bpm ];
+                $bpm = [ '$in' => $this->bpm ];
             }
+
+            $criteria['bpm'] = $bpm;
         }
 
         if ($this->indexedDates) {
             if ($this->indexedDates instanceof MinMaxInfo) {
-                $criteria['indexed_date'] = MinMaxInfoToStorageQuery::toStorage($this->indexedDates);
+                $indexedDate = MinMaxInfoToStorageQuery::toStorage($this->indexedDates);
             } elseif (count($this->indexedDates) === 1) {
-                $criteria['indexed_date'] = $this->indexedDates[0];
+                $indexedDate = $this->indexedDates[0];
             } else {
-                $criteria['indexed_date'] = [ '$in' => $this->indexedDates ];
+                $indexedDate = [ '$in' => $this->indexedDates ];
             }
+
+            $criteria['indexed_date'] = $indexedDate;
+        }
+
+        if ($this->pathname) {
+            $criteria['pathname'] = $this->pathname;
         }
 
         return $criteria;

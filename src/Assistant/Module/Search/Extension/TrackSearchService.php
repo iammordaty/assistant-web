@@ -2,6 +2,7 @@
 
 namespace Assistant\Module\Search\Extension;
 
+use Assistant\Module\Common\Extension\SlugifyService;
 use Assistant\Module\Common\Repository\Storage;
 use Assistant\Module\Track\Extension\TrackService;
 use Pagerfanta\Adapter\NullAdapter;
@@ -12,8 +13,10 @@ use Pagerfanta\View\TwitterBootstrap3View;
 /** Lokalizacja tymczasowa / wrzucone na szybko; przemyśleć, nie przywiązywać się */
 final class TrackSearchService
 {
-    public function __construct(private TrackService $trackService)
-    {
+    public function __construct(
+        private SlugifyService $slugify,
+        private TrackService $trackService,
+    ) {
     }
 
     /**
@@ -22,6 +25,19 @@ final class TrackSearchService
      * @var int
      */
     public const MAX_TRACKS_PER_PAGE = 50;
+
+    public function findByName(string $name, int $page): array
+    {
+        // slugify w tym miejscu (w sumie cała metoda) wrzucona trochę na szybko, nie przywiązywać się,
+        // przemyśleć później jak to rozwiązać bardziej elegancko.
+
+        $name = $this->slugify->slugify($name);
+
+        $searchCriteria = SearchCriteriaFacade::createFromName($name);
+        $tracks = $this->findBy($searchCriteria, $page);
+
+        return $tracks;
+    }
 
     public function findBy(SearchCriteria $criteria, int $page): array
     {

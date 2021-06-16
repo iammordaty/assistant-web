@@ -9,7 +9,7 @@ use Assistant\Module\Directory\Repository\DirectoryRepository;
 /**
  * Writer dla elementów będących katalogami
  */
-class DirectoryWriter implements WriterInterface
+final class DirectoryWriter implements WriterInterface
 {
     private DirectoryRepository $repository;
 

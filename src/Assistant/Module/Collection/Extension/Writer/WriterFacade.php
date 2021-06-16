@@ -6,27 +6,17 @@ use Assistant\Module\Common\Extension\Backend\Client as BackendClient;
 use Assistant\Module\Common\Model\CollectionItemInterface;
 use Assistant\Module\Directory\Model\Directory;
 use Assistant\Module\Directory\Repository\DirectoryRepository;
+use Assistant\Module\Track\Extension\TrackService;
 use Assistant\Module\Track\Model\Track;
-use Assistant\Module\Track\Repository\TrackRepository;
 use Psr\Container\ContainerInterface as Container;
 
-/**
- * Fasada dla writerów zajmujących się zapisywaniem elementów w kolekcji
- */
+/** Fasada dla writerów zajmujących się zapisywaniem elementów w kolekcji */
 final class WriterFacade
 {
-    /**
-     * Obiekt klasy odpowiedzialnej za zapis katalogów w bazie danych
-     *
-     * @var DirectoryWriter
-     */
+    /** Obiekt klasy odpowiedzialnej za zapis katalogów w bazie danych */
     private DirectoryWriter $directoryWriter;
 
-    /**
-     * Obiekt klasy odpowiedzialnej za zapis plików (utworów muzycznych) w bazie danych
-     *
-     * @var TrackWriter
-     */
+    /** Obiekt klasy odpowiedzialnej za zapis plików (utworów muzycznych) w bazie danych */
     private TrackWriter $trackWriter;
 
     public function __construct(DirectoryWriter $directoryWriter, TrackWriter $trackWriter)
@@ -42,7 +32,7 @@ final class WriterFacade
         );
 
         $trackWriter = new TrackWriter(
-            $container->get(TrackRepository::class),
+            $container->get(TrackService::class),
             $container->get(BackendClient::class),
         );
 

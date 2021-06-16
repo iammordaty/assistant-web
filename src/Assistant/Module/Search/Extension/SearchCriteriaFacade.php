@@ -2,35 +2,40 @@
 
 namespace Assistant\Module\Search\Extension;
 
+use Assistant\Module\Common\Repository\Regex;
 use Psr\Http\Message\ServerRequestInterface as Request;
 
 final class SearchCriteriaFacade
 {
     private const DEFAULTS = [
-        'name' => '',
-        'artist' => '',
-        'title' => '',
-        'genre' => '',
-        'publisher' => '',
-        'year' => '',
-        'initial_key' => '',
-        'bpm' => '',
-        'indexed_date' => '',
+        'artist' => null,
+        'bpm' => null,
+        'genre' => null,
+        'guid' => null,
+        'indexed_date' => null,
+        'initial_key' => null,
+        'name' => null,
+        'publisher' => null,
+        'title' => null,
+        'year' => null,
     ];
 
     public static function createFromSearchRequest(Request $request): SearchCriteria
     {
         $queryParams = array_merge(self::DEFAULTS, $request->getQueryParams());
 
-        $name = trim($queryParams['name']) ?: null;
-        $artist = trim($queryParams['artist']) ?: null;
-        $title = trim($queryParams['title']) ?: null;
+        $name = $queryParams['name'] ? Regex::contains(trim($queryParams['name'])) : null;
+        $guid = $queryParams['guid'] ? Regex::exact(trim($queryParams['guid'])) : null;
+        $artist = $queryParams['artist'] ? Regex::contains(trim($queryParams['artist'])) : null;
+        $title = $queryParams['title'] ? Regex::contains(trim($queryParams['title'])) : null;
 
-        $genres = explode(',', $queryParams['genre']);
-        $genres = self::unique($genres) ?: null;
+        $genres = explode(',', trim($queryParams['genre']));
+        $genres = self::unique($genres);
+        $genres = array_map(fn ($genre) => Regex::exact($genre), $genres) ?: null;
 
-        $publishers = explode(',', $queryParams['publisher']);
-        $publishers = self::unique($publishers) ?: null;
+        $publishers = explode(',', trim($queryParams['publisher']));
+        $publishers = self::unique($publishers);
+        $publishers = array_map(fn ($publisher) => Regex::exact($publisher), $publishers) ?: null;
 
         $years = YearMinMaxExpressionParser::parse($queryParams['year']);
 
@@ -62,6 +67,7 @@ final class SearchCriteriaFacade
 
         $searchCriteria = new SearchCriteria(
             $name,
+            $guid,
             $artist,
             $title,
             $genres,
@@ -77,7 +83,15 @@ final class SearchCriteriaFacade
 
     public static function createFromName(string $name): SearchCriteria
     {
-        $searchCriteria = new SearchCriteria(name: trim($name));
+        $regex = Regex::contains($name);
+        $searchCriteria = new SearchCriteria(name: $regex);
+
+        return $searchCriteria;
+    }
+
+    public static function createFromPathname(string $pathname): SearchCriteria
+    {
+        $searchCriteria = new SearchCriteria(pathname: $pathname);
 
         return $searchCriteria;
     }

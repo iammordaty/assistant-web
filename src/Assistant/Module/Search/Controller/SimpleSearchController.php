@@ -2,7 +2,6 @@
 
 namespace Assistant\Module\Search\Controller;
 
-use Assistant\Module\Search\Extension\SearchCriteriaFacade;
 use Assistant\Module\Search\Extension\TrackSearchService;
 use Assistant\Module\Track\Model\Track;
 use Psr\Http\Message\ResponseInterface as Response;
@@ -35,8 +34,7 @@ final class SimpleSearchController
             $name = $form['query'];
             $page = max(1, (int) ($form['page'] ?? 1));
 
-            $searchCriteria = SearchCriteriaFacade::createFromName($name);
-            $results = $this->searchService->findBy($searchCriteria, $page);
+            $results = $this->searchService->findByName($name, $page);
 
             if ($results['count'] > TrackSearchService::MAX_TRACKS_PER_PAGE) {
                 $routeParser = RouteContext::fromRequest($request)->getRouteParser();
