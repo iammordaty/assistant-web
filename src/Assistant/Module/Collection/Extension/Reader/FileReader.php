@@ -33,7 +33,7 @@ final class FileReader implements ReaderInterface
 
         $track = new Track(
             id: null,
-            guid: sprintf('%s - %s', $metadata['artist'], $metadata['title']),
+            guid: $this->getGuid($metadata),
             artist: $metadata['artist'],
             artists: $parsedMetadata['artists'],
             title: $metadata['title'],
@@ -54,5 +54,13 @@ final class FileReader implements ReaderInterface
         );
 
         return $track;
+    }
+
+    /** Zwraca guid dla podanego pliku (utworu muzycznego) */
+    private function getGuid(array $metadata): string
+    {
+        $string = sprintf('%s - %s', $metadata['artist'], $metadata['title']);
+
+        return $this->slugify->slugify($string);
     }
 }
