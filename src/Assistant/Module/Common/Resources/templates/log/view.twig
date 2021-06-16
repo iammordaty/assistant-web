@@ -1,8 +1,8 @@
 <table class="table table-hover" data-element="log-viewer" data-log="{{ log }}" data-mtime="{{ logMtime }}" data-maxlines="{{ maxLines }}">
     <tbody>
         {% for line in logContent %}
-            <tr {% if line.level == 'ERROR' %}class="danger"{% elseif line.level == 'INFO' %}class="info"{% endif %}>
-                <td title="{{ line.raw }}" class="col-xs-2">{{ line.date }}</td>
+            <tr {% if line.level == 'ERROR' %}class="danger" {% elseif line.level == 'INFO' %} class="info"{% endif %}>
+                <td title="{{ line.raw }}" class="col-xs-2">{{ line.date|date('d.m.Y, H:i:s') }}</td>
                 <td
                     class="col-xs-7"
                     {% if line.message|length > 200 %}
