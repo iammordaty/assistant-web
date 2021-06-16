@@ -38,7 +38,7 @@ final class Regex
         return $regex;
     }
 
-    public static function create(string $expression, ?array $flags = null): self
+    public static function create(string $expression, array $flags = []): self
     {
         return new self($expression, implode('', $flags));
     }
