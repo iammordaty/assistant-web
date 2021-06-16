@@ -53,6 +53,8 @@ final class ValidatorFacade
     {
         if ($node instanceof Directory) {
             $this->directoryValidator->validate($node);
+
+            return;
         }
 
         // to jest ok, ale FileReader czyta także katalog incoming (zwracając obiekt typu IncomingTrack)
