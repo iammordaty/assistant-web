@@ -25,7 +25,10 @@ abstract class AbstractTask extends Command
         $this->output = $output;
 
         $this->logger->pushProcessor(function ($record) {
-            $record['extra']['task'] = $this->getName();
+            $taskName = static::getDefaultName();
+
+            $record['context']['command'] = $taskName;
+            $record['extra']['task'] = $taskName;
 
             return $record;
         });
