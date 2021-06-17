@@ -87,7 +87,7 @@ final class LogController
             $context = json_decode($matches[4], true);
 
             if (isset($matches[5])) {
-                $context = array_merge($context, json_decode($matches[5], true));
+                $context = array_merge($context ?? [], json_decode($matches[5], true) ?? []);
             }
 
             $pathname = [];
