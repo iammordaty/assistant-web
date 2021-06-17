@@ -8,16 +8,16 @@ use Psr\Http\Message\ServerRequestInterface as Request;
 final class SearchCriteriaFacade
 {
     private const DEFAULTS = [
-        'artist' => null,
-        'bpm' => null,
-        'genre' => null,
-        'guid' => null,
-        'indexed_date' => null,
-        'initial_key' => null,
-        'name' => null,
-        'publisher' => null,
-        'title' => null,
-        'year' => null,
+        'artist' => '',
+        'bpm' => '',
+        'genre' => '',
+        'guid' => '',
+        'indexed_date' => '',
+        'initial_key' => '',
+        'name' => '',
+        'publisher' => '',
+        'title' => '',
+        'year' => '',
     ];
 
     public static function createFromSearchRequest(Request $request): SearchCriteria
