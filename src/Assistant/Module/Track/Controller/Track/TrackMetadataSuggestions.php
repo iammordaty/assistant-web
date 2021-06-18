@@ -54,7 +54,7 @@ final class TrackMetadataSuggestions
         $beatportApiClient = BeatportApiClient::create($oauthParams, BASE_DIR);
         */
 
-        $beatportApiClient = BeatportApiClient::create($_ENV['BEATPORT_API_AUTHORIZATION'], BASE_DIR);
+        $beatportApiClient = BeatportApiClient::create($_ENV['BEATPORT_API_URL'], BASE_DIR);
         $beatportTrackBuilder = new BeatportTrackBuilder($beatportApiClient);
 
         $googleSearchApiClient = new GoogleSearchApiClient(
@@ -72,7 +72,7 @@ final class TrackMetadataSuggestions
             // $tracksFoundByBeatportSearch = $beatportSearchTracks($query);
 
             // var_dump($tracksFoundByBeatportSearch ?? null, $tracksFoundByGoogleSearch ?? null); exit;
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             $tracksFoundByBeatportSearch = [];
             $tracksFoundByGoogleSearch = [];
 

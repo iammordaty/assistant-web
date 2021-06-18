@@ -24,7 +24,7 @@ final class BeatportApiClient implements BeatportApiClientInterface
         $this->client = $client;
     }
 
-    public static function create(string $authorization, string $baseDir): self
+    public static function create(string $baseUri, string $baseDir): self
     {
         $stack = HandlerStack::create();
 
@@ -37,12 +37,12 @@ final class BeatportApiClient implements BeatportApiClientInterface
 
         $stack->push($cacheMiddleware);
 
-        $stack->push(Middleware::mapRequest(function (RequestInterface $request) use ($authorization) {
-            return $request->withHeader('Authorization', $authorization);
+        $stack->push(Middleware::mapRequest(function (RequestInterface $request): RequestInterface {
+            return $request->withHeader('Accept', 'application/json');
         }));
 
         $client = new Client([
-            'base_uri' => 'https://api.beatport.com/v4/',
+            'base_uri' => $baseUri,
             'handler' => $stack,
         ]);
 
@@ -51,7 +51,7 @@ final class BeatportApiClient implements BeatportApiClientInterface
 
     public function search(array $query): array
     {
-        $response = $this->client->get('/v4/catalog/search', [
+        $response = $this->client->get('v4/catalog/search', [
             'query' => $query,
         ]);
 
@@ -62,7 +62,7 @@ final class BeatportApiClient implements BeatportApiClientInterface
 
     public function track(int $trackId): array
     {
-        $url = '/v4/catalog/tracks/' . $trackId;
+        $url = 'v4/catalog/tracks/' . $trackId;
         $response = $this->client->get($url);
 
         $contents = json_decode($response->getBody()->getContents(), true);
@@ -72,7 +72,7 @@ final class BeatportApiClient implements BeatportApiClientInterface
 
     public function charts(array $query): array
     {
-        $response = $this->client->get('/v4/catalog/charts', [
+        $response = $this->client->get('v4/catalog/charts', [
             'query' => $query,
         ]);
 
