@@ -40,10 +40,9 @@ final class Track implements CollectionItemInterface
     private string $parent;
     private string $pathname;
     private DateTime $modifiedDate;
-    private DateTime $indexedDate;
+    private ?DateTime $indexedDate;
     private ?SplFileInfo $file = null;
 
-    /** @noinspection DuplicatedCode */
     public function __construct(
         ?string $id,
         string $guid,
@@ -59,11 +58,11 @@ final class Track implements CollectionItemInterface
         ?string $initialKey,
         int $length,
         array $tags,
-        string $metadataMd5,  // być może to powinno być wyliczane w modelu
+        string $metadataMd5,  // @idea: być może to powinno być wyliczane w modelu
         string $parent,
         string $pathname,
         DateTime $modifiedDate,
-        DateTime $indexedDate
+        ?DateTime $indexedDate = null,
     ) {
         $this->id = $id;
         $this->guid = $guid;
@@ -266,9 +265,17 @@ final class Track implements CollectionItemInterface
         return $clone;
     }
 
-    public function getIndexedDate(): DateTime
+    public function getIndexedDate(): ?DateTime
     {
         return $this->indexedDate;
+    }
+
+    public function withIndexedDate(DateTime $indexedDate): self
+    {
+        $clone = clone $this;
+        $clone->indexedDate = $indexedDate;
+
+        return $clone;
     }
 
     public function getFile(): SplFileInfo

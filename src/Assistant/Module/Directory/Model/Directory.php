@@ -14,7 +14,7 @@ final class Directory implements CollectionItemInterface
     private ?string $parent;
     private string $pathname;
     private DateTime $modifiedDate;
-    private DateTime $indexedDate;
+    private ?DateTime $indexedDate;
     private ?SplFileInfo $file = null;
 
     public function __construct(
@@ -24,7 +24,7 @@ final class Directory implements CollectionItemInterface
         ?string $parent,
         string $pathname,
         DateTime $modifiedDate,
-        DateTime $indexedDate
+        ?DateTime $indexedDate = null,
     ) {
         $this->id = $id;
         $this->guid = $guid;
@@ -87,9 +87,17 @@ final class Directory implements CollectionItemInterface
         return $this->modifiedDate;
     }
 
-    public function getIndexedDate(): DateTime
+    public function getIndexedDate(): ?DateTime
     {
         return $this->indexedDate;
+    }
+
+    public function withIndexedDate(DateTime $indexedDate): self
+    {
+        $clone = clone $this;
+        $clone->indexedDate = $indexedDate;
+
+        return $clone;
     }
 
     public function getFile(): SplFileInfo

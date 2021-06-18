@@ -27,9 +27,7 @@ final class FileReader implements ReaderInterface
             ->readId3v2Metadata();
 
         $parsedMetadata = $this->metadataParser->parse($metadata);
-
-        $modifiedTimestamp = (new \DateTime())->setTimestamp($node->getMTime());
-        $indexedTimestamp = new \DateTime();
+        $modifiedDate = (new \DateTime())->setTimestamp($node->getMTime());
 
         $track = new Track(
             id: null,
@@ -49,8 +47,7 @@ final class FileReader implements ReaderInterface
             metadataMd5: md5(json_encode($metadata)),
             parent: $this->slugify->slugifyPath($node->getPath()),
             pathname: $node->getPathname(),
-            modifiedDate: $modifiedTimestamp,
-            indexedDate: $indexedTimestamp,
+            modifiedDate: $modifiedDate,
         );
 
         return $track;

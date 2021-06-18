@@ -18,7 +18,6 @@ final class DirectoryReader implements ReaderInterface
     public function read(SplFileInfo $node): Directory
     {
         $modifiedTimestamp = (new \DateTime())->setTimestamp($node->getMTime());
-        $indexedTimestamp = new \DateTime();
 
         $directory = new Directory(
             id:  null,
@@ -27,7 +26,6 @@ final class DirectoryReader implements ReaderInterface
             parent: $this->slugify->slugifyPath($node->getPath()),
             pathname: $node->getPathname(),
             modifiedDate: $modifiedTimestamp,
-            indexedDate: $indexedTimestamp,
         );
 
         return $directory;

@@ -17,6 +17,7 @@ use Psr\Container\ContainerInterface as Container;
 use SplFileInfo;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
+use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 use Throwable;
 
@@ -64,21 +65,24 @@ final class IndexerTask extends AbstractTask
         $this
             ->setDescription('Indexes tracks and directories in collection')
             ->addArgument(
-                'pathname',
-                InputArgument::OPTIONAL,
-                'Pathname to index',
-                $collectionRootDir
+                name: 'pathname',
+                mode: InputArgument::OPTIONAL,
+                description: 'Pathname to index',
+                default: $collectionRootDir,
             )
-            ->addOption('ensure-collection-root-dir');
+            ->addOption(
+                name: 'ensure-collection-root-dir',
+                mode: InputOption::VALUE_NONE,
+                description: 'Ensures that the collection root is saved in the database',
+            )
+            ->addOption(
+                name: 'use-modification-date-as-index-date',
+                mode: InputOption::VALUE_NONE,
+                description: 'Specifies that the modified date of the item will be used as its indexing date',
+            );
     }
 
-    /**
-     * Rozpoczyna proces indeksowania kolekcji
-     *
-     * @param InputInterface $input
-     * @param OutputInterface $output
-     * @return int
-     */
+    /** Rozpoczyna proces indeksowania kolekcji */
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $this->logger->info('Task executed', self::getInputParams($input));
@@ -88,12 +92,22 @@ final class IndexerTask extends AbstractTask
             $input->getOption('ensure-collection-root-dir')
         );
 
+        $useModifiedDateAsIndexDate = $input->getOption('use-modification-date-as-index-date');
+
         foreach ($nodesToIndex as $node) {
             $this->logger->info('Processing node', [ 'pathname' => $node->getPathname() ]);
 
             try {
                 $element = $this->reader->read($node);
                 $this->validator->validate($element);
+
+                $indexedDate = $useModifiedDateAsIndexDate
+                    ? $element->getModifiedDate()
+                    : new \DateTime();
+
+                /** @uses Track::withIndexedDate() */
+                /** @uses Directory::withIndexedDate() */
+                $element = $element->withIndexedDate($indexedDate);
 
                 $this->writer->save($element);
 
@@ -129,7 +143,7 @@ final class IndexerTask extends AbstractTask
 
                 return self::FAILURE;
             } finally {
-                unset($node, $element);
+                unset($node, $element, $indexedDate);
             }
         }
 

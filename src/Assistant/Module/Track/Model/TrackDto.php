@@ -9,7 +9,6 @@ use stdClass;
 
 final class TrackDto
 {
-    /** @noinspection DuplicatedCode */
     public function __construct(
         private ?ObjectId $objectId,
         private string $guid,
@@ -29,7 +28,7 @@ final class TrackDto
         private string $parent,
         private string $pathname,
         private UTCDateTime $modifiedDate,
-        private UTCDateTime $indexedDate
+        private ?UTCDateTime $indexedDate,
     ) {
     }
 
@@ -63,7 +62,9 @@ final class TrackDto
     public static function fromModel(Track $track): self
     {
         $modifiedTimestamp = (int) $track->getModifiedDate()->format('U') * 1000;
-        $indexedTimestamp = (int) $track->getIndexedDate()->format('U') * 1000;
+        $indexedTimestamp = $track->getIndexedDate()
+            ? (int) $track->getIndexedDate()->format('U') * 1000
+            : null;
 
         $dto = new self(
             $track->getId() ? new ObjectId($track->getId()) : null,
@@ -84,7 +85,7 @@ final class TrackDto
             $track->getParent(),
             $track->getPathname(),
             new UTCDateTime($modifiedTimestamp),
-            new UTCDateTime($indexedTimestamp),
+            $indexedTimestamp ? new UTCDateTime($indexedTimestamp) : null,
         );
 
         return $dto;
@@ -200,7 +201,7 @@ final class TrackDto
         return $this->modifiedDate;
     }
 
-    public function getIndexedDate(): UTCDateTime
+    public function getIndexedDate(): ?UTCDateTime
     {
         return $this->indexedDate;
     }

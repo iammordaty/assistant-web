@@ -14,7 +14,7 @@ final class DirectoryDto
     private ?string $parent; /** To dotyczy tylko roota (/collection), które nie ma katalogu nadrzędnego. */
     private string $pathname;
     private UTCDateTime $modifiedDate;
-    private UTCDateTime $indexedDate;
+    private ?UTCDateTime $indexedDate;
 
     public function __construct(
         ?ObjectId $objectId,
@@ -23,7 +23,7 @@ final class DirectoryDto
         ?string $parent,
         string $pathname,
         UTCDateTime $modifiedDate,
-        UTCDateTime $indexedDate
+        ?UTCDateTime $indexedDate,
     ) {
         $this->objectId = $objectId;
         $this->guid = $guid;
@@ -52,7 +52,9 @@ final class DirectoryDto
     public static function fromModel(Directory $directory): self
     {
         $modifiedTimestamp = (int) $directory->getModifiedDate()->format('U') * 1000;
-        $indexedTimestamp = (int) $directory->getIndexedDate()->format('U') * 1000;
+        $indexedTimestamp = $directory->getIndexedDate()
+            ? (int) $directory->getIndexedDate()->format('U') * 1000
+            : null;
 
         $dto = new self(
             $directory->getId() ? new ObjectId($directory->getId()) : null,
@@ -61,7 +63,7 @@ final class DirectoryDto
             $directory->getParent(),
             $directory->getPathname(),
             new UTCDateTime($modifiedTimestamp),
-            new UTCDateTime($indexedTimestamp),
+            $indexedTimestamp ? new UTCDateTime($indexedTimestamp) : null,
         );
 
         return $dto;
@@ -110,7 +112,7 @@ final class DirectoryDto
         return $this->modifiedDate;
     }
 
-    public function getIndexedDate(): UTCDateTime
+    public function getIndexedDate(): ?UTCDateTime
     {
         return $this->indexedDate;
     }

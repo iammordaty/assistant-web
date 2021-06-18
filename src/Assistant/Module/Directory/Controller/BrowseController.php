@@ -91,9 +91,6 @@ final class BrowseController
             $recent[$groupName]['tracks'][$track->getGuid()] = $track;
         }
 
-        // Sortowanie chyba nie będzie potrzebne jeśli data zaindeksowania w bazie będzie poprawna
-        krsort($recent);
-
         foreach ($recent as &$group) {
             ksort($group['tracks']);
         }
