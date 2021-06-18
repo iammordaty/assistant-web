@@ -63,7 +63,7 @@ return static fn (string $baseDir, array $config): array => [
     },
 
     Logger::class => function () use ($baseDir): LoggerInterface {
-        $logsDir = $baseDir . '/app/logs';
+        $logsDir = $baseDir . '/var/logs';
 
         $logger = new Logger('assistant-logger');
 

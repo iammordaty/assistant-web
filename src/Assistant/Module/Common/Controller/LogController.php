@@ -30,7 +30,7 @@ final class LogController
 
         $logs = $log ? [ $log ] : self::AVAILABLE_LOGS;
 
-        $names = array_map(fn($log): string => sprintf('%s/app/logs/app.%s.log', $this->baseDir, $log), $logs);
+        $names = array_map(fn($log): string => sprintf('%s/var/logs/app.%s.log', $this->baseDir, $log), $logs);
         $maxLines = $log ? 100 : 5;
 
         $contents = array_map(fn($filename): array => $this->read($filename, $maxLines), $names);
@@ -55,7 +55,7 @@ final class LogController
             throw new HttpNotFoundException($request);
         }
 
-        $filename = sprintf('%s/app/logs/app.%s.log', $this->baseDir, $log);
+        $filename = sprintf('%s/var/logs/app.%s.log', $this->baseDir, $log);
 
         $maxLines = $queryParams['lines'] ?? null;
         $logContent = $this->read($filename, $maxLines);

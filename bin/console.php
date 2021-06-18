@@ -12,21 +12,21 @@ require_once BASE_DIR . '/vendor/autoload.php';
 
 // require config and set up dependencies
 
-$config = (require_once BASE_DIR . '/app/config.inc')(BASE_DIR);
+$config = (require_once BASE_DIR . '/config/config.inc')(BASE_DIR);
 
 /** @noinspection PhpUnhandledExceptionInspection */
 $container = (new ContainerBuilder())
-    ->addDefinitions((require_once BASE_DIR . '/app/container.inc')(BASE_DIR, $config))
+    ->addDefinitions((require_once BASE_DIR . '/config/container.inc')(BASE_DIR, $config))
     ->build();
 
 $app = Bridge::create($container);
 
-(require_once BASE_DIR . '/app/middleware.inc')($app);
+(require_once BASE_DIR . '/config/middleware.inc')($app);
 
 // prepare tasks and console app
 
 $console = new Application();
-$console->addCommands((require_once BASE_DIR . '/app/tasks.inc')($container));
+$console->addCommands((require_once BASE_DIR . '/config/tasks.inc')($container));
 
 unset($app, $container);
 

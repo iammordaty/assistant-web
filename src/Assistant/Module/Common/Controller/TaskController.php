@@ -19,7 +19,7 @@ final class TaskController
     public function calculateAudioData(Request $request, Response $response): Response
     {
         $pathname = $request->getParsedBody()['pathname'] ?? null;
-        $command = sprintf('php %s/app/console.php track:calculate-audio-data -w "%s"', $this->baseDir, $pathname);
+        $command = sprintf('php %s/bin/console.php track:calculate-audio-data -w "%s"', $this->baseDir, $pathname);
 
         $backgroundProcess = new BackgroundProcess($command);
         $backgroundProcess->run();
@@ -35,16 +35,6 @@ final class TaskController
     public function move(Request $request, Response $response): Response
     {
         $post = $request->getParsedBody();
-
-        /*
-        (new BackgroundProcess(
-            sprintf(
-                'php /data/app/console.php collection:move %s %s',
-                escapeshellarg($data['pathname']),
-                escapeshellarg($targetPathname)
-            )
-        ))->run();
-        */
 
         $response->getBody()->write(json_encode([
             'message' => 'not-implemented :-(',

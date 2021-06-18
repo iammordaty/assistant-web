@@ -30,7 +30,7 @@ final class BeatportApiClient implements BeatportApiClientInterface
 
         $cacheMiddleware = new CacheMiddleware(
             new GreedyCacheStrategy(
-                new FlysystemStorage(new Local($baseDir . '/cache')),
+                new FlysystemStorage(new Local($baseDir . '/var/cache')),
                 3600, // 1h, the TTL in seconds
             )
         );

@@ -161,7 +161,7 @@ final class MonitorTask extends AbstractTask
     {
         /*
         (new \Cocur\BackgroundProcess\BackgroundProcess(
-            sprintf('php app/console.php track:calculate-audio-data -r -w "%s"', $pathname)
+            sprintf('php bin/console.php track:calculate-audio-data -r -w "%s"', $pathname)
         ))->run();
         */
     }
@@ -175,7 +175,7 @@ final class MonitorTask extends AbstractTask
     {
         /*
         (new \Cocur\BackgroundProcess\BackgroundProcess(
-            sprintf('php app/console.php collection:index "%s"', $pathname)
+            sprintf('php bin/console.php collection:index "%s"', $pathname)
         ))->run();
         */
     }
@@ -189,7 +189,7 @@ final class MonitorTask extends AbstractTask
     {
         /*
         (new \Cocur\BackgroundProcess\BackgroundProcess(
-            sprintf('php app/console.php collection:clean "%s"', $pathname)
+            sprintf('php bin/console.php collection:clean "%s"', $pathname)
         ))->run();
         */
     }

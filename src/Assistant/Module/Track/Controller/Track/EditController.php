@@ -151,7 +151,7 @@ final class EditController
 
         if (isset($postData['task:calculate-audio-data'])) {
             $command = sprintf(
-                'php /data/app/console.php track:calculate-audio-data -w "%s"',
+                'php /data/bin/console.php track:calculate-audio-data -w "%s"',
                 $track->getFile()->getPathname()
             );
 

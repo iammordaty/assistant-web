@@ -1,6 +1,6 @@
 *~
-.idea
 .env
+.idea
+/var/cache/*
+/var/logs/*
 /vendor/
-/cache/*
-/app/logs/*
