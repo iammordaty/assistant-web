@@ -2,8 +2,8 @@
 
 namespace Assistant\Module\Track\Repository;
 
-use Assistant\Module\Common\Repository\Query;
-use Assistant\Module\Common\Repository\Storage;
+use Assistant\Module\Common\Storage\Query;
+use Assistant\Module\Common\Storage\Storage;
 use Assistant\Module\Directory\Model\Directory;
 use Assistant\Module\Search\Extension\SearchCriteria;
 use Assistant\Module\Track\Model\Track;

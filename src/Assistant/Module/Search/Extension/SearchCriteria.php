@@ -2,7 +2,7 @@
 
 namespace Assistant\Module\Search\Extension;
 
-use Assistant\Module\Common\Repository\Regex;
+use Assistant\Module\Common\Storage\Regex;
 
 final class SearchCriteria
 {

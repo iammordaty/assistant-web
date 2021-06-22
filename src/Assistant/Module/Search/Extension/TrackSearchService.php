@@ -3,7 +3,7 @@
 namespace Assistant\Module\Search\Extension;
 
 use Assistant\Module\Common\Extension\SlugifyService;
-use Assistant\Module\Common\Repository\Storage;
+use Assistant\Module\Common\Storage\Storage;
 use Assistant\Module\Track\Extension\TrackService;
 use Pagerfanta\Adapter\NullAdapter;
 use Pagerfanta\Exception\NotValidCurrentPageException;

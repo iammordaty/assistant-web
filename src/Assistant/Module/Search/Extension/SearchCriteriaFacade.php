@@ -2,7 +2,7 @@
 
 namespace Assistant\Module\Search\Extension;
 
-use Assistant\Module\Common\Repository\Regex;
+use Assistant\Module\Common\Storage\Regex;
 use Psr\Http\Message\ServerRequestInterface as Request;
 
 final class SearchCriteriaFacade

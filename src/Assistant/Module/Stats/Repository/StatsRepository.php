@@ -2,7 +2,7 @@
 
 namespace Assistant\Module\Stats\Repository;
 
-use Assistant\Module\Common\Repository\Storage;
+use Assistant\Module\Common\Storage\Storage;
 use MongoDB\Database;
 
 /**

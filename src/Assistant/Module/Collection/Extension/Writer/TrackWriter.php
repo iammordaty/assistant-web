@@ -4,7 +4,7 @@ namespace Assistant\Module\Collection\Extension\Writer;
 
 use Assistant\Module\Common\Extension\Backend\Client as BackendClient;
 use Assistant\Module\Common\Model\CollectionItemInterface;
-use Assistant\Module\Common\Repository\Regex;
+use Assistant\Module\Common\Storage\Regex;
 use Assistant\Module\Search\Extension\SearchCriteria;
 use Assistant\Module\Track\Extension\TrackService;
 use Assistant\Module\Track\Model\Track;

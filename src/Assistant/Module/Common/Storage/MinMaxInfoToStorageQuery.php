@@ -1,6 +1,6 @@
 <?php
 
-namespace Assistant\Module\Common\Repository;
+namespace Assistant\Module\Common\Storage;
 
 use Assistant\Module\Search\Extension\MinMaxInfo;
 use MongoDB\BSON\UTCDateTime;

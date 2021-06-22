@@ -2,7 +2,7 @@
 
 namespace Assistant\Module\Directory\Repository;
 
-use Assistant\Module\Common\Repository\Storage;
+use Assistant\Module\Common\Storage\Storage;
 use Assistant\Module\Directory\Model\Directory;
 use Assistant\Module\Directory\Model\DirectoryDto;
 use MongoDB\Database;

@@ -1,7 +1,6 @@
 <?php
 
-// @todo Repository -> Storage, (Persistence?)
-namespace Assistant\Module\Common\Repository;
+namespace Assistant\Module\Common\Storage;
 
 use MongoDB\BSON\ObjectId;
 use MongoDB\BSON\UTCDateTime;

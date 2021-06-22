@@ -1,7 +1,6 @@
 <?php
 
-// @todo Repository -> Storage, (Persistence?)
-namespace Assistant\Module\Common\Repository;
+namespace Assistant\Module\Common\Storage;
 
 use Assistant\Module\Search\Extension\MinMaxInfo;
 use Assistant\Module\Search\Extension\SearchCriteria;
