@@ -3,7 +3,7 @@
 namespace Assistant\Module\Collection\Extension\Validator;
 
 use Assistant\Module\Collection\Extension\Validator\Exception\DuplicatedElementException;
-use Assistant\Module\Collection\Extension\Validator\Exception\EmptyMetadataException;
+use Assistant\Module\Collection\Extension\Validator\Exception\InvalidMetadataException;
 use Assistant\Module\Common\Extension\GetId3\Adapter as Id3Adapter;
 use Assistant\Module\Common\Model\CollectionItemInterface;
 use Assistant\Module\Track\Model\Track;
@@ -53,7 +53,7 @@ class TrackValidator implements ValidatorInterface
         if (!$hasValidMetadata) {
             $message = sprintf('Track %s does\'t contains metadata.', $track->getFile()->getBasename());
 
-            throw new EmptyMetadataException($message);
+            throw new InvalidMetadataException($message);
         }
 
         // TODO: tutaj, w przyszłości, powinna zawarta być także logika odpowiedzialna za wyszukiwanie

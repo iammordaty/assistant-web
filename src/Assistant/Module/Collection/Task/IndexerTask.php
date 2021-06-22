@@ -5,7 +5,7 @@ namespace Assistant\Module\Collection\Task;
 use Assistant\Module\Collection\Extension\Finder;
 use Assistant\Module\Collection\Extension\Reader\ReaderFacade;
 use Assistant\Module\Collection\Extension\Validator\Exception\DuplicatedElementException;
-use Assistant\Module\Collection\Extension\Validator\Exception\EmptyMetadataException;
+use Assistant\Module\Collection\Extension\Validator\Exception\InvalidMetadataException;
 use Assistant\Module\Collection\Extension\Validator\ValidatorFacade;
 use Assistant\Module\Collection\Extension\Writer\WriterFacade;
 use Assistant\Module\Common\Extension\Backend\Exception\Exception as BackendException;
@@ -41,7 +41,7 @@ final class IndexerTask extends AbstractTask
 
         $this->stats = [
             'added' => [ 'file' => 0, 'dir' => 0 ],
-            'empty_metadata' => 0,
+            'invalid_metadata' => 0,
             'duplicated' => 0,
             'error' => 0,
         ];
@@ -114,8 +114,8 @@ final class IndexerTask extends AbstractTask
                 $this->stats['added'][$node->getType()]++;
 
                 $this->logger->info('Node processing completed successfully');
-            } catch (EmptyMetadataException) {
-                $this->stats['empty_metadata']++;
+            } catch (InvalidMetadataException) {
+                $this->stats['invalid_metadata']++;
 
                 $this->logger->warning('Track does not contains metadata');
             } catch (DuplicatedElementException $e) {
