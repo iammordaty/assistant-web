@@ -35,7 +35,7 @@ final class SearchCriteriaFacade
 
         $publishers = explode(',', trim($queryParams['publisher']));
         $publishers = self::unique($publishers);
-        $publishers = array_map(fn ($publisher) => Regex::exact($publisher), $publishers) ?: null;
+        $publishers = array_map(fn ($publisher) => Regex::startsWith($publisher), $publishers) ?: null;
 
         $years = YearMinMaxExpressionParser::parse($queryParams['year']);
 
