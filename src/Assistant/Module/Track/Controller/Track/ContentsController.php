@@ -2,10 +2,10 @@
 
 namespace Assistant\Module\Track\Controller\Track;
 
+use Assistant\Module\Common\Extension\Redirect;
 use Assistant\Module\Track\Repository\TrackRepository;
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
-use Slim\Exception\HttpNotFoundException;
 use Slim\Psr7\Factory\StreamFactory;
 
 final class ContentsController
@@ -20,7 +20,14 @@ final class ContentsController
         $track = $this->trackRepository->getOneByGuid($guid);
 
         if (!$track || !is_readable($track->getPathname())) {
-            throw new HttpNotFoundException($request);
+            $redirect = Redirect::create(
+                request: $request,
+                routeName: 'search.simple.index',
+                queryParams: [ 'query' => str_replace('-', ' ', $guid) ],
+                status: 404,
+            );
+
+            return $redirect;
         }
 
         $body = (new StreamFactory())->createStreamFromFile($track->getPathname());

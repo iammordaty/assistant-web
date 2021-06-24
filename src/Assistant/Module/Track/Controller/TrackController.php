@@ -5,6 +5,7 @@ namespace Assistant\Module\Track\Controller;
 use Assistant\Module\Collection\Extension\MusicalKeyInfo;
 use Assistant\Module\Common\Extension\Config;
 use Assistant\Module\Common\Extension\PathBreadcrumbs;
+use Assistant\Module\Common\Extension\Redirect;
 use Assistant\Module\Track\Extension\Similarity;
 use Assistant\Module\Track\Extension\Similarity\Provider\Bpm;
 use Assistant\Module\Track\Extension\Similarity\Provider\Genre;
@@ -15,7 +16,6 @@ use Assistant\Module\Track\Model\Track;
 use Assistant\Module\Track\Repository\TrackRepository;
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
-use Slim\Routing\RouteContext;
 use Slim\Views\Twig;
 
 final class TrackController
@@ -34,16 +34,12 @@ final class TrackController
         $track = $this->trackRepository->getOneByGuid($guid);
 
         if (!$track) {
-            $routeName = 'search.simple.index';
-            $data = [];
-            $queryParams = [ 'query' => str_replace('-', ' ', $guid) ];
-
-            $routeParser = RouteContext::fromRequest($request)->getRouteParser();
-            $redirectUrl = $routeParser->urlFor($routeName, $data, $queryParams);
-
-            $redirect = $response
-                ->withHeader('Location', $redirectUrl)
-                ->withStatus(404);
+            $redirect = Redirect::create(
+                request: $request,
+                routeName: 'search.simple.index',
+                queryParams: [ 'query' => str_replace('-', ' ', $guid) ],
+                status: 404,
+            );
 
             return $redirect;
         }

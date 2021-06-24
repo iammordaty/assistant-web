@@ -2,11 +2,12 @@
 
 namespace Assistant\Module\Search\Controller;
 
+use Assistant\Module\Common\Extension\Redirect;
+use Assistant\Module\Common\Extension\UrlFactory;
 use Assistant\Module\Search\Extension\TrackSearchService;
 use Assistant\Module\Track\Model\Track;
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
-use Slim\Routing\RouteContext;
 use Slim\Views\Twig;
 
 /**
@@ -37,20 +38,15 @@ final class SimpleSearchController
             $results = $this->searchService->findByName($name, $page);
 
             if ($results['count'] > TrackSearchService::MAX_TRACKS_PER_PAGE) {
-                $routeParser = RouteContext::fromRequest($request)->getRouteParser();
+                $baseUrl = UrlFactory::fromRequest($request)
+                    ->setRouteName('search.simple.index')
+                    ->setQueryParams([ 'query' => str_replace('-', ' ', $form['query']) ]);
 
-                $routeGenerator = function ($page) use ($form, $routeParser) {
-                    $routeName = 'search.simple.index';
-                    $data = [];
-                    $paginatorQueryParams = [ 'query' => str_replace('-', ' ', $form['query']) ];
-
-                    $baseUrl = $routeParser->urlFor($routeName, $data, $paginatorQueryParams);
-                    $url = sprintf('%s&page=%d', $baseUrl, $page);
-
-                    return $url;
-                };
-
-                $paginator = $this->searchService->getPaginator($page, $results['count'], $routeGenerator);
+                $paginator = $this->searchService->getPaginator(
+                    $page,
+                    $results['count'],
+                    fn($page) => sprintf('%s&page=%d', $baseUrl, $page)
+                );
             }
         }
 
@@ -58,16 +54,11 @@ final class SimpleSearchController
             /** @var Track $track */
             $track = $results['tracks']->current();
 
-            $routeName = 'track.track.index';
-            $data = [ 'guid' => $track->getGuid() ];
-            $queryParams = [ ];
-
-            $routeParser = RouteContext::fromRequest($request)->getRouteParser();
-            $redirectUrl = $routeParser->urlFor($routeName, $data, $queryParams);
-
-            $redirect = $response
-                ->withHeader('Location', $redirectUrl)
-                ->withStatus(302);
+            $redirect = Redirect::create(
+                request: $request,
+                routeName: 'track.track.index',
+                data: [ 'guid' => $track->getGuid() ],
+            );
 
             return $redirect;
         }

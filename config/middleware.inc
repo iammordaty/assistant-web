@@ -6,6 +6,8 @@ use Slim\Views\Twig;
 use Slim\Views\TwigMiddleware;
 
 return static function (App $app): void {
+    $app->addRoutingMiddleware();
+
     $app->add(TwigMiddleware::createFromContainer($app, containerKey: Twig::class));
 
     $app->addErrorMiddleware(

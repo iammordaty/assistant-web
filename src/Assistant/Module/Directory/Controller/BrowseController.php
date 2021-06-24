@@ -6,6 +6,7 @@ use Assistant\Module\Collection\Extension\Finder;
 use Assistant\Module\Collection\Extension\Reader\ReaderFacade;
 use Assistant\Module\Common\Extension\Config;
 use Assistant\Module\Common\Extension\PathBreadcrumbs;
+use Assistant\Module\Common\Extension\Redirect;
 use Assistant\Module\Common\Extension\SlugifyService;
 use Assistant\Module\Common\Extension\TargetPathService;
 use Assistant\Module\Common\Model\CollectionItemInterface;
@@ -14,8 +15,6 @@ use Assistant\Module\Directory\Repository\DirectoryRepository;
 use Assistant\Module\Track\Repository\TrackRepository;
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
-use Slim\Exception\HttpNotFoundException;
-use Slim\Routing\RouteContext;
 use Slim\Views\Twig;
 use SplFileInfo;
 
@@ -40,16 +39,11 @@ final class BrowseController
         if (!$guid) {
             $guid = $this->slugify->slugify($this->config->get('collection.root_dir'));
 
-            $routeName = 'directory.browse.index';
-            $data = [ 'guid' => $guid ];
-            $queryParams = [ ];
-
-            $routeParser = RouteContext::fromRequest($request)->getRouteParser();
-            $redirectUrl = $routeParser->urlFor($routeName, $data, $queryParams);
-
-            $redirect = $response
-                ->withHeader('Location', $redirectUrl)
-                ->withStatus(302);
+            $redirect = Redirect::create(
+                request: $request,
+                routeName: 'directory.browse.index',
+                data: [ 'guid' => $guid ],
+            );
 
             return $redirect;
         }
@@ -57,7 +51,15 @@ final class BrowseController
         $directory = $this->directoryRepository->getByGuid($guid);
 
         if (!$directory) {
-            throw new HttpNotFoundException($request);
+            $guid = $this->slugify->slugify($this->config->get('collection.root_dir'));
+
+            $redirect = Redirect::create(
+                request: $request,
+                routeName: 'directory.browse.index',
+                data: [ 'guid' => $guid ],
+            );
+
+            return $redirect;
         }
 
         return $this->view->render($response, '@directory/index.twig', [
@@ -106,7 +108,15 @@ final class BrowseController
         $pathname = $request->getAttribute('pathname') ?: $this->config->get('collection.incoming_dir');
 
         if (!is_readable($pathname)) {
-            throw new HttpNotFoundException($request);
+            $guid = $this->slugify->slugify($this->config->get('collection.incoming_dir'));
+
+            $redirect = Redirect::create(
+                request: $request,
+                routeName: 'directory.browse.index',
+                data: [ 'guid' => $guid ],
+            );
+
+            return $redirect;
         }
 
         // TODO: Czy to muszą być dwie zmienne? Może da się to uprościć bez dużej straty w widoku

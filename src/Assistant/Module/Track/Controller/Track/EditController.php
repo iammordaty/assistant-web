@@ -3,11 +3,11 @@
 namespace Assistant\Module\Track\Controller\Track;
 
 use Assistant\Module\Common\Extension\GetId3\Adapter as Id3Adapter;
+use Assistant\Module\Common\Extension\Redirect;
 use Assistant\Module\Track\Extension\TrackService;
 use Cocur\BackgroundProcess\BackgroundProcess;
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
-use Slim\Routing\RouteContext;
 use Slim\Views\Twig;
 
 final class EditController
@@ -30,28 +30,7 @@ final class EditController
         $track = $this->trackService->createFromFile($pathname);
 
         if (!$track) {
-            // to może być oprogramowane jako middleware. uwaga - poniżej jest to samo
-            // https://stackoverflow.com/questions/57648078/replacement-for-notfoundhandler-setting/57648863
-            // https://www.slimframework.com/docs/v4/middleware/error-handling.html
-
-            if ($this->trackService->getLocationArbiter()->isInCollection($pathname)) {
-                $routeName = 'search.simple.index';
-                $data = [];
-                $queryParams = [ 'query' => str_replace('-', ' ', $pathname) ];
-            } else {
-                $routeName = 'directory.browse.incoming';
-                $data = [];
-                $queryParams = [ ];
-            }
-
-            $routeParser = RouteContext::fromRequest($request)->getRouteParser();
-            $redirectUrl = $routeParser->urlFor($routeName, $data, $queryParams);
-
-            $redirect = $response
-                ->withHeader('Location', $redirectUrl)
-                ->withStatus(404);
-
-            return $redirect;
+            return $this->getNotFoundRedirect($request, $pathname);
         }
 
         $query = $request->getQueryParams()['query'] ?? null;
@@ -79,30 +58,13 @@ final class EditController
      * @todo Na tyle ile pozwala biblioteka, opcja usuwania innych tagów powinna usuwać zdjęcie, tag id3v1, lyrics,
      *       ape (oraz inne) oraz niewspierane pola z id3v2
      */
-    public function save(Request $request, Response $response): Response
+    public function save(Request $request): Response
     {
         $pathname = $request->getAttribute('pathname');
         $track = $this->trackService->createFromFile($pathname);
 
         if (!$track) {
-            if ($this->trackService->getLocationArbiter()->isInCollection($pathname)) {
-                $routeName = 'search.simple.index';
-                $data = [];
-                $queryParams = [ 'query' => str_replace('-', ' ', $pathname) ];
-            } else {
-                $routeName = 'directory.browse.incoming';
-                $data = [];
-                $queryParams = [ ];
-            }
-
-            $routeParser = RouteContext::fromRequest($request)->getRouteParser();
-            $redirectUrl = $routeParser->urlFor($routeName, $data, $queryParams);
-
-            $redirect = $response
-                ->withHeader('Location', $redirectUrl)
-                ->withStatus(404);
-
-            return $redirect;
+            return $this->getNotFoundRedirect($request, $pathname);
         }
 
         $postData = $request->getParsedBody();
@@ -158,23 +120,19 @@ final class EditController
             (new BackgroundProcess($command))->run();
         }
 
-        /** @noinspection PhpIfWithCommonPartsInspection, celowe to jest do wyniesienia później */
         if ($this->trackService->getLocationArbiter()->isInCollection($pathname)) {
             $routeName = 'track.track.index';
             $data = [ 'guid' => $track->getGuid() ];
-            $queryParams = [ ];
         } else {
             $routeName = 'track.edit.edit';
             $data = [ 'pathname' => $track->getFile()->getPathname() ];
-            $queryParams = [ ];
         }
 
-        $routeParser = RouteContext::fromRequest($request)->getRouteParser();
-        $redirectUrl = $routeParser->urlFor($routeName, $data, $queryParams);
-
-        $redirect = $response
-            ->withHeader('Location', $redirectUrl)
-            ->withStatus(302);
+        $redirect = Redirect::create(
+            request: $request,
+            routeName: $routeName,
+            data: $data,
+        );
 
         return $redirect;
     }
@@ -182,8 +140,6 @@ final class EditController
     /**
      * @fixme Przy problemach z połączeniem wywala się cała aplikacja, poprawić.
      * @todo Dodać obsługę generowanie sugestii z metadanych pliku oraz nazwy pliku
-     *
-     * @todo Dodać obsługę beatport api v4 po uzyskaniu dostępu.
      */
     private function getMetadataSuggestions(string $query): array
     {
@@ -226,5 +182,25 @@ final class EditController
             [ 'option' => 'remove-other-tags', 'title' => 'Usuń pozostałe metadane zapisane w pliku' ],
             [ 'option' => 'task:calculate-audio-data', 'title' => 'Oblicz tonację i BPM utworu' ],
         ];
+    }
+
+    private function getNotFoundRedirect(Request $request, string $pathname): Response
+    {
+        if ($this->trackService->getLocationArbiter()->isInCollection($pathname)) {
+            $routeName = 'search.simple.index';
+            $queryParams = [ 'query' => str_replace('-', ' ', $pathname) ];
+        } else {
+            $routeName = 'directory.browse.incoming';
+            $queryParams = [];
+        }
+
+        $redirect = Redirect::create(
+            request: $request,
+            routeName: $routeName,
+            queryParams: $queryParams,
+            status: 404,
+        );
+
+        return $redirect;
     }
 }

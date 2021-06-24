@@ -16,8 +16,8 @@ $container = (new ContainerBuilder())
 
 $app = Bridge::create($container);
 
-(require_once BASE_DIR . '/config/middleware.inc')($app);
 (require_once BASE_DIR . '/config/routes.inc')($app);
+(require_once BASE_DIR . '/config/middleware.inc')($app);
 
 unset($config, $container);
 

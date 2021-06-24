@@ -3,10 +3,10 @@
 namespace Assistant\Module\Common\Controller;
 
 use Assistant\Module\Common\Extension\Config;
+use Assistant\Module\Common\Extension\Redirect;
 use PhpExtended\Tail\Tail;
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
-use Slim\Exception\HttpNotFoundException;
 use Slim\Views\Twig;
 
 final class LogController
@@ -25,7 +25,9 @@ final class LogController
         $log = $request->getQueryParams()['log'] ?? null;
 
         if ($log && !in_array($log, self::AVAILABLE_LOGS)) {
-            throw new HttpNotFoundException($request);
+            $redirect = Redirect::create(request: $request, routeName: 'common.log.index', status: 404);
+
+            return $redirect;
         }
 
         $logs = $log ? [ $log ] : self::AVAILABLE_LOGS;
@@ -52,7 +54,9 @@ final class LogController
         $log = $queryParams['log'] ?? null;
 
         if ($log && !in_array($log, self::AVAILABLE_LOGS)) {
-            throw new HttpNotFoundException($request);
+            $redirect = Redirect::create(request: $request, routeName: 'common.log.index', status: 404);
+
+            return $redirect;
         }
 
         $filename = sprintf('%s/var/logs/app.%s.log', $this->baseDir, $log);
