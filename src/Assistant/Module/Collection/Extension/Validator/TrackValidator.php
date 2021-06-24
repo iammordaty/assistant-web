@@ -6,22 +6,18 @@ use Assistant\Module\Collection\Extension\Validator\Exception\DuplicatedElementE
 use Assistant\Module\Collection\Extension\Validator\Exception\InvalidMetadataException;
 use Assistant\Module\Common\Extension\GetId3\Adapter as Id3Adapter;
 use Assistant\Module\Common\Model\CollectionItemInterface;
+use Assistant\Module\Track\Extension\TrackService;
 use Assistant\Module\Track\Model\Track;
-use Assistant\Module\Track\Repository\TrackRepository;
 
 /**
  * Walidator elementów będących plikami
  */
 class TrackValidator implements ValidatorInterface
 {
-    private TrackRepository $repository;
-
-    private Id3Adapter $id3Adapter;
-
-    public function __construct(TrackRepository $repository, Id3Adapter $id3Adapter)
-    {
-        $this->repository = $repository;
-        $this->id3Adapter = $id3Adapter;
+    public function __construct(
+        private TrackService $trackService,
+        private Id3Adapter $id3Adapter
+    ) {
     }
 
     /**
@@ -35,8 +31,7 @@ class TrackValidator implements ValidatorInterface
         /** @var Track $track */
         $track = $collectionItem;
 
-        /* @var $indexedTrack Track */
-        $indexedTrack = $this->repository->getOneByPathname($track->getPathname());
+        $indexedTrack = $this->trackService->findOneByPathname($collectionItem->getPathname());
 
         if ($indexedTrack !== null && $track->getMetadataMd5() === $indexedTrack->getMetadataMd5()) {
             $message = sprintf('Track "%s" is already in database.', $track->getGuid());

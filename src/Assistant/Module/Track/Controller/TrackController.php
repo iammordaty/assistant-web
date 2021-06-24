@@ -12,6 +12,7 @@ use Assistant\Module\Track\Extension\Similarity\Provider\Genre;
 use Assistant\Module\Track\Extension\Similarity\Provider\MusicalKey;
 use Assistant\Module\Track\Extension\Similarity\Provider\Musly;
 use Assistant\Module\Track\Extension\Similarity\Provider\Year;
+use Assistant\Module\Track\Extension\TrackService;
 use Assistant\Module\Track\Model\Track;
 use Assistant\Module\Track\Repository\TrackRepository;
 use Psr\Http\Message\ResponseInterface as Response;
@@ -24,6 +25,7 @@ final class TrackController
         private Config $config,
         private PathBreadcrumbs $pathBreadcrumbs,
         private TrackRepository $trackRepository,
+        private TrackService $trackService,
         private Twig $view,
     ) {
     }
@@ -31,7 +33,7 @@ final class TrackController
     public function index(Request $request, Response $response): Response
     {
         $guid = $request->getAttribute('guid');
-        $track = $this->trackRepository->getOneByGuid($guid);
+        $track = $this->trackService->findOneByGuid($guid);
 
         if (!$track) {
             $redirect = Redirect::create(

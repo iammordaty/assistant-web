@@ -5,7 +5,7 @@ namespace Assistant\Module\Collection\Extension\Writer;
 use Assistant\Module\Common\Extension\Backend\Client as BackendClient;
 use Assistant\Module\Common\Model\CollectionItemInterface;
 use Assistant\Module\Common\Storage\Regex;
-use Assistant\Module\Search\Extension\SearchCriteria;
+use Assistant\Module\Search\Extension\SearchCriteriaFacade as SearchCriteria;
 use Assistant\Module\Track\Extension\TrackService;
 use Assistant\Module\Track\Model\Track;
 
@@ -65,7 +65,7 @@ final class TrackWriter implements WriterInterface
         //</editor-fold>
 
         $regex = Regex::exact($track->getGuid());
-        $searchCriteria = new SearchCriteria(guid: $regex);
+        $searchCriteria = SearchCriteria::createFromGuid($regex);
 
         $count = $this->trackService->count($searchCriteria);
 
@@ -74,7 +74,7 @@ final class TrackWriter implements WriterInterface
         }
 
         $regex = Regex::create(sprintf('^%s(?:-\d+)?$', $track->getGuid()));
-        $searchCriteria = new SearchCriteria(guid: $regex);
+        $searchCriteria = SearchCriteria::createFromGuid($regex);
 
         $count = $this->trackService->count($searchCriteria);
 

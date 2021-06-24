@@ -89,6 +89,13 @@ final class SearchCriteriaFacade
         return $searchCriteria;
     }
 
+    public static function createFromGuid(Regex|string $guid): SearchCriteria
+    {
+        $searchCriteria = new SearchCriteria(guid: $guid);
+
+        return $searchCriteria;
+    }
+
     public static function createFromPathname(string $pathname): SearchCriteria
     {
         $searchCriteria = new SearchCriteria(pathname: $pathname);

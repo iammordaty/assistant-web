@@ -9,7 +9,6 @@ use Assistant\Module\Search\Extension\SearchCriteria;
 use Assistant\Module\Track\Model\Track;
 use Assistant\Module\Track\Model\TrackDto;
 use DateTime;
-use MongoDB\BSON\Regex;
 use MongoDB\Database;
 use Traversable;
 
@@ -65,20 +64,6 @@ final class TrackRepository
         $tracks = $this->findBy($query->toStorage(), $sort, $limit, $skip);
 
         return $tracks;
-    }
-
-    public function getOneByGuid(string|Regex $guid): ?Track
-    {
-        $track = $this->findOneBy([ 'guid' => $guid ]);
-
-        return $track;
-    }
-
-    public function getOneByPathname(string $pathname): ?Track
-    {
-        $track = $this->findOneBy([ 'pathname' => $pathname ]);
-
-        return $track;
     }
 
     /**

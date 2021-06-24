@@ -33,6 +33,14 @@ final class TrackService
         return $track;
     }
 
+    public function findOneByGuid(string $guid): ?Track
+    {
+        $searchCriteria = SearchCriteriaFacade::createFromGuid($guid);
+        $track = $this->trackRepository->getOneBy($searchCriteria);
+
+        return $track;
+    }
+
     public function findOneByPathname(string $pathname): ?Track
     {
         $searchCriteria = SearchCriteriaFacade::createFromPathname($pathname);

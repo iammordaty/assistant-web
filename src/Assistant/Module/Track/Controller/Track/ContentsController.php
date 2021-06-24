@@ -3,21 +3,21 @@
 namespace Assistant\Module\Track\Controller\Track;
 
 use Assistant\Module\Common\Extension\Redirect;
-use Assistant\Module\Track\Repository\TrackRepository;
+use Assistant\Module\Track\Extension\TrackService;
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
 use Slim\Psr7\Factory\StreamFactory;
 
 final class ContentsController
 {
-    public function __construct(private TrackRepository $trackRepository)
+    public function __construct(private TrackService $trackService)
     {
     }
 
     public function get(Request $request, Response $response): Response
     {
         $guid = $request->getAttribute('guid');
-        $track = $this->trackRepository->getOneByGuid($guid);
+        $track = $this->trackService->findOneByGuid($guid);
 
         if (!$track || !is_readable($track->getPathname())) {
             $redirect = Redirect::create(
