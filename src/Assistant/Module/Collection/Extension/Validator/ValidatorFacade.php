@@ -6,6 +6,7 @@ use Assistant\Module\Common\Extension\GetId3\Adapter as Id3Adapter;
 use Assistant\Module\Common\Model\CollectionItemInterface;
 use Assistant\Module\Directory\Model\Directory;
 use Assistant\Module\Directory\Repository\DirectoryRepository;
+use Assistant\Module\Track\Extension\TrackService;
 use Assistant\Module\Track\Model\Track;
 use Assistant\Module\Track\Repository\TrackRepository;
 use Psr\Container\ContainerInterface as Container;
@@ -42,7 +43,7 @@ final class ValidatorFacade
         );
 
         $trackValidator = new TrackValidator(
-            $container->get(TrackRepository::class),
+            $container->get(TrackService::class),
             $container->get(Id3Adapter::class),
         );
 
