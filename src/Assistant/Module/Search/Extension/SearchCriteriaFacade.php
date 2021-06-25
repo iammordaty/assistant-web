@@ -3,7 +3,6 @@
 namespace Assistant\Module\Search\Extension;
 
 use Assistant\Module\Common\Storage\Regex;
-use Psr\Http\Message\ServerRequestInterface as Request;
 
 final class SearchCriteriaFacade
 {
@@ -20,47 +19,47 @@ final class SearchCriteriaFacade
         'year' => '',
     ];
 
-    public static function createFromSearchRequest(Request $request): SearchCriteria
+    public static function create(array $fields): SearchCriteria
     {
-        $queryParams = array_merge(self::DEFAULTS, $request->getQueryParams());
+        $fields = array_merge(self::DEFAULTS, $fields);
 
-        $name = $queryParams['name'] ? Regex::contains(trim($queryParams['name'])) : null;
-        $guid = $queryParams['guid'] ? Regex::exact(trim($queryParams['guid'])) : null;
-        $artist = $queryParams['artist'] ? Regex::contains(trim($queryParams['artist'])) : null;
-        $title = $queryParams['title'] ? Regex::contains(trim($queryParams['title'])) : null;
+        $name = $fields['name'] ?: null;
+        $guid = $fields['guid'] ? Regex::exact(trim($fields['guid'])) : null;
+        $artist = $fields['artist'] ? Regex::contains(trim($fields['artist'])) : null;
+        $title = $fields['title'] ? Regex::contains(trim($fields['title'])) : null;
 
-        $genres = explode(',', trim($queryParams['genre']));
+        $genres = explode(',', trim($fields['genre']));
         $genres = self::unique($genres);
         $genres = array_map(fn ($genre) => Regex::exact($genre), $genres) ?: null;
 
-        $publishers = explode(',', trim($queryParams['publisher']));
+        $publishers = explode(',', trim($fields['publisher']));
         $publishers = self::unique($publishers);
         $publishers = array_map(fn ($publisher) => Regex::startsWith($publisher), $publishers) ?: null;
 
-        $years = YearMinMaxExpressionParser::parse($queryParams['year']);
+        $years = YearMinMaxExpressionParser::parse($fields['year']);
 
         if (!$years) {
-            $years = explode(',', $queryParams['year']);
+            $years = explode(',', $fields['year']);
             $years = self::unique($years);
             $years = array_map(fn ($year) => (int) $year, $years);
         }
 
-        $initialKeys = explode(',', $queryParams['initial_key']);
+        $initialKeys = explode(',', $fields['initial_key']);
         $initialKeys = self::unique($initialKeys);
         $initialKeys = array_map(fn ($key) => strtoupper($key), $initialKeys);
 
-        $bpm = NumberMinMaxExpressionParser::parse($queryParams['bpm']);
+        $bpm = NumberMinMaxExpressionParser::parse($fields['bpm']);
 
         if (!$bpm) {
-            $bpm = explode(',', $queryParams['bpm']);
+            $bpm = explode(',', $fields['bpm']);
             $bpm = self::unique($bpm);
             $bpm = array_map(fn ($value) => (float) $value, $bpm);
         }
 
-        $indexedDates = DateTimeMinMaxExpressionParser::parse($queryParams['indexed_date']);
+        $indexedDates = DateTimeMinMaxExpressionParser::parse($fields['indexed_date']);
 
         if (!$indexedDates) {
-            $indexedDates = explode(',', $queryParams['indexed_date']);
+            $indexedDates = explode(',', $fields['indexed_date']);
             $indexedDates = self::unique($indexedDates);
             $indexedDates = array_map(fn ($date) => (int) $date, $indexedDates);
         }
@@ -83,8 +82,7 @@ final class SearchCriteriaFacade
 
     public static function createFromName(string $name): SearchCriteria
     {
-        $regex = Regex::contains($name);
-        $searchCriteria = new SearchCriteria(name: $regex);
+        $searchCriteria = new SearchCriteria(name: $name);
 
         return $searchCriteria;
     }

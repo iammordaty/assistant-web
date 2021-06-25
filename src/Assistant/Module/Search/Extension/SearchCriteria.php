@@ -7,7 +7,7 @@ use Assistant\Module\Common\Storage\Regex;
 final class SearchCriteria
 {
     /**
-     * @param Regex|string|null $name
+     * @param string|null $name
      * @param Regex|string|null $guid
      * @param Regex|string|null $artist
      * @param Regex|string|null $title
@@ -20,7 +20,7 @@ final class SearchCriteria
      * @param string|null $pathname
      */
     public function __construct(
-        private Regex|string|null $name = null,
+        private ?string $name = null,
         private Regex|string|null $guid = null,
         private Regex|string|null $artist = null,
         private Regex|string|null $title = null,
@@ -34,7 +34,7 @@ final class SearchCriteria
     ) {
     }
 
-    public function getName(): Regex|string|null
+    public function getName(): ?string
     {
         return $this->name;
     }

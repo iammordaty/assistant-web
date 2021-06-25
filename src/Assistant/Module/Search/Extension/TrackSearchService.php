@@ -2,7 +2,6 @@
 
 namespace Assistant\Module\Search\Extension;
 
-use Assistant\Module\Common\Extension\SlugifyService;
 use Assistant\Module\Common\Storage\Storage;
 use Assistant\Module\Track\Extension\TrackService;
 use Pagerfanta\Adapter\NullAdapter;
@@ -13,10 +12,8 @@ use Pagerfanta\View\TwitterBootstrap3View;
 /** Lokalizacja tymczasowa / wrzucone na szybko; przemyśleć, nie przywiązywać się */
 final class TrackSearchService
 {
-    public function __construct(
-        private SlugifyService $slugify,
-        private TrackService $trackService,
-    ) {
+    public function __construct(private TrackService $trackService)
+    {
     }
 
     /**
@@ -28,30 +25,18 @@ final class TrackSearchService
 
     public function findByName(string $name, int $page): array
     {
-        // slugify w tym miejscu (w sumie cała metoda) wrzucona trochę na szybko, nie przywiązywać się,
-        // przemyśleć później jak to rozwiązać bardziej elegancko.
+        $criteria = SearchCriteriaFacade::createFromName($name);
+        $sort = Storage::SORT_TEXT_SCORE_DESC;
 
-        $name = $this->slugify->slugify($name);
-
-        $searchCriteria = SearchCriteriaFacade::createFromName($name);
-        $tracks = $this->findBy($searchCriteria, $page);
-
-        return $tracks;
+        return $this->search($criteria, $sort, $page);
     }
 
-    public function findBy(SearchCriteria $criteria, int $page): array
+    public function findBy(array $fields, int $page): array
     {
+        $criteria = SearchCriteriaFacade::create($fields);
         $sort = [ 'guid' => Storage::SORT_ASC ]; // docelowo jako parametr przychodzący z frontu
-        $limit = TrackSearchService::MAX_TRACKS_PER_PAGE;
-        $skip = ($page - 1) * TrackSearchService::MAX_TRACKS_PER_PAGE;
 
-        $tracks = $this->trackService->findBy($criteria, $sort, $limit, $skip);
-        $count = $this->trackService->count($criteria);
-
-        return [
-            'tracks' => $tracks,
-            'count' => $count,
-        ];
+        return $this->search($criteria, $sort, $page);
     }
 
     /**
@@ -94,5 +79,22 @@ final class TrackSearchService
             'previous_message' => 'Poprzednia',
             'next_message' => 'Następna',
         ]);
+    }
+
+    private function search(SearchCriteria $criteria, array $sort, int $page): array
+    {
+        $limit = TrackSearchService::MAX_TRACKS_PER_PAGE;
+        $skip = ($page - 1) * TrackSearchService::MAX_TRACKS_PER_PAGE;
+
+        $tracks = $this->trackService->findBy($criteria, $sort, $limit, $skip);
+        $count = $this->trackService->count($criteria);
+
+        // warto zastanowić się na zwróceniem samego paginatora co zhermetyzuje funkcjonalność
+        // i odchudzi kontrolery.
+
+        return [
+            'tracks' => $tracks,
+            'count' => $count,
+        ];
     }
 }

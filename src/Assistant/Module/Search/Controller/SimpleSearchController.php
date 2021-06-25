@@ -40,7 +40,8 @@ final class SimpleSearchController
             if ($results['count'] > TrackSearchService::MAX_TRACKS_PER_PAGE) {
                 $baseUrl = UrlFactory::fromRequest($request)
                     ->setRouteName('search.simple.index')
-                    ->setQueryParams([ 'query' => str_replace('-', ' ', $form['query']) ]);
+                    ->setQueryParams([ 'query' => str_replace('-', ' ', $form['query']) ])
+                    ->getUrl();
 
                 $paginator = $this->searchService->getPaginator(
                     $page,

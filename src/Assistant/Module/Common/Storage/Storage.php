@@ -13,6 +13,7 @@ final class Storage
 {
     public const SORT_ASC = 1;
     public const SORT_DESC = -1;
+    public const SORT_TEXT_SCORE_DESC = [ 'sort' => [ '$meta' => 'textScore' ] ];
 
     private Collection $collection;
 

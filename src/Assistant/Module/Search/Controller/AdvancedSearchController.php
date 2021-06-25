@@ -3,7 +3,6 @@
 namespace Assistant\Module\Search\Controller;
 
 use Assistant\Module\Common\Extension\UrlFactory;
-use Assistant\Module\Search\Extension\SearchCriteriaFacade;
 use Assistant\Module\Search\Extension\TrackSearchService;
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
@@ -32,14 +31,13 @@ final class AdvancedSearchController
 
         if ($this->isRequestValid($form)) {
             $page = max(1, (int) ($form['page'] ?? 1));
-
-            $searchCriteria = SearchCriteriaFacade::createFromSearchRequest($request);
-            $results = $this->searchService->findBy($searchCriteria, $page);
+            $results = $this->searchService->findBy($form, $page);
 
             if ($results['count'] > TrackSearchService::MAX_TRACKS_PER_PAGE) {
                 $baseUrl = UrlFactory::fromRequest($request)
                     ->setRouteName('search.advanced.index')
-                    ->setQueryParams($form);
+                    ->setQueryParams($form)
+                    ->getUrl();
 
                 $paginator = $this->searchService->getPaginator(
                     $page,

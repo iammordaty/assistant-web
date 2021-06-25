@@ -9,7 +9,7 @@ use MongoDB\BSON\Regex as MongoDBRegex;
 final class Query
 {
     /**
-     * @param Regex|string|null $name
+     * @param string|null $name
      * @param Regex|string|null $guid
      * @param Regex|string|null $artist
      * @param Regex|string|null $title
@@ -22,7 +22,7 @@ final class Query
      * @param string|null $pathname
      */
     public function __construct(
-        private Regex|string|null $name,
+        private ?string $name,
         private Regex|string|null $guid,
         private Regex|string|null $artist,
         private Regex|string|null $title,
@@ -63,15 +63,7 @@ final class Query
         $criteria = [];
 
         if ($this->name) {
-            $name = $this->name instanceof Regex
-                ? new MongoDBRegex($this->name->getPattern(), $this->name->getFlags())
-                : $this->name;
-
-            $criteria['$or'] = [
-                [ 'artist' => $name ],
-                [ 'title' => $name ],
-                [ 'guid' => $name ],
-            ];
+            $criteria['$text'] = [ '$search' => $this->name ];
         }
 
         if ($this->guid) {
