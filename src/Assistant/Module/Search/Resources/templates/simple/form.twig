@@ -1,9 +1,16 @@
 <form method="GET" action="{{ url_for('search.simple.index') }}" class="form-horizontal search-form-simple" role="form">
     <legend>Szybkie wyszukiwanie</legend>
 
-    <!-- wpiąć autocompleter -->
     <div class="input-group input-group-lg">
-        <input type="text" name="query" value="{{ form.query }}" class="form-control" placeholder="Wprowadź nazwę wykonawcy lub tytuł utworu">
+        <input
+            data-role="autocompleter"
+            data-url="{{ url_for('track.track.autocomplete') }}"
+            type="text"
+            name="query"
+            value="{{ form.query }}"
+            class="form-control"
+            placeholder="Wprowadź nazwę wykonawcy lub tytuł utworu"
+        >
         <span class="input-group-btn">
             <button class="btn btn-default btn-lg" type="submit">
                 <i class="fa fa-search"></i>

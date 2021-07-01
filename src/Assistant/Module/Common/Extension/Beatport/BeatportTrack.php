@@ -114,7 +114,7 @@ final class BeatportTrack
     }
 
     /**
-     * Zwraca nazwę utworu w pełnej postacji, tj. Wykonawca - Tytuł utworu (Nazwa remiksu)
+     * Zwraca nazwę utworu w pełnej postaci, tj. Wykonawca - Tytuł utworu (Nazwa remiksu)
      *
      * @return string
      */

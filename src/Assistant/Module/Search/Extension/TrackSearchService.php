@@ -3,16 +3,18 @@
 namespace Assistant\Module\Search\Extension;
 
 use Assistant\Module\Common\Storage\Storage;
-use Assistant\Module\Track\Extension\TrackService;
+use Assistant\Module\Track\Model\Track;
+use Assistant\Module\Track\Repository\TrackRepository;
 use Pagerfanta\Adapter\NullAdapter;
 use Pagerfanta\Exception\NotValidCurrentPageException;
 use Pagerfanta\Pagerfanta;
 use Pagerfanta\View\TwitterBootstrap3View;
+use Traversable;
 
 /** Lokalizacja tymczasowa / wrzucone na szybko; przemyśleć, nie przywiązywać się */
 final class TrackSearchService
 {
-    public function __construct(private TrackService $trackService)
+    public function __construct(private TrackRepository $trackRepository)
     {
     }
 
@@ -23,6 +25,30 @@ final class TrackSearchService
      */
     public const MAX_TRACKS_PER_PAGE = 50;
 
+    public function findOneByName(string $name): ?Track
+    {
+        $searchCriteria = SearchCriteriaFacade::createFromName($name);
+        $track = $this->trackRepository->getOneBy($searchCriteria);
+
+        return $track;
+    }
+
+    public function findOneByGuid(string $guid): ?Track
+    {
+        $searchCriteria = SearchCriteriaFacade::createFromGuid($guid);
+        $track = $this->trackRepository->getOneBy($searchCriteria);
+
+        return $track;
+    }
+
+    public function findOneByPathname(string $pathname): ?Track
+    {
+        $searchCriteria = SearchCriteriaFacade::createFromPathname($pathname);
+        $track = $this->trackRepository->getOneBy($searchCriteria);
+
+        return $track;
+    }
+
     public function findByName(string $name, int $page): array
     {
         $criteria = SearchCriteriaFacade::createFromName($name);
@@ -31,12 +57,37 @@ final class TrackSearchService
         return $this->search($criteria, $sort, $page);
     }
 
-    public function findBy(array $fields, int $page): array
+    public function findByFields(array $fields, int $page): array
     {
         $criteria = SearchCriteriaFacade::create($fields);
         $sort = [ 'guid' => Storage::SORT_ASC ]; // docelowo jako parametr przychodzący z frontu
 
         return $this->search($criteria, $sort, $page);
+    }
+
+    /**
+     * @param SearchCriteria $searchCriteria
+     * @param array|null $sort
+     * @param int|null $limit
+     * @param int|null $skip
+     * @return Track[]|Traversable
+     */
+    public function findBy(
+        SearchCriteria $searchCriteria,
+        ?array $sort = null,
+        ?int $limit = null,
+        ?int $skip = null
+    ): array|Traversable {
+        $tracks = $this->trackRepository->getBy($searchCriteria, $sort, $limit, $skip);
+
+        return $tracks;
+    }
+
+    public function count(SearchCriteria $searchCriteria): int
+    {
+        $tracks = $this->trackRepository->countBy($searchCriteria);
+
+        return $tracks;
     }
 
     /**
@@ -86,8 +137,8 @@ final class TrackSearchService
         $limit = TrackSearchService::MAX_TRACKS_PER_PAGE;
         $skip = ($page - 1) * TrackSearchService::MAX_TRACKS_PER_PAGE;
 
-        $tracks = $this->trackService->findBy($criteria, $sort, $limit, $skip);
-        $count = $this->trackService->count($criteria);
+        $tracks = $this->findBy($criteria, $sort, $limit, $skip);
+        $count = $this->count($criteria);
 
         // warto zastanowić się na zwróceniem samego paginatora co zhermetyzuje funkcjonalność
         // i odchudzi kontrolery.

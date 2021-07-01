@@ -3,7 +3,8 @@
 namespace Assistant\Module\Common\Controller;
 
 use Assistant\Module\Common\Extension\Config;
-use Assistant\Module\Common\Extension\Redirect;
+use Assistant\Module\Common\Extension\Route;
+use Assistant\Module\Common\Extension\RouteResolver;
 use PhpExtended\Tail\Tail;
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
@@ -15,8 +16,11 @@ final class LogController
 
     private string $baseDir;
 
-    public function __construct(Config $config, private Twig $view)
-    {
+    public function __construct(
+        private RouteResolver $routeResolver,
+        private Twig $view,
+        Config $config,
+    ) {
         $this->baseDir = $config->get('base_dir');
     }
 
@@ -25,7 +29,12 @@ final class LogController
         $log = $request->getQueryParams()['log'] ?? null;
 
         if ($log && !in_array($log, self::AVAILABLE_LOGS)) {
-            $redirect = Redirect::create(request: $request, routeName: 'common.log.index', status: 404);
+            $route = Route::create('common.log.index');
+            $redirectUrl = $this->routeResolver->resolve($route);
+
+            $redirect = $response
+                ->withHeader('Location', $redirectUrl)
+                ->withStatus(404);
 
             return $redirect;
         }
@@ -54,7 +63,12 @@ final class LogController
         $log = $queryParams['log'] ?? null;
 
         if ($log && !in_array($log, self::AVAILABLE_LOGS)) {
-            $redirect = Redirect::create(request: $request, routeName: 'common.log.index', status: 404);
+            $route = Route::create('common.log.index');
+            $redirectUrl = $this->routeResolver->resolve($route);
+
+            $redirect = $response
+                ->withHeader('Location', $redirectUrl)
+                ->withStatus(404);
 
             return $redirect;
         }

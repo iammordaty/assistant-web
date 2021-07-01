@@ -13,6 +13,7 @@ final class Track implements CollectionItemInterface
     private string $artist;
     private array $artists;
     private string $title;
+    private string $name;
     private ?string $album;
     private ?int $trackNumber;
     private ?int $year;
@@ -69,6 +70,7 @@ final class Track implements CollectionItemInterface
         $this->artist = $artist;
         $this->artists = $artists;
         $this->title = $title;
+        $this->name = $artist . ' - ' . $title;
         $this->album = $album;
         $this->trackNumber = $trackNumber;
         $this->year = $year;
@@ -158,6 +160,16 @@ final class Track implements CollectionItemInterface
     public function getTitle(): string
     {
         return $this->title;
+    }
+
+    /**
+     * Zwraca nazwę utworu w pełnej postaci, tj. Wykonawca - Tytuł utworu
+     *
+     * @return string
+     */
+    public function getName(): string
+    {
+        return $this->name;
     }
 
     public function getAlbum(): ?string

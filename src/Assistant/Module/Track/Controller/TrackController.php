@@ -5,7 +5,8 @@ namespace Assistant\Module\Track\Controller;
 use Assistant\Module\Collection\Extension\MusicalKeyInfo;
 use Assistant\Module\Common\Extension\Config;
 use Assistant\Module\Common\Extension\PathBreadcrumbs;
-use Assistant\Module\Common\Extension\Redirect;
+use Assistant\Module\Common\Extension\Route;
+use Assistant\Module\Common\Extension\RouteResolver;
 use Assistant\Module\Track\Extension\Similarity;
 use Assistant\Module\Track\Extension\Similarity\Provider\Bpm;
 use Assistant\Module\Track\Extension\Similarity\Provider\Genre;
@@ -24,6 +25,7 @@ final class TrackController
     public function __construct(
         private Config $config,
         private PathBreadcrumbs $pathBreadcrumbs,
+        private RouteResolver $routeResolver,
         private TrackRepository $trackRepository,
         private TrackService $trackService,
         private Twig $view,
@@ -33,15 +35,15 @@ final class TrackController
     public function index(Request $request, Response $response): Response
     {
         $guid = $request->getAttribute('guid');
-        $track = $this->trackService->findOneByGuid($guid);
+        $track = $this->trackService->getByGuid($guid);
 
         if (!$track) {
-            $redirect = Redirect::create(
-                request: $request,
-                routeName: 'search.simple.index',
-                queryParams: [ 'query' => str_replace('-', ' ', $guid) ],
-                status: 404,
-            );
+            $route = Route::create('search.simple.index')->withQuery([ 'query' => str_replace('-', ' ', $guid) ]);
+            $redirectUrl = $this->routeResolver->resolve($route);
+
+            $redirect = $response
+                ->withHeader('Location', $redirectUrl)
+                ->withStatus(404);
 
             return $redirect;
         }

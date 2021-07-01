@@ -105,8 +105,17 @@ a.undecorated:hover {
     right: 1px;
 }
 
-.navbar .dropdown-menu li a {
+.navbar .dropdown-menu li a, [data-role="autocompleter"] + .dropdown-menu li a {
     line-height: 27px;
+}
+
+.navbar .dropdown-menu {
+    left: initial!important;
+}
+
+.typeahead.dropdown-menu {
+    max-height: 350px;
+    overflow-y: auto;
 }
 
 .directory-info .breadcrumb {

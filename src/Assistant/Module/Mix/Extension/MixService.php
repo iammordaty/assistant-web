@@ -3,16 +3,16 @@
 namespace Assistant\Module\Mix\Extension;
 
 use Assistant\Module\Mix\Extension\Strategy\MostSimilarTrackStrategy;
+use Assistant\Module\Search\Extension\TrackSearchService;
 use Assistant\Module\Track\Extension\Similarity;
 use Assistant\Module\Track\Extension\SimilarTracksVO;
-use Assistant\Module\Track\Extension\TrackService;
 use Assistant\Module\Track\Model\Track;
 
 final class MixService
 {
     public function __construct(
         private Similarity $similarity,
-        private TrackService $trackService
+        private TrackSearchService $searchService,
     ) {
     }
 
@@ -54,7 +54,7 @@ final class MixService
         /** @see SimilarTracksVO */
 
         foreach ($listing as $trackName) {
-            $track = $this->trackService->findOneByName($trackName);
+            $track = $this->searchService->findOneByName($trackName);
 
             if (!$track) {
                 // @todo: brak wyszukanego utworu powinien być komunikowany na froncie

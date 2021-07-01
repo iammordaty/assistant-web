@@ -31,7 +31,7 @@ class TrackValidator implements ValidatorInterface
         /** @var Track $track */
         $track = $collectionItem;
 
-        $indexedTrack = $this->trackService->findOneByPathname($collectionItem->getPathname());
+        $indexedTrack = $this->trackService->getByPathname($collectionItem->getPathname());
 
         if ($indexedTrack !== null && $track->getMetadataMd5() === $indexedTrack->getMetadataMd5()) {
             $message = sprintf('Track "%s" is already in database.', $track->getGuid());

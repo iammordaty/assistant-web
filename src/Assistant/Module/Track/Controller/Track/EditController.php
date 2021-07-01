@@ -3,7 +3,8 @@
 namespace Assistant\Module\Track\Controller\Track;
 
 use Assistant\Module\Common\Extension\GetId3\Adapter as Id3Adapter;
-use Assistant\Module\Common\Extension\Redirect;
+use Assistant\Module\Common\Extension\Route;
+use Assistant\Module\Common\Extension\RouteResolver;
 use Assistant\Module\Track\Extension\TrackService;
 use Cocur\BackgroundProcess\BackgroundProcess;
 use Psr\Http\Message\ResponseInterface as Response;
@@ -14,6 +15,7 @@ final class EditController
 {
     public function __construct(
         private Id3Adapter $id3Adapter,
+        private RouteResolver $routeResolver,
         private TrackService $trackService,
         private Twig $view,
     ) {
@@ -30,7 +32,7 @@ final class EditController
         $track = $this->trackService->createFromFile($pathname);
 
         if (!$track) {
-            return $this->getNotFoundRedirect($request, $pathname);
+            return $this->getNotFoundRedirect($response, $pathname);
         }
 
         $query = $request->getQueryParams()['query'] ?? null;
@@ -58,13 +60,13 @@ final class EditController
      * @todo Na tyle ile pozwala biblioteka, opcja usuwania innych tagów powinna usuwać zdjęcie, tag id3v1, lyrics,
      *       ape (oraz inne) oraz niewspierane pola z id3v2
      */
-    public function save(Request $request): Response
+    public function save(Request $request, Response $response): Response
     {
         $pathname = $request->getAttribute('pathname');
         $track = $this->trackService->createFromFile($pathname);
 
         if (!$track) {
-            return $this->getNotFoundRedirect($request, $pathname);
+            return $this->getNotFoundRedirect($response, $pathname);
         }
 
         $postData = $request->getParsedBody();
@@ -122,17 +124,18 @@ final class EditController
 
         if ($this->trackService->getLocationArbiter()->isInCollection($pathname)) {
             $routeName = 'track.track.index';
-            $data = [ 'guid' => $track->getGuid() ];
+            $params = [ 'guid' => $track->getGuid() ];
         } else {
             $routeName = 'track.edit.edit';
-            $data = [ 'pathname' => $track->getFile()->getPathname() ];
+            $params = [ 'pathname' => $track->getFile()->getPathname() ];
         }
 
-        $redirect = Redirect::create(
-            request: $request,
-            routeName: $routeName,
-            data: $data,
-        );
+        $route = Route::create($routeName)->withParams($params);
+        $redirectUrl = $this->routeResolver->resolve($route);
+
+        $redirect = $response
+            ->withHeader('Location', $redirectUrl)
+            ->withStatus(302);
 
         return $redirect;
     }
@@ -184,22 +187,22 @@ final class EditController
         ];
     }
 
-    private function getNotFoundRedirect(Request $request, string $pathname): Response
+    private function getNotFoundRedirect(Response $response, string $pathname): Response
     {
         if ($this->trackService->getLocationArbiter()->isInCollection($pathname)) {
             $routeName = 'search.simple.index';
-            $queryParams = [ 'query' => str_replace('-', ' ', $pathname) ];
+            $query = [ 'query' => str_replace('-', ' ', $pathname) ];
         } else {
             $routeName = 'directory.browse.incoming';
-            $queryParams = [];
+            $query = [];
         }
 
-        $redirect = Redirect::create(
-            request: $request,
-            routeName: $routeName,
-            queryParams: $queryParams,
-            status: 404,
-        );
+        $route = Route::create($routeName)->withQuery($query);
+        $redirectUrl = $this->routeResolver->resolve($route);
+
+        $redirect = $response
+            ->withHeader('Location', $redirectUrl)
+            ->withStatus(404);
 
         return $redirect;
     }

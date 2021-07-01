@@ -6,6 +6,7 @@ use Assistant\Module\Common\Extension\Backend\Client as BackendClient;
 use Assistant\Module\Common\Model\CollectionItemInterface;
 use Assistant\Module\Common\Storage\Regex;
 use Assistant\Module\Search\Extension\SearchCriteriaFacade as SearchCriteria;
+use Assistant\Module\Search\Extension\TrackSearchService;
 use Assistant\Module\Track\Extension\TrackService;
 use Assistant\Module\Track\Model\Track;
 
@@ -14,6 +15,7 @@ final class TrackWriter implements WriterInterface
 {
     public function __construct(
         private TrackService $trackService,
+        private TrackSearchService $searchService,
         private BackendClient $backendClient,
     ) {
     }
@@ -21,7 +23,7 @@ final class TrackWriter implements WriterInterface
     /** Zapisuje utwór muzyczny w bazie danych */
     public function save(Track|CollectionItemInterface $collectionItem): Track
     {
-        $indexedTrack = $this->trackService->findOneByPathname($collectionItem->getPathname());
+        $indexedTrack = $this->trackService->getByPathname($collectionItem->getPathname());
 
         // może odtąd* powinno zostać przeniesione do serwisu lub repo?
 
@@ -50,7 +52,7 @@ final class TrackWriter implements WriterInterface
     /** Zwraca unikalny guid dla podanego utworu */
     private function getUniqueGuid(Track $track): string
     {
-        $isGuidAvailable = ($this->trackService->findOneByGuid($track->getGuid()) === null);
+        $isGuidAvailable = ($this->trackService->getByGuid($track->getGuid()) === null);
 
         if ($isGuidAvailable) {
             return $track->getGuid();
@@ -59,7 +61,7 @@ final class TrackWriter implements WriterInterface
         $regex = Regex::create(sprintf('^%s(?:-\d+)?$', $track->getGuid()));
         $searchCriteria = SearchCriteria::createFromGuid($regex);
 
-        $count = $this->trackService->count($searchCriteria);
+        $count = $this->searchService->count($searchCriteria);
 
         if ($count === 0) {
             return $track->getGuid();

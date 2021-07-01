@@ -6,7 +6,8 @@ use Assistant\Module\Collection\Extension\Finder;
 use Assistant\Module\Collection\Extension\Reader\ReaderFacade;
 use Assistant\Module\Common\Extension\Config;
 use Assistant\Module\Common\Extension\PathBreadcrumbs;
-use Assistant\Module\Common\Extension\Redirect;
+use Assistant\Module\Common\Extension\Route;
+use Assistant\Module\Common\Extension\RouteResolver;
 use Assistant\Module\Common\Extension\SlugifyService;
 use Assistant\Module\Common\Extension\TargetPathService;
 use Assistant\Module\Common\Model\CollectionItemInterface;
@@ -26,6 +27,7 @@ final class BrowseController
         private DirectoryRepository $directoryRepository,
         private PathBreadcrumbs $pathBreadcrumbs,
         private ReaderFacade $reader,
+        private RouteResolver $routeResolver,
         private SlugifyService $slugify,
         private TrackRepository $trackRepository,
         private Twig $view,
@@ -39,11 +41,12 @@ final class BrowseController
         if (!$guid) {
             $guid = $this->slugify->slugify($this->config->get('collection.root_dir'));
 
-            $redirect = Redirect::create(
-                request: $request,
-                routeName: 'directory.browse.index',
-                data: [ 'guid' => $guid ],
-            );
+            $route = Route::create('directory.browse.index')->withParams([ 'guid' => $guid ]);
+            $redirectUrl = $this->routeResolver->resolve($route);
+
+            $redirect = $response
+                ->withHeader('Location', $redirectUrl)
+                ->withStatus(302);
 
             return $redirect;
         }
@@ -53,11 +56,12 @@ final class BrowseController
         if (!$directory) {
             $guid = $this->slugify->slugify($this->config->get('collection.root_dir'));
 
-            $redirect = Redirect::create(
-                request: $request,
-                routeName: 'directory.browse.index',
-                data: [ 'guid' => $guid ],
-            );
+            $route = Route::create('directory.browse.index')->withParams([ 'guid' => $guid ]);
+            $redirectUrl = $this->routeResolver->resolve($route);
+
+            $redirect = $response
+                ->withHeader('Location', $redirectUrl)
+                ->withStatus(404);
 
             return $redirect;
         }
@@ -110,11 +114,12 @@ final class BrowseController
         if (!is_readable($pathname)) {
             $guid = $this->slugify->slugify($this->config->get('collection.incoming_dir'));
 
-            $redirect = Redirect::create(
-                request: $request,
-                routeName: 'directory.browse.index',
-                data: [ 'guid' => $guid ],
-            );
+            $route = Route::create('directory.browse.index')->withParams([ 'guid' => $guid ]);
+            $redirectUrl = $this->routeResolver->resolve($route);
+
+            $redirect = $response
+                ->withHeader('Location', $redirectUrl)
+                ->withStatus(404);
 
             return $redirect;
         }

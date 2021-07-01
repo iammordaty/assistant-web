@@ -2,7 +2,8 @@
 
 namespace Assistant\Module\Search\Controller;
 
-use Assistant\Module\Common\Extension\UrlFactory;
+use Assistant\Module\Common\Extension\Route;
+use Assistant\Module\Common\Extension\RouteResolver;
 use Assistant\Module\Search\Extension\TrackSearchService;
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
@@ -14,6 +15,7 @@ use Slim\Views\Twig;
 final class AdvancedSearchController
 {
     public function __construct(
+        private RouteResolver $routeResolver,
         private TrackSearchService $searchService,
         private Twig $view,
     ) {
@@ -31,13 +33,11 @@ final class AdvancedSearchController
 
         if ($this->isRequestValid($form)) {
             $page = max(1, (int) ($form['page'] ?? 1));
-            $results = $this->searchService->findBy($form, $page);
+            $results = $this->searchService->findByFields($form, $page);
 
             if ($results['count'] > TrackSearchService::MAX_TRACKS_PER_PAGE) {
-                $baseUrl = UrlFactory::fromRequest($request)
-                    ->setRouteName('search.advanced.index')
-                    ->setQueryParams($form)
-                    ->getUrl();
+                $route = Route::create('search.advanced.index')->withQuery($form);
+                $baseUrl = $this->routeResolver->resolve($route);
 
                 $paginator = $this->searchService->getPaginator(
                     $page,

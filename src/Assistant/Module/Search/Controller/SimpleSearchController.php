@@ -2,8 +2,8 @@
 
 namespace Assistant\Module\Search\Controller;
 
-use Assistant\Module\Common\Extension\Redirect;
-use Assistant\Module\Common\Extension\UrlFactory;
+use Assistant\Module\Common\Extension\Route;
+use Assistant\Module\Common\Extension\RouteResolver;
 use Assistant\Module\Search\Extension\TrackSearchService;
 use Assistant\Module\Track\Model\Track;
 use Psr\Http\Message\ResponseInterface as Response;
@@ -16,6 +16,7 @@ use Slim\Views\Twig;
 final class SimpleSearchController
 {
     public function __construct(
+        private RouteResolver $routeResolver,
         private TrackSearchService $searchService,
         private Twig $view,
     ) {
@@ -38,10 +39,8 @@ final class SimpleSearchController
             $results = $this->searchService->findByName($name, $page);
 
             if ($results['count'] > TrackSearchService::MAX_TRACKS_PER_PAGE) {
-                $baseUrl = UrlFactory::fromRequest($request)
-                    ->setRouteName('search.simple.index')
-                    ->setQueryParams([ 'query' => str_replace('-', ' ', $form['query']) ])
-                    ->getUrl();
+                $route = Route::create('search.simple.index')->withQuery($form);
+                $baseUrl = $this->routeResolver->resolve($route);
 
                 $paginator = $this->searchService->getPaginator(
                     $page,
@@ -55,11 +54,12 @@ final class SimpleSearchController
             /** @var Track $track */
             $track = $results['tracks']->current();
 
-            $redirect = Redirect::create(
-                request: $request,
-                routeName: 'track.track.index',
-                data: [ 'guid' => $track->getGuid() ],
-            );
+            $route = Route::create('track.track.index', [ 'guid' => $track->getGuid() ]);
+            $redirectUrl = $this->routeResolver->resolve($route);
+
+            $redirect = $response
+                ->withHeader('Location', $redirectUrl)
+                ->withStatus(302);
 
             return $redirect;
         }

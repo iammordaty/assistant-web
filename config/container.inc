@@ -1,5 +1,6 @@
 <?php
 
+use Assistant\Module\Collection\Extension\Autocomplete\TrackAutocompleteService;
 use Assistant\Module\Collection\Extension\Reader\DirectoryReader;
 use Assistant\Module\Collection\Extension\Reader\FileReader;
 use Assistant\Module\Collection\Extension\Reader\FileReaderFacade;
@@ -10,6 +11,7 @@ use Assistant\Module\Common\Extension\Config;
 use Assistant\Module\Common\Extension\PathBreadcrumbs;
 use Assistant\Module\Common\Extension\SlugifyService;
 use Assistant\Module\Common\Extension\Twig\DurationTwigExtension;
+use Assistant\Module\Common\Extension\RouteResolver;
 use Assistant\Module\Directory\Repository\DirectoryRepository;
 use Assistant\Module\File\Extension\Parser as MetadataParser;
 use Assistant\Module\Mix\Extension\MixService;
@@ -25,6 +27,7 @@ use Monolog\Handler\ErrorLogHandler;
 use Monolog\Handler\StreamHandler;
 use Monolog\Logger;
 use Psr\Log\LoggerInterface;
+use Slim\App;
 use Slim\Views\Twig;
 use Twig\Extension\DebugExtension as TwigDebugExtension;
 use Psr\Container\ContainerInterface as Container;
@@ -102,6 +105,8 @@ return static fn (string $baseDir, array $config): array => [
 
     ReaderFacade::class => autowire(),
 
+    TrackAutocompleteService::class => autowire(),
+
     TrackLocationArbiter::class => autowire(),
 
     TrackSearchService::class => autowire(),
@@ -147,6 +152,13 @@ return static fn (string $baseDir, array $config): array => [
     MixService::class => autowire(),
 
     PathBreadcrumbs::class => autowire(),
+
+    RouteResolver::class => function (Container $container): RouteResolver {
+        $routeParser = $container->get(App::class)->getRouteCollector()->getRouteParser();
+        $urlResolver = new RouteResolver($routeParser);
+
+        return $urlResolver;
+    },
 
     // Tutaj chyba należy wprowadzić klasę faktorującą, bo obecnie
     // nie ma możliwości nadpisania parametrów poprzez formularz na stronie utworu.

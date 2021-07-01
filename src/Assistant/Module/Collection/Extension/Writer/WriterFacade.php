@@ -6,6 +6,7 @@ use Assistant\Module\Common\Extension\Backend\Client as BackendClient;
 use Assistant\Module\Common\Model\CollectionItemInterface;
 use Assistant\Module\Directory\Model\Directory;
 use Assistant\Module\Directory\Repository\DirectoryRepository;
+use Assistant\Module\Search\Extension\TrackSearchService;
 use Assistant\Module\Track\Extension\TrackService;
 use Assistant\Module\Track\Model\Track;
 use Psr\Container\ContainerInterface as Container;
@@ -33,6 +34,7 @@ final class WriterFacade
 
         $trackWriter = new TrackWriter(
             $container->get(TrackService::class),
+            $container->get(TrackSearchService::class),
             $container->get(BackendClient::class),
         );
 
