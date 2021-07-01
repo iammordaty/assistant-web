@@ -19,7 +19,7 @@ final class SearchCriteriaFacade
         'year' => '',
     ];
 
-    public static function create(array $fields): SearchCriteria
+    public static function createFromFields(array $fields): SearchCriteria
     {
         $fields = array_merge(self::DEFAULTS, $fields);
 
