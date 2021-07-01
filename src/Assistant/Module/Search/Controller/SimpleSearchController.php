@@ -39,7 +39,7 @@ final class SimpleSearchController
             $results = $this->searchService->findByName($name, $page);
 
             if ($results['count'] > TrackSearchService::MAX_TRACKS_PER_PAGE) {
-                $route = Route::create('search.simple.index')->withQuery($form);
+                $route = Route::create('search.simple.index')->withQuery([ 'query' => str_replace('-', ' ', $name) ]);
                 $baseUrl = $this->routeResolver->resolve($route);
 
                 $paginator = $this->searchService->getPaginator(
