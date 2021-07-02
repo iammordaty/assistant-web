@@ -2,8 +2,8 @@
 
 namespace Assistant\Module\Collection\Extension\Reader;
 
-use Assistant\Module\File\Model\IncomingTrack;
 use Assistant\Module\Track\Extension\TrackLocationArbiter;
+use Assistant\Module\Track\Model\IncomingTrack;
 use Assistant\Module\Track\Model\Track;
 use SplFileInfo;
 
@@ -20,7 +20,7 @@ final class FileReaderFacade implements ReaderInterface
     }
 
     public function read(SplFileInfo $node): IncomingTrack|Track
-    {   
+    {
         $fileReader = $this->arbiter->isInCollection($node)
             ? $this->fileReader
             : $this->incomingFileReader;

@@ -3,7 +3,7 @@
 namespace Assistant\Module\Collection\Extension\Writer;
 
 use Assistant\Module\Common\Extension\Backend\Client as BackendClient;
-use Assistant\Module\Common\Model\CollectionItemInterface;
+use Assistant\Module\Collection\Model\CollectionItemInterface;
 use Assistant\Module\Directory\Model\Directory;
 use Assistant\Module\Directory\Repository\DirectoryRepository;
 use Assistant\Module\Search\Extension\TrackSearchService;

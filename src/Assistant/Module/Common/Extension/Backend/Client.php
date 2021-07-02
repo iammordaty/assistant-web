@@ -4,7 +4,7 @@ namespace Assistant\Module\Common\Extension\Backend;
 
 use Assistant\Module\Common\Extension\Backend\Exception\AudioDataCalculatorException;
 use Assistant\Module\Common\Extension\Backend\Exception\SimilarCollectionException;
-use Assistant\Module\File\Model\IncomingTrack;
+use Assistant\Module\Track\Model\IncomingTrack;
 use Assistant\Module\Track\Model\Track;
 use Curl\Curl;
 
@@ -27,12 +27,12 @@ final class Client
     }
 
     /**
-     * @param Track|IncomingTrack $track
+     * @param IncomingTrack|Track $track
      * @return array
      *
      * @throws AudioDataCalculatorException
      */
-    public function calculateAudioData(Track|IncomingTrack $track): array
+    public function calculateAudioData(IncomingTrack|Track $track): array
     {
         $response = $this->curl->get(
             sprintf(

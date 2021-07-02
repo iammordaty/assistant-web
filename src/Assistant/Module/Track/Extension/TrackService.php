@@ -4,8 +4,8 @@
 namespace Assistant\Module\Track\Extension;
 
 use Assistant\Module\Collection\Extension\Reader\FileReaderFacade;
-use Assistant\Module\File\Model\IncomingTrack;
 use Assistant\Module\Search\Extension\TrackSearchService;
+use Assistant\Module\Track\Model\IncomingTrack;
 use Assistant\Module\Track\Model\Track;
 use Assistant\Module\Track\Repository\TrackRepository;
 use SplFileInfo;

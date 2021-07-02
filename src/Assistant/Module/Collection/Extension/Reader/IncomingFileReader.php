@@ -4,7 +4,7 @@ namespace Assistant\Module\Collection\Extension\Reader;
 
 use Assistant\Module\Common\Extension\GetId3\Adapter as Id3Adapter;
 use Assistant\Module\Common\Extension\SlugifyService;
-use Assistant\Module\File\Model\IncomingTrack;
+use Assistant\Module\Track\Model\IncomingTrack;
 use SplFileInfo;
 
 /**

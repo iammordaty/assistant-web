@@ -1,17 +1,23 @@
 <?php
 
-namespace Assistant\Module\File\Extension\Parser\Field;
+namespace Assistant\Module\Collection\Extension\Reader\MetadataParser\MetadataField;
 
-use Assistant\Module\File\Extension\Parser\Field as BaseField;
-
-final class Artist extends BaseField
+final class Artist implements MetadataFieldInterface
 {
-    /**
-     * Lista wyjątków, które nie są rozdzielane
-     *
-     * @var array
-     */
-    private $exceptions = [];
+    /** Lista wyjątków, które nie są rozdzielane */
+    private array $exceptions;
+
+    public function __construct(private array $parameters)
+    {
+        $this->exceptions = [
+            'values' => $this->parameters['exceptions'],
+            'placeholders' => [ ],
+        ];
+
+        foreach ($this->parameters['exceptions'] as $exception) {
+            $this->exceptions['placeholders'][] = str_replace(' ', '-', $exception);
+        }
+    }
 
     public function parse(string $value): array
     {
@@ -25,18 +31,6 @@ final class Artist extends BaseField
         );
 
         return str_replace($this->exceptions['placeholders'], $this->parameters['exceptions'], $artists);
-    }
-
-    protected function setup(): void
-    {
-        $this->exceptions = [
-            'values' => $this->parameters['exceptions'],
-            'placeholders' => [ ],
-        ];
-
-        foreach ($this->parameters['exceptions'] as $exception) {
-            $this->exceptions['placeholders'][] = str_replace(' ', '-', $exception);
-        }
     }
 
     private function explode($delimiters, $artist): array

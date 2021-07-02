@@ -3,7 +3,7 @@
 namespace Assistant\Module\Track\Extension;
 
 use Assistant\Module\Common\Extension\Config;
-use Assistant\Module\File\Model\IncomingTrack;
+use Assistant\Module\Track\Model\IncomingTrack;
 use Assistant\Module\Track\Model\Track;
 use SplFileInfo;
 

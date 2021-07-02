@@ -2,7 +2,7 @@
 
 namespace Assistant\Module\Directory\Model;
 
-use Assistant\Module\Common\Model\CollectionItemInterface;
+use Assistant\Module\Collection\Model\CollectionItemInterface;
 use DateTime;
 use SplFileInfo;
 

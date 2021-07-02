@@ -3,7 +3,7 @@
 namespace Assistant\Module\Collection\Extension\Reader;
 
 use Assistant\Module\Directory\Model\Directory;
-use Assistant\Module\File\Model\IncomingTrack;
+use Assistant\Module\Track\Model\IncomingTrack;
 use Assistant\Module\Track\Model\Track;
 use SplFileInfo;
 

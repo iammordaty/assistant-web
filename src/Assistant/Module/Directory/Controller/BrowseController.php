@@ -10,7 +10,7 @@ use Assistant\Module\Common\Extension\Route;
 use Assistant\Module\Common\Extension\RouteResolver;
 use Assistant\Module\Common\Extension\SlugifyService;
 use Assistant\Module\Common\Extension\TargetPathService;
-use Assistant\Module\Common\Model\CollectionItemInterface;
+use Assistant\Module\Collection\Model\CollectionItemInterface;
 use Assistant\Module\Directory\Model\Directory;
 use Assistant\Module\Directory\Repository\DirectoryRepository;
 use Assistant\Module\Track\Repository\TrackRepository;
