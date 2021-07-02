@@ -3,7 +3,7 @@
 namespace Assistant\Module\Collection\Extension\Writer;
 
 use Assistant\Module\Common\Extension\Backend\Client as BackendClient;
-use Assistant\Module\Common\Model\CollectionItemInterface;
+use Assistant\Module\Collection\Model\CollectionItemInterface;
 use Assistant\Module\Common\Storage\Regex;
 use Assistant\Module\Search\Extension\SearchCriteriaFacade as SearchCriteria;
 use Assistant\Module\Search\Extension\TrackSearchService;

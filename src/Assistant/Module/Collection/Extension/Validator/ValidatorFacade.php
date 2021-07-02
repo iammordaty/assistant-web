@@ -3,7 +3,7 @@
 namespace Assistant\Module\Collection\Extension\Validator;
 
 use Assistant\Module\Common\Extension\GetId3\Adapter as Id3Adapter;
-use Assistant\Module\Common\Model\CollectionItemInterface;
+use Assistant\Module\Collection\Model\CollectionItemInterface;
 use Assistant\Module\Directory\Model\Directory;
 use Assistant\Module\Directory\Repository\DirectoryRepository;
 use Assistant\Module\Track\Extension\TrackService;

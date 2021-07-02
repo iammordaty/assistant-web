@@ -3,7 +3,7 @@
 namespace Assistant\Module\Collection\Extension\Validator;
 
 use Assistant\Module\Collection\Extension\Validator\Exception\DuplicatedElementException;
-use Assistant\Module\Common\Model\CollectionItemInterface;
+use Assistant\Module\Collection\Model\CollectionItemInterface;
 use Assistant\Module\Directory\Model\Directory;
 use Assistant\Module\Directory\Repository\DirectoryRepository;
 

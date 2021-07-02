@@ -4,33 +4,33 @@ use Assistant\Module\Collection\Extension\Autocomplete\TrackAutocompleteService;
 use Assistant\Module\Collection\Extension\Reader\DirectoryReader;
 use Assistant\Module\Collection\Extension\Reader\FileReader;
 use Assistant\Module\Collection\Extension\Reader\FileReaderFacade;
+use Assistant\Module\Collection\Extension\Reader\MetadataParser\MetadataParser;
 use Assistant\Module\Collection\Extension\Reader\ReaderFacade;
 use Assistant\Module\Common\Extension\Backend\Client as BackendClient;
-use Assistant\Module\Common\Extension\GetId3\Adapter as Id3Adapter;
 use Assistant\Module\Common\Extension\Config;
+use Assistant\Module\Common\Extension\GetId3\Adapter as Id3Adapter;
 use Assistant\Module\Common\Extension\PathBreadcrumbs;
+use Assistant\Module\Common\Extension\RouteResolver;
 use Assistant\Module\Common\Extension\SlugifyService;
 use Assistant\Module\Common\Extension\Twig\DurationTwigExtension;
-use Assistant\Module\Common\Extension\RouteResolver;
 use Assistant\Module\Directory\Repository\DirectoryRepository;
-use Assistant\Module\File\Extension\Parser as MetadataParser;
 use Assistant\Module\Mix\Extension\MixService;
 use Assistant\Module\Search\Extension\TrackSearchService;
-use Assistant\Module\Stats\Repository\StatsRepository;
 use Assistant\Module\Track\Extension\Similarity;
-use Assistant\Module\Track\Extension\TrackService;
 use Assistant\Module\Track\Extension\TrackLocationArbiter;
+use Assistant\Module\Track\Extension\TrackService;
 use Assistant\Module\Track\Repository\TrackRepository;
+use Assistant\Module\Track\Repository\TrackStatsRepository;
 use MongoDB\Client as MongoDBClient;
 use Monolog\Formatter\LineFormatter;
 use Monolog\Handler\ErrorLogHandler;
 use Monolog\Handler\StreamHandler;
 use Monolog\Logger;
+use Psr\Container\ContainerInterface as Container;
 use Psr\Log\LoggerInterface;
 use Slim\App;
 use Slim\Views\Twig;
 use Twig\Extension\DebugExtension as TwigDebugExtension;
-use Psr\Container\ContainerInterface as Container;
 use Twig\Extra\String\StringExtension;
 
 use function DI\autowire;
@@ -124,13 +124,13 @@ return static fn (string $baseDir, array $config): array => [
     },
 
     // @todo Docelowo usunąć z DI, zastąpić serwisem dla statystyk
-    StatsRepository::class => function (Container $container): StatsRepository {
+    TrackStatsRepository::class => function (Container $container): TrackStatsRepository {
         $storage = $container->get(Config::class)->get('storage');
 
         $client = new MongoDBClient($storage['connection_uri']);
         $database = $client->selectDatabase($storage['database']);
 
-        $repository = StatsRepository::factory($database);
+        $repository = TrackStatsRepository::factory($database);
 
         return $repository;
     },

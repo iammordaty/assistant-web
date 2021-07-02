@@ -2,7 +2,7 @@
 
 namespace Assistant\Module\Dashboard\Controller;
 
-use Assistant\Module\Stats\Repository\StatsRepository;
+use Assistant\Module\Track\Repository\TrackStatsRepository;
 use Assistant\Module\Track\Repository\TrackRepository;
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
@@ -15,7 +15,7 @@ final class DashboardController
     private const MAX_ARTISTS = 10;
 
     public function __construct(
-        private StatsRepository $statsRepository,
+        private TrackStatsRepository $statsRepository,
         private TrackRepository $trackRepository,
         private Twig $view,
     ) {

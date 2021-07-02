@@ -2,7 +2,7 @@
 
 namespace Assistant\Module\Collection\Extension\Writer;
 
-use Assistant\Module\Common\Model\CollectionItemInterface;
+use Assistant\Module\Collection\Model\CollectionItemInterface;
 
 /**
  * Interfejs dla klas zapisujących obiekty w kolekcji

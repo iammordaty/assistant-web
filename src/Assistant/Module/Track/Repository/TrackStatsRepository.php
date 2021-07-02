@@ -1,6 +1,6 @@
 <?php
 
-namespace Assistant\Module\Stats\Repository;
+namespace Assistant\Module\Track\Repository;
 
 use Assistant\Module\Common\Storage\Storage;
 use MongoDB\Database;
@@ -8,7 +8,7 @@ use MongoDB\Database;
 /**
  * Repozytorium zawierające metody statystyczne
  */
-final class StatsRepository
+final class TrackStatsRepository
 {
     private const COLLECTION_NAME = 'tracks';
 
@@ -33,39 +33,16 @@ final class StatsRepository
         return $repository;
     }
 
-    /**
-     * Zwraca liczbę utworów w podziale na gatunki
-     *
-     * @param int|null $limit
-     * @param array|null $sort
-     * @return array
-     */
     public function getTrackCountByGenre(?int $limit = null, ?array $sort = null): array
     {
         return $this->aggregateBy('genre', self::FIELD_TYPE_STRING, $limit, $sort);
     }
 
-    /**
-     * Zwraca liczbę utworów w podziale na artystów
-     *
-     * @param int|null $limit
-     * @param array|null $sort
-     * @return array
-     */
     public function getTrackCountByArtist(?int $limit = null, ?array $sort = null): array
     {
         return $this->aggregateBy('artists', self::FIELD_TYPE_ARRAY, $limit, $sort);
     }
 
-    /**
-     * Agreguje dokumenty w bazie danych na podstawie przekazanych parametrów
-     *
-     * @param string $fieldName
-     * @param string $fieldType
-     * @param int|null $limit
-     * @param array|null $sort
-     * @return array
-     */
     private function aggregateBy(string $fieldName, string $fieldType, ?int $limit, ?array $sort = null): array
     {
         if (empty($sort)) {

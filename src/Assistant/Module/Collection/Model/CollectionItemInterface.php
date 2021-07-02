@@ -1,6 +1,6 @@
 <?php
 
-namespace Assistant\Module\Common\Model;
+namespace Assistant\Module\Collection\Model;
 
 interface CollectionItemInterface
 {

@@ -1,48 +1,35 @@
 <?php
 
-namespace Assistant\Module\File\Extension;
+namespace Assistant\Module\Collection\Extension\Reader\MetadataParser;
+
+use Assistant\Module\Collection\Extension\Reader\MetadataParser\MetadataField\MetadataFieldInterface;
 
 /**
- * Fasada dla parserów operująch na metadanych
+ * Fasada dla parserów operujący na metadanych
  */
-class Parser
+final class MetadataParser
 {
-    /**
-     * Lista parserów pól metadanych
-     *
-     * @var array
-     */
-    private $parserNames = [
+    /** Lista nazw obsługiwanych parserów pól metadanych */
+    private array $parserNames = [
         'artist',
     ];
 
     /**
-     * Lista parserów pól metadanych
+     * Lista obiektów parserów pól metadanych
      *
      * @see setup()
      * @see $providerNames
      *
-     * @var Parser\Field
+     * @var MetadataFieldInterface[]
      */
-    private $parsers = [ ];
+    private array $parsers = [ ];
 
-    /**
-     * @var array
-     */
-    private $sourceFieldToDestinationFieldMap = [
+    private array $sourceFieldToDestinationFieldMap = [
         'artist' => 'artists',
     ];
 
-    /**
-     * @var array
-     */
-    private $parameters;
+    private array $parameters;
 
-    /**
-     * Konstruktor
-     *
-     * @param array $parameters
-     */
     public function __construct(array $parameters)
     {
         $this->parameters = $parameters;
@@ -56,7 +43,7 @@ class Parser
      * @param array $metadata
      * @return array
      */
-    public function parse(array $metadata)
+    public function parse(array $metadata): array
     {
         $result = [];
 
@@ -71,14 +58,12 @@ class Parser
         return $result;
     }
 
-    /**
-     * Przygotowuje parsery do użycia
-     */
-    protected function setup()
+    /** Przygotowuje parsery do użycia */
+    private function setup(): void
     {
         foreach ($this->parserNames as $parserName) {
-            $className = sprintf('%s\Parser\Field\%s', __NAMESPACE__, ucfirst($parserName));
-            $parserParameters = isset($this->parameters[$parserName]) ? $this->parameters[$parserName] : null;
+            $className = sprintf('%s\MetadataField\%s', __NAMESPACE__, ucfirst($parserName));
+            $parserParameters = $this->parameters[ $parserName ] ?? null;
 
             $this->parsers[$parserName] = new $className($parserParameters);
 

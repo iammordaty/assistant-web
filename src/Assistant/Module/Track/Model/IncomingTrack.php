@@ -1,6 +1,6 @@
 <?php
 
-namespace Assistant\Module\File\Model;
+namespace Assistant\Module\Track\Model;
 
 use SplFileInfo;
 

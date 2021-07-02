@@ -5,7 +5,7 @@ namespace Assistant\Module\Collection\Extension\Validator;
 use Assistant\Module\Collection\Extension\Validator\Exception\DuplicatedElementException;
 use Assistant\Module\Collection\Extension\Validator\Exception\InvalidMetadataException;
 use Assistant\Module\Common\Extension\GetId3\Adapter as Id3Adapter;
-use Assistant\Module\Common\Model\CollectionItemInterface;
+use Assistant\Module\Collection\Model\CollectionItemInterface;
 use Assistant\Module\Track\Extension\TrackService;
 use Assistant\Module\Track\Model\Track;
 
