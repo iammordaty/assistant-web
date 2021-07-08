@@ -100,10 +100,10 @@ final class TrackMetadataSuggestionsBuilder
             ? S::collapseWhitespace($matches[1])
             : null;
 
-        $artists = array_filter(
+        $artists = array_values(array_filter(
             $artists,
             static fn($artist) => S::toLowerCase($artist) !== S::toLowerCase($featuredArtist)
-        );
+        ));
 
         $artistsCount = count($artists);
 
@@ -190,6 +190,12 @@ final class TrackMetadataSuggestionsBuilder
         }
 
         if ($remixers) {
+            // @todo: wyeliminować sytuację w której
+            //        tytuł utworu to: Blinding Lights [Joris Voorn Remix]
+            //        album utworu to: Blinding Lights (Joris Voorn Remix)
+            //        a wygenerowana sugestia to: Blinding Lights (Joris Voorn Remix) (Joris Voorn Remix)
+            //        Innymi słowy, jeśli w nawiasach jest to samo, to nie powinno być dodawane do sugestii
+
             $suggestions[] = sprintf('%s (%s Remix)', $titleCase, implode(', ', $remixers));
             $suggestions[] = sprintf('%s (%s Remix)', $releaseNameWithoutBrackets, implode(', ', $remixers));
 
@@ -198,10 +204,6 @@ final class TrackMetadataSuggestionsBuilder
             // In The Air Tonight (Club Remixes) (Passenger 10 Remix)
             // to samo dotyczy tytułu utworu
         }
-
-        // Spróbować wyeliminować taki przypadek
-        // I Still Keep Love For You (Einmusik Remix)
-        // I Still Keep Love For You (Einmusik Remix) (Einmusik Remix)
 
         $suggestions = self::getUniqueSortedSuggestions($suggestions);
 

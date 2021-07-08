@@ -10,9 +10,11 @@
                 data-role="incoming-tracks:calculate-audio-data" title="Oblicz BPM i tonację">
                 <i class="fa fa-calculator"></i>
             </button>
+            {#
             <button type="button" class="btn btn-sm btn-default disabled">
                 <i class="fa fa-folder-open"></i>
             </button>
+            #}
         </div>
         <ol class="breadcrumb" style="padding-bottom: 8px">
             <li>
@@ -21,12 +23,12 @@
                 </a>
             </li>
             {% for path in pathBreadcrumbs[1:] %}
-                <li><a href="{{ url_for('directory.browse.incoming', { pathname: path.guid } )}}" class="undecorated">{{ path.path }}</a></li>
+                <li><a href="{{ url_for('directory.browse.incoming', { pathname: path.pathname }) }}" class="undecorated">{{ path.path }}</a></li>
             {% endfor %}
         </ol>
     </div>
 
-    {% if children.directories %}
+    {% if directories %}
         <table class="table table-hover">
             <thead>
                 <tr>
@@ -39,25 +41,25 @@
                 </tr>
             </thead>
             <tbody>
-                {% for child in children.directories %}
-{#                {% for child in children.directories if (child.directory.parent or child.directory.guid) %}#}
-                    <tr data-role="element" data-element-pathname="{{ child.node.pathname }}" data-element-target-pathname="{{ child.targetPath }}">
+                {% for data in directories %}
+                    {% set directory = data.collectionItem %}
+                    {% set targetPath = data.targetPath %}
+
+                    <tr data-role="element" data-element-pathname="{{ directory.pathname }}" data-element-target-pathname="{{ targetPath }}">
                         <td class="col-xs-10">
-                            {% if child.directory == pathname %}
-                                <a href="{{ url_for('directory.browse.incoming', { pathname: child.directory.parent } )}}"><i class="fa fa-level-up"></i> </a>
-                            {% else %}
-                                <a href="{{ url_for('directory.browse.incoming', { pathname: child.directory.pathname } )}}">{{ child.directory.name }}</a>
-                            {% endif %}
+                            <a href="{{ url_for('directory.browse.incoming', { pathname: directory.pathname }) }}">{{ directory.name }}</a>
                         </td>
                         <td class="col-xs-2 text-right">
                             <button type="button" class="btn btn-sm btn-default"
                                 data-role="incoming-tracks:calculate-audio-data" title="Oblicz BPM i tonację">
                                 <i class="fa fa-calculator"></i>
                             </button>
-                            <button type="button" class="btn btn-sm btn-default {% if not child.targetPath %}disabled{% endif %}"
-                                data-role="incoming-tracks:move" title="Przenieś do {{ child.targetPath }}">
+                            {#
+                            <button type="button" class="btn btn-sm btn-default {% if not targetPath %}disabled{% endif %}"
+                                data-role="incoming-tracks:move" title="Przenieś do {{ targetPath }}">
                                 <i class="fa fa-folder-open"></i>
                             </button>
+                            #}
                         </td>
                     </tr>
                 {% endfor %}
@@ -65,7 +67,7 @@
         </table>
     {% endif %}
 
-    {% if children.tracks %}
+    {% if tracks %}
         <div class="table-responsive">
             <table class="table table-hover">
                 <thead>
@@ -85,18 +87,21 @@
                     </tr>
                 </thead>
                 <tbody>
-                    {% for track in children.tracks %}
-                        <tr data-role="element" data-element-pathname="{{ track.node.pathname }}" data-element-target-pathname="{{ track.targetPath }}">
+                    {% for data in tracks %}
+                        {% set track = data.collectionItem %}
+                        {% set targetPath = date.targetPath %}
+
+                        <tr data-role="element" data-element-pathname="{{ track.pathname }}" data-element-target-pathname="{{ targetPath }}">
                             <td class="col-xs-8">
-                                <a class="undecorated" href="{{ url_for('track.edit.edit', { pathname: track.node.pathname } )}}">
-                                    {{ track.node.basename }}
+                                <a class="undecorated" href="{{ url_for('track.edit.edit', { pathname: track.pathname }) }}">
+                                    {{ track.name }}
                                 </a>
                             </td>
                             <td class="col-xs-1">
-                                {{ track.track.initialKey }}
+                                {{ track.initialKey }}
                             </td>
                             <td class="col-xs-1">
-                                {{ track.track.bpm }}
+                                {{ track.bpm }}
                             </td>
                             <td class="col-xs-2 text-right">
                                 <button type="button" class="btn btn-sm btn-default"
@@ -105,7 +110,7 @@
                                 </button>
                                 {#
                                 <button type="button" class="btn btn-sm btn-default"
-                                    data-role="incoming-tracks:move" title="Przenieś do {{ track.targetPath }}">
+                                    data-role="incoming-tracks:move" title="Przenieś do {{ targetPath }}">
                                     <i class="fa fa-folder-open"></i>
                                 </button>
                                 #}
@@ -113,7 +118,7 @@
                                     type="button"
                                     class="btn btn-sm btn-default"
                                     title="Edytuj metadane"
-                                    href="{{ url_for('track.edit.edit', { pathname: track.node.pathname } )}}">
+                                    href="{{ url_for('track.edit.edit', { pathname: track.pathname }) }}">
                                     <i class="fa fa-pencil"></i>
                                 </a>
                             </td>
@@ -123,5 +128,4 @@
             </table>
         </div>
     {% endif %}
-
 {% endblock %}

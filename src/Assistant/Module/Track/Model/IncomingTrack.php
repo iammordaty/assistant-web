@@ -6,6 +6,7 @@ use SplFileInfo;
 
 final class IncomingTrack
 {
+    private string $name;
     private SplFileInfo $file;
 
     public function __construct(
@@ -22,6 +23,9 @@ final class IncomingTrack
         private string $pathname,
     ) {
         $this->file = new SplFileInfo($this->pathname);
+        $this->name = $artist && $title
+            ? $artist . ' - ' . $title
+            : $this->file->getBasename(sprintf('.%s', $this->file->getExtension()));
     }
 
     public function getGuid(): string
@@ -37,6 +41,17 @@ final class IncomingTrack
     public function getTitle(): ?string
     {
         return $this->title;
+    }
+
+    /**
+     * Zwraca nazwę utworu w pełnej postaci, tj. Wykonawca - Tytuł utworu
+     * lub nazwę pliku bez rozszerzenia jako fallback
+     *
+     * @return string
+     */
+    public function getName(): string
+    {
+        return $this->name;
     }
 
     public function getAlbum(): ?string

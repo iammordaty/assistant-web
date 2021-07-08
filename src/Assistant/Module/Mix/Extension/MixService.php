@@ -5,7 +5,6 @@ namespace Assistant\Module\Mix\Extension;
 use Assistant\Module\Mix\Extension\Strategy\MostSimilarTrackStrategy;
 use Assistant\Module\Search\Extension\TrackSearchService;
 use Assistant\Module\Track\Extension\Similarity;
-use Assistant\Module\Track\Extension\SimilarTracksVO;
 use Assistant\Module\Track\Model\Track;
 
 final class MixService
@@ -24,6 +23,7 @@ final class MixService
      */
     public function getMixInfo(array $listing): array
     {
+        $listing = array_map('trim', $listing);
         $tracks = $this->getTracks($listing); // być może to powinno być wyżej
 
         $strategy = new MostSimilarTrackStrategy($this->similarity);
@@ -44,16 +44,15 @@ final class MixService
      * @param string[] $listing
      * @return Track[]
      */
-    public function getTracks(array $listing): array
+    private function getTracks(array $listing): array
     {
         $tracks = [];
 
-        $previousTrack = null;
-
-        // @todo rozbić na pobranie, filter, mapowanie
-        /** @see SimilarTracksVO */
-
         foreach ($listing as $trackName) {
+            if ($trackName === '') {
+                continue;
+            }
+
             $track = $this->searchService->findOneByName($trackName);
 
             if (!$track) {
@@ -61,16 +60,9 @@ final class MixService
                 continue;
             }
 
-            $similarityValue = $previousTrack ? $this->similarity->getSimilarityValue($previousTrack, $track) : null;
+            $tracks[] =  $track;
 
-            $tracks[] = [
-                'track' => $track,
-                'similarityValue' => $similarityValue,
-            ];
-
-            $previousTrack = $track;
-
-            unset($track, $similarityValue);
+            unset($track, $trackName);
         }
 
         return $tracks;

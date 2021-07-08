@@ -19,7 +19,6 @@ use Psr\Http\Message\ServerRequestInterface as Request;
 use Slim\Views\Twig;
 use SplFileInfo;
 
-// TODO: Uprościć przeglądarkę: ścieżki i katalogi w jednej tablicy
 final class BrowseController
 {
     public function __construct(
@@ -66,11 +65,15 @@ final class BrowseController
             return $redirect;
         }
 
+        $directories = iterator_to_array($this->directoryRepository->getChildren($directory));
+        $tracks = iterator_to_array($this->trackRepository->getChildren($directory));
+
         return $this->view->render($response, '@directory/index.twig', [
             'menu' => 'browse',
-            'directory' => $directory,
+            'currentDirectory' => $directory,
             'pathBreadcrumbs' => $this->pathBreadcrumbs->get($directory->getPathname()),
-            'children' => $this->getChildren($directory),
+            'directories' => $directories,
+            'tracks' => $tracks,
         ]);
     }
 
@@ -124,67 +127,46 @@ final class BrowseController
             return $redirect;
         }
 
-        // TODO: Czy to muszą być dwie zmienne? Może da się to uprościć bez dużej straty w widoku
         $tracks = [];
         $directories = [];
 
         $targetPathService = TargetPathService::factory();
 
         foreach ($this->getNodes($pathname) as $node) {
-            /** @var CollectionItemInterface $element */
-            $element = $this->reader->read($node);
+            /** @var CollectionItemInterface $collectionItem */
+            $collectionItem = $this->reader->read($node);
             $targetPath = $targetPathService->getTargetPath($node);
 
             if ($node->isFile()) {
                 $tracks[] = [
-                    'track' => $element,
-                    'node' => $node,
+                    'collectionItem' => $collectionItem,
                     'targetPath' => $targetPath,
                 ];
             } elseif ($node->isDir()) {
                 $directories[] = [
-                    'directory' => $element,
-                    'node' => $node,
+                    'collectionItem' => $collectionItem,
                     'targetPath' => $targetPath,
                 ];
             }
         }
 
-        sort($directories);
-
-        /** @uses Track::getPathname() */
-        usort($tracks, static function ($data1, $data2): int {
-            return strnatcasecmp($data1['track']->getPathname(), $data2['track']->getPathname());
+        /** @uses Directory::getName() */
+        usort($directories, static function ($data1, $data2): int {
+            return strnatcasecmp($data1['collectionItem']->getName(), $data2['collectionItem']->getName());
         });
 
-        $children = [
-            'directories' => $directories,
-            'tracks' => $tracks,
-        ];
+        /** @uses IncomingTrack::getName() */
+        usort($tracks, static function ($data1, $data2): int {
+            return strnatcasecmp($data1['collectionItem']->getName(), $data2['collectionItem']->getName());
+        });
 
         return $this->view->render($response, '@directory/incoming.twig', [
             'menu' => 'browse',
             'pathname' => $pathname,
             'pathBreadcrumbs' => $this->pathBreadcrumbs->get($pathname),
-            'children' => $children,
+            'directories' => $directories,
+            'tracks' => $tracks,
         ]);
-    }
-
-    /**
-     * Zwraca elementy kolekcji znajdujące się w podanym katalogu
-     *
-     * @param Directory $directory
-     * @return array
-     */
-    private function getChildren(Directory $directory): array
-    {
-        $directories = $this->directoryRepository->getChildren($directory);
-        $tracks = $this->trackRepository->getChildren($directory);
-
-        return [
-            'directories' => iterator_to_array($directories),
-            'tracks' => iterator_to_array($tracks),
-        ];
     }
 
     /**

@@ -34,10 +34,9 @@
                         <a href="{{ url_for('directory.browse.recent') }}" title="Pokaż więcej ostatnio dodanych">Ostatnio dodane</a>
                     </span>
                     {% for track in recentlyAddedTracks %}
-                        <a href="{{ url_for('track.track.index', { guid: track.guid } )}}" class="ellipsis list-group-item">
-                            {% set name = track.artist ~ ' - ' ~ track.title %}
-                            <span  title="{{ name }}">
-                                {{ name }}
+                        <a href="{{ url_for('track.track.index', { guid: track.guid }) }}" class="ellipsis list-group-item">
+                            <span title="{{ track.name }}">
+                                {{ track.name }}
                             </span>
                         </a>
                     {% endfor %}

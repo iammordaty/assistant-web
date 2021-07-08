@@ -1,8 +1,8 @@
 {% extends '@common/layout.twig' %}
 
-{% set directoryWithoutSeparator = directory.pathname|trim(constant('DIRECTORY_SEPARATOR')) %}
+{% set currentDirectoryWithoutSeparator = currentDirectory.pathname|trim(constant('DIRECTORY_SEPARATOR')) %}
 
-{% block title %}Przeglądanie kolekcji {% if directoryWithoutSeparator %}– {{ directoryWithoutSeparator }}{% endif %}{% endblock %}
+{% block title %}Przeglądanie kolekcji {% if currentDirectoryWithoutSeparator %}– {{ currentDirectoryWithoutSeparator }}{% endif %}{% endblock %}
 
 {% block contentBlock %}
     <div class="directory-info">
@@ -14,12 +14,12 @@
                 </a>
             </li>
             {% for path in pathBreadcrumbs[1:] %}
-                <li><a href="{{ url_for('directory.browse.index', { guid: path.guid } )}}" class="undecorated">{{ path.path }}</a></li>
+                <li><a href="{{ url_for('directory.browse.index', { guid: path.guid }) }}" class="undecorated">{{ path.path }}</a></li>
             {% endfor %}
         </ol>
     </div>
 
-    {% if children.directories %}
+    {% if directories %}
         <table class="table table-hover">
             <thead>
                 <tr>
@@ -29,15 +29,10 @@
                 </tr>
             </thead>
             <tbody>
-{#                {% for child in children.directories if (child.parent or child.guid) %}#}
-                {% for child in children.directories  %}
+                {% for directory in directories %}
                     <tr>
                         <td>
-                            {% if child == directory %}
-                                <a href="{{ url_for('directory.browse.index', { guid: child.parent } )}}"><i class="fa fa-level-up"></i> </a>
-                            {% else %}
-                                <a href="{{ url_for('directory.browse.index', { guid: child.guid } )}}">{{ child.name }}</a>
-                            {% endif %}
+                            <a href="{{ url_for('directory.browse.index', { guid: directory.guid }) }}">{{ directory.name }}</a>
                         </td>
                     </tr>
                 {% endfor %}
@@ -45,7 +40,7 @@
         </table>
     {% endif %}
 
-    {% if children.tracks %}
+    {% if tracks %}
         <div class="table-responsive">
             <table class="table table-hover">
                 <thead>
@@ -71,12 +66,11 @@
                     </tr>
                 </thead>
                 <tbody>
-                    {% for track in children.tracks %}
+                    {% for track in tracks %}
                         <tr>
                             <td class="col-xs-6">
                                 <span class="ellipsis track-name">
-                                    {% set name = track.artist ~ ' - ' ~ track.title %}
-                                    <a href="{{ url_for('track.track.index', { guid: track.guid } )}}" title="{{ name }}">{{ name }}</a>
+                                    <a href="{{ url_for('track.track.index', { guid: track.guid }) }}" title="{{ track.name }}">{{ track.name }}</a>
                                 </span>
                             </td>
                             <td class="col-xs-2">
@@ -100,5 +94,4 @@
             </table>
         </div>
     {% endif %}
-
 {% endblock %}

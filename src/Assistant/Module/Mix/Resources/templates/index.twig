@@ -54,8 +54,7 @@
                         <tr class="">
                             <td class="col-xs-5">
                                 <span class="ellipsis track-name">
-                                    {% set name = track.track.artist ~ ' - ' ~ track.track.title %}
-                                    <a href="{{ url_for('track.track.index', { guid: track.track.guid } )}}" title="{{ name }}">{{ name }}</a>
+                                    <a href="{{ url_for('track.track.index', { guid: track.track.guid }) }}" title="{{ track.track.name }}">{{ track.track.name }}</a>
                                 </span>
                             </td>
                             <td class="col-xs-2">
@@ -87,18 +86,16 @@
         <table class="table table-hover table-cross-hover" style="font-size: 10px">
             <tr>
                 <td>&nbsp;</td>
-                {% for row in matrix %}
-                    {% set name = row.track.artist ~ ' - ' ~ row.track.title %}
-                    <td title="{{ row.track.artist }} - {{ row.track.title}}">
-                        <a href="{{ url_for('track.track.index', { guid: row.track.guid } )}}"  class="undecorated" title="{{ name }}">{{ row.track.title }}</a>
+                {% for row in similarityGrid %}
+                    <td class="text-center" title="{{ row.track.name }}">
+                        <a href="{{ url_for('track.track.index', { guid: row.track.guid }) }}" class="undecorated" title="{{ row.track.name }}">{{ row.track.title }}</a>
                     </td>
                 {% endfor %}
             </tr>
-            {% for row in matrix %}
+            {% for row in similarityGrid %}
                 <tr>
-                    {% set name = row.track.artist ~ ' - ' ~ row.track.title %}
-                    <td title="{{ row.track.artist }} - {{ row.track.title}}">
-                        <a href="{{ url_for('track.track.index', { guid: row.track.guid } )}}"  class="undecorated" title="{{ name }}">{{ row.track.title }}</a>
+                    <td title="{{ row.track.name }}">
+                        <a href="{{ url_for('track.track.index', { guid: row.track.guid }) }}" class="undecorated" title="{{ row.track.name }}">{{ row.track.title }}</a>
                     </td>
                     {% for track in row.tracks %}
                         <td class="text-center" {% if track.similarityValue is empty %}style="background-color: #eaeaea"{% endif %}>{{ track.similarityValue|default('-') }}</td>

@@ -41,8 +41,7 @@
                             <tr>
                                 <td class="col-xs-6">
                                     <span class="ellipsis track-name">
-                                        {% set name = track.artist ~ ' - ' ~ track.title %}
-                                        <a href="{{ url_for('track.track.index', { guid: track.guid } )}}" title="{{ name }}">{{ name }}</a>
+                                        <a href="{{ url_for('track.track.index', { guid: track.guid }) }}" title="{{ track.name }}">{{ track.name }}</a>
                                     </span>
                                 </td>
                                 <td class="col-xs-2">
