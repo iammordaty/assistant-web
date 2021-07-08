@@ -33,7 +33,7 @@ final class BeatportTrack
         $artists = array_map(static fn($artist) => $artist['name'], $track['artists']);
         $remixers = array_map(static fn($remixer) => $remixer['name'], $track['remixers']);
         $mixName = $track['mix_name'] ?? self::DEFAULT_MIX_NAME;
-        $name = sprintf('%s - %s (%s)', implode(',', $artists), $track['name'], $mixName);
+        $name = sprintf('%s - %s (%s)', implode(', ', $artists), $track['name'], $mixName);
         $charts = array_map(static fn($chart) => BeatportChart::create($chart), $track['charts']);
 
         /** @noinspection PhpUnhandledExceptionInspection */

@@ -1,6 +1,6 @@
 {% extends '@common/layout.twig' %}
 
-{% block title %}{{ track.artist }} - {{ track.title }}{% endblock %}
+{% block title %}{{ track.name }}{% endblock %}
 
 {# TODO: Porozbijać ten szablon na części, bo nie da się tego czytać #}
 
@@ -93,7 +93,7 @@
                                </a>
                            </li>
                            {% for path in pathBreadcrumbs[1:] %}
-                                <li><a href="{{ url_for('directory.browse.index', { guid: path.guid } )}}" class="undecorated">{{ path.path }}</a></li>
+                                <li><a href="{{ url_for('directory.browse.index', { guid: path.guid }) }}" class="undecorated">{{ path.path }}</a></li>
                            {% endfor %}
                         </ol>
                     </span>
@@ -117,7 +117,7 @@
                 data-role="similar-tracks:toggle-visibility"></i>
         </legend>
 
-        <form action="{{ url_for('track.track.index', { guid: track.guid } )}}" method="get" data-role="similar-tracks:parameters"
+        <form action="{{ url_for('track.track.index', { guid: track.guid }) }}" method="get" data-role="similar-tracks:parameters"
               class="form-horizontal {% if not form %} hide {% endif %}">
             <div class="form-group">
                 <div class="col-xs-4 col-sm-2">
@@ -209,8 +209,7 @@
                             <tr class="{% if loop.index >= softLimit %}hide{% endif %}">
                                 <td class="col-xs-5">
                                     <span class="ellipsis track-name">
-                                       {% set name = similarTrack.artist ~ ' - ' ~ similarTrack.title %}
-                                       <a href="{{ url_for('track.track.index', { guid: similarTrack.guid } )}}" title="{{ name }}">{{ name }}</a>
+                                       <a href="{{ url_for('track.track.index', { guid: similarTrack.guid }) }}" title="{{ similarTrack.name }}">{{ similarTrack.name }}</a>
                                     </span>
                                 </td>
                                 <td class="col-xs-2">

@@ -30,19 +30,22 @@ final class PathBreadcrumbs
 
         $parts = explode(DIRECTORY_SEPARATOR, $path);
         $treeParts = [];
+        $treePathname = [];
 
         $breadcrumbs = [];
 
         foreach ($parts as $part) {
-            $guid = $this->slugify->slugify($part);
-            $treeParts[] = $guid;
+            $treeParts[] = $this->slugify->slugify($part);
+            $treePathname[] = $part;
 
             // @todo: dodać url; pozwoli to na użycie klasy także w incoming (uelastycznia klasę)
             // @todo: pomyśleć nad przekształceniem tego w tablicę value object-ów
+            // @todo: ogarnąć to, bo bałagan zrobił się pierwszorzędny :-)
 
             $breadcrumbs[] = [
                 'guid' => implode(DIRECTORY_SEPARATOR, $treeParts),
                 'path' => $part,
+                'pathname' => DIRECTORY_SEPARATOR . implode(DIRECTORY_SEPARATOR, $treePathname),
             ];
         }
 

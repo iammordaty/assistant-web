@@ -1,6 +1,6 @@
 {% extends '@common/layout.twig' %}
 
-{% block title %}{{ track.artist }} - {{ track.title }}{% endblock %}
+{% block title %}{{ track.name }}{% endblock %}
 
 {% block contentBlock %}
     <div
@@ -15,7 +15,7 @@
         role="form"
         autocomplete="off"
     >
-        <legend>{{ track.artist }} - {{ track.title }}</legend>
+        <legend>{{ track.name }}</legend>
 
         <div class="form-group">
             <label class="col-sm-2 control-label">

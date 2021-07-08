@@ -20,13 +20,13 @@ final class MixController
 
             $listing = explode(PHP_EOL, $form['listing']);
 
-            [ $mix, $matrix ] = $this->mixService->getMixInfo($listing);
+            [ $mix, $similarityGrid ] = $this->mixService->getMixInfo($listing);
         }
 
         return $this->view->render($response, '@mix/index.twig', [
             'menu' => 'mix',
             'form' => $form ?? null,
-            'matrix' => $matrix ?? null,
+            'similarityGrid' => $similarityGrid ?? null,
             'mix' => $mix ?? null,
         ]);
     }
