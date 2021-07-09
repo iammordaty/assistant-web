@@ -51,7 +51,7 @@
                                     data-url="{{ url_for('track.track.autocomplete') }}"
                                     type="text"
                                     name="query"
-                                    value="{{ form.query }}"
+                                    value="{{ form.query|default }}"
                                     class="form-control"
                                     placeholder="Wprowadź nazwę wykonawcy lub tytuł utworu"
                                 >

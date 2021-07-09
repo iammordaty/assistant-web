@@ -73,21 +73,18 @@ final class MostSimilarTrackStrategy implements NextTrackStrategy
                 'tracks' => [],
             ];
 
-            $trackOneGuid = $trackOne->getGuid();
-
             foreach ($listing as $trackTwo) {
-                $trackTwoGuid = $trackTwo->getGuid();
-                $similarityValue = $trackOneGuid !== $trackTwoGuid
+                $similarityValue = $trackOne->getGuid() !== $trackTwo->getGuid()
                     ? $this->similarity->getSimilarityValue($trackOne, $trackTwo)
                     : null;
 
-                $row['tracks'][$trackTwoGuid] = [
+                $row['tracks'][$trackTwo->getGuid()] = [
                     'track' => $trackTwo,
                     'similarityValue' => $similarityValue,
                 ];
             }
 
-            $grid[$trackOneGuid] = $row;
+            $grid[$trackOne->getGuid()] = $row;
         }
 
         return $grid;

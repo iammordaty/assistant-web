@@ -53,7 +53,7 @@ return static fn (string $baseDir, array $config): array => [
 
         $settings = [
             'debug' => true,
-            'strict_variables' => false, // todo: zmienić na true
+            'strict_variables' => true,
         ];
 
         $view = Twig::create($paths, $settings);
