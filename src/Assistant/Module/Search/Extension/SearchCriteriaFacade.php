@@ -6,7 +6,7 @@ use Assistant\Module\Common\Storage\Regex;
 
 final class SearchCriteriaFacade
 {
-    private const DEFAULTS = [
+    public const DEFAULTS = [
         'artist' => '',
         'bpm' => '',
         'genre' => '',
@@ -21,8 +21,6 @@ final class SearchCriteriaFacade
 
     public static function createFromFields(array $fields): SearchCriteria
     {
-        $fields = array_merge(self::DEFAULTS, $fields);
-
         $name = $fields['name'] ?: null;
         $guid = $fields['guid'] ? Regex::exact(trim($fields['guid'])) : null;
         $artist = $fields['artist'] ? Regex::contains(trim($fields['artist'])) : null;

@@ -149,7 +149,7 @@
                                     {% if not form or 'year' in form.providers.names|default %} checked="checked" {% endif %}> Rok
                         </label>
                         <div class="additional-info {% if form and 'year' not in form.providers.names|default %} hide {% endif %}">
-                            <input type="number" name="similarity[track][year]" value="{{ form.track.year|default(track.year) }}" min="1980" max="{{ now|date('Y')}}"
+                            <input type="number" name="similarity[track][year]" value="{{ form.track.year|default(track.year) }}" min="1980" max="{{ "now"|date('Y')}}"
                                    class="form-control input-sm" placeholder="{{ track.year }}">
                         </div>
                     </span>
@@ -236,7 +236,7 @@
                 </table>
             </div>
 
-            {% if similarTracks|length > softLimit %}
+            {% if similarTracksList|length > softLimit %}
                 <div class="text-center">
                     <button type="button" class="btn btn-default" data-role="similar-tracks:show-more">Pokaż więcej</button>
                 </div>

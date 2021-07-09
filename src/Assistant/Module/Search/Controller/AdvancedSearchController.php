@@ -4,6 +4,7 @@ namespace Assistant\Module\Search\Controller;
 
 use Assistant\Module\Common\Extension\Route;
 use Assistant\Module\Common\Extension\RouteResolver;
+use Assistant\Module\Search\Extension\SearchCriteriaFacade;
 use Assistant\Module\Search\Extension\TrackSearchService;
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
@@ -26,7 +27,7 @@ final class AdvancedSearchController
      */
     public function index(Request $request, Response $response): Response
     {
-        $form = $request->getQueryParams();
+        $form = array_merge(SearchCriteriaFacade::DEFAULTS, $request->getQueryParams());
 
         $results = [ 'count' => 0 ];
         $paginator = null;

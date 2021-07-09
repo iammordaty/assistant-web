@@ -33,7 +33,7 @@
     <div class="form-group">
         <label class="col-sm-1 control-label">Rok</label>
         <div class="col-sm-5 col-md-3">
-            {% set year = now|date('Y') %}
+            {% set year = "now"|date('Y') %}
             <input name="year" value="{{ form.year }}" class="form-control" placeholder="np. {{ year - 3 }} - {{ year }}">
         </div>
     </div>
@@ -56,7 +56,7 @@
     <div class="form-group">
         <label class="col-sm-1 control-label">Dodany</label>
         <div class="col-sm-5 col-md-3">
-            {% set year = now|date('Y') %}
+            {% set year = "now"|date('Y') %}
             <input name="indexed_date" value="{{ form.indexed_date }}" class="form-control" placeholder="np. >= {{ year - 3 }}">
         </div>
     </div>
