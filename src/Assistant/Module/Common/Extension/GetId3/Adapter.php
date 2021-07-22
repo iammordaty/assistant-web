@@ -147,7 +147,7 @@ final class Adapter
         $this->id3Writer->warnings = [];
         $this->id3Writer->errors = [];
 
-        $fileModificationTime = \DateTime::createFromFormat('U', $this->file->getMTime());
+        $fileModificationTime = $this->file->getMTime();
 
         if ($overwrite) {
             $this->rawInfo = [];
@@ -168,13 +168,7 @@ final class Adapter
 
         $result = $this->id3Writer->WriteTags();
 
-        // obejście warninga (podnoszonego do wyjątku) generowanego przez funkcję touch():
-        // touch(): Utime failed: Operation not permitted
-        exec(sprintf(
-            'touch --no-create -d "%s" "%s"',
-            $fileModificationTime->format('Y-m-d H:i'),
-            $this->file->getPathname()
-        ));
+        touch($this->file->getPathname(), $fileModificationTime);
 
         if ($result === false) {
             throw new WriteException(sprintf('Unable to save metadata to "%s"', $this->file->getPathname()));
