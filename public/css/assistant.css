@@ -116,6 +116,12 @@ a.undecorated:hover {
 .typeahead.dropdown-menu {
     max-height: 350px;
     overflow-y: auto;
+    width: 700px;
+}
+
+.typeahead.dropdown-menu li a {
+    text-overflow: ellipsis;
+    overflow: hidden;
 }
 
 .directory-info .breadcrumb {
