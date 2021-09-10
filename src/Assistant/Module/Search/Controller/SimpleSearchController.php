@@ -6,8 +6,10 @@ use Assistant\Module\Common\Extension\Route;
 use Assistant\Module\Common\Extension\RouteResolver;
 use Assistant\Module\Search\Extension\TrackSearchService;
 use Assistant\Module\Track\Model\Track;
-use Psr\Http\Message\ResponseInterface as Response;
-use Psr\Http\Message\ServerRequestInterface as Request;
+use Fig\Http\Message\StatusCodeInterface;
+use Psr\Http\Message\ResponseInterface;
+use Psr\Http\Message\ServerRequestInterface;
+use Slim\Http\Response;
 use Slim\Views\Twig;
 
 /**
@@ -25,7 +27,7 @@ final class SimpleSearchController
     /**
      * Renderuje stronę wyszukiwania
      */
-    public function index(Request $request, Response $response): Response
+    public function index(ServerRequestInterface $request, Response $response): ResponseInterface
     {
         $form = $request->getQueryParams();
 
@@ -53,13 +55,11 @@ final class SimpleSearchController
         if ($results['count'] === 1) {
             /** @var Track $track */
             $track = $results['tracks']->current();
-
             $route = Route::create('track.track.index', [ 'guid' => $track->getGuid() ]);
-            $redirectUrl = $this->routeResolver->resolve($route);
 
             $redirect = $response
-                ->withHeader('Location', $redirectUrl)
-                ->withStatus(302);
+                ->withRedirect($this->routeResolver->resolve($route))
+                ->withStatus(StatusCodeInterface::STATUS_NOT_FOUND);
 
             return $redirect;
         }

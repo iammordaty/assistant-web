@@ -4,18 +4,20 @@ namespace Assistant\Module\Directory\Controller;
 
 use Assistant\Module\Collection\Extension\Finder;
 use Assistant\Module\Collection\Extension\Reader\ReaderFacade;
+use Assistant\Module\Collection\Model\CollectionItemInterface;
 use Assistant\Module\Common\Extension\Config;
 use Assistant\Module\Common\Extension\PathBreadcrumbs;
 use Assistant\Module\Common\Extension\Route;
 use Assistant\Module\Common\Extension\RouteResolver;
 use Assistant\Module\Common\Extension\SlugifyService;
 use Assistant\Module\Common\Extension\TargetPathService;
-use Assistant\Module\Collection\Model\CollectionItemInterface;
 use Assistant\Module\Directory\Model\Directory;
 use Assistant\Module\Directory\Repository\DirectoryRepository;
 use Assistant\Module\Track\Repository\TrackRepository;
-use Psr\Http\Message\ResponseInterface as Response;
-use Psr\Http\Message\ServerRequestInterface as Request;
+use Fig\Http\Message\StatusCodeInterface;
+use Psr\Http\Message\ResponseInterface;
+use Psr\Http\Message\ServerRequestInterface;
+use Slim\Http\Response;
 use Slim\Views\Twig;
 use SplFileInfo;
 
@@ -33,19 +35,17 @@ final class BrowseController
     ) {
     }
 
-    public function index(Request $request, Response $response): Response
+    public function index(ServerRequestInterface $request, Response $response): ResponseInterface
     {
         $guid = $request->getAttribute('guid');
 
         if (!$guid) {
             $guid = $this->slugify->slugify($this->config->get('collection.root_dir'));
-
             $route = Route::create('directory.browse.index')->withParams([ 'guid' => $guid ]);
-            $redirectUrl = $this->routeResolver->resolve($route);
 
             $redirect = $response
-                ->withHeader('Location', $redirectUrl)
-                ->withStatus(302);
+                ->withRedirect($this->routeResolver->resolve($route))
+                ->withStatus(StatusCodeInterface::STATUS_NOT_FOUND);
 
             return $redirect;
         }
@@ -54,13 +54,11 @@ final class BrowseController
 
         if (!$directory) {
             $guid = $this->slugify->slugify($this->config->get('collection.root_dir'));
-
             $route = Route::create('directory.browse.index')->withParams([ 'guid' => $guid ]);
-            $redirectUrl = $this->routeResolver->resolve($route);
 
             $redirect = $response
-                ->withHeader('Location', $redirectUrl)
-                ->withStatus(404);
+                ->withRedirect($this->routeResolver->resolve($route))
+                ->withStatus(StatusCodeInterface::STATUS_NOT_FOUND);
 
             return $redirect;
         }
@@ -77,7 +75,7 @@ final class BrowseController
         ]);
     }
 
-    public function recent(Request $request, Response $response): Response
+    public function recent(ServerRequestInterface $request, ResponseInterface $response): ResponseInterface
     {
         $getGroupName = static function ($name): string {
             $parts = explode(DIRECTORY_SEPARATOR, ltrim($name, '/'));
@@ -110,21 +108,17 @@ final class BrowseController
         ]);
     }
 
-    public function incoming(Request $request, Response $response): Response
+    public function incoming(ServerRequestInterface $request, Response $response): ResponseInterface
     {
         $pathname = $request->getAttribute('pathname') ?: $this->config->get('collection.incoming_dir');
 
         if (!is_readable($pathname)) {
             $guid = $this->slugify->slugify($this->config->get('collection.incoming_dir'));
-
             $route = Route::create('directory.browse.index')->withParams([ 'guid' => $guid ]);
-            $redirectUrl = $this->routeResolver->resolve($route);
 
             $redirect = $response
-                ->withHeader('Location', $redirectUrl)
-                ->withStatus(404);
-
-            return $redirect;
+                ->withRedirect($this->routeResolver->resolve($route))
+                ->withStatus(StatusCodeInterface::STATUS_NOT_FOUND);
         }
 
         $tracks = [];

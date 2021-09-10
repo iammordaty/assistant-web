@@ -7,8 +7,10 @@ use Assistant\Module\Common\Extension\Route;
 use Assistant\Module\Common\Extension\RouteResolver;
 use Assistant\Module\Track\Extension\TrackService;
 use Cocur\BackgroundProcess\BackgroundProcess;
-use Psr\Http\Message\ResponseInterface as Response;
-use Psr\Http\Message\ServerRequestInterface as Request;
+use Fig\Http\Message\StatusCodeInterface;
+use Psr\Http\Message\ResponseInterface;
+use Psr\Http\Message\ServerRequestInterface;
+use Slim\Http\Response;
 use Slim\Views\Twig;
 
 final class EditController
@@ -26,7 +28,7 @@ final class EditController
      * @todo Wyciągnąć z kontrolera i przerzucić do innej klasy
      * @todo Część klas (m.in. BeatportApiClient) przerzucić do containera dla wygodniejszej inicjalizacji
      */
-    public function edit(Request $request, Response $response): Response
+    public function edit(ServerRequestInterface $request, Response $response): ResponseInterface
     {
         $pathname = $request->getAttribute('pathname');
         $track = $this->trackService->createFromFile($pathname);
@@ -60,7 +62,7 @@ final class EditController
      * @todo Na tyle ile pozwala biblioteka, opcja usuwania innych tagów powinna usuwać zdjęcie, tag id3v1, lyrics,
      *       ape (oraz inne) oraz niewspierane pola z id3v2
      */
-    public function save(Request $request, Response $response): Response
+    public function save(ServerRequestInterface $request, Response $response): ResponseInterface
     {
         $pathname = $request->getAttribute('pathname');
         $track = $this->trackService->createFromFile($pathname);
@@ -131,11 +133,10 @@ final class EditController
         }
 
         $route = Route::create($routeName)->withParams($params);
-        $redirectUrl = $this->routeResolver->resolve($route);
 
         $redirect = $response
-            ->withHeader('Location', $redirectUrl)
-            ->withStatus(302);
+            ->withRedirect($this->routeResolver->resolve($route))
+            ->withStatus(StatusCodeInterface::STATUS_FOUND);
 
         return $redirect;
     }
@@ -187,7 +188,7 @@ final class EditController
         ];
     }
 
-    private function getNotFoundRedirect(Response $response, string $pathname): Response
+    private function getNotFoundRedirect(Response $response, string $pathname): ResponseInterface
     {
         if ($this->trackService->getLocationArbiter()->isInCollection($pathname)) {
             $routeName = 'search.simple.index';
@@ -198,11 +199,10 @@ final class EditController
         }
 
         $route = Route::create($routeName)->withQuery($query);
-        $redirectUrl = $this->routeResolver->resolve($route);
 
         $redirect = $response
-            ->withHeader('Location', $redirectUrl)
-            ->withStatus(404);
+            ->withRedirect($this->routeResolver->resolve($route))
+            ->withStatus(StatusCodeInterface::STATUS_NOT_FOUND);
 
         return $redirect;
     }

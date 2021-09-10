@@ -2,45 +2,54 @@
 
 namespace Assistant\Module\Track\Controller\Track;
 
-use Assistant\Module\Common\Extension\Route;
-use Assistant\Module\Common\Extension\RouteResolver;
 use Assistant\Module\Track\Extension\TrackService;
-use Psr\Http\Message\ResponseInterface as Response;
-use Psr\Http\Message\ServerRequestInterface as Request;
-use Slim\Psr7\Factory\StreamFactory;
+use Fig\Http\Message\StatusCodeInterface;
+use Monolog\Logger;
+use Psr\Http\Message\ResponseInterface;
+use Psr\Http\Message\ServerRequestInterface;
+use Slim\Http\Response;
 
 final class ContentsController
 {
     public function __construct(
-        private RouteResolver $routeResolver,
+        private Logger $logger,
         private TrackService $trackService,
     ) {
     }
 
-    public function get(Request $request, Response $response): Response
+    public function get(ServerRequestInterface $request, Response $response): ResponseInterface
     {
         $guid = $request->getAttribute('guid');
         $track = $this->trackService->getByGuid($guid);
 
-        if (!$track || !is_readable($track->getPathname())) {
-            $route = Route::create('search.simple.index')->withQuery([ 'query' => str_replace('-', ' ', $guid) ]);
-            $redirectUrl = $this->routeResolver->resolve($route);
+        if (!$track) {
+            $error = sprintf("Track with guid \"%s\" doesn't exist.", $guid);
 
-            $redirect = $response
-                ->withHeader('Location', $redirectUrl)
-                ->withStatus(404);
+            $error = $response
+                ->withJson([ 'error' => $error ])
+                ->withStatus(StatusCodeInterface::STATUS_NOT_FOUND);
 
-            return $redirect;
+            return $response;
         }
 
-        $body = (new StreamFactory())->createStreamFromFile($track->getPathname());
+        if (!is_readable($track->getPathname())) {
+            $this->logger->error('File is not readable', [
+                'pathname' => $track->getPathname(),
+            ]);
+
+            $error = sprintf("File \"%s\" is not readable.", $track->getPathname());
+
+            return $response
+                ->withJson([ 'error' => $error ])
+                ->withStatus(StatusCodeInterface::STATUS_INTERNAL_SERVER_ERROR);
+        }
+
         $contentDisposition = sprintf('inline; filename="%s - %s"', $track->getArtist(), $track->getTitle());
 
         $response = $response
-            ->withBody($body)
+            ->withFile($track->getPathname())
             ->withHeader('Content-Disposition', $contentDisposition)
-            ->withHeader('Content-Length', filesize($track->getPathname()))
-            ->withHeader('Content-Type', 'audio/mpeg');
+            ->withHeader('Content-Length', $track->getFile()->getSize());
 
         return $response;
     }
