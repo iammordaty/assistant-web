@@ -117,7 +117,7 @@ final class Adapter
         try {
             $this->rawInfo = $this->id3Reader->analyze($this->file->getPathname());
         } catch (\Throwable $e) {
-            $message = sprintf('Unable to read metadata form "%s": %s', $this->file->getPathname(), $e->getMessage());
+            $message = sprintf('Unable to read metadata from "%s": %s', $this->file->getPathname(), $e->getMessage());
 
             throw new ReadException($message);
         }

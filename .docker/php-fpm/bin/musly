@@ -1,0 +1,11 @@
+#!/bin/bash
+
+COMMAND="musly "
+
+for ARG in "$@"; do
+  COMMAND+="\"${ARG}\" "
+done
+
+sshpass -p "root" ssh -o LogLevel=quiet -o StrictHostKeyChecking=no -t root@music-similarity ${COMMAND}
+
+

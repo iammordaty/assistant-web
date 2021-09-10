@@ -2,7 +2,6 @@
 
 namespace Assistant\Module\Track\Controller\Track;
 
-use Assistant\Module\Common\Extension\Backend\Client as BackendClient;
 use Assistant\Module\Common\Extension\Beatport\BeatportTrackBuilder;
 use Assistant\Module\Common\Extension\BeatportApiClient;
 use Assistant\Module\Common\Extension\TrackSearch\BeatportSearchTracks;
@@ -92,7 +91,7 @@ final class TrackMetadataSuggestions
 
         // -- budowanie sugestii na podstawie znalezionych utworów
 
-        $suggestionsBuilder = new TrackMetadataSuggestionsBuilder(new BackendClient());
+        $suggestionsBuilder = new TrackMetadataSuggestionsBuilder();
 
         $suggestions = array_map(
             static fn($beatportTrack) => [

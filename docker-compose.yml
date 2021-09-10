@@ -1,0 +1,82 @@
+version: '3'
+
+services:
+    mongo:
+        image: mongo:4.4
+        container_name: assistant-mongo
+        restart: always
+        networks:
+            - assistant
+        hostname: assistant-mongo
+        expose:
+            - 27017
+        volumes:
+            - ${ASSISTANT_DATABASE_VOLUME}:/data/db
+
+    nginx:
+        image: nginx:latest
+        container_name: assistant-nginx
+        restart: always
+        networks:
+            - assistant
+        hostname: assistant-nginx
+        expose:
+            - 80
+        links:
+            - front
+        ports:
+            - "9090:80"
+        volumes:
+            - ${ASSISTANT_FRONTEND_VOLUME}:/data
+            - ./.docker/nginx/conf/default.conf:/etc/nginx/conf.d/default.conf
+
+    front:
+        build: ./.docker/php-fpm
+        image: assistant-front
+        container_name: assistant-front
+        restart: always
+        networks:
+            - assistant
+        hostname: assistant-front
+        links:
+            - mongo
+            - music-classifier
+            - music-similarity
+        volumes:
+            - ${ASSISTANT_FRONTEND_VOLUME}:/data
+            - ${ASSISTANT_COLLECTION_VOLUME}:/collection
+            - ${ASSISTANT_METADATA_VOLUME}:/metadata
+            - ./.docker/php-fpm/conf/php.ini:/usr/local/etc/php/php.ini
+
+    music-classifier:
+        build: ./.docker/music-classifier
+        image: assistant-music-classifier
+        container_name: assistant-music-classifier
+        restart: always
+        networks:
+            - assistant
+        hostname: assistant-music-classifier
+        ports:
+            - 22
+        volumes:
+            - ${ASSISTANT_COLLECTION_VOLUME}:/collection
+            - ${ASSISTANT_METADATA_VOLUME}:/metadata
+
+    music-similarity:
+        build: ./.docker/music-similarity
+        image: assistant-music-similarity
+        container_name: assistant-music-similarity
+        restart: always
+        networks:
+            - assistant
+        hostname: assistant-music-similarity
+        ports:
+            - 22
+        volumes:
+            - ${ASSISTANT_COLLECTION_VOLUME}:/collection
+            - ${ASSISTANT_METADATA_VOLUME}:/metadata
+
+networks:
+    assistant:
+        name: assistant-network
+

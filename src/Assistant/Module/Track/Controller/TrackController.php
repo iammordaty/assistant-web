@@ -87,7 +87,7 @@ final class TrackController
 
         if ($customTrackParams) {
             if (isset($customTrackParams['year'])) {
-                $track = $track->withYear($customTrackParams['year']);
+                $track = $track->withYear((int) $customTrackParams['year']);
             }
 
             if (isset($customTrackParams['genre'])) {
@@ -95,7 +95,7 @@ final class TrackController
             }
 
             if (isset($customTrackParams['bpm'])) {
-                $track = $track->withBpm($customTrackParams['bpm']);
+                $track = $track->withBpm((float) $customTrackParams['bpm']);
             }
 
             if (isset($customTrackParams['initial_key'])) {
