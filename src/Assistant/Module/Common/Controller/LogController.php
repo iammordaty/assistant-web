@@ -5,9 +5,11 @@ namespace Assistant\Module\Common\Controller;
 use Assistant\Module\Common\Extension\Config;
 use Assistant\Module\Common\Extension\Route;
 use Assistant\Module\Common\Extension\RouteResolver;
+use Fig\Http\Message\StatusCodeInterface;
 use PhpExtended\Tail\Tail;
-use Psr\Http\Message\ResponseInterface as Response;
-use Psr\Http\Message\ServerRequestInterface as Request;
+use Psr\Http\Message\ResponseInterface;
+use Psr\Http\Message\ServerRequestInterface;
+use Slim\Http\Response;
 use Slim\Views\Twig;
 
 final class LogController
@@ -24,17 +26,16 @@ final class LogController
         $this->baseDir = $config->get('base_dir');
     }
 
-    public function index(Request $request, Response $response): Response
+    public function index(ServerRequestInterface $request, Response $response): ResponseInterface
     {
         $log = $request->getQueryParams()['log'] ?? null;
 
         if ($log && !in_array($log, self::AVAILABLE_LOGS)) {
             $route = Route::create('common.log.index');
-            $redirectUrl = $this->routeResolver->resolve($route);
 
             $redirect = $response
-                ->withHeader('Location', $redirectUrl)
-                ->withStatus(404);
+                ->withRedirect($this->routeResolver->resolve($route))
+                ->withStatus(StatusCodeInterface::STATUS_NOT_FOUND);
 
             return $redirect;
         }
@@ -56,7 +57,7 @@ final class LogController
         ]);
     }
 
-    public function ajax(Request $request, Response $response): Response
+    public function ajax(ServerRequestInterface $request, Response $response): ResponseInterface
     {
         $queryParams = $request->getQueryParams();
 
@@ -64,11 +65,10 @@ final class LogController
 
         if ($log && !in_array($log, self::AVAILABLE_LOGS)) {
             $route = Route::create('common.log.index');
-            $redirectUrl = $this->routeResolver->resolve($route);
 
             $redirect = $response
-                ->withHeader('Location', $redirectUrl)
-                ->withStatus(404);
+                ->withRedirect($this->routeResolver->resolve($route))
+                ->withStatus(StatusCodeInterface::STATUS_NOT_FOUND);
 
             return $redirect;
         }

@@ -16,8 +16,10 @@ use Assistant\Module\Track\Extension\Similarity\Provider\Year;
 use Assistant\Module\Track\Extension\TrackService;
 use Assistant\Module\Track\Model\Track;
 use Assistant\Module\Track\Repository\TrackRepository;
-use Psr\Http\Message\ResponseInterface as Response;
-use Psr\Http\Message\ServerRequestInterface as Request;
+use Fig\Http\Message\StatusCodeInterface;
+use Psr\Http\Message\ResponseInterface;
+use Psr\Http\Message\ServerRequestInterface;
+use Slim\Http\Response;
 use Slim\Views\Twig;
 
 final class TrackController
@@ -32,18 +34,17 @@ final class TrackController
     ) {
     }
 
-    public function index(Request $request, Response $response): Response
+    public function index(ServerRequestInterface $request, Response $response): ResponseInterface
     {
         $guid = $request->getAttribute('guid');
         $track = $this->trackService->getByGuid($guid);
 
         if (!$track) {
             $route = Route::create('search.simple.index')->withQuery([ 'query' => str_replace('-', ' ', $guid) ]);
-            $redirectUrl = $this->routeResolver->resolve($route);
 
             $redirect = $response
-                ->withHeader('Location', $redirectUrl)
-                ->withStatus(404);
+                ->withRedirect($this->routeResolver->resolve($route))
+                ->withStatus(StatusCodeInterface::STATUS_NOT_FOUND);
 
             return $redirect;
         }
