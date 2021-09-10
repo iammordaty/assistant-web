@@ -3,13 +3,15 @@
 namespace Assistant\Module\Track\Task;
 
 use Assistant\Module\Collection\Extension\Finder;
-use Assistant\Module\Common\Extension\Backend\Client as BackendClient;
-use Assistant\Module\Common\Extension\Backend\Exception\AudioDataCalculatorException;
+use Assistant\Module\Common\Extension\Config;
 use Assistant\Module\Common\Extension\GetId3\Adapter as Id3Adapter;
 use Assistant\Module\Common\Extension\GetId3\Exception\GetId3Exception;
-use Assistant\Module\Common\Extension\Config;
+use Assistant\Module\Common\Extension\MusicClassifier\MusicClassifierResult;
+use Assistant\Module\Common\Extension\MusicClassifier\MusicClassifierService;
+use Assistant\Module\Common\Extension\MusicClassifier\MusicClassifierException;
 use Assistant\Module\Common\Task\AbstractTask;
 use Assistant\Module\Track\Extension\TrackService;
+use KeyTools\KeyTools;
 use Monolog\Logger;
 use Psr\Container\ContainerInterface as Container;
 use SplFileInfo;
@@ -30,9 +32,10 @@ final class AudioDataCalculatorTask extends AbstractTask
 
     public function __construct(
         Logger $logger,
-        private BackendClient $backend,
+        private MusicClassifierService $musicClassifierService,
         private Id3Adapter $id3,
         private TrackService $trackService,
+        private KeyTools $keyTools,
         private array $parameters,
     ) {
         parent::__construct($logger);
@@ -42,7 +45,7 @@ final class AudioDataCalculatorTask extends AbstractTask
             'updated' => 0,
             'mismatch' => [ 'initial_key' => 0, 'bpm' => 0 ],
             'skipped' => [ 'too_long' => 0, 'already_calculated' => 0, 'same_data' => 0 ],
-            'error' => [ 'backend' => 0, 'tags' => 0, 'other' => 0 ],
+            'error' => [ 'classifier' => 0, 'tags' => 0, 'other' => 0 ],
         ];
     }
 
@@ -50,9 +53,10 @@ final class AudioDataCalculatorTask extends AbstractTask
     {
         return new self(
             $container->get(Logger::class),
-            $container->get(BackendClient::class),
+            $container->get(MusicClassifierService::class),
             $container->get(Id3Adapter::class),
             $container->get(TrackService::class),
+            KeyTools::fromNotation(KeyTools::NOTATION_MUSICAL_ESSENTIA),
             $container->get(Config::class)->get('collection'),
         );
     }
@@ -130,14 +134,15 @@ final class AudioDataCalculatorTask extends AbstractTask
                     continue;
                 }
 
-                $audioData = $this->backend->calculateAudioData($track);
+                $classificationResult = $this->musicClassifierService->analyze($track->getFile());
+                $audioData = $this->getAudioData($classificationResult);
 
                 if ($this->isTrackHasSameData($metadata, $audioData) === true) {
                     $this->stats['skipped']['same_data']++;
 
                     $this->logger->debug('Track has the same audio data, update is not necessary', $audioData);
 
-                    unset($file, $track, $metadata, $audioData);
+                    unset($file, $track, $metadata, $classificationResult, $audioData);
 
                     continue;
                 }
@@ -168,13 +173,14 @@ final class AudioDataCalculatorTask extends AbstractTask
                 }
 
                 $this->logger->debug('Track processing completed successfully');
-            } catch (AudioDataCalculatorException $e) {
-                $this->stats['error']['backend']++;
+            } catch (MusicClassifierException $e) {
+                $this->stats['error']['classifier']++;
 
-                $this->logger->error(
-                    $e->getMessage(),
-                    [ 'pathname' => $track->getPathname(), 'metadata' => $metadata ?? null]
-                );
+                $this->logger->error($e->getMessage(), [
+                    'pathname' => $track->getPathname(),
+                    'metadata' => $metadata ?? null,
+                    'commandLine' => $e->getProcessCommandLine(),
+                ]);
             } catch (GetId3Exception $e) {
                 $this->stats['error']['tags']++;
 
@@ -195,7 +201,7 @@ final class AudioDataCalculatorTask extends AbstractTask
                     'exception' => $e,
                 ]);
             } finally {
-                unset($file, $track, $metadata, $audioData);
+                unset($file, $track, $metadata, $classificationResult, $audioData);
             }
         }
 
@@ -205,7 +211,7 @@ final class AudioDataCalculatorTask extends AbstractTask
     }
 
     /**
-     * Określa, czy dane zawarte w metadanych pliku są takie same jak te obliczone przez backend
+     * Określa, czy dane zawarte w metadanych pliku są takie same jak te obliczone przez music classifier service
      *
      * @param array|null $metadata
      * @param array $audioData
@@ -217,7 +223,7 @@ final class AudioDataCalculatorTask extends AbstractTask
             return false;
         }
 
-        $hasSameBpm = (string) $metadata['bpm'] === (string) $audioData['bpm'];
+        $hasSameBpm = (float) $metadata['bpm'] === (float) $audioData['bpm'];
         $hasSameInitialKey = $metadata['initial_key'] === $audioData['initial_key'];
 
         return $hasSameBpm && $hasSameInitialKey;
@@ -235,5 +241,18 @@ final class AudioDataCalculatorTask extends AbstractTask
             'mode' => Finder::MODE_FILES_ONLY,
             'recursive' => $recursive,
         ]);
+    }
+
+    private function getAudioData(MusicClassifierResult $classificationResult): array
+    {
+        $bpm = $classificationResult->getBpm();
+        $key = $classificationResult->getMusicalKey();
+
+        $audioData = [
+            'bpm' => $bpm,
+            'initial_key' => $this->keyTools->convertKeyToNotation($key, KeyTools::NOTATION_CAMELOT_KEY),
+        ];
+
+        return $audioData;
     }
 }

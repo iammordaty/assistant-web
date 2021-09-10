@@ -6,11 +6,11 @@ use Assistant\Module\Collection\Extension\Reader\FileReader;
 use Assistant\Module\Collection\Extension\Reader\FileReaderFacade;
 use Assistant\Module\Collection\Extension\Reader\MetadataParser\MetadataParser;
 use Assistant\Module\Collection\Extension\Reader\ReaderFacade;
-use Assistant\Module\Common\Extension\Backend\Client as BackendClient;
 use Assistant\Module\Common\Extension\Config;
 use Assistant\Module\Common\Extension\GetId3\Adapter as Id3Adapter;
 use Assistant\Module\Common\Extension\PathBreadcrumbs;
 use Assistant\Module\Common\Extension\RouteResolver;
+use Assistant\Module\Common\Extension\SimilarTracksCollection\SimilarTracksCollectionService;
 use Assistant\Module\Common\Extension\SlugifyService;
 use Assistant\Module\Common\Extension\Twig\DurationTwigExtension;
 use Assistant\Module\Directory\Repository\DirectoryRepository;
@@ -37,8 +37,6 @@ use function DI\autowire;
 use function DI\create;
 
 return static fn (string $baseDir, array $config): array => [
-    BackendClient::class => create(),
-
     Config::class => create()->constructor($config),
 
     Twig::class => function () use ($baseDir): Twig {
@@ -160,8 +158,19 @@ return static fn (string $baseDir, array $config): array => [
         return $urlResolver;
     },
 
-    // Tutaj chyba należy wprowadzić klasę faktorującą, bo obecnie
-    // nie ma możliwości nadpisania parametrów poprzez formularz na stronie utworu.
+    /**
+     * @todo Tutaj chyba należy wprowadzić klasę faktorującą, bo obecnie nie ma możliwości nadpisania parametrów
+     *       poprzez formularz na stronie utworu.
+     *
+     * @see Similarity\Provider\Musly::__construct()
+     *
+     * @todo Do zastanowienia się jak tworzyć obiekt(y), bo obecnie nie ma możliwości przekazania zależności
+     *       do dostawców
+     *
+     * @see \Assistant\Module\Track\Controller\TrackController::getSimilarTracks()
+     *
+     * @noinspection GrazieInspection
+     */
     Similarity::class => function (Container $container): Similarity {
         $similarity = new Similarity(
             $container->get(TrackRepository::class),
@@ -170,6 +179,8 @@ return static fn (string $baseDir, array $config): array => [
 
         return $similarity;
     },
+
+    SimilarTracksCollectionService::class => autowire(),
 
     SlugifyService::class => create(),
 

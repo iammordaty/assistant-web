@@ -2,25 +2,25 @@
 My web-based music collection assistant (under high development and BC changes)
 
 ## features
-- search
-- browse
+- search and browse collection
 - find similar tracks (based on track similarity* and metadata fields: initial_key, bpm, genre, year)
+- calculate track tempo (bpm), musical key and audio features**
 - rearrange mix by similarity (based on track similarity module)
 
-\* Thanks to [Musly - Music Similarity Library](https://github.com/dominikschnitzer/musly)
+\* Thanks to [Musly - Music Similarity Library](https://github.com/dominikschnitzer/musly)  
+\** Thanks to [Essentia](https://github.com/MTG/essentia) via [music extractor](https://github.com/MTG/essentia/blob/master/doc/sphinxdoc/streaming_extractor_music.rst)
+
 
 ## plans
 - find inconsistencies / mismatches in track metadata ("Watermät" vs "Watermat", "The Disciples" vs. "Disciples", and so on)
 - i18n
 - custom tags and links to other tracks in the track view
-- integrate Indexer with [Essentia](https://github.com/MTG/essentia) (which is "library for audio and music analysis, description and synthesis")
-- opt-out of a backend written in go
 - ...?
 
 ## requirements
 - PHP >= 8
 - MongoDB >= 4.x
-- nginx / Apache
+- nginx
 
 ## how to start?
 

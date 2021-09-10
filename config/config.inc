@@ -27,6 +27,10 @@ return static function (string $baseDir): array {
                 '/collection/Other',
             ],
             'incoming_dir' => '/collection/_new',
+            'metadata_dirs' => [
+                'music_similarity' => '/metadata/musly',
+                'music_classifier' => '/metadata/essentia',
+            ],
         ],
 
         'track_metadata_parser' => [

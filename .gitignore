@@ -4,3 +4,4 @@
 /var/cache/*
 /var/logs/*
 /vendor/
+@eaDir

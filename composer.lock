@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "7edec120d8dd9ede64fc4a2ed7d091dd",
+    "content-hash": "1cc0637c758f2b7bc69504edd2feb499",
     "packages": [
         {
             "name": "cache/adapter-common",
@@ -1030,24 +1030,76 @@
             "time": "2020-03-03T14:37:45+00:00"
         },
         {
-            "name": "james-heinrich/getid3",
-            "version": "v1.9.20",
+            "name": "iammordaty/musly-php",
+            "version": "0.4",
             "source": {
                 "type": "git",
-                "url": "https://github.com/JamesHeinrich/getID3.git",
-                "reference": "3c15e353b9bb1252201c73394bb8390b573a751d"
+                "url": "https://github.com/iammordaty/musly-php.git",
+                "reference": "1638660ad044287e07eb98dfbee5fe264f56d492"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/JamesHeinrich/getID3/zipball/3c15e353b9bb1252201c73394bb8390b573a751d",
-                "reference": "3c15e353b9bb1252201c73394bb8390b573a751d",
+                "url": "https://api.github.com/repos/iammordaty/musly-php/zipball/1638660ad044287e07eb98dfbee5fe264f56d492",
+                "reference": "1638660ad044287e07eb98dfbee5fe264f56d492",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=7.1",
+                "symfony/process": ">=4.2"
+            },
+            "require-dev": {
+                "phpstan/phpstan": ">=0.11.1",
+                "phpunit/phpunit": ">=7"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "Musly\\": "src"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "iammordaty",
+                    "email": "iammordaty@users.noreply.github.com"
+                }
+            ],
+            "description": "PHP wrapper around the `musly` command",
+            "keywords": [
+                "library",
+                "music-similarity",
+                "musly",
+                "php",
+                "wrapper"
+            ],
+            "support": {
+                "issues": "https://github.com/iammordaty/musly-php/issues",
+                "source": "https://github.com/iammordaty/musly-php/tree/0.4"
+            },
+            "time": "2021-09-03T19:45:42+00:00"
+        },
+        {
+            "name": "james-heinrich/getid3",
+            "version": "dev-master",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/JamesHeinrich/getID3.git",
+                "reference": "4e02ed09c081a606c734c6b27d1b504fecfe402f"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/JamesHeinrich/getID3/zipball/4e02ed09c081a606c734c6b27d1b504fecfe402f",
+                "reference": "4e02ed09c081a606c734c6b27d1b504fecfe402f",
                 "shasum": ""
             },
             "require": {
                 "php": ">=5.3.0"
             },
             "require-dev": {
-                "jakub-onderka/php-parallel-lint": "^0.9 || ^1.0"
+                "php-parallel-lint/php-parallel-lint": "^1.0"
             },
             "suggest": {
                 "ext-SimpleXML": "SimpleXML extension is required to analyze RIFF/WAV/BWF audio files (also requires `ext-libxml`).",
@@ -1066,6 +1118,7 @@
                 "ext-xml": "XML extension is required for graphic modules to analyze the XML metadata.",
                 "ext-zlib": "Zlib extension is required for archive modules and compressed metadata."
             },
+            "default-branch": true,
             "type": "library",
             "extra": {
                 "branch-alias": {
@@ -1094,7 +1147,7 @@
                 "issues": "https://github.com/JamesHeinrich/getID3/issues",
                 "source": "https://github.com/JamesHeinrich/getID3/tree/master"
             },
-            "time": "2020-06-30T18:43:34+00:00"
+            "time": "2021-09-01T10:16:10+00:00"
         },
         {
             "name": "jean85/pretty-package-versions",
@@ -1813,66 +1866,6 @@
                 }
             ],
             "time": "2021-03-07T15:10:07+00:00"
-        },
-        {
-            "name": "php-curl-class/php-curl-class",
-            "version": "4.13.0",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/php-curl-class/php-curl-class.git",
-                "reference": "debe0a89ee1eb9a2f15c0bb63ce8b347130af50d"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/php-curl-class/php-curl-class/zipball/debe0a89ee1eb9a2f15c0bb63ce8b347130af50d",
-                "reference": "debe0a89ee1eb9a2f15c0bb63ce8b347130af50d",
-                "shasum": ""
-            },
-            "require": {
-                "ext-curl": "*",
-                "php": ">=5.3"
-            },
-            "require-dev": {
-                "phpunit/phpunit": "*"
-            },
-            "type": "library",
-            "autoload": {
-                "psr-4": {
-                    "Curl\\": "src/Curl/"
-                }
-            },
-            "notification-url": "https://packagist.org/downloads/",
-            "license": [
-                "Unlicense"
-            ],
-            "authors": [
-                {
-                    "name": "Zach Borboa"
-                }
-            ],
-            "description": "PHP Curl Class is an object-oriented wrapper of the PHP cURL extension.",
-            "homepage": "https://github.com/php-curl-class/php-curl-class",
-            "keywords": [
-                "api",
-                "class",
-                "client",
-                "curl",
-                "framework",
-                "http",
-                "http client",
-                "json",
-                "php",
-                "requests",
-                "rest",
-                "restful",
-                "web service",
-                "xml"
-            ],
-            "support": {
-                "issues": "https://github.com/php-curl-class/php-curl-class/issues",
-                "source": "https://github.com/php-curl-class/php-curl-class/tree/master"
-            },
-            "time": "2016-07-25T19:31:39+00:00"
         },
         {
             "name": "php-di/invoker",
@@ -3852,6 +3845,68 @@
             "time": "2021-01-07T16:49:33+00:00"
         },
         {
+            "name": "symfony/process",
+            "version": "v4.4.27",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/symfony/process.git",
+                "reference": "0b7dc5599ac4aa6d7b936c8f7d10abae64f6cf7f"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/symfony/process/zipball/0b7dc5599ac4aa6d7b936c8f7d10abae64f6cf7f",
+                "reference": "0b7dc5599ac4aa6d7b936c8f7d10abae64f6cf7f",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=7.1.3",
+                "symfony/polyfill-php80": "^1.16"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "Symfony\\Component\\Process\\": ""
+                },
+                "exclude-from-classmap": [
+                    "/Tests/"
+                ]
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Fabien Potencier",
+                    "email": "fabien@symfony.com"
+                },
+                {
+                    "name": "Symfony Community",
+                    "homepage": "https://symfony.com/contributors"
+                }
+            ],
+            "description": "Executes commands in sub-processes",
+            "homepage": "https://symfony.com",
+            "support": {
+                "source": "https://github.com/symfony/process/tree/v4.4.27"
+            },
+            "funding": [
+                {
+                    "url": "https://symfony.com/sponsor",
+                    "type": "custom"
+                },
+                {
+                    "url": "https://github.com/fabpot",
+                    "type": "github"
+                },
+                {
+                    "url": "https://tidelift.com/funding/github/packagist/symfony/symfony",
+                    "type": "tidelift"
+                }
+            ],
+            "time": "2021-07-23T15:41:52+00:00"
+        },
+        {
             "name": "symfony/service-contracts",
             "version": "v2.2.0",
             "source": {
@@ -4398,14 +4453,16 @@
     "packages-dev": [],
     "aliases": [],
     "minimum-stability": "stable",
-    "stability-flags": [],
+    "stability-flags": {
+        "james-heinrich/getid3": 20
+    },
     "prefer-stable": false,
     "prefer-lowest": false,
     "platform": {
         "php": "~8.0",
         "ext-inotify": "^3.0",
         "ext-json": "^8.0",
-        "ext-mongodb": "~1.9.0"
+        "ext-mongodb": ">=1.9.0"
     },
     "platform-dev": [],
     "plugin-api-version": "2.1.0"

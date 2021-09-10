@@ -14,8 +14,11 @@ use Assistant\Module\Track\Repository\TrackRepository;
 
 /**
  * Moduł podobieństwa
+ *
+ * @idea Być może należałoby wprowadzić klasę odpowiedzialną za listę podobnych utworów
+ *       (na wzór SimilarTracksResultList), rozdzielając tym samym pobieranie z bazy od sortowania, mapowania, itp
  */
-class Similarity
+final class Similarity
 {
     private TrackRepository $repository;
 

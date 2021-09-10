@@ -2,8 +2,8 @@
 
 namespace Assistant\Module\Collection\Extension\Writer;
 
-use Assistant\Module\Common\Extension\Backend\Client as BackendClient;
 use Assistant\Module\Collection\Model\CollectionItemInterface;
+use Assistant\Module\Common\Extension\SimilarTracksCollection\SimilarTracksCollectionService;
 use Assistant\Module\Common\Storage\Regex;
 use Assistant\Module\Search\Extension\SearchCriteriaFacade as SearchCriteria;
 use Assistant\Module\Search\Extension\TrackSearchService;
@@ -16,7 +16,7 @@ final class TrackWriter implements WriterInterface
     public function __construct(
         private TrackService $trackService,
         private TrackSearchService $searchService,
-        private BackendClient $backendClient,
+        private SimilarTracksCollectionService $similarTracksCollectionService,
     ) {
     }
 
@@ -25,26 +25,26 @@ final class TrackWriter implements WriterInterface
     {
         $indexedTrack = $this->trackService->getByPathname($collectionItem->getPathname());
 
-        // może odtąd* powinno zostać przeniesione do serwisu lub repo?
-
-        /** @noinspection PhpIfWithCommonPartsInspection, powyższy komentarz */
+        // Utworu nie ma jeszcze bazie danych — zapisz go i dodaj do kolekcji podobnych utworów
         if ($indexedTrack === null) {
             $collectionItem = $collectionItem->withGuid($this->getUniqueGuid($collectionItem));
 
             $result = $this->trackService->save($collectionItem);
-        } else {
-            $collectionItem = $collectionItem
-                ->withId($indexedTrack->getId())
-                ->withModifiedDate($indexedTrack->getModifiedDate());
 
-            $result = $this->trackService->save($collectionItem);
+            if ($result) {
+                $this->similarTracksCollectionService->add($collectionItem->getFile());
+            }
+
+            return $collectionItem;
         }
 
-        // -- *dotąd
+        // Utwór znajduje się w bazie danych, ale jego metadane zostały zmodyfikowane — zaktualizuj dane w bazie.
+        $collectionItem = $collectionItem
+            ->withId($indexedTrack->getId())
+            ->withIndexedDate($indexedTrack->getIndexedDate())
+            ->withModifiedDate($indexedTrack->getModifiedDate());
 
-        if (!$indexedTrack && $result) {
-            $this->backendClient->addToSimilarCollection($collectionItem);
-        }
+        $this->trackService->save($collectionItem);
 
         return $collectionItem;
     }

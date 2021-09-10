@@ -109,11 +109,11 @@ final class Finder implements IteratorAggregate, Countable
             }
         }
 
+        $filter = $params['filter'] ?? self::defaultFilter();
+
         $service
             ->exclude(self::SYNOLOGY_EXTENDED_ATTRIBUTES_DIR)
-            ->filter(static fn(SplFileInfo $node): bool => (
-                $node->isDir() || ($node->isFile() && $node->getExtension() === 'mp3')
-            ));
+            ->filter($filter);
 
         return new self($service);
     }
@@ -131,5 +131,14 @@ final class Finder implements IteratorAggregate, Countable
     public function count(): int
     {
         return $this->service->count();
+    }
+
+    private static function defaultFilter(): \Closure
+    {
+        $defaultFilter = static fn(SplFileInfo $node): bool => (
+            $node->isDir() || ($node->isFile() && $node->getExtension() === 'mp3')
+        );
+
+        return $defaultFilter;
     }
 }

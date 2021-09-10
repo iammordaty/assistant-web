@@ -2,8 +2,10 @@
 
 namespace Assistant\Module\Track\Extension\Similarity\Provider;
 
-use Assistant\Module\Common\Extension\Backend\Client as BackendClient;
-use Assistant\Module\Common\Extension\Backend\Exception\Exception as BackendException;
+use Assistant\Module\Common\Extension\Config;
+use Assistant\Module\Common\Extension\SimilarTracksCollection\SimilarTracksCollectionException;
+use Assistant\Module\Common\Extension\SimilarTracksCollection\SimilarTracksCollectionService;
+use Assistant\Module\Common\Extension\SimilarTracksCollection\SimilarTracksResultList;
 use Assistant\Module\Track\Model\Track;
 
 final class Musly extends AbstractProvider
@@ -18,13 +20,15 @@ final class Musly extends AbstractProvider
      */
     protected const SIMILARITY_FIELD = 'pathname';
 
-    private BackendClient $backendClient;
+    private SimilarTracksCollectionService $service;
 
-    private ?array $similarTracks = null;
+    private ?SimilarTracksResultList $similarTracks = null;
 
     public function __construct()
     {
-        $this->backendClient = new BackendClient();
+        // @fixme: to jest zło
+        $values = [ 'collection' => [ 'metadata_dirs' => [ 'music_similarity' => '/metadata/musly' ] ] ];
+        $this->service = new SimilarTracksCollectionService(new Config($values));
     }
 
     /**
@@ -34,18 +38,18 @@ final class Musly extends AbstractProvider
     {
         if ($this->similarTracks === null) {
             try {
-                $this->similarTracks = $this->backendClient->getSimilarTracks($baseTrack);
-            } catch (BackendException $e) {
+                $this->similarTracks = $this->service->getSimilarTracks($baseTrack->getFile());
+            } catch (SimilarTracksCollectionException $e) {
                 // @todo: usunąć try-catch i łapać wyżej?
                 // @fixme: błąd powinien być komunikowany na froncie, a nie wyciszany
 
                 unset($e);
-
-                $this->similarTracks = [];
             }
         }
 
-        return $this->similarTracks[$comparedTrack->getPathname()] ?? 0;
+        $similarityValue = $this->similarTracks?->getSimilarityValue($comparedTrack->getFile()) ?? 0;
+
+        return $similarityValue;
     }
 
     /**

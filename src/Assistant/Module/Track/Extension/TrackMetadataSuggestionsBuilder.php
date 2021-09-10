@@ -3,7 +3,6 @@
 // Wrzucone na szybko, być może powinno leżeć bliżej modelu
 namespace Assistant\Module\Track\Extension;
 
-use Assistant\Module\Common\Extension\Backend\Client as BackendClient;
 use Assistant\Module\Common\Extension\Beatport\BeatportChart;
 use Assistant\Module\Common\Extension\Beatport\BeatportTrack;
 use Assistant\Module\Track\Model\TrackMetadataSuggestions;
@@ -16,13 +15,6 @@ use Stringy\StaticStringy as S;
  */
 final class TrackMetadataSuggestionsBuilder
 {
-    private BackendClient $backendClient;
-
-    public function __construct(BackendClient $backendClient)
-    {
-        $this->backendClient = $backendClient;
-    }
-
     public function fromBeatportTrack(BeatportTrack $beatportTrack): TrackMetadataSuggestions
     {
         // Być może w przyszłości to powinno zostać oddelegowane do wyspecjalizowanej dla Beatport klasy,
@@ -297,7 +289,7 @@ final class TrackMetadataSuggestionsBuilder
 
     private function getBpm(): array
     {
-        // sugestie obejmują tylko BPM obliczone przez backend
+        // sugestie obejmują tylko BPM obliczone przez music classifier service
 
         $suggestions = [ ];
 
@@ -306,7 +298,7 @@ final class TrackMetadataSuggestionsBuilder
 
     private function getInitialKey(): array
     {
-        // sugestie obejmują tylko klucz obliczony przez backend
+        // sugestie obejmują tylko klucz obliczony przez music classifier service
 
         $suggestions = [ ];
 

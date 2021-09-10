@@ -8,9 +8,10 @@ use Assistant\Module\Collection\Extension\Validator\Exception\DuplicatedElementE
 use Assistant\Module\Collection\Extension\Validator\Exception\InvalidMetadataException;
 use Assistant\Module\Collection\Extension\Validator\ValidatorFacade;
 use Assistant\Module\Collection\Extension\Writer\WriterFacade;
-use Assistant\Module\Common\Extension\Backend\Exception\Exception as BackendException;
 use Assistant\Module\Common\Extension\GetId3\Exception\GetId3Exception;
 use Assistant\Module\Common\Extension\Config;
+use Assistant\Module\Common\Extension\SimilarTracksCollection\SimilarTracksCollectionException;
+use Assistant\Module\Common\Extension\SimilarTracksCollection\SimilarTracksCollectionService;
 use Assistant\Module\Common\Task\AbstractTask;
 use Monolog\Logger;
 use Psr\Container\ContainerInterface as Container;
@@ -122,14 +123,14 @@ final class IndexerTask extends AbstractTask
                 $this->stats['duplicated']++;
 
                 $this->logger->debug($e->getMessage());
-            } catch (BackendException | GetId3Exception $e) {
+            } catch (SimilarTracksCollectionException | GetId3Exception $e) {
                 $this->stats['error']++;
 
                 /** @uses Track::toDto() */
                 /** @uses Directory::toDto() */
                 $this->logger->error(
                     $e->getMessage(),
-                    [ 'element' => isset($element) ? $element->toDto() : null ]
+                    [ 'element' => isset($element) ? $element->toDto()->toStorage() : null ]
                 );
             } catch (Throwable $e) {
                 $this->stats['error']++;
@@ -137,7 +138,7 @@ final class IndexerTask extends AbstractTask
                 /** @uses Track::toDto() */
                 /** @uses Directory::toDto() */
                 $this->logger->critical($e->getMessage(), [
-                    'element' => isset($element) ? $element->toDto() : null,
+                    'element' => isset($element) ? $element->toDto()->toStorage() : null,
                     'stacktrace' => debug_backtrace(),
                 ]);
 
