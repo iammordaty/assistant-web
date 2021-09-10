@@ -80,6 +80,8 @@ final class LogController
         $logMtime = filemtime($filename);
 
         return $this->view->render($response, '@common/log/view.twig', [
+            'log' => $log,
+            'maxLines' => $maxLines,
             'logContent' => $logContent,
             'logMtime' => $logMtime,
         ]);
