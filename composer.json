@@ -30,6 +30,7 @@
         "cocur/background-process": "^0.7.0",
         "cocur/slugify": "^4.0",
         "danielstjules/stringy": "^3.1",
+        "fig/http-message-util": "^1.1",
         "guzzlehttp/guzzle": "6.5.5",
         "iammordaty/key-tools": "^0.8.2",
         "iammordaty/musly-php": "^0.4.0",
