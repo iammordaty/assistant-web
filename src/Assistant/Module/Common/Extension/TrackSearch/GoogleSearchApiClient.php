@@ -2,50 +2,46 @@
 
 namespace Assistant\Module\Common\Extension\TrackSearch;
 
-use Curl\Curl;
+use GuzzleHttp\Client;
 
 /**
- * Ogólna klasa wyszukująca
+ * @link https://developers.google.com/custom-search/v1
+ * @link https://programmablesearchengine.google.com/cse/all
  */
 final class GoogleSearchApiClient
 {
-    private const API_BASE_URL = 'https://www.googleapis.com/customsearch/v1';
+    private const API_HOSTNAME = 'https://www.googleapis.com';
+    private const API_SEARCH_ENDPOINT = '/customsearch/v1';
 
     private string $apiKey;
-
-    /**
-     * @link https://cse.google.com/all
-     *
-     * @var string
-     */
     private string $apiSearchId;
+
+    private Client $client;
 
     public function __construct(string $apiKey, string $apiSearchId)
     {
         $this->apiKey = $apiKey;
         $this->apiSearchId = $apiSearchId;
+
+        $this->client = new Client([
+            'base_uri' => self::API_HOSTNAME,
+            'timeout' => 60 /* sekund */
+        ]);
     }
 
     public function search(string $query): array
     {
-        $url = sprintf(
-            '%s?key=%s&cx=%s&q=%s',
-            self::API_BASE_URL,
-            $this->apiKey,
-            $this->apiSearchId,
-            urlencode($query)
-        );
+        $queryParams = [
+            'key' => $this->apiKey,
+            'cx' => $this->apiSearchId,
+            'q' => $query,
+        ];
 
-        // TODO: użyć guzzle, przenieść do konstruktora
-        $curl = new Curl();
-        $curl->setTimeout(3 * 60);
+        $url = sprintf('%s?%s', self::API_SEARCH_ENDPOINT, http_build_query($queryParams));
 
-        $response = $curl->get($url);
+        $response = $this->client->get($url);
+        $body = json_decode((string) $response->getBody());
 
-        if (empty($response->items)) {
-            return [];
-        }
-
-        return $response->items;
+        return $body->items ?? [];
     }
 }
