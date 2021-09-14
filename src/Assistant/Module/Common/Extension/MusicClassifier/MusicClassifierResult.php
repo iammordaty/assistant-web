@@ -2,15 +2,13 @@
 
 namespace Assistant\Module\Common\Extension\MusicClassifier;
 
-// Draft
+/**
+ * @link https://essentia.upf.edu/streaming_extractor_music.html#music-descriptors
+ * @link https://jsonblob.com/67586924-f135-11eb-99e5-ffeea52be274
+ */
 final class MusicClassifierResult
 {
-    // przykładowy plik wygenerowany przez: https://jsonblob.com/67586924-f135-11eb-99e5-ffeea52be274
-    // https://essentia.upf.edu/streaming_extractor_music.html#music-descriptors
-    // zastanowić się jak przechowywać właściwości wysokopoziomowe, takie jak danceability, mood_happy, mood_happy
-    // jako flagi: isDanceable, isHappy czy jakoś inaczej?
-
-    private string $key;
+    private string $musicalKey;
     private float $bpm;
     private array $features;
     private string $chromaprint;
@@ -18,7 +16,7 @@ final class MusicClassifierResult
 
     public function __construct(private array $rawResult)
     {
-        $this->key = $this->rawResult['tonal']['chords_key'] . ' ' . $this->rawResult['tonal']['chords_scale'];
+        $this->musicalKey = $this->rawResult['tonal']['chords_key'] . ' ' . $this->rawResult['tonal']['chords_scale'];
         $this->bpm = round($this->rawResult['rhythm']['bpm'], 1);
         $this->features = $this->rawResult['highlevel'];
         $this->chromaprint = $this->rawResult['chromaprint']['string'][0];
@@ -34,7 +32,7 @@ final class MusicClassifierResult
 
     public function getMusicalKey(): string
     {
-        return $this->key;
+        return $this->musicalKey;
     }
 
     public function getBpm(): float

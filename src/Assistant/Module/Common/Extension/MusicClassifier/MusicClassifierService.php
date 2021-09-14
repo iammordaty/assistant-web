@@ -32,7 +32,7 @@ final class MusicClassifierService
 
     public function analyze(SplFileInfo $track): MusicClassifierResult
     {
-        $resultFile = $this->findExistingResultFile($track);
+        $resultFile = $this->findResultFile($track);
 
         if (!file_exists($resultFile)) {
             $process = new Process([
@@ -57,7 +57,7 @@ final class MusicClassifierService
         return $result;
     }
 
-    private function findExistingResultFile(SplFileInfo $track): ?string
+    private function findResultFile(SplFileInfo $track): ?string
     {
         $resultPathname = $this->generateResultFilename($track);
 
@@ -86,11 +86,12 @@ final class MusicClassifierService
         return $resultFile;
     }
 
+    /**
+     * @link https://www.linuxquestions.org/questions/linux-general-1/inode-number-questions-can-they-change-and-when-are-they-reused-592388/
+     * @link https://unix.stackexchange.com/questions/192800/does-the-inode-change-when-renaming-or-moving-a-file
+     */
     private function generateResultFilename(SplFileInfo $track): string
     {
-        // https://www.linuxquestions.org/questions/linux-general-1/inode-number-questions-can-they-change-and-when-are-they-reused-592388/
-        // https://unix.stackexchange.com/questions/192800/does-the-inode-change-when-renaming-or-moving-a-file
-
         $basename = $this->slugify->slugify($track->getBasename('.' . $track->getExtension()));
         $inode = $track->getInode();
 
