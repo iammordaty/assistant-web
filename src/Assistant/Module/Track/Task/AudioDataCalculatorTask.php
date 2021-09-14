@@ -243,10 +243,10 @@ final class AudioDataCalculatorTask extends AbstractTask
         ]);
     }
 
-    private function getAudioData(MusicClassifierResult $classificationResult): array
+    private function getAudioData(MusicClassifierResult $result): array
     {
-        $bpm = $classificationResult->getBpm();
-        $key = $classificationResult->getMusicalKey();
+        $bpm = $result->getBpm();
+        $key = $result->getMusicalKey();
 
         $audioData = [
             'bpm' => $bpm,
