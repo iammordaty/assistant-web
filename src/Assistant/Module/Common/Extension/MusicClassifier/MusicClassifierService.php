@@ -11,8 +11,10 @@ use Symfony\Component\Process\Process;
 final class MusicClassifierService
 {
     /**
-     * Nazwa essentia_streaming_extractor_music. Uwaga, plik wykonywalny znajduje się w innym kontenerze.
+     * Uwaga, plik wykonywalny znajduje się w innym kontenerze.
      *
+     * @see .docker/php-fpm/Dockerfile
+     * @see .docker/php-fpm/bin/essentia_streaming_extractor_music
      * @link https://essentia.upf.edu/streaming_extractor_music.html
      */
     private const EXTRACTOR_BINARY = 'essentia_streaming_extractor_music';
