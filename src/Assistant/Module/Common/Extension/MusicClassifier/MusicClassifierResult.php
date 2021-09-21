@@ -74,131 +74,117 @@ final class MusicClassifierResult
      *
      * @return MusicClassifierFeature[]
      */
-    private static function createFeatures(array $rawDescriptors): array
+    private static function createFeatures(array $rawFeatures): array
     {
-        $calcProbability = static fn($value): int => round($value * 100);
+        $features = [];
 
-        $feature = [];
-
-        if (isset($rawDescriptors['danceable']) && $rawDescriptors['danceable']['value'] === 'danceable') {
-            $feature[] = MusicClassifierFeature::create(
-                name: 'danceable',
-                type: MusicClassifierFeature::TYPE_DANCEABILITY,
-                probability: $calcProbability($rawDescriptors['danceability']['probability']),
+        if (isset($rawFeatures['danceable']) && $rawFeatures['danceable']['value'] === 'danceable') {
+            $features[] = MusicClassifierFeature::create(
+                'danceable',
+                $rawFeatures['danceability']['probability']
             );
         }
 
-        // gender (male, female); (nie występuje zawsze)
+        // gender (male, female); (wartość opcjonalna)
 
-        if (isset($rawDescriptors['gender'])) {
-            $feature[] = MusicClassifierFeature::create(
-                name: $rawDescriptors['gender']['value'],
-                type: MusicClassifierFeature::TYPE_VOCAL,
-                probability: $calcProbability($rawDescriptors['gender']['probability']),
+        if (isset($rawFeatures['gender'])) {
+            $features[] = MusicClassifierFeature::create(
+                $rawFeatures['gender']['value'],
+                $rawFeatures['gender']['probability']
             );
         }
 
         // genre_electronic (ambient, dnb, house, techno, trance)
 
-        $feature[] = MusicClassifierFeature::create(
-            name: $rawDescriptors['genre_electronic']['value'],
-            type: MusicClassifierFeature::TYPE_GENRE,
-            probability: $calcProbability($rawDescriptors['genre_electronic']['probability'])
+        $features[] = MusicClassifierFeature::create(
+            $rawFeatures['genre_electronic']['value'],
+            $rawFeatures['genre_electronic']['probability']
         );
 
-        // mood_acoustic (acoustic, not_acoustic); (nie występuje zawsze)
+        // mood_acoustic (acoustic, not_acoustic); (wartość opcjonalna)
 
-        if (isset($rawDescriptors['mood_acoustic']) && $rawDescriptors['mood_acoustic']['value'] === 'acoustic') {
-            $feature[] = MusicClassifierFeature::create(
-                name: 'acoustic',
-                type: MusicClassifierFeature::TYPE_MOOD,
-                probability: $rawDescriptors['mood_acoustic']['probability']
+        if (isset($rawFeatures['mood_acoustic']) && $rawFeatures['mood_acoustic']['value'] === 'acoustic') {
+            $features[] = MusicClassifierFeature::create(
+                'acoustic',
+                $rawFeatures['mood_acoustic']['probability']
             );
         }
 
         // mood_aggressive (aggressive, not_aggressive)
 
-        if ($rawDescriptors['mood_aggressive']['value'] === 'aggressive') {
-            $feature[] = MusicClassifierFeature::create(
-                name: 'aggressive',
-                type: MusicClassifierFeature::TYPE_MOOD,
-                probability: $calcProbability($rawDescriptors['mood_aggressive']['probability'])
+        if ($rawFeatures['mood_aggressive']['value'] === 'aggressive') {
+            $features[] = MusicClassifierFeature::create(
+                'aggressive',
+                $rawFeatures['mood_aggressive']['probability']
             );
         }
 
         // mood_happy (happy, not_happy)
 
-        if ($rawDescriptors['mood_happy']['value'] === 'happy') {
-            $feature[] = MusicClassifierFeature::create(
-                name: 'happy',
-                type: MusicClassifierFeature::TYPE_MOOD,
-                probability: $calcProbability($rawDescriptors['mood_happy']['probability'])
+        if ($rawFeatures['mood_happy']['value'] === 'happy') {
+            $features[] = MusicClassifierFeature::create(
+                'happy',
+                $rawFeatures['mood_happy']['probability']
             );
         }
 
         // mood_party (party, not_party)
 
-        if ($rawDescriptors['mood_party']['value'] === 'party') {
-            $feature[] = MusicClassifierFeature::create(
-                name: 'party',
-                type: MusicClassifierFeature::TYPE_MOOD,
-                probability: $calcProbability($rawDescriptors['mood_party']['probability'])
+        if ($rawFeatures['mood_party']['value'] === 'party') {
+            $features[] = MusicClassifierFeature::create(
+                'party',
+                $rawFeatures['mood_party']['probability']
             );
         }
 
         // mood_relaxed (relaxed, not_relaxed)
 
-        if ($rawDescriptors['mood_relaxed']['value'] === 'relaxed') {
-            $feature[] = MusicClassifierFeature::create(
-                name: 'relaxed',
-                type: MusicClassifierFeature::TYPE_MOOD,
-                probability: $calcProbability($rawDescriptors['mood_relaxed']['probability'])
+        if ($rawFeatures['mood_relaxed']['value'] === 'relaxed') {
+            $features[] = MusicClassifierFeature::create(
+                'relaxed',
+                $rawFeatures['mood_relaxed']['probability']
             );
         }
 
         // mood_sad (sad, not_sad)
 
-        if ($rawDescriptors['mood_sad']['value'] === 'sad') {
-            $feature[] = MusicClassifierFeature::create(
-                name: 'sad',
-                type: MusicClassifierFeature::TYPE_MOOD,
-                probability: $calcProbability($rawDescriptors['mood_sad']['probability'])
+        if ($rawFeatures['mood_sad']['value'] === 'sad') {
+            $features[] = MusicClassifierFeature::create(
+                'sad',
+                $rawFeatures['mood_sad']['probability']
             );
         }
 
         // moods_mirex (Cluster1, Cluster2, Cluster3, Cluster4, Cluster5)
 
-        $feature[] = MusicClassifierFeature::create(
-            name: strtolower($rawDescriptors['moods_mirex']['value']),
-            type: MusicClassifierFeature::TYPE_MOOD_CLUSTER,
-            probability: $calcProbability($rawDescriptors['moods_mirex']['probability'])
+        $features[] = MusicClassifierFeature::create(
+            strtolower($rawFeatures['moods_mirex']['value']),
+            $rawFeatures['moods_mirex']['probability']
         );
 
         // timbre (dark, bright)
         // https://en.wikipedia.org/wiki/Timbre
 
-        $feature[] = MusicClassifierFeature::create(
-            name: $rawDescriptors['timbre']['value'],
-            type: MusicClassifierFeature::TYPE_TONE_COLOR,
-            probability: $calcProbability($rawDescriptors['timbre']['probability'])
+        $features[] = MusicClassifierFeature::create(
+            $rawFeatures['timbre']['value'],
+            $rawFeatures['timbre']['probability']
         );
 
         // tonal_atonal (tonal, atonal)
         // https://en.wikipedia.org/wiki/Tonality
 
-        $feature[] = MusicClassifierFeature::create(
-            name: $rawDescriptors['tonal_atonal']['value'],
-            type: MusicClassifierFeature::TYPE_TONALITY,
-            probability: $calcProbability($rawDescriptors['tonal_atonal']['probability'])
+        $features[] = MusicClassifierFeature::create(
+            $rawFeatures['tonal_atonal']['value'],
+            $rawFeatures['tonal_atonal']['probability']
         );
 
         // voice_instrumental (voice, instrumental)
 
-        $feature[] = MusicClassifierFeature::create(
-            name: $rawDescriptors['voice_instrumental']['value'],
-            probability: $calcProbability($rawDescriptors['voice_instrumental']['probability'])
+        $features[] = MusicClassifierFeature::create(
+            $rawFeatures['voice_instrumental']['value'],
+            $rawFeatures['voice_instrumental']['probability']
         );
 
-        return $feature;
+        return $features;
     }
 }
