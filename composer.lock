@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "0f3501917aab5df760a87e4607649104",
+    "content-hash": "7add648ec34fc2a10499fd5800c5b6a4",
     "packages": [
         {
             "name": "cache/adapter-common",
@@ -1083,16 +1083,16 @@
         },
         {
             "name": "james-heinrich/getid3",
-            "version": "dev-master",
+            "version": "v1.9.21",
             "source": {
                 "type": "git",
                 "url": "https://github.com/JamesHeinrich/getID3.git",
-                "reference": "4e02ed09c081a606c734c6b27d1b504fecfe402f"
+                "reference": "36f5dabb1325415a4b07a401113f8db2eb81eca1"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/JamesHeinrich/getID3/zipball/4e02ed09c081a606c734c6b27d1b504fecfe402f",
-                "reference": "4e02ed09c081a606c734c6b27d1b504fecfe402f",
+                "url": "https://api.github.com/repos/JamesHeinrich/getID3/zipball/36f5dabb1325415a4b07a401113f8db2eb81eca1",
+                "reference": "36f5dabb1325415a4b07a401113f8db2eb81eca1",
                 "shasum": ""
             },
             "require": {
@@ -1118,7 +1118,6 @@
                 "ext-xml": "XML extension is required for graphic modules to analyze the XML metadata.",
                 "ext-zlib": "Zlib extension is required for archive modules and compressed metadata."
             },
-            "default-branch": true,
             "type": "library",
             "extra": {
                 "branch-alias": {
@@ -1145,9 +1144,9 @@
             ],
             "support": {
                 "issues": "https://github.com/JamesHeinrich/getID3/issues",
-                "source": "https://github.com/JamesHeinrich/getID3/tree/master"
+                "source": "https://github.com/JamesHeinrich/getID3/tree/v1.9.21"
             },
-            "time": "2021-09-01T10:16:10+00:00"
+            "time": "2021-09-22T16:34:51+00:00"
         },
         {
             "name": "jean85/pretty-package-versions",
@@ -4530,9 +4529,7 @@
     "packages-dev": [],
     "aliases": [],
     "minimum-stability": "stable",
-    "stability-flags": {
-        "james-heinrich/getid3": 20
-    },
+    "stability-flags": [],
     "prefer-stable": false,
     "prefer-lowest": false,
     "platform": {

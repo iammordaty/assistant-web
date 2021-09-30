@@ -34,7 +34,7 @@
         "guzzlehttp/guzzle": "6.5.5",
         "iammordaty/key-tools": "^0.8.2",
         "iammordaty/musly-php": "^0.4.0",
-        "james-heinrich/getid3": "dev-master#4e02ed09c081a606c734c6b27d1b504fecfe402f",
+        "james-heinrich/getid3": "^1.9",
         "kevinrob/guzzle-cache-middleware": "^3.3",
         "khill/php-duration": "^1.0",
         "mongodb/mongodb": "^1.8",
