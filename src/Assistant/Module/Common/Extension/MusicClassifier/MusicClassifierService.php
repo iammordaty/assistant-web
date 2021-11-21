@@ -54,7 +54,7 @@ final class MusicClassifierService
             }
         }
 
-        $result = MusicClassifierResult::fromOutputJsonFile($resultFile);
+        $result = MusicClassifierResult::fromResultFile($resultFile);
 
         return $result;
     }
