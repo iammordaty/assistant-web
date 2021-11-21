@@ -140,7 +140,11 @@ final class AudioDataCalculatorTask extends AbstractTask
                 if ($this->isTrackHasSameData($metadata, $audioData) === true) {
                     $this->stats['skipped']['same_data']++;
 
-                    $this->logger->debug('Track has the same audio data, update is not necessary', $audioData);
+                    $this->logger->debug('Track has the same audio data, update is not necessary', [
+                        'initial_key' => $metadata['initial_key'],
+                        'bpm' => $metadata['bpm'],
+                        'classificationResultFilename' => $classificationResult->getFile()?->getBasename(),
+                    ]);
 
                     unset($file, $track, $metadata, $classificationResult, $audioData);
 
@@ -159,6 +163,7 @@ final class AudioDataCalculatorTask extends AbstractTask
                     'metadata' => [
                         'initial_key' => $hasInitialKey === true ? $metadata['initial_key'] : null,
                         'bpm' => $hasBpm === true ? $metadata['bpm'] : null,
+                        'classificationResultFilename' => $classificationResult->getFile()?->getBasename(),
                     ]
                 ]);
 

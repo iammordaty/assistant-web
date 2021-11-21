@@ -2,6 +2,8 @@
 
 namespace Assistant\Module\Common\Extension\MusicClassifier;
 
+use SplFileInfo;
+
 /**
  * @link https://essentia.upf.edu/streaming_extractor_music.html#high-level-classifier-models
  * @link https://essentia.upf.edu/streaming_extractor_music.html#music-descriptors
@@ -15,6 +17,7 @@ final class MusicClassifierResult
      * @param string $md5
      * @param MusicClassifierFeature[] $features
      * @param array $rawResult
+     * @param SplFileInfo|null $file
      */
     public function __construct(
         private string $musicalKey,
@@ -23,11 +26,16 @@ final class MusicClassifierResult
         private string $md5,
         private array $features,
         private array $rawResult,
+        private ?SplFileInfo $file = null,
     ) {
     }
 
-    public static function fromOutputJsonFile(string $filename): self
+    public static function fromResultFile(SplFileInfo|string $filename): self
     {
+        if (is_string($filename)) {
+            $filename = new SplFileInfo($filename);
+        }
+
         $rawResult = json_decode(file_get_contents($filename), true);
 
         $musicalKey = $rawResult['tonal']['chords_key'] . ' ' . $rawResult['tonal']['chords_scale'];
@@ -36,7 +44,7 @@ final class MusicClassifierResult
         $audioMd5 = $rawResult['metadata']['audio_properties']['md5_encoded'];
         $audioCharacteristics = self::createFeatures($rawResult['highlevel']);
 
-        return new self($musicalKey, $bpm, $chromaprint, $audioMd5, $audioCharacteristics, $rawResult);
+        return new self($musicalKey, $bpm, $chromaprint, $audioMd5, $audioCharacteristics, $rawResult, $filename);
     }
 
     public function getMusicalKey(): string
@@ -67,6 +75,11 @@ final class MusicClassifierResult
     public function getRawResult(): array
     {
         return $this->rawResult;
+    }
+
+    public function getFile(): ?SplFileInfo
+    {
+        return $this->file;
     }
 
     /**
