@@ -4,8 +4,8 @@ namespace Assistant\Module\Collection\Extension\Writer;
 
 use Assistant\Module\Collection\Model\CollectionItemInterface;
 use Assistant\Module\Common\Extension\SimilarTracksCollection\SimilarTracksCollectionService;
+use Assistant\Module\Directory\Extension\DirectoryService;
 use Assistant\Module\Directory\Model\Directory;
-use Assistant\Module\Directory\Repository\DirectoryRepository;
 use Assistant\Module\Search\Extension\TrackSearchService;
 use Assistant\Module\Track\Extension\TrackService;
 use Assistant\Module\Track\Model\Track;
@@ -26,10 +26,10 @@ final class WriterFacade
         $this->trackWriter = $trackWriter;
     }
 
-    public static function factory(Container $container): WriterFacade
+    public static function factory(Container $container): self
     {
         $directoryWriter = new DirectoryWriter(
-            $container->get(DirectoryRepository::class),
+            $container->get(DirectoryService::class),
         );
 
         $trackWriter = new TrackWriter(
@@ -41,12 +41,7 @@ final class WriterFacade
         return new self($directoryWriter, $trackWriter);
     }
 
-    /**
-     * Zapisuje element kolekcji
-     *
-     * @param Directory|Track|CollectionItemInterface $collectionItem
-     * @return Directory|Track|CollectionItemInterface
-     */
+    /** Zapisuje element kolekcji */
     public function save(CollectionItemInterface $collectionItem): CollectionItemInterface
     {
         if ($collectionItem instanceof Directory) {

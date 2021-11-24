@@ -14,7 +14,7 @@ final class MinMaxInfo
     public function __construct(private array $minMaxInfo)
     {
         if (($invalid = array_diff(array_keys($minMaxInfo), self::VALID_INFO_KEYS))) {
-            throw new \InvalidArgumentException('Invalid MinMaxExpressionInfo keys: ', implode(',', $invalid));
+            throw new \InvalidArgumentException('Invalid MinMaxInfo keys: ', implode(',', $invalid));
         }
     }
 

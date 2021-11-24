@@ -18,11 +18,7 @@ final class TrackSearchService
     {
     }
 
-    /**
-     * Maksymalna liczba wyszukanych utworów na stronie
-     *
-     * @var int
-     */
+    /** Maksymalna liczba wyszukanych utworów na stronie */
     public const MAX_TRACKS_PER_PAGE = 50;
 
     public function findOneByName(string $name): ?Track

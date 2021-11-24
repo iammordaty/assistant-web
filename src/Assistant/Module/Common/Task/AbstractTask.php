@@ -9,7 +9,7 @@ use Symfony\Component\Console\Output\OutputInterface;
 
 abstract class AbstractTask extends Command
 {
-    public const IGNORED_PARAMETERS = [ 'help', 'ansi', 'no-ansi', 'no-interaction', 'quiet', 'verbose', 'version' ];
+    private const IGNORED_PARAMETERS = [ 'ansi', 'help', 'no-ansi', 'no-interaction', 'quiet', 'verbose', 'version' ];
 
     protected InputInterface $input;
     protected OutputInterface $output;

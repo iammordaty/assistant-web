@@ -17,7 +17,8 @@ final class SearchCriteria
      * @param string[]|null $initialKeys
      * @param MinMaxInfo|float[]|null $bpm
      * @param MinMaxInfo|\DateTimeInterface[]|null $indexedDates
-     * @param string|null $pathname
+     * @param Regex|string|null $parent
+     * @param Regex|string|null $pathname
      */
     public function __construct(
         private ?string $name = null,
@@ -30,7 +31,8 @@ final class SearchCriteria
         private ?array $initialKeys = null,
         private MinMaxInfo|array|null $bpm = null,
         private MinMaxInfo|array|null $indexedDates = null,
-        private ?string $pathname = null,
+        private Regex|string|null $parent = null,
+        private Regex|string|null $pathname = null,
     ) {
     }
 
@@ -90,7 +92,12 @@ final class SearchCriteria
         return $this->indexedDates;
     }
 
-    public function getPathname(): ?string
+    public function getParent(): Regex|string|null
+    {
+        return $this->parent;
+    }
+
+    public function getPathname(): Regex|string|null
     {
         return $this->pathname;
     }

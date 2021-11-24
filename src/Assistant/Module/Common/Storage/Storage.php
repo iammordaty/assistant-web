@@ -77,7 +77,7 @@ final class Storage
      * @param array $fields
      * @return Cursor
      */
-    public function findById(array $ids, array $fields = [])
+    public function findById(array $ids, array $fields = []): Cursor
     {
         return $this->findBy(
             [ '_id' => [ '$in' => $this->idsToObjectIds($ids) ] ],

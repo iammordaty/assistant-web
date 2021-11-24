@@ -2,8 +2,8 @@
 
 namespace Assistant\Module\Dashboard\Controller;
 
+use Assistant\Module\Track\Extension\TrackService;
 use Assistant\Module\Track\Repository\TrackStatsRepository;
-use Assistant\Module\Track\Repository\TrackRepository;
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
 use Slim\Views\Twig;
@@ -15,8 +15,8 @@ final class DashboardController
     private const MAX_ARTISTS = 10;
 
     public function __construct(
+        private TrackService $trackService,
         private TrackStatsRepository $statsRepository,
-        private TrackRepository $trackRepository,
         private Twig $view,
     ) {
     }
@@ -27,7 +27,7 @@ final class DashboardController
             'menu' => 'dashboard',
             'trackCountByGenre' => $this->statsRepository->getTrackCountByGenre(self::MAX_GENRES),
             'trackCountByArtist' => $this->statsRepository->getTrackCountByArtist(self::MAX_ARTISTS),
-            'recentlyAddedTracks' => $this->trackRepository->getRecent(limit: self::MAX_RECENT_TRACKS),
+            'recentlyAddedTracks' => $this->trackService->getRecent(limit: self::MAX_RECENT_TRACKS),
         ]);
     }
 }
