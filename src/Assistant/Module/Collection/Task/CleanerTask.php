@@ -3,12 +3,15 @@
 namespace Assistant\Module\Collection\Task;
 
 use Assistant\Module\Common\Extension\Config;
+use Assistant\Module\Common\Storage\Regex;
 use Assistant\Module\Common\Task\AbstractTask;
+use Assistant\Module\Directory\Extension\DirectoryService;
 use Assistant\Module\Directory\Model\Directory;
-use Assistant\Module\Directory\Repository\DirectoryRepository;
-use Assistant\Module\Track\Model\Track;
-use Assistant\Module\Track\Repository\TrackRepository;
-use MongoDB\BSON\Regex;
+use Assistant\Module\Search\Extension\DirectorySearchService;
+use Assistant\Module\Search\Extension\SearchCriteria;
+use Assistant\Module\Search\Extension\SearchCriteriaFacade;
+use Assistant\Module\Search\Extension\TrackSearchService;
+use Assistant\Module\Track\Extension\TrackService;
 use Monolog\Logger;
 use Psr\Container\ContainerInterface as Container;
 use Symfony\Component\Console\Input\InputArgument;
@@ -16,9 +19,7 @@ use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 
-/**
- * Task usuwający nieistniejące utwory oraz katalogu z kolekcji
- */
+/** Task usuwający nieistniejące utwory oraz katalogu z kolekcji */
 final class CleanerTask extends AbstractTask
 {
     protected static $defaultName = 'collection:clean';
@@ -27,8 +28,10 @@ final class CleanerTask extends AbstractTask
 
     public function __construct(
         Logger $logger,
-        private DirectoryRepository $directoryRepository,
-        private TrackRepository $trackRepository,
+        private DirectorySearchService $directorySearchService,
+        private DirectoryService $directoryService,
+        private TrackSearchService $trackSearchService,
+        private TrackService $trackService,
         private array $parameters,
     ) {
         parent::__construct($logger);
@@ -42,8 +45,10 @@ final class CleanerTask extends AbstractTask
     {
         return new self(
             $container->get(Logger::class),
-            $container->get(DirectoryRepository::class),
-            $container->get(TrackRepository::class),
+            $container->get(DirectorySearchService::class),
+            $container->get(DirectoryService::class),
+            $container->get(TrackSearchService::class),
+            $container->get(TrackService::class),
             $container->get(Config::class)->get('collection'),
         );
     }
@@ -63,13 +68,7 @@ final class CleanerTask extends AbstractTask
             )->addOption('force', 'f', InputOption::VALUE_NONE, 'Do not check file existence');
     }
 
-    /**
-     * Rozpoczyna proces usuwania nieistniejących elementów z kolekcji
-     *
-     * @param InputInterface $input
-     * @param OutputInterface $output
-     * @return int
-     */
+    /** Rozpoczyna proces usuwania nieistniejących elementów z kolekcji */
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $this->logger->info('Task executed', self::getInputParams($input));
@@ -77,36 +76,43 @@ final class CleanerTask extends AbstractTask
         $force = (bool) $input->getOption('force');
         $pathname = $input->getArgument('pathname');
 
-        $searchCondition = [ 'pathname' => new Regex('^' . preg_quote($pathname)) ];
+        $regex = Regex::startsWith($pathname);
+        $searchCriteria = SearchCriteriaFacade::createFromPathname($regex);
 
-        $this->stats['removed']['dir'] = $this->remove(
-            $this->directoryRepository,
-            $searchCondition,
-            $force
-        );
-
-        $this->stats['removed']['file'] = $this->remove(
-            $this->trackRepository,
-            $searchCondition,
-            $force
-        );
+        $this->stats['removed']['file'] = $this->removeTracks($searchCriteria, $force);
+        $this->stats['removed']['dir'] = $this->removeDirectories($searchCriteria, $force);
 
         $this->logger->info('Task finished', $this->stats);
 
         return self::SUCCESS;
     }
 
-    /** Usuwa nieistniejące elementy z kolekcji */
-    private function remove(DirectoryRepository|TrackRepository $repository, array $conditions, bool $force): int
+    /** Usuwa nieistniejące utworzy muzyczne */
+    private function removeTracks(SearchCriteria $searchCriteria, bool $force): int
     {
         $removed = 0;
 
-        /** @var Directory|Track $element */
-        foreach ($repository->findBy($conditions) as $element) {
-            /** @uses Track::getPathname() */
+        foreach ($this->trackSearchService->findBy($searchCriteria) as $track) {
+            if ($force || !$track->getFile()->isReadable()) {
+                $this->trackService->remove($track);
+
+                $removed++;
+            }
+        }
+
+        return $removed;
+    }
+
+    /** Usuwa nieistniejące elementy z kolekcji */
+    private function removeDirectories(SearchCriteria $searchCriteria, bool $force): int
+    {
+        $removed = 0;
+
+        /** @var Directory $directory */
+        foreach ($this->directorySearchService->findBy($searchCriteria) as $directory) {
             /** @uses Directory::getPathname() */
-            if ($force === true || file_exists($element->getPathname()) === false) {
-                $repository->delete($element);
+            if ($force || !$directory->getFile()->isReadable()) {
+                $this->directoryService->remove($directory);
 
                 $removed++;
             }
@@ -115,4 +121,3 @@ final class CleanerTask extends AbstractTask
         return $removed;
     }
 }
-

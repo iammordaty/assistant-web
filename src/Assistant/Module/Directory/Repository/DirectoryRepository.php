@@ -2,15 +2,15 @@
 
 namespace Assistant\Module\Directory\Repository;
 
+use Assistant\Module\Common\Storage\Query;
 use Assistant\Module\Common\Storage\Storage;
 use Assistant\Module\Directory\Model\Directory;
 use Assistant\Module\Directory\Model\DirectoryDto;
+use Assistant\Module\Search\Extension\SearchCriteria;
 use MongoDB\Database;
 use Traversable;
 
-/**
- * Repozytorium obiektów Directory
- */
+/** Repozytorium obiektów Directory */
 final class DirectoryRepository
 {
     private const COLLECTION_NAME = 'directories';
@@ -32,9 +32,10 @@ final class DirectoryRepository
         return $repository;
     }
 
-    public function getByGuid(string $guid): ?Directory
+    public function getOneBy(SearchCriteria $searchCriteria): ?Directory
     {
-        $directory = $this->findOneBy([ 'guid' => $guid ]);
+        $query = Query::fromSearchCriteria($searchCriteria);
+        $directory = $this->findOneBy($query->toStorage());
 
         return $directory;
     }
@@ -47,17 +48,31 @@ final class DirectoryRepository
     }
 
     /**
-     * @param Directory $directory
+     * @param SearchCriteria $searchCriteria
+     * @param array|null $sort
+     * @param int|null $limit
+     * @param int|null $skip
      * @return Directory[]|Traversable
      */
-    public function getChildren(Directory $directory): array|Traversable
-    {
-        $directories = $this->findBy(
-            [ 'parent' => $directory->getGuid() ],
-            [ 'guid' => Storage::SORT_ASC ]
-        );
+    public function getBy(
+        SearchCriteria $searchCriteria,
+        ?array $sort = null,
+        ?int $limit = null,
+        ?int $skip = null
+    ): array|Traversable {
+        $query = Query::fromSearchCriteria($searchCriteria);
 
-        return $directories;
+        $documents = $this->storage->findBy($query->toStorage(), options: [
+            'sort' => $sort,
+            'limit' => $limit,
+            'skip' => $skip,
+        ]);
+
+        foreach ($documents as $document) {
+            $directory = self::createModel($document);
+
+            yield $directory;
+        }
     }
 
     public function save(Directory $directory): bool
@@ -78,30 +93,6 @@ final class DirectoryRepository
         $dto = $directory->toDto();
 
         return $this->storage->removeById($dto->getObjectId());
-    }
-
-    /**
-     * @deprecated Publiczna tymczasowo, ta metoda powinna być prywatna
-     *
-     * @param array $conditions
-     * @param array|null $sort
-     * @return Directory[]|Traversable
-     */
-    public function findBy(array $conditions, ?array $sort = []): array|Traversable
-    {
-        $options = [];
-
-        if ($sort) {
-            $options['sort'] = $sort;
-        }
-
-        $documents = $this->storage->findBy($conditions, $options);
-
-        foreach ($documents as $document) {
-            $directory = self::createModel($document);
-
-            yield $directory;
-        }
     }
 
     private function findOneBy(array $conditions): ?Directory

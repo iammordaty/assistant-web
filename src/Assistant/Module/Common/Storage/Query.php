@@ -19,7 +19,8 @@ final class Query
      * @param string[]|null $initialKeys
      * @param MinMaxInfo|float[]|null $bpm
      * @param MinMaxInfo|\DateTimeInterface[]|null $indexedDates
-     * @param string|null $pathname
+     * @param string|null $parent
+     * @param Regex|string|null $pathname
      */
     public function __construct(
         private ?string $name,
@@ -32,7 +33,8 @@ final class Query
         private ?array $initialKeys,
         private MinMaxInfo|array|null $bpm,
         private MinMaxInfo|array|null $indexedDates,
-        private ?string $pathname,
+        private ?string $parent,
+        private Regex|string|null $pathname,
     ) {
     }
 
@@ -49,6 +51,7 @@ final class Query
             $criteria->getInitialKeys(),
             $criteria->getBpm(),
             $criteria->getIndexedDates(),
+            $criteria->getParent(),
             $criteria->getPathname(),
         );
 
@@ -57,8 +60,8 @@ final class Query
 
     public function toStorage(): array
     {
-        // części wspólne wyciągnąć do prywatnych metod
-        // zastanowić się jak ugryźć to, że konwersja MinMaxInfo jest w zewn. klasie, a Regex nie (widać to w use)
+        // Części wspólne wyciągnąć do prywatnych metod.
+        // Zastanowić się jak ugryźć to, że konwersja MinMaxInfo jest w zewn. klasie, a Regex nie (widać to w use)
 
         $criteria = [];
 
@@ -164,8 +167,16 @@ final class Query
             $criteria['indexed_date'] = $indexedDate;
         }
 
+        if ($this->parent) {
+            $criteria['parent'] = $this->parent;
+        }
+
         if ($this->pathname) {
-            $criteria['pathname'] = $this->pathname;
+            $pathname = $this->pathname instanceof Regex
+                ? new MongoDBRegex($this->pathname->getPattern(), $this->pathname->getFlags())
+                : $this->pathname;
+
+            $criteria['pathname'] = $pathname;
         }
 
         return $criteria;

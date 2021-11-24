@@ -11,9 +11,9 @@ use Assistant\Module\Common\Extension\Route;
 use Assistant\Module\Common\Extension\RouteResolver;
 use Assistant\Module\Common\Extension\SlugifyService;
 use Assistant\Module\Common\Extension\TargetPathService;
+use Assistant\Module\Directory\Extension\DirectoryService;
 use Assistant\Module\Directory\Model\Directory;
-use Assistant\Module\Directory\Repository\DirectoryRepository;
-use Assistant\Module\Track\Repository\TrackRepository;
+use Assistant\Module\Track\Extension\TrackService;
 use Fig\Http\Message\StatusCodeInterface;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
@@ -25,12 +25,12 @@ final class BrowseController
 {
     public function __construct(
         private Config $config,
-        private DirectoryRepository $directoryRepository,
+        private DirectoryService $directoryService,
         private PathBreadcrumbs $pathBreadcrumbs,
         private ReaderFacade $reader,
         private RouteResolver $routeResolver,
         private SlugifyService $slugify,
-        private TrackRepository $trackRepository,
+        private TrackService $trackService,
         private Twig $view,
     ) {
     }
@@ -50,7 +50,7 @@ final class BrowseController
             return $redirect;
         }
 
-        $directory = $this->directoryRepository->getByGuid($guid);
+        $directory = $this->directoryService->getByGuid($guid);
 
         if (!$directory) {
             $guid = $this->slugify->slugify($this->config->get('collection.root_dir'));
@@ -63,8 +63,8 @@ final class BrowseController
             return $redirect;
         }
 
-        $directories = iterator_to_array($this->directoryRepository->getChildren($directory));
-        $tracks = iterator_to_array($this->trackRepository->getChildren($directory));
+        $directories = iterator_to_array($this->directoryService->getByDirectory($directory));
+        $tracks = iterator_to_array($this->trackService->getByDirectory($directory));
 
         return $this->view->render($response, '@directory/index.twig', [
             'menu' => 'browse',
@@ -85,7 +85,7 @@ final class BrowseController
 
         $recent = [];
 
-        foreach ($this->trackRepository->getRecent() as $track) {
+        foreach ($this->trackService->getRecent() as $track) {
             $groupName = $getGroupName($track->getPathname());
 
             if (isset($recent[$groupName]) === false) {
@@ -119,6 +119,8 @@ final class BrowseController
             $redirect = $response
                 ->withRedirect($this->routeResolver->resolve($route))
                 ->withStatus(StatusCodeInterface::STATUS_NOT_FOUND);
+
+            return $redirect;
         }
 
         $tracks = [];

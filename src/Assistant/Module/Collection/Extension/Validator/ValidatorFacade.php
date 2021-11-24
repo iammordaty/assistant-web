@@ -2,13 +2,12 @@
 
 namespace Assistant\Module\Collection\Extension\Validator;
 
-use Assistant\Module\Common\Extension\GetId3\Adapter as Id3Adapter;
 use Assistant\Module\Collection\Model\CollectionItemInterface;
+use Assistant\Module\Common\Extension\GetId3\Adapter as Id3Adapter;
+use Assistant\Module\Directory\Extension\DirectoryService;
 use Assistant\Module\Directory\Model\Directory;
-use Assistant\Module\Directory\Repository\DirectoryRepository;
 use Assistant\Module\Track\Extension\TrackService;
 use Assistant\Module\Track\Model\Track;
-use Assistant\Module\Track\Repository\TrackRepository;
 use Psr\Container\ContainerInterface as Container;
 
 /**
@@ -36,10 +35,10 @@ final class ValidatorFacade
         $this->trackValidator = $trackValidator;
     }
 
-    public static function factory(Container $container): ValidatorFacade
+    public static function factory(Container $container): self
     {
         $directoryValidator = new DirectoryValidator(
-            $container->get(DirectoryRepository::class)
+            $container->get(DirectoryService::class)
         );
 
         $trackValidator = new TrackValidator(

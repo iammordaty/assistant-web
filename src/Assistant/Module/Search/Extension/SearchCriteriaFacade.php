@@ -3,6 +3,7 @@
 namespace Assistant\Module\Search\Extension;
 
 use Assistant\Module\Common\Storage\Regex;
+use DateTime;
 
 final class SearchCriteriaFacade
 {
@@ -92,14 +93,29 @@ final class SearchCriteriaFacade
         return $searchCriteria;
     }
 
-    public static function createFromPathname(string $pathname): SearchCriteria
+    public static function createFromParent(string $parent): SearchCriteria
+    {
+        $searchCriteria = new SearchCriteria(parent: $parent);
+
+        return $searchCriteria;
+    }
+
+    public static function createFromPathname(Regex|string $pathname): SearchCriteria
     {
         $searchCriteria = new SearchCriteria(pathname: $pathname);
 
         return $searchCriteria;
     }
 
-    // do osobnej klasy / funkcji. wyszukać w projekcie podobne wywołania
+    public static function createFromMinIndexedDate(DateTime $indexedDate): SearchCriteria
+    {
+        $indexedDates = MinMaxInfo::create([ 'gte' => $indexedDate, 'lte' => null ]);
+        $searchCriteria = new SearchCriteria(indexedDates: $indexedDates);
+
+        return $searchCriteria;
+    }
+
+    // Przenieść osobnej klasy / funkcji. Wyszukać w projekcie podobne wywołania
     private static function unique(?array $values): array
     {
         $values = array_map('trim', $values ?: []);

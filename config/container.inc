@@ -13,8 +13,10 @@ use Assistant\Module\Common\Extension\RouteResolver;
 use Assistant\Module\Common\Extension\SimilarTracksCollection\SimilarTracksCollectionService;
 use Assistant\Module\Common\Extension\SlugifyService;
 use Assistant\Module\Common\Extension\Twig\DurationTwigExtension;
+use Assistant\Module\Directory\Extension\DirectoryService;
 use Assistant\Module\Directory\Repository\DirectoryRepository;
 use Assistant\Module\Mix\Extension\MixService;
+use Assistant\Module\Search\Extension\DirectorySearchService;
 use Assistant\Module\Search\Extension\TrackSearchService;
 use Assistant\Module\Track\Extension\Similarity;
 use Assistant\Module\Track\Extension\TrackLocationArbiter;
@@ -87,7 +89,6 @@ return static fn (string $baseDir, array $config): array => [
 
     DirectoryReader::class => autowire(),
 
-    // @todo Docelowo usunąć z DI, zastąpić serwisem dla katalogów
     DirectoryRepository::class => function (Container $container): DirectoryRepository {
         $storage = $container->get(Config::class)->get('storage');
 
@@ -99,6 +100,10 @@ return static fn (string $baseDir, array $config): array => [
         return $repository;
     },
 
+    DirectoryService::class => autowire(),
+
+    DirectorySearchService::class => autowire(),
+
     Id3Adapter::class => create(),
 
     ReaderFacade::class => autowire(),
@@ -109,7 +114,6 @@ return static fn (string $baseDir, array $config): array => [
 
     TrackSearchService::class => autowire(),
 
-    // @todo Docelowo usunąć z DI, zastąpić TrackService
     TrackRepository::class => function (Container $container): TrackRepository {
         $storage = $container->get(Config::class)->get('storage');
 
@@ -121,7 +125,6 @@ return static fn (string $baseDir, array $config): array => [
         return $repository;
     },
 
-    // @todo Docelowo usunąć z DI, zastąpić serwisem dla statystyk
     TrackStatsRepository::class => function (Container $container): TrackStatsRepository {
         $storage = $container->get(Config::class)->get('storage');
 

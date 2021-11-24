@@ -4,20 +4,13 @@ namespace Assistant\Module\Track\Repository;
 
 use Assistant\Module\Common\Storage\Query;
 use Assistant\Module\Common\Storage\Storage;
-use Assistant\Module\Directory\Model\Directory;
 use Assistant\Module\Search\Extension\SearchCriteria;
 use Assistant\Module\Track\Model\Track;
 use Assistant\Module\Track\Model\TrackDto;
-use DateTime;
 use MongoDB\Database;
 use Traversable;
 
-/**
- * Repozytorium obiektów Track
- *
- * @todo W niniejszej klasie niech zostanie tylko CRUD. Pozostałe metody (getOneBy[Field], getChildren, itp)
- *       przenieść do serwisu
- */
+/** Repozytorium obiektów Track */
 final class TrackRepository
 {
     private const COLLECTION_NAME = 'tracks';
@@ -61,45 +54,18 @@ final class TrackRepository
         ?int $skip = null
     ): array|Traversable {
         $query = Query::fromSearchCriteria($searchCriteria);
-        $tracks = $this->findBy($query->toStorage(), $sort, $limit, $skip);
 
-        return $tracks;
-    }
+        $documents = $this->storage->findBy($query->toStorage(), options: [
+            'sort' => $sort,
+            'limit' => $limit,
+            'skip' => $skip,
+        ]);
 
-    /**
-     * @param Directory $directory
-     * @return Track[]|Traversable
-     */
-    public function getChildren(Directory $directory): array|Traversable
-    {
-        $directories = $this->findBy(
-            [ 'parent' => $directory->getGuid() ],
-            [ 'guid' => Storage::SORT_ASC ]
-        );
+        foreach ($documents as $document) {
+            $track = self::createModel($document);
 
-        return $directories;
-    }
-
-    /**
-     * @param DateTime|null $from
-     * @param int|null $limit
-     * @return Track[]|Traversable
-     */
-    public function getRecent(?DateTime $from = null, ?int $limit = null): array|Traversable
-    {
-        if (!$from) {
-            $from = new DateTime();
-
-            $from->modify('-3 years first day of january');
+            yield $track;
         }
-
-        $tracks = $this->findBy(
-            [ 'indexed_date' => [ '$gte' => Storage::toDateTime($from) ] ],
-            [ 'indexed_date' => Storage::SORT_DESC ],
-            $limit
-        );
-
-        return $tracks;
     }
 
     public function save(Track $track): bool
@@ -150,25 +116,18 @@ final class TrackRepository
         }
     }
 
-    public function countBy(SearchCriteria $searchCriteria): int
-    {
-        $criteria = Query::fromSearchCriteria($searchCriteria);
-        $count = $this->count($criteria->toStorage());
-
-        return $count;
-    }
-
     /**
      * Zwraca informację o liczbie dokumentów w kolekcji na podstawie podanych kryteriów
      *
-     * @deprecated Publiczna tymczasowo, ta metoda powinna być prywatna
-     *
-     * @param array $conditions
+     * @param SearchCriteria $searchCriteria
      * @return int
      */
-    public function count(array $conditions = []): int
+    public function countBy(SearchCriteria $searchCriteria): int
     {
-        return $this->storage->count($conditions);
+        $criteria = Query::fromSearchCriteria($searchCriteria);
+        $count = $this->storage->count($criteria->toStorage());
+
+        return $count;
     }
 
     private function findOneBy(array $conditions): ?Track
