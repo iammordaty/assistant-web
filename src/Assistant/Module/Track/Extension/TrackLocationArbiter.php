@@ -10,9 +10,7 @@ use SplFileInfo;
 final class TrackLocationArbiter
 {
     private const LOCATION_IN_COLLECTION = 'in_collection';
-
     private const LOCATION_IN_INCOMING = 'in_incoming';
-
     private const LOCATION_UNSUPPORTED = null;
 
     public function __construct(private Config $config)
@@ -64,6 +62,10 @@ final class TrackLocationArbiter
             $file = new SplFileInfo($pathname);
         } elseif ($pathname instanceof Track || $pathname instanceof IncomingTrack) {
             $file = $pathname->getFile();
+        }
+
+        if (!$file->isReadable()) {
+            return null;
         }
 
         assert($file instanceof SplFileInfo); // na szybko, może lepszy będzie instanceof i exception
