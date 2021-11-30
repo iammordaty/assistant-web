@@ -18,13 +18,14 @@ My web-based music collection assistant (under high development and BC changes)
 - ...?
 
 ## requirements
-- PHP >= 8
+- PHP >= 8.1
 - MongoDB >= 4.x
 - nginx
 
 ## how to start?
 
-See [docker files](https://github.com/iammordaty/docker-files/tree/master/assistant) for more info (sorry).
+See [docker-compose.yml](https://github.com/iammordaty/assistant-web/blob/master/docker-compose.yml) 
+and [.env.example](https://github.com/iammordaty/assistant-web/blob/master/.env.example) for more info (sorry).
 
 ## contributions
 Contributions are greatly appreciated. Feel free to open PR.

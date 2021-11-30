@@ -49,7 +49,7 @@ final class Musly extends AbstractProvider
 
         $similarityValue = $this->similarTracks?->getSimilarityValue($comparedTrack->getFile()) ?? 0;
 
-        return $similarityValue;
+        return (int) $similarityValue;
     }
 
     /**
