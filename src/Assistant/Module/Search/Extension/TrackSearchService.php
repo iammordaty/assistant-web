@@ -123,7 +123,7 @@ final class TrackSearchService
 
         return (new TwitterBootstrap3View())->render($paginator, $routeGenerator, [
             'proximity' => 2,
-            'previous_message' => 'Poprzednia',
+            'prev_message' => 'Poprzednia',
             'next_message' => 'Następna',
         ]);
     }
