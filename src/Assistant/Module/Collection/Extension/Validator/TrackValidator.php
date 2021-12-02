@@ -9,10 +9,8 @@ use Assistant\Module\Collection\Model\CollectionItemInterface;
 use Assistant\Module\Track\Extension\TrackService;
 use Assistant\Module\Track\Model\Track;
 
-/**
- * Walidator elementów będących plikami
- */
-class TrackValidator implements ValidatorInterface
+/** Walidator elementów będących plikami */
+final class TrackValidator implements ValidatorInterface
 {
     public function __construct(
         private TrackService $trackService,
@@ -20,12 +18,7 @@ class TrackValidator implements ValidatorInterface
     ) {
     }
 
-    /**
-     * Weryfikuje czy plik (utwór muzyczny) może zostać dodany do bazy danych kolekcji
-     *
-     * @param CollectionItemInterface $collectionItem
-     * @return void
-     */
+    /** Weryfikuje czy plik (utwór muzyczny) może zostać dodany do bazy danych kolekcji */
     public function validate(CollectionItemInterface $collectionItem): void
     {
         /** @var Track $track */
@@ -33,7 +26,11 @@ class TrackValidator implements ValidatorInterface
 
         $indexedTrack = $this->trackService->getByPathname($collectionItem->getPathname());
 
-        if ($indexedTrack !== null && $track->getMetadataMd5() === $indexedTrack->getMetadataMd5()) {
+        // Sprawdź artystów po ew. zmianach wyjątków ich rozbijania w parserze metadanych
+        $hasSameArtist = $track->getArtists() === $indexedTrack?->getArtists();
+        $hasSameMetadata = $track->getMetadataMd5() === $indexedTrack?->getMetadataMd5();
+
+        if ($hasSameMetadata && $hasSameArtist) {
             $message = sprintf('Track "%s" is already in database.', $track->getGuid());
 
             throw new DuplicatedElementException($message);
