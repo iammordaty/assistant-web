@@ -2,7 +2,7 @@
 
 namespace Assistant\Module\Collection\Extension\Validator\Exception;
 
-class DuplicatedElementException extends \RuntimeException
+final class DuplicatedElementException extends \RuntimeException
 {
 
 }

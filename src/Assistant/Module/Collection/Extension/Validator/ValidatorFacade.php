@@ -10,23 +10,13 @@ use Assistant\Module\Track\Extension\TrackService;
 use Assistant\Module\Track\Model\Track;
 use Psr\Container\ContainerInterface as Container;
 
-/**
- * Fasada dla walidatorów plików oraz katalogów mających zostać dodanych do kolekcji
- */
+/** Fasada dla walidatorów plików oraz katalogów mających zostać dodanych do kolekcji */
 final class ValidatorFacade
 {
-    /**
-     * Obiekt klasy walidującej katalogi
-     *
-     * @var DirectoryValidator
-     */
+    /** Obiekt klasy walidującej katalogi */
     private DirectoryValidator $directoryValidator;
 
-    /**
-     * Obiekt klasy walidujący pliki (utwory muzyczne)
-     *
-     * @var TrackValidator
-     */
+    /** Obiekt klasy walidujący pliki (utwory muzyczne) */
     private TrackValidator $trackValidator;
 
     public function __construct(DirectoryValidator $directoryValidator, TrackValidator $trackValidator)
