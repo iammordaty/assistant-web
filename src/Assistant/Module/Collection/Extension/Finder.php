@@ -2,16 +2,18 @@
 
 namespace Assistant\Module\Collection\Extension;
 
+use BadMethodCallException;
+use Closure;
 use Countable;
 use IteratorAggregate;
 use SplFileInfo;
 use Symfony\Component\Finder\Finder as Service;
 use Symfony\Component\Finder\Iterator\FileTypeFilterIterator;
+use Traversable;
 
 final class Finder implements IteratorAggregate, Countable
 {
     public const MODE_DIRECTORIES_ONLY = FileTypeFilterIterator::ONLY_DIRECTORIES;
-
     public const MODE_FILES_ONLY = FileTypeFilterIterator::ONLY_FILES;
 
     private const SUPPORTED_MODES = [
@@ -20,7 +22,6 @@ final class Finder implements IteratorAggregate, Countable
     ];
 
     private const DEFAULT_SKIP_SELF = false;
-
     private const SYNOLOGY_EXTENDED_ATTRIBUTES_DIR = '@eaDir';
 
     private Service $service;
@@ -30,18 +31,13 @@ final class Finder implements IteratorAggregate, Countable
         $this->service = $service;
     }
 
-    /**
-     * @todo Dopisać testy oraz uprościć poniższą logikę, jeśli się da
-     *
-     * @param array $params
-     * @return Finder
-     */
+    /** @todo Dopisać testy oraz uprościć poniższą logikę, jeśli się da */
     public static function create(array $params): Finder
     {
         /** @todo Tablicę $params zamienić na value object */
 
         if (empty($params['pathname'])) {
-            throw new \BadMethodCallException('Pathname cannot be empty');
+            throw new BadMethodCallException('Pathname cannot be empty');
         }
 
         $service = new Service();
@@ -103,7 +99,7 @@ final class Finder implements IteratorAggregate, Countable
                     break;
 
                 default:
-                    throw new \BadMethodCallException(
+                    throw new BadMethodCallException(
                         sprintf('Invalid mode ("%s"). Supported modes are: %s)', $params['mode'], self::SUPPORTED_MODES)
                     );
             }
@@ -124,11 +120,11 @@ final class Finder implements IteratorAggregate, Countable
     }
 
     /**
-     * @return \Traversable|SplFileInfo[]
+     * @return Traversable|SplFileInfo[]
      *
      * @noinspection PhpDocSignatureInspection
      */
-    public function getIterator(): \Traversable
+    public function getIterator(): Traversable
     {
         return $this->service->getIterator();
     }
@@ -138,7 +134,7 @@ final class Finder implements IteratorAggregate, Countable
         return $this->service->count();
     }
 
-    private static function defaultFilter(): \Closure
+    private static function defaultFilter(): Closure
     {
         $defaultFilter = static fn(SplFileInfo $node): bool => (
             $node->isDir() || ($node->isFile() && $node->getExtension() === 'mp3')
