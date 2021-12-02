@@ -123,7 +123,12 @@ final class Finder implements IteratorAggregate, Countable
         $this->service->append($iterator);
     }
 
-    public function getIterator(): array|\Traversable|\Iterator|\AppendIterator
+    /**
+     * @return \Traversable|SplFileInfo[]
+     *
+     * @noinspection PhpDocSignatureInspection
+     */
+    public function getIterator(): \Traversable
     {
         return $this->service->getIterator();
     }
