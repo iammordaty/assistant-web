@@ -99,9 +99,13 @@ final class Finder implements IteratorAggregate, Countable
                     break;
 
                 default:
-                    throw new BadMethodCallException(
-                        sprintf('Invalid mode ("%s"). Supported modes are: %s)', $params['mode'], self::SUPPORTED_MODES)
+                    $message = sprintf(
+                        'Invalid mode ("%s"). Supported modes are: %s.',
+                        $params['mode'],
+                        implode(', ', self::SUPPORTED_MODES)
                     );
+
+                    throw new BadMethodCallException($message);
             }
         }
 
