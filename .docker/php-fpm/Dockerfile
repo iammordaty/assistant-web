@@ -9,6 +9,7 @@ RUN apt-get update && \
     apt-get install -y --no-install-recommends \
     curl \
     libcurl4-gnutls-dev \
+    libicu-dev \
     libssl-dev \
     libzip-dev \
     locales \
@@ -30,6 +31,8 @@ RUN pecl install xdebug && \
 
 RUN docker-php-ext-configure zip && \
     docker-php-ext-install zip
+
+RUN docker-php-ext-install intl
 
 RUN apt-get -y autoremove && \
     apt-get -y clean

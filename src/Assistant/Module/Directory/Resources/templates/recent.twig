@@ -12,8 +12,6 @@
                         <i class="fa fa-home fa-lg fa-fw"></i>
                     </a>
                 </li>
-                <!-- @todo: miesiąc bez numeru miesiąca, czyli: [ root ] / 2021 / styczeń -->
-                <!-- @todo kolejne segmenty jako linki do wyszukiwania -->
                 {% for segment in month.name|split('/') %}
                     <li>{{ segment }}</li>
                 {% endfor %}
@@ -34,7 +32,9 @@
                         </tr>
                     </thead>
                     <tbody>
-                        {% for track in month.tracks %}
+                        {% set tracks = month.tracks|sort((trackOne, trackTwo) => trackOne.guid <=> trackTwo.guid) %}
+
+                        {% for track in tracks %}
                             <tr>
                                 <td class="col-xs-5">
                                     <span class="ellipsis track-name">
