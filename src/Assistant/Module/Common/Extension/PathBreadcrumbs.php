@@ -20,9 +20,7 @@ final class PathBreadcrumbs
      */
     public function get(string $path): array
     {
-        if (str_starts_with($path, DIRECTORY_SEPARATOR)) {
-            $path = ltrim($path, DIRECTORY_SEPARATOR);
-        }
+        $path = ltrim($path, DIRECTORY_SEPARATOR);
 
         if (empty($path)) {
             return [];
