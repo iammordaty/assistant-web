@@ -8,11 +8,16 @@ use Assistant\Module\Collection\Extension\Validator\Exception\DuplicatedElementE
 use Assistant\Module\Collection\Extension\Validator\Exception\InvalidMetadataException;
 use Assistant\Module\Collection\Extension\Validator\ValidatorFacade;
 use Assistant\Module\Collection\Extension\Writer\WriterFacade;
-use Assistant\Module\Common\Extension\GetId3\Exception\GetId3Exception;
+use Assistant\Module\Collection\Task\Indexer\IndexedDate;
+use Assistant\Module\Collection\Task\Indexer\IndexingDateStrategy;
 use Assistant\Module\Common\Extension\Config;
+use Assistant\Module\Common\Extension\GetId3\Exception\GetId3Exception;
 use Assistant\Module\Common\Extension\SimilarTracksCollection\SimilarTracksCollectionException;
-use Assistant\Module\Common\Extension\SimilarTracksCollection\SimilarTracksCollectionService;
 use Assistant\Module\Common\Task\AbstractTask;
+use Assistant\Module\Directory\Model\Directory;
+use Assistant\Module\Track\Model\Track;
+use BackedEnum;
+use DateTime;
 use Monolog\Logger;
 use Psr\Container\ContainerInterface as Container;
 use SplFileInfo;
@@ -20,6 +25,7 @@ use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
+use Symfony\Component\Console\Question\Question;
 use Throwable;
 
 /**
@@ -28,6 +34,9 @@ use Throwable;
 final class IndexerTask extends AbstractTask
 {
     protected static $defaultName = 'collection:index';
+
+    private BackedEnum $indexedDateStrategy;
+    private ?DateTime $fixedIndexedDate;
 
     private array $stats;
 
@@ -77,10 +86,61 @@ final class IndexerTask extends AbstractTask
                 description: 'Ensures that the collection root is saved in the database',
             )
             ->addOption(
-                name: 'use-modification-date-as-index-date',
-                mode: InputOption::VALUE_NONE,
-                description: 'Specifies that the modified date of the item will be used as its indexing date',
+                name: 'indexing-date-strategy',
+                shortcut: 'i',
+                mode: InputOption::VALUE_OPTIONAL,
+                description: 'Specifies how to set the indexing date for tracks and directories in collection',
+                default: IndexingDateStrategy::CURRENT_DATE
+            )
+            ->addOption(
+                name: 'indexed-date',
+                shortcut: 'd',
+                mode: InputOption::VALUE_OPTIONAL,
+                description: 'The date that will be used if a fixed indexing date was selected'
             );
+    }
+
+    protected function initialize(InputInterface $input, OutputInterface $output)
+    {
+        $indexingDateStrategy = IndexingDateStrategy::tryFrom($input->getOption('indexing-date-strategy'));
+
+        if (!$indexingDateStrategy) {
+            $strategies = array_map(
+                fn (IndexingDateStrategy $strategy) => $strategy->value,
+                IndexingDateStrategy::cases()
+            );
+
+            $message = sprintf(
+                'Invalid indexing date setting strategy specified. Supported strategies: %s.',
+                implode(', ', $strategies)
+            );
+
+            throw new \InvalidArgumentException($message);
+        }
+
+        $this->indexedDateStrategy = $indexingDateStrategy;
+    }
+
+    protected function interact(InputInterface $input, OutputInterface $output)
+    {
+        if ($this->indexedDateStrategy === IndexingDateStrategy::FIXED_DATE) {
+            $answer = $this
+                ->getHelper('question')
+                ->ask(
+                    $input,
+                    $output,
+                    new Question('Please enter fixed indexed date (dd.mm.YYYY): ')
+                );
+
+            $format = 'd.m.Y';
+            $dateTime = DateTime::createFromFormat($format, $answer) ?: null;
+
+            if ($dateTime?->format($format) !== $answer) {
+                throw new \InvalidArgumentException('Invalid date specified.');
+            }
+
+            $this->fixedIndexedDate = $dateTime;
+        }
     }
 
     /** Rozpoczyna proces indeksowania kolekcji */
@@ -93,8 +153,6 @@ final class IndexerTask extends AbstractTask
             $input->getOption('ensure-collection-root-dir')
         );
 
-        $useModifiedDateAsIndexDate = $input->getOption('use-modification-date-as-index-date');
-
         foreach ($nodesToIndex as $node) {
             $this->logger->info('Processing node', [ 'pathname' => $node->getPathname() ]);
 
@@ -102,9 +160,11 @@ final class IndexerTask extends AbstractTask
                 $element = $this->reader->read($node);
                 $this->validator->validate($element);
 
-                $indexedDate = $useModifiedDateAsIndexDate
-                    ? $element->getModifiedDate()
-                    : new \DateTime();
+                $indexedDate = IndexedDate::get(
+                    $element,
+                    $this->indexedDateStrategy,
+                    $this->fixedIndexedDate
+                );
 
                 /** @uses Track::withIndexedDate() */
                 /** @uses Directory::withIndexedDate() */
