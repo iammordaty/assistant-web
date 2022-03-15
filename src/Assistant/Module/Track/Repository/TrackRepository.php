@@ -29,11 +29,13 @@ final class TrackRepository
         return $repository;
     }
 
-    public function getOneBy(SearchCriteria $searchCriteria): ?Track
+    public function getOneBy(SearchCriteria $searchCriteria, ?array $sort = null): ?Track
     {
         $query = Query::fromSearchCriteria($searchCriteria);
 
-        $document = $this->storage->findOneBy($query->toStorage());
+        $document = $this->storage->findOneBy($query->toStorage(), options: [
+            'sort' => $sort,
+        ]);
 
         if (!$document) {
             return null;

@@ -24,7 +24,9 @@ final class TrackSearchService
     public function findOneByName(string $name): ?Track
     {
         $searchCriteria = SearchCriteriaFacade::createFromName($name);
-        $track = $this->trackRepository->getOneBy($searchCriteria);
+        $sort = Storage::SORT_TEXT_SCORE_DESC;
+
+        $track = $this->trackRepository->getOneBy($searchCriteria, $sort);
 
         return $track;
     }
