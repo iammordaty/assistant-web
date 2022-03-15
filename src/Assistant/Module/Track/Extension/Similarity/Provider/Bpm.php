@@ -2,23 +2,15 @@
 
 namespace Assistant\Module\Track\Extension\Similarity\Provider;
 
+use Assistant\Module\Search\Extension\MinMaxInfo;
 use Assistant\Module\Track\Model\Track;
 
 final class Bpm extends AbstractProvider
 {
-    /**
-     * {@inheritDoc}
-     */
+    /** {@inheritDoc} */
     public const NAME = 'BPM';
 
-    /**
-     * {@inheritDoc}
-     */
-    protected const SIMILARITY_FIELD = 'bpm';
-
-    /**
-     * {@inheritDoc}
-     */
+    /** {@inheritDoc} */
     protected array $similarityMap = [
         0 => self::MAX_SIMILARITY_VALUE,
         1 => 98,
@@ -28,16 +20,11 @@ final class Bpm extends AbstractProvider
         5 => 30,
     ];
 
-    private array $parameters;
-
-    public function __construct(array $parameters)
+    public function __construct(private array $parameters)
     {
-        $this->parameters = $parameters;
     }
 
-    /**
-     * {@inheritDoc}
-     */
+    /** {@inheritDoc} */
     public function getSimilarityValue(Track $baseTrack, Track $comparedTrack): int
     {
         $distance = (int) round(abs($baseTrack->getBpm() - $comparedTrack->getBpm()));
@@ -48,16 +35,19 @@ final class Bpm extends AbstractProvider
         return $similarity;
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    public function getCriteria(Track $baseTrack): array
+    /** {@inheritDoc} */
+    public function getCriteria(Track $baseTrack): MinMaxInfo
     {
-        $criteria = [
-            '$gte' => round($baseTrack->getBpm()) - $this->parameters['tolerance'],
-            '$lte' => round($baseTrack->getBpm()) + $this->parameters['tolerance'],
-        ];
+        $roundedBpm = round($baseTrack->getBpm());
 
-        return $criteria;
+        $minBpm = $roundedBpm - $this->parameters['tolerance'];
+        $maxBpm = $roundedBpm + $this->parameters['tolerance'];
+
+        $minMaxInfo = MinMaxInfo::create([
+            MinMaxInfo::GREATER_THAN_OR_EQUAL => $minBpm,
+            MinMaxInfo::LESS_THAN_OR_EQUAL => $maxBpm,
+        ]);
+
+        return $minMaxInfo;
     }
 }

@@ -6,19 +6,10 @@ use Assistant\Module\Track\Model\Track;
 
 final class Genre extends AbstractProvider
 {
-    /**
-     * {@inheritDoc}
-     */
+    /** {@inheritDoc} */
     public const NAME = 'Genre';
 
-    /**
-     * {@inheritDoc}
-     */
-    protected const SIMILARITY_FIELD = 'genre';
-
-    /**
-     * @var array
-     */
+    /** @var array */
     private array $similarityMapBase = [
         ['House', 'Tech House', 90],
         ['House', 'Progressive House', 90],
@@ -61,13 +52,11 @@ final class Genre extends AbstractProvider
         $this->setup();
     }
 
-    /**
-     * {@inheritDoc}
-     */
+    /** {@inheritDoc} */
     public function getSimilarityValue(Track $baseTrack, Track $comparedTrack): int
     {
         if ($comparedTrack->getGenre() === $baseTrack->getGenre()) {
-            return static::MAX_SIMILARITY_VALUE;
+            return self::MAX_SIMILARITY_VALUE;
         }
 
         $similarity = 0;
@@ -82,14 +71,12 @@ final class Genre extends AbstractProvider
             }
         }
 
-        // echo $baseTrack->$this->getGenre(), ' vs. ', $comparedTrack->$this->getGenre(), ' = ', $similarity, PHP_EOL;
+        // echo $baseTrack->getGenre(), ' vs. ', $comparedTrack->getGenre(), ' = ', $similarity, PHP_EOL;
 
         return $similarity;
     }
 
-    /**
-     * {@inheritDoc}
-     */
+    /** {@inheritDoc} */
     public function getCriteria(Track $baseTrack): array
     {
         $genres = [];
@@ -100,19 +87,15 @@ final class Genre extends AbstractProvider
             }
         }
 
-        // $baseTrack->$this->getGenre() jest innym, niewymienionym gatunkiem (np. hardstyle, hard house)
+        // $baseTrack->getGenre() jest innym, niewymienionym gatunkiem (np. HardStyle, Hard-House)
         if (empty($genres)) {
             $genres[] = $baseTrack->getGenre();
         }
 
-        return [
-            '$in' => $genres
-        ];
+        return $genres;
     }
 
-    /**
-     * Przygotowuje dostawcę do użycia
-     */
+    /** Przygotowuje dostawcę do użycia */
     private function setup(): void
     {
         $this->similarityMap = [];
@@ -123,7 +106,7 @@ final class Genre extends AbstractProvider
             $max = [
                 $baseGenre,
                 $baseGenre,
-                static::MAX_SIMILARITY_VALUE,
+                self::MAX_SIMILARITY_VALUE,
             ];
 
             if (!in_array($max, $this->similarityMap, true)) {
@@ -133,7 +116,7 @@ final class Genre extends AbstractProvider
             $max = [
                 $comparedGenre,
                 $comparedGenre,
-                static::MAX_SIMILARITY_VALUE,
+                self::MAX_SIMILARITY_VALUE,
             ];
 
             if (!in_array($max, $this->similarityMap, true)) {

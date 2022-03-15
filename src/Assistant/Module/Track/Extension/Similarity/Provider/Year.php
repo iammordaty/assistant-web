@@ -2,23 +2,15 @@
 
 namespace Assistant\Module\Track\Extension\Similarity\Provider;
 
+use Assistant\Module\Search\Extension\MinMaxInfo;
 use Assistant\Module\Track\Model\Track;
 
 final class Year extends AbstractProvider
 {
-    /**
-     * {@inheritDoc}
-     */
+    /** {@inheritDoc} */
     public const NAME = 'Year';
 
-    /**
-     * {@inheritDoc}
-     */
-    protected const SIMILARITY_FIELD = 'year';
-
-    /**
-     * {@inheritDoc}
-     */
+    /** {@inheritDoc} */
     protected array $similarityMap = [
         0 => self::MAX_SIMILARITY_VALUE,
         1 => 98,
@@ -28,45 +20,38 @@ final class Year extends AbstractProvider
         5 => 20,
     ];
 
-    private array $parameters;
-
-    public function __construct(array $parameters)
+    public function __construct(private array $parameters)
     {
-        $this->parameters = $parameters;
     }
 
-    /**
-     * {@inheritDoc}
-     */
+    /** {@inheritDoc} */
     public function getSimilarityValue(Track $baseTrack, Track $comparedTrack): int
     {
         if ($comparedTrack->getYear() === $baseTrack->getYear()) {
-            return static::MAX_SIMILARITY_VALUE;
+            return self::MAX_SIMILARITY_VALUE;
         }
 
         $distance = abs($baseTrack->getYear() - $comparedTrack->getYear());
         $similarity = $this->similarityMap[$distance] ?? 0;
 
-        // echo $baseTrack->$this->getYear(), ' vs. ', $comparedTrack->$this->getYear(), ' = ', $similarity, " ($distance)", PHP_EOL;
+        // echo $baseTrack->getYear(), ' vs. ', $comparedTrack->getYear(), ' = ', $similarity, " ($distance)", PHP_EOL;
 
         return $similarity;
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    public function getCriteria(Track $baseTrack): array
+    /** {@inheritDoc} */
+    public function getCriteria(Track $baseTrack): MinMaxInfo
     {
         $fromYear = $baseTrack->getYear() - $this->parameters['tolerance'];
 
         $currentYear = (new \DateTime())->format('Y');
         $toYear = (int) max($currentYear, $baseTrack->getYear() + $this->parameters['tolerance']);
 
-        $criteria = [
-            '$gte' => $fromYear,
-            '$lte' => $toYear,
-        ];
+        $minMaxInfo = MinMaxInfo::create([
+            MinMaxInfo::GREATER_THAN_OR_EQUAL => $fromYear,
+            MinMaxInfo::LESS_THAN_OR_EQUAL => $toYear,
+        ]);
 
-        return $criteria;
+        return $minMaxInfo;
     }
 }

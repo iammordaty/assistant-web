@@ -1,34 +1,4 @@
-$(document).ready(function() {
-	$('[data-toggle="popover"]').popover();
-
-	//When checkboxes/radios checked/unchecked, toggle background color
-	$('.form-group').on('click','input[type=radio]',function() {
-		$(this).closest('.form-group').find('.radio-inline, .radio').removeClass('checked');
-		$(this).closest('.radio-inline, .radio').addClass('checked');
-	});
-
-	$('.form-group').on('click','input[type=checkbox]',function() {
-		$(this).closest('.checkbox-inline, .checkbox').toggleClass('checked');
-	});
-
-	//Show additional info text box when relevant checkbox checked
-	$('.additional-info-wrap input[type=checkbox]').click(function() {
-		if ($(this).is(':checked')) {
-			$(this).closest('.additional-info-wrap').find('.additional-info').removeClass('hide').find('input,select').removeAttr('disabled');
-		} else {
-			$(this).closest('.additional-info-wrap').find('.additional-info').addClass('hide').find('input,select').val('').attr('disabled','disabled');
-		}
-	});
-
-	//Show additional info text box when relevant radio checked
-	$('input[type=radio]').click(function() {
-		$(this).closest('.form-group').find('.additional-info-wrap .additional-info').addClass('hide').find('input,select').val('').attr('disabled','disabled');
-
-		if ($(this).closest('.additional-info-wrap').length > 0) {
-			$(this).closest('.additional-info-wrap').find('.additional-info').removeClass('hide').find('input,select').removeAttr('disabled');
-		}
-	});
-});
+/* global $ */
 
 function formatSeconds(ss) {
 	var result = '',
@@ -57,6 +27,8 @@ function formatSeconds(ss) {
 }
 
 $(function () {
+	$('[data-toggle="popover"]').popover();
+
 	var wavesurfer = Object.create(WaveSurfer),
 		wavesurferPlayInterval = null;
 
@@ -136,11 +108,6 @@ $(function () {
 
 	wavesurfer.load($('#wave-container').data('track-url'));
 
-	$('[data-role="similar-tracks:show-more"]').on('click', function () {
-		$('div.similar-tracks tr.hide').hide().removeClass('hide').fadeIn('fast');
-		$(this).remove();
-	});
-
 	$('[data-role="play-pause"]').on('click', function () {
 		wavesurfer.playPause();
 	});
@@ -152,13 +119,83 @@ $(function () {
 		);
 	});
 
-	$('[data-role="similar-tracks:toggle-visibility"]').on('click', function () {
-		$(this).toggleClass('fa-rotate-180');
+	// -- similarity
 
-		if ($(this).hasClass('fa-rotate-180')) {
+	$('.additional-info-wrap input[type=checkbox]').on('change', function () {
+		const $info = $(this).closest('.additional-info-wrap').find('.additional-info');
+		const $input = $info.find('input');
+
+		const isUnchecked = !$(this).is(':checked');
+
+		$info.toggleClass('hide', isUnchecked);
+		$input.prop('disabled', isUnchecked);
+	});
+
+	$('[data-role="similar-tracks:toggle-visibility"]').on('click', function () {
+		const $icon = $(this).find('[data-role="similar-tracks:toggle-visibility-icon"]');
+
+		$icon.toggleClass('fa-rotate-180');
+
+		if ($icon.hasClass('fa-rotate-180')) {
 			$('[data-role="similar-tracks:parameters"]').removeClass('hide');
 		} else {
 			$('[data-role="similar-tracks:parameters"]').addClass('hide');
 		}
+	});
+
+	let debounceTimerId;
+
+	const debounce = (func, delay) => {
+		clearTimeout(debounceTimerId)
+
+		debounceTimerId = setTimeout(func, delay)
+	}
+
+	const $container = $('[data-role="similar-tracks:container"]');
+	const $list = $('[data-role="similar-tracks:list"]');
+
+	const reloadSimilarTracks = $form => {
+		$list.fadeTo(350, 0.60);
+
+		$.ajax({
+			url: $form.attr('action'),
+			data: $form.serializeArray(),
+			dataType: 'html',
+			cache: false,
+			success: response => $list
+				.stop(true, false, true)
+				.html(response)
+				.fadeTo(100, 1)
+		});
+	};
+
+	$list.on('click', '[data-role="similar-tracks:show-more"]', function () {
+		$list.find('tr.hide').hide().removeClass('hide').fadeIn('fast');
+
+		$(this).remove();
+	});
+
+	const $form = $container.find('[data-role="similar-tracks:parameters"]');
+
+	$form.data('previous-state', $form.serialize());
+
+	$form.find('input').on('keyup change', function ()  {
+		const currentFormState = $form.serialize();
+		const previousFormState = $form.data('previous-state');
+
+		if (currentFormState === previousFormState) {
+			return;
+		}
+
+		const $input = $(this);
+		const isCheckbox = $input.attr('type') === 'checkbox';
+
+		if (!isCheckbox && !$input.val()) {
+			return;
+		}
+
+		$form.data('previous-state', currentFormState);
+
+		debounce(() => reloadSimilarTracks($form), isCheckbox ? 50 : 400);
 	});
 });

@@ -7,24 +7,15 @@ use KeyTools\KeyTools;
 
 final class MusicalKey extends AbstractProvider
 {
-    /**
-     * {@inheritDoc}
-     */
+    /** {@inheritDoc} */
     public const NAME = 'MusicalKey';
-
-    /**
-     * {@inheritDoc}
-     */
-    protected const SIMILARITY_FIELD = 'initial_key';
 
     public function __construct()
     {
         $this->setup();
     }
 
-    /**
-     * {@inheritDoc}
-     */
+    /** {@inheritDoc} */
     public function getSimilarityValue(Track $baseTrack, Track $comparedTrack): int
     {
         $similarity = $this->similarityMap[$baseTrack->getInitialKey()][$comparedTrack->getInitialKey()] ?? 0;
@@ -32,19 +23,15 @@ final class MusicalKey extends AbstractProvider
         return $similarity;
     }
 
-    /**
-     * {@inheritDoc}
-     */
+    /** {@inheritDoc} */
     public function getCriteria(Track $baseTrack): array
     {
         $similarKeys = array_keys($this->similarityMap[$baseTrack->getInitialKey()]);
 
-        return [ '$in' => $similarKeys ];
+        return $similarKeys;
     }
 
-    /**
-     * Przygotowuje dostawcę do użycia
-     */
+    /** Przygotowuje dostawcę do użycia */
     private function setup(): void
     {
         $keyTools = KeyTools::fromNotation(KeyTools::NOTATION_CAMELOT_KEY);

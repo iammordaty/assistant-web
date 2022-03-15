@@ -1,5 +1,6 @@
 <?php
 
+use Assistant\Module\Track\Extension\Similarity\Similarity;
 use Assistant\Module\Track\Extension\Similarity\Provider\Bpm;
 use Assistant\Module\Track\Extension\Similarity\Provider\MusicalKey;
 use Assistant\Module\Track\Extension\Similarity\Provider\Genre;
@@ -69,41 +70,20 @@ return static function (string $baseDir): array {
             ],
         ],
 
-        'similarity' => [
-            'providers' => [
-                'enabled' => [
-                    Bpm::class,
-                    Genre::class,
-                    MusicalKey::class,
-                    Musly::class,
-                    Year::class,
-                ],
-                'parameters' => [
-                    Bpm::class => [
-                        'tolerance' => 5,
-                    ],
-                    Genre::class => [
-                    ],
-                    MusicalKey::class => [
-                    ],
-                    Musly::class => [
-                    ],
-                    Year::class => [
-                        'tolerance' => 2,
-                    ],
-                ],
-                'weights' => [
-                    Bpm::class => 0.70,
-                    Genre::class => 0.75,
-                    MusicalKey::class => 0.90,
-                    Musly::class => 1,
-                    Year::class => 0.60,
-                ],
+        Similarity::class => [
+            'providers_parameters' => [
+                Bpm::NAME => [ 'tolerance' => 5 ],
+                Year::NAME => [ 'tolerance' => 3 ],
             ],
-            'limit' => [
-                'tracks' => 200,
-                'value' => 60,
+            'providers_weights' => [
+                Bpm::NAME => 0.70,
+                Genre::NAME => 0.75,
+                MusicalKey::NAME => 0.90,
+                Musly::NAME => 1,
+                Year::NAME => 0.60,
             ],
+            'min_similarity_value' => 60,
+            'max_tracks' => 200,
         ],
     ];
 
