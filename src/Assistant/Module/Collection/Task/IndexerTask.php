@@ -36,7 +36,7 @@ final class IndexerTask extends AbstractTask
     protected static $defaultName = 'collection:index';
 
     private BackedEnum $indexedDateStrategy;
-    private ?DateTime $fixedIndexedDate;
+    private ?DateTime $fixedIndexedDate = null;
 
     private array $stats;
 
@@ -90,7 +90,7 @@ final class IndexerTask extends AbstractTask
                 shortcut: 'i',
                 mode: InputOption::VALUE_OPTIONAL,
                 description: 'Specifies how to set the indexing date for tracks and directories in collection',
-                default: IndexingDateStrategy::CURRENT_DATE
+                default: IndexingDateStrategy::CURRENT_DATE->value
             )
             ->addOption(
                 name: 'indexed-date',
