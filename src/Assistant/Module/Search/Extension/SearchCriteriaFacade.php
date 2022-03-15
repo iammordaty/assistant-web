@@ -3,6 +3,7 @@
 namespace Assistant\Module\Search\Extension;
 
 use Assistant\Module\Common\Storage\Regex;
+use Assistant\Module\Track\Extension\Similarity\Similarity;
 use DateTime;
 
 final class SearchCriteriaFacade
@@ -20,6 +21,13 @@ final class SearchCriteriaFacade
         'year' => '',
     ];
 
+    /**
+     * @idea Z tej metody należy wyodrębnić explode-y i przenieść do kontrolera lub serwisu (raczej to pierwsze)
+     *
+     * @idea Najlepiej byłoby z niej zrezygnować na rzecz metody przyjmującej wiele SearchCriteria.
+     *       Uprości to kod, a także wyeliminuje tablice asocjacyjne na rzecz obiektów.
+     * @see Similarity::getSimilarityCriteria(); w TrackSearchService też będzie się dało to wykorzystać
+     */
     public static function createFromFields(array $fields): SearchCriteria
     {
         $name = $fields['name'] ?: null;

@@ -139,8 +139,8 @@ a.undecorated:hover {
 }
 
 .track-info .breadcrumb {
-  padding: 0;
-  background-color: initial;
+    padding: 0;
+    background-color: initial;
 }
 
 .ellipsis {
@@ -171,24 +171,17 @@ a.undecorated:hover {
 }
 
 .similar-tracks .toggle-visibility {
-    font-size: 70%;
-    line-height: 30px;
     cursor: pointer;
 }
 
-label.radio-inline, label.checkbox-inline {
+.similar-tracks .toggle-visibility-icon {
+    font-size: 70%;
+    line-height: 30px;
+}
+
+label.checkbox-inline {
     margin-bottom: 10px !important;
     padding: 10px 10px 10px 30px;
-}
-
-.checkbox-inline + .checkbox-inline, .radio-inline + .radio-inline {
-    margin-left: 0;
-}
-
-.columns label.radio-inline, .columns label.checkbox-inline {
-    min-width: 190px;
-    vertical-align: top;
-    width: 30%;
 }
 
 .additional-info-wrap .additional-info {
@@ -227,14 +220,20 @@ table .popover {
     padding-top: 5px;
     padding-bottom: 5px;
 }
-.base-track-info div { line-height: 20px }
+
+.base-track-info div {
+    line-height: 20px
+}
+
 .base-track-info div > span + span::before {
     padding: 0 1px 0 3px;
     color: #bbb;
     content: "/\00a0";
 }
 
-.base-track-info .fa { padding-left: 4px }
+.base-track-info .fa {
+    padding-left: 4px
+}
 
 .metadata-options {
     margin-top: 20px;

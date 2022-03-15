@@ -4,7 +4,7 @@ namespace Assistant\Module\Common\Extension\SimilarTracksCollection;
 
 use SplFileInfo;
 
-// Sprawdzić, czy SimilarTracksVO może używać tego jako klasy bazowej albo serwisu (jak Config, Finder itp.)
+// Sprawdzić, czy SimilarTracks może używać tego jako klasy bazowej albo serwisu (jak Config, Finder itp.)
 // zwracając oczywiście obiekty typu Track, a nie SplFileInfo. Jeśli tak, to należałoby uspójnić nazewnictwo klas.
 final class SimilarTracksResult
 {

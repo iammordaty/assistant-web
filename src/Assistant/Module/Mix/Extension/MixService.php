@@ -4,13 +4,13 @@ namespace Assistant\Module\Mix\Extension;
 
 use Assistant\Module\Mix\Extension\Strategy\MostSimilarTrackStrategy;
 use Assistant\Module\Search\Extension\TrackSearchService;
-use Assistant\Module\Track\Extension\Similarity;
+use Assistant\Module\Track\Extension\Similarity\SimilarityBuilder;
 use Assistant\Module\Track\Model\Track;
 
 final class MixService
 {
     public function __construct(
-        private Similarity $similarity,
+        private SimilarityBuilder $similarityBuilder,
         private TrackSearchService $searchService,
     ) {
     }
@@ -24,9 +24,10 @@ final class MixService
     public function getMixInfo(array $listing): array
     {
         $listing = array_map('trim', $listing);
-        $tracks = $this->getTracks($listing); // być może to powinno być wyżej
+        $tracks = $this->getTracks($listing); // @idea: być może to powinno być wyżej
 
-        $strategy = new MostSimilarTrackStrategy($this->similarity);
+        $similarityService = $this->similarityBuilder->createService()->getSimilarityService();
+        $strategy = new MostSimilarTrackStrategy($similarityService);
 
         // @todo: dodać strategię, która dobierze najlepszy pierwszy kawałek dla MostSimilarTrackStrategy
         // @todo: dodać strategię, która dobierze najbardziej podobny następny kawałek (także do kolejnego),

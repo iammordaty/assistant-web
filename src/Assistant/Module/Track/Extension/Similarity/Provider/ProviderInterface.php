@@ -6,34 +6,18 @@ use Assistant\Module\Track\Model\Track;
 
 interface ProviderInterface
 {
-    /**
-     * Zwraca nazwę dostawcy
-     *
-     * @return string
-     */
+    /** Nazwa dostawcy */
+    public const NAME = '';
+
+    /** Zwraca nazwę dostawcy */
     public function getName(): string;
 
-    /**
-     * Oblicza i zwraca wartość podobieństwa pomiędzy utworami (wyrażoną w procentach)
-     *
-     * @param Track $baseTrack
-     * @param Track $comparedTrack
-     * @return int
-     */
+    /** Oblicza i zwraca wartość podobieństwa pomiędzy utworami (wyrażoną w procentach) */
     public function getSimilarityValue(Track $baseTrack, Track $comparedTrack): int;
 
-    /**
-     * Zwraca maksymalną wartość podobieństwa, jaką może zwrócić dostawca
-     *
-     * @return int
-     */
+    /** Zwraca maksymalną wartość podobieństwa, jaką może zwrócić dostawca */
     public function getMaxSimilarityValue(): int;
 
-    /**
-     * Zwraca kryteria, które muszą zostać spełnione, aby utwór uznać za podobny przez dostawcę
-     *
-     * @param Track $baseTrack
-     * @return array
-     */
-    public function getCriteria(Track $baseTrack): array;
+    /** Zwraca kryteria, które muszą zostać spełnione, aby utwór uznać za podobny przez dostawcę */
+    public function getCriteria(Track $baseTrack): mixed;
 }

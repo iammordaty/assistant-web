@@ -25,7 +25,7 @@ class NumberMinMaxExpressionParser extends RawMinMaxExpressionParser
         }
 
         $numbers = array_map(fn($value) => (float) $value, $minMaxInfo->values());
-        $numberMinMaxInfo = array_combine($minMaxInfo->keys(), $numbers);
+        $numberMinMaxInfo = array_combine($minMaxInfo->operators(), $numbers);
 
         return MinMaxInfo::create($numberMinMaxInfo);
     }

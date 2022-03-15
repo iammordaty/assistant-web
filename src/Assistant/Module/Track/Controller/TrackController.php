@@ -3,19 +3,13 @@
 namespace Assistant\Module\Track\Controller;
 
 use Assistant\Module\Collection\Extension\MusicalKeyInfo;
-use Assistant\Module\Common\Extension\Config;
 use Assistant\Module\Common\Extension\PathBreadcrumbs;
 use Assistant\Module\Common\Extension\Route;
 use Assistant\Module\Common\Extension\RouteResolver;
-use Assistant\Module\Track\Extension\Similarity;
-use Assistant\Module\Track\Extension\Similarity\Provider\Bpm;
-use Assistant\Module\Track\Extension\Similarity\Provider\Genre;
-use Assistant\Module\Track\Extension\Similarity\Provider\MusicalKey;
-use Assistant\Module\Track\Extension\Similarity\Provider\Musly;
-use Assistant\Module\Track\Extension\Similarity\Provider\Year;
+use Assistant\Module\Track\Extension\Similarity\SimilarityBuilder;
+use Assistant\Module\Track\Extension\Similarity\SimilarityParametersForm;
 use Assistant\Module\Track\Extension\TrackService;
 use Assistant\Module\Track\Model\Track;
-use Assistant\Module\Track\Repository\TrackRepository;
 use Fig\Http\Message\StatusCodeInterface;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
@@ -24,11 +18,12 @@ use Slim\Views\Twig;
 
 final class TrackController
 {
+    private const SIMILAR_TRACKS_SOFT_LIMIT = 50;
+
     public function __construct(
-        private Config $config,
         private PathBreadcrumbs $pathBreadcrumbs,
         private RouteResolver $routeResolver,
-        private TrackRepository $trackRepository,
+        private SimilarityBuilder $similarityBuilder,
         private TrackService $trackService,
         private Twig $view,
     ) {
@@ -49,99 +44,38 @@ final class TrackController
             return $redirect;
         }
 
+        $form = SimilarityParametersForm::create($track->toDto(), $request);
+
+        $similarTracks = $this->similarityBuilder
+            ->withTrack($track)
+            ->withForm($form)
+            ->createService()
+            ->getSimilarTracks();
+
+        if ($request->getHeaderLine('X-Requested-With') === 'XMLHttpRequest') {
+            return $this->view->render($response, '@track/similarTracks/list.twig', [
+                'similarTracksList' => $similarTracks,
+                'similarTracksSoftLimit' => self::SIMILAR_TRACKS_SOFT_LIMIT,
+            ]);
+        }
+
         $pathBreadcrumbs = $this->pathBreadcrumbs->get(dirname($track->getPathname()));
-
-        $customSimilarityParameters = $request->getQueryParams()['similarity'] ?? null;
-
-        $similarityParameters = $this->config->get('similarity');
-        $similarTracks = $this->getSimilarTracks($track, $similarityParameters, $customSimilarityParameters);
 
         return $this->view->render($response, '@track/index.twig', [
             'menu' => 'track',
             'track' => $track,
-            'keyInfo' => $this->getTrackKeyInfo($track),
+            'musicalKeyInfo' => $this->getTrackMusicalKeyInfo($track),
             'pathBreadcrumbs' => $pathBreadcrumbs,
-            'form' => $customSimilarityParameters,
+            'form' => $form,
             'similarTracksList' => $similarTracks,
+            'similarTracksSoftLimit' => self::SIMILAR_TRACKS_SOFT_LIMIT,
         ]);
     }
 
-    /**
-     * Zwraca utwory podobne do podanego utworu
-     *
-     * @todo Przenieść do zewnętrznej klasy
-     *
-     * @param Track $baseTrack
-     * @param array $similarityParameters
-     * @param array|null $customSimilarityParameters
-     * @return array
-     */
-    private function getSimilarTracks(
-        Track $baseTrack,
-        array $similarityParameters,
-        ?array $customSimilarityParameters,
-    ): array {
-        $track = $baseTrack;
-        $parameters = $similarityParameters;
-
-        $customTrackParams = $customSimilarityParameters['track'] ?? null;
-
-        if ($customTrackParams) {
-            if (isset($customTrackParams['year'])) {
-                $track = $track->withYear((int) $customTrackParams['year']);
-            }
-
-            if (isset($customTrackParams['genre'])) {
-                $track = $track->withGenre($customTrackParams['genre']);
-            }
-
-            if (isset($customTrackParams['bpm'])) {
-                $track = $track->withBpm((float) $customTrackParams['bpm']);
-            }
-
-            if (isset($customTrackParams['initial_key'])) {
-                $track = $track->withInitialKey($customTrackParams['initial_key']);
-            }
-        }
-
-        $customProviders = $customSimilarityParameters['providers']['names'] ?? null;
-
-        if ($customProviders) {
-            // TODO: Do poprawienia: Dane formularza, takie jak nazwy powinny pochodzić z PHP-a,
-            //       co rozwiązuje problem mapowania nazw, wygody i zdublowanego kodu (np. nazw providerów).
-
-            $nameToClassname = [
-                'musly' => Musly::class,
-                'bpm' => Bpm::class,
-                'year' => Year::class,
-                'genre' => Genre::class,
-                'musicalKey' => MusicalKey::class,
-            ];
-
-            $enabledProviders = array_filter(
-                $nameToClassname,
-                static fn($providerName) => in_array($providerName, $customSimilarityParameters['providers']['names'], true),
-                ARRAY_FILTER_USE_KEY
-            );
-
-            $parameters['providers']['enabled'] = array_values($enabledProviders);
-        }
-
-        // @todo: docelowo powinno być wstrzykiwane poprzez DI (zob. komentarz w container.inc przy Similarity)
-        $similarity = new Similarity($this->trackRepository, $parameters);
-
-        return $similarity->getSimilarTracks($track);
-    }
-
-    /**
-     * Zwraca klucze podobne do klucza podanego utworu
-     *
-     * @param Track $track
-     * @return array|null
-     */
-    private function getTrackKeyInfo(Track $track): ?array
+    /** Zwraca klucze podobne do klucza podanego utworu */
+    private function getTrackMusicalKeyInfo(Track $track): ?array
     {
-        $musicalKeyInfo = MusicalKeyInfo::factory(); // faktorka i konstruktor do przemyślenia
+        $musicalKeyInfo = MusicalKeyInfo::factory();
 
         return $musicalKeyInfo->get($track->getInitialKey());
     }

@@ -4,17 +4,23 @@ namespace Assistant\Module\Search\Extension;
 
 final class MinMaxInfo
 {
-    private const VALID_INFO_KEYS = [
-        'gt',
-        'gte',
-        'lt',
-        'lte',
+    // @idea Może BackedEnum zamiast const-ów?
+    public const GREATER_THAN = 'gt';
+    public const GREATER_THAN_OR_EQUAL = 'gte';
+    public const LESS_THAN = 'lt';
+    public const LESS_THAN_OR_EQUAL = 'lte';
+
+    private const VALID_OPERATORS = [
+        self::GREATER_THAN,
+        self::GREATER_THAN_OR_EQUAL,
+        self::LESS_THAN,
+        self::LESS_THAN_OR_EQUAL,
     ];
 
     public function __construct(private array $minMaxInfo)
     {
-        if (($invalid = array_diff(array_keys($minMaxInfo), self::VALID_INFO_KEYS))) {
-            throw new \InvalidArgumentException('Invalid MinMaxInfo keys: ', implode(',', $invalid));
+        if (($invalid = array_diff(array_keys($minMaxInfo), self::VALID_OPERATORS))) {
+            throw new \InvalidArgumentException('Invalid MinMaxInfo operator: ', implode(',', $invalid));
         }
     }
 
@@ -28,7 +34,7 @@ final class MinMaxInfo
         return $this->minMaxInfo;
     }
 
-    public function keys(): array
+    public function operators(): array
     {
         return array_keys($this->minMaxInfo);
     }

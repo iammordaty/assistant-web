@@ -2,8 +2,8 @@
 
 namespace Assistant\Module\Mix\Extension\Strategy;
 
-use Assistant\Module\Track\Extension\Similarity;
-use Assistant\Module\Track\Extension\SimilarTracksVO;
+use Assistant\Module\Track\Extension\Similarity\Similarity;
+use Assistant\Module\Track\Extension\Similarity\SimilarTracks;
 use Assistant\Module\Track\Model\Track;
 
 final class MostSimilarTrackStrategy implements NextTrackStrategy
@@ -55,13 +55,13 @@ final class MostSimilarTrackStrategy implements NextTrackStrategy
 
     /**
      * 1. Do przemyślenia czy da się to osiągnąć bardziej czytelnie i elegancko.
-     *    Zerknąć na SimilarTrackVO, pewnie da się wykorzystać
+     *    Zerknąć na SimilarTracks, pewnie da się wykorzystać
      *
      * 2. Może należałoby rozdzielić tworzenie tablicy wielowymiarowej i wyliczania podobieństwa między ścieżkami?
      *
      * @param Track[] $listing
      * @return array
-     * @see SimilarTracksVO
+     * @see SimilarTracks
      */
     private function computeSimilarityGrid(array $listing): array
     {

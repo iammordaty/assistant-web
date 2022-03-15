@@ -15,11 +15,8 @@ final class TrackRepository
 {
     private const COLLECTION_NAME = 'tracks';
 
-    private Storage $storage;
-
-    public function __construct(Storage $storage)
+    public function __construct(private Storage $storage)
     {
-        $this->storage = $storage;
     }
 
     public static function factory(Database $database): self
@@ -35,7 +32,14 @@ final class TrackRepository
     public function getOneBy(SearchCriteria $searchCriteria): ?Track
     {
         $query = Query::fromSearchCriteria($searchCriteria);
-        $track = $this->findOneBy($query->toStorage());
+
+        $document = $this->storage->findOneBy($query->toStorage());
+
+        if (!$document) {
+            return null;
+        }
+
+        $track = self::createModel($document);
 
         return $track;
     }
@@ -47,7 +51,7 @@ final class TrackRepository
      * @param int|null $skip
      * @return Track[]|Traversable
      */
-    public function getBy(
+    public function findBy(
         SearchCriteria $searchCriteria,
         ?array $sort = null,
         ?int $limit = null,
@@ -89,34 +93,6 @@ final class TrackRepository
     }
 
     /**
-     * @deprecated Publiczna tymczasowo, ta metoda powinna być prywatna
-     *
-     * @param array $conditions
-     * @param array|null $sort
-     * @param int|null $limit
-     * @param int|null $skip
-     * @return Track[]|Traversable
-     */
-    public function findBy(
-        array $conditions,
-        ?array $sort = [],
-        ?int $limit = null,
-        ?int $skip = null
-    ): array|Traversable {
-        $documents = $this->storage->findBy($conditions, options: [
-            'sort' => $sort,
-            'limit' => $limit,
-            'skip' => $skip,
-        ]);
-
-        foreach ($documents as $document) {
-            $track = self::createModel($document);
-
-            yield $track;
-        }
-    }
-
-    /**
      * Zwraca informację o liczbie dokumentów w kolekcji na podstawie podanych kryteriów
      *
      * @param SearchCriteria $searchCriteria
@@ -128,19 +104,6 @@ final class TrackRepository
         $count = $this->storage->count($criteria->toStorage());
 
         return $count;
-    }
-
-    private function findOneBy(array $conditions): ?Track
-    {
-        $document = $this->storage->findOneBy($conditions);
-
-        if (!$document) {
-            return null;
-        }
-
-        $track = self::createModel($document);
-
-        return $track;
     }
 
     private static function createModel($document): Track

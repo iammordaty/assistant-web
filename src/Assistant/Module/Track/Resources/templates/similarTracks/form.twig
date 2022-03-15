@@ -1,0 +1,41 @@
+<form
+    action="{{ actionUrl }}"
+    class="form-horizontal hide"
+    data-role="similar-tracks:parameters"
+    method="get"
+    name="{{ 'now'|date('U') }}" {# https://stackoverflow.com/a/44504822 #}
+>
+    <div class="form-group">
+        {% for similarityParameter in form.similarityParameters %}
+            {% set isProviderEnabled = form.isProviderEnabled(similarityParameter.name) %}
+
+            <div class="col-xs-4 col-sm-2">
+                <div class="additional-info-wrap">
+                    <label class="checkbox-inline" for="provider-{{ similarityParameter.name }}">
+                        <input
+                            type="checkbox"
+                            name="{{ constant('NAME_PROVIDERS', form) }}[]"
+                            value="{{ similarityParameter.name }}"
+                            id="provider-{{ similarityParameter.name }}"
+                            {% if isProviderEnabled %} checked="checked" {% endif %}
+                        > {{ similarityParameter.displayName }}
+                    </label>
+                    {% if similarityParameter.hasInput %}
+                        <div class="additional-info {% if not isProviderEnabled %} hide {% endif %}">
+                            <input
+                                type="{{ similarityParameter.inputType }}"
+                                name="{{ similarityParameter.name }}"
+                                value="{{ similarityParameter.inputValue }}"
+                                class="form-control input-sm"
+                                {% if similarityParameter.placeholder %} placeholder="{{ similarityParameter.placeholder }}" {% endif %}
+                                {% if similarityParameter.inputMinValue %} min="{{ similarityParameter.inputMinValue }}" {% endif %}
+                                {% if similarityParameter.inputMaxValue %} max="{{ similarityParameter.inputMaxValue }}" {% endif %}
+                                {% if similarityParameter.inputStep %} step="{{ similarityParameter.inputStep }}" {% endif %}
+                            >
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+</form>

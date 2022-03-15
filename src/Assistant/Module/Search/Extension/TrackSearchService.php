@@ -74,7 +74,7 @@ final class TrackSearchService
         ?int $limit = null,
         ?int $skip = null
     ): array|Traversable {
-        $tracks = $this->trackRepository->getBy($searchCriteria, $sort, $limit, $skip);
+        $tracks = $this->trackRepository->findBy($searchCriteria, $sort, $limit, $skip);
 
         return $tracks;
     }

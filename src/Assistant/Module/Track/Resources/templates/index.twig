@@ -2,8 +2,6 @@
 
 {% block title %}{{ track.name }}{% endblock %}
 
-{# TODO: Porozbijać ten szablon na części, bo nie da się tego czytać #}
-
 {% block contentBlock %}
     <div id="wave-progress" class="text-center"><i class="fa fa-cog fa-spin fa-5x"></i></div>
     <div id="wave-container" data-track-url="{{ url_for('track.contents.get', { guid: track.guid }) }}">
@@ -16,7 +14,7 @@
     </div>
 
     <script src="/vendor/wavesurfer.js/wavesurfer.min.js" type="text/javascript"></script>
-    <script src="/js/track.js" type="text/javascript"></script>
+    <script src="/js/track.js" type="module"></script>
 
     <div class="track-info">
         <legend>
@@ -24,225 +22,35 @@
         </legend>
 
         <div class="row">
-            <div class="col-xs-12 {% if keyInfo %}col-sm-8 col-md-9{% endif %}">
-                <div class="row">
-                    <span class="col-xs-4 col-sm-3 col-md-2 text-right">
-                        <strong>{% if track.artists|length == 1 %}Wykonawca{% else %}Wykonawcy{% endif %}</strong>
-                    </span>
-                    <span class="col-xs-8 col-sm-9 col-md-10">
-                       {%- for artist in track.artists -%}
-                            <a href="{{ url_for('search.advanced.index') }}?artist={{ artist|url_encode() }}" class="undecorated">{{ artist }}</a>
-                           {%- if not loop.last %}, {% endif -%}
-                       {%- endfor -%}
-                    </span>
-                </div>
+            {% include '@track/track/trackInfo.twig' with {
+                track: track,
+                pathBreadcrumbs: pathBreadcrumbs,
+                extraClasses: musicalKeyInfo ? [ 'col-sm-8', 'col-md-9' ] : [],
+            } only %}
 
-                <div class="row">
-                    <span class="col-xs-4 col-sm-3 col-md-2 text-right"><strong>Tytuł utworu</strong></span>
-                    <span class="col-xs-8 col-sm-9 col-md-10">{{ track.title }}</span>
-                </div>
-
-                <div class="row">
-                    <span class="col-xs-4 col-sm-3 col-md-2 text-right"><strong>Gatunek</strong></span>
-                    <span class="col-xs-8 col-sm-9 col-md-10"><a href="{{ url_for('search.advanced.index') }}?genre={{ track.genre }}" class="undecorated">{{ track.genre }}</a></span>
-                </div>
-
-                <div class="row">
-                    <span class="col-xs-4 col-sm-3 col-md-2 text-right"><strong>Album</strong></span>
-                    <span class="col-xs-8 col-sm-9 col-md-10">{{ track.album }}</span>
-                </div>
-
-                <div class="row">
-                    <span class="col-xs-4 col-sm-3 col-md-2 text-right"><strong>Wydawca</strong></span>
-                    <span class="col-xs-8 col-sm-9 col-md-10"><a href="{{ url_for('search.advanced.index') }}?publisher={{ track.publisher }}" class="undecorated">{{ track.publisher }}</a></span>
-                </div>
-
-                <div class="row">
-                    <span class="col-xs-4 col-sm-3 col-md-2 text-right"><strong>Czas trwania</strong></span>
-                    <span class="col-xs-8 col-sm-9 col-md-10">{{ track.length|format_duration }}</span>
-                </div>
-
-                <div class="row">
-                    <span class="col-xs-4 col-sm-3 col-md-2 text-right"><strong>Ścieżka</strong></span>
-                    <span class="col-xs-8 col-sm-9 col-md-10">{{ track.trackNumber }}</span>
-                </div>
-
-                <div class="row">
-                    <span class="col-xs-4 col-sm-3 col-md-2 text-right"><strong>Rok</strong></span>
-                    <span class="col-xs-8 col-sm-9 col-md-10"><a href="{{ url_for('search.advanced.index') }}?year={{ track.year }}" class="undecorated">{{ track.year }}</a></span>
-                </div>
-
-                <div class="row">
-                    <span class="col-xs-4 col-sm-3 col-md-2 text-right"><strong>BPM</strong></span>
-                    <span class="col-xs-8 col-sm-9 col-md-10"><a href="{{ url_for('search.advanced.index') }}?bpm={{ track.bpm }}" class="undecorated">{{ track.bpm }}</a></span>
-                </div>
-
-                <div class="row">
-                    <span class="col-xs-4 col-sm-3 col-md-2 text-right"><strong>Tonacja</strong></span>
-                    <span class="col-xs-8 col-sm-9 col-md-10"><a href="{{ url_for('search.advanced.index') }}?initial_key={{ track.initialKey }}" class="undecorated">{{ track.initialKey }}</a></span>
-                </div>
-
-                <div class="row">
-                    <span class="col-xs-4 col-sm-3 col-md-2 text-right"><strong>Położenie</strong></span>
-                    <span class="col-xs-8 col-sm-9 col-md-10">
-                        <!-- @todo: wynieść do zewnętrznego szablonu i uspójnić z innymi -->
-                        <ol class="breadcrumb">
-                           <li>
-                               <a href="{{ url_for('directory.browse.index', { guid: (pathBreadcrumbs|first).guid }) }}" class="undecorated">
-                                   <i class="fa fa-home fa-lg"></i>
-                               </a>
-                           </li>
-                           {% for path in pathBreadcrumbs[1:] %}
-                                <li><a href="{{ url_for('directory.browse.index', { guid: path.guid }) }}" class="undecorated">{{ path.path }}</a></li>
-                           {% endfor %}
-                        </ol>
-                    </span>
-                </div>
-           </div>
-
-           {% if keyInfo %}
-                {% include '@track/key-info.twig' with keyInfo only %}
+           {% if musicalKeyInfo %}
+                {% include '@track/track/musicalKeyInfo.twig' with musicalKeyInfo only %}
            {% endif %}
         </div>
     </div>
 
-    <div class="similar-tracks">
-        <!-- TODO: usunąć niepotrzebny kod js -->
-        <!-- TODO: usunąć niepotrzebne style -->
-        <!-- TODO: dostosować górny i dolny margines -->
-        <!-- TODO: przepisać js-y odpowiedzialne za pokazywanie i ukrywanie input-ów -->
-        <legend>
+    <div data-role="similar-tracks:container" class="similar-tracks">
+        <legend data-role="similar-tracks:toggle-visibility" class="toggle-visibility">
             Podobne utwory
-            <i class="fa fa-angle-double-down pull-right toggle-visibility {% if form %} fa-rotate-180 {% endif %}"
-                data-role="similar-tracks:toggle-visibility"></i>
+            <i
+                data-role="similar-tracks:toggle-visibility-icon"
+                class="fa fa-angle-double-down pull-right toggle-visibility-icon">
+            </i>
         </legend>
 
-        <form action="{{ url_for('track.track.index', { guid: track.guid }) }}" method="get" data-role="similar-tracks:parameters"
-              class="form-horizontal {% if not form %} hide {% endif %}">
-            <div class="form-group">
-                <div class="col-xs-4 col-sm-2">
-                    {#
-                        Do przemyślenia, czy elementy i atrybuty html mogą wychodzić z PHP-a,
-                        bo w tej formie jest to mało generyczne i wygodne, a także dubluje kod (nazwy)
-                    #}
-                    <label class="checkbox-inline" for="provider-musly">
-                          <input type="checkbox" id="provider-musly" name="similarity[providers][names][]" value="musly"
-                                {% if not form or 'musly' in form.providers.names|default %} checked="checked" {% endif %}> Musly
-                    </label>
-                </div>
-                <div class="col-xs-4 col-sm-2">
-                    <span class="additional-info-wrap">
-                        <label class="checkbox-inline" for="provider-genre">
-                              <input type="checkbox" name="similarity[providers][names][]" id="provider-genre" value="genre"
-                                    {% if not form or 'genre' in form.providers.names|default %} checked="checked" {% endif %}> Gatunek
-                        </label>
-                        <div class="additional-info {% if form and 'genre' not in form.providers.names|default %} hide {% endif %}">
-                              <input type="text" name="similarity[track][genre]" value="{{ form.track.genre|default(track.genre) }}"
-                                     class="form-control input-sm" placeholder="{{ track.genre }}">
-                        </div>
-                    </span>
-                </div>
-                <div class="col-xs-4 col-sm-2">
-                    <span class="additional-info-wrap">
-                        <label class="checkbox-inline" for="provider-year">
-                              <input type="checkbox" name="similarity[providers][names][]" id="provider-year" value="year"
-                                    {% if not form or 'year' in form.providers.names|default %} checked="checked" {% endif %}> Rok
-                        </label>
-                        <div class="additional-info {% if form and 'year' not in form.providers.names|default %} hide {% endif %}">
-                            <input type="number" name="similarity[track][year]" value="{{ form.track.year|default(track.year) }}" min="1980" max="{{ "now"|date('Y')}}"
-                                   class="form-control input-sm" placeholder="{{ track.year }}">
-                        </div>
-                    </span>
-                </div>
-                <div class="clearfix visible-xs"></div>
-                <div class="col-xs-4 col-sm-2">
-                    <span class="additional-info-wrap">
-                        <label class="checkbox-inline" for="provider-bpm">
-                              <input type="checkbox" name="similarity[providers][names][]" id="provider-bpm" value="bpm"
-                                    {% if not form or 'bpm' in form.providers.names|default %} checked="checked" {% endif %}> BPM
-                        </label>
-                        <div class="additional-info {% if form and 'bpm' not in form.providers.names|default %} hide {% endif %}">
-                              <input type="number" name="similarity[track][bpm]" value="{{ form.track.bpm|default(track.bpm) }}" min="50" max="200" step="0.1"
-                                     class="form-control input-sm" placeholder="{{ track.bpm }}">
-                        </div>
-                    </span>
-                </div>
-                <div class="col-xs-4 col-sm-2">
-                    <span class="additional-info-wrap">
-                        <label class="checkbox-inline" for="provider-musicalKey">
-                              <input type="checkbox" name="similarity[providers][names][]" id="provider-musicalKey" value="musicalKey"
-                                    {% if not form or 'musicalKey' in form.providers.names|default %} checked="checked" {% endif %}> Tonacja
-                        </label>
-                        <div class="additional-info {% if form and 'musicalKey' not in form.providers.names|default %} hide {% endif %}">
-                              <input type="text" name="similarity[track][initial_key]" value="{{ form.track.initial_key|default(track.initialKey) }}"
-                                     class="form-control input-sm" placeholder="{{ track.initialKey }}">
-                        </div>
-                    </span>
-                </div>
-                <div class="col-xs-4 col-sm-2">
-                    <button type="submit" name="similarity-settings" value="1" class="btn btn-default btn-sm pull-right">Odśwież</button>
-                </div>
-            </div>
-        </form>
+        {% include '@track/similarTracks/form.twig' with {
+            form: form,
+            actionUrl: url_for('track.track.index', { guid: track.guid }),
+        } only %}
 
-       {% if similarTracksList %}
-           {% set softLimit = 50 %}
-
-            <div class="table-responsive">
-                <table class="table table-hover">
-                    <thead>
-                        <tr>
-                            <th>Nazwa utworu</th>
-                            <th>Gatunek</th>
-                            <th>Długość</th>
-                            <th>Rok</th>
-                            <th>Tonacja</th>
-                            <th>BPM</th>
-                            <th>%</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                       {% for similarTracks in similarTracksList %}
-                            {% set similarTrack = similarTracks.secondTrack %}
-                            {% set similarityValue = similarTracks.similarityValue %}
-
-                            <tr class="{% if loop.index >= softLimit %}hide{% endif %}">
-                                <td class="col-xs-5">
-                                    <span class="ellipsis track-name">
-                                       <a href="{{ url_for('track.track.index', { guid: similarTrack.guid }) }}" title="{{ similarTrack.name }}">{{ similarTrack.name }}</a>
-                                    </span>
-                                </td>
-                                <td class="col-xs-2">
-                                    <a class="undecorated" href="{{ url_for('search.advanced.index') }}?genre={{ similarTrack.genre }}">{{ similarTrack.genre }}</a>
-                                </td>
-                                <td class="col-xs-1">
-                                   {{ similarTrack.length|format_duration }}
-                                </td>
-                                <td class="col-xs-1">
-                                    <a class="undecorated" href="{{ url_for('search.advanced.index') }}?year={{ similarTrack.year }}">{{ similarTrack.year }}</a>
-                                </td>
-                                <td class="col-xs-1">
-                                    <a class="undecorated" href="{{ url_for('search.advanced.index') }}?initial_key={{ similarTrack.initialKey }}">{{ similarTrack.initialKey }}</a>
-                                </td>
-                                <td class="col-xs-1">
-                                    <a class="undecorated" href="{{ url_for('search.advanced.index') }}?bpm={{ similarTrack.bpm }}">{{ similarTrack.bpm }}</a>
-                                </td>
-                                <td class="col-xs-1">
-                                   {{ similarityValue }}%
-                                </td>
-                            </tr>
-                       {% endfor %}
-                    </tbody>
-                </table>
-            </div>
-
-            {% if similarTracksList|length > softLimit %}
-                <div class="text-center">
-                    <button type="button" class="btn btn-default" data-role="similar-tracks:show-more">Pokaż więcej</button>
-                </div>
-            {% endif %}
-       {% else %}
-            <p class="lead text-center text-muted">Nie znaleziono podobnych utworów</p>
-       {% endif %}
+        {% include '@track/similarTracks/list.twig' with {
+            similarTracksList: similarTracksList,
+            similarTracksSoftLimit: similarTracksSoftLimit,
+        } only %}
     </div>
 {% endblock %}

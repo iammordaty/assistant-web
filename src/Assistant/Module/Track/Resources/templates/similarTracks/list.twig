@@ -1,0 +1,59 @@
+<div data-role="similar-tracks:list">
+    {% if similarTracksList %}
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>Nazwa utworu</th>
+                        <th>Gatunek</th>
+                        <th>Długość</th>
+                        <th>Rok</th>
+                        <th>Tonacja</th>
+                        <th>BPM</th>
+                        <th>%</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for similarTracks in similarTracksList %}
+                        {% set similarTrack = similarTracks.secondTrack %}
+                        {% set similarityValue = similarTracks.similarityValue %}
+
+                        <tr class="{% if loop.index >= similarTracksSoftLimit %}hide{% endif %}">
+                            <td class="col-xs-5">
+                                <span class="ellipsis track-name">
+                                   <a href="{{ url_for('track.track.index', { guid: similarTrack.guid }) }}" title="{{ similarTrack.name }}">{{ similarTrack.name }}</a>
+                                </span>
+                            </td>
+                            <td class="col-xs-2">
+                                <a class="undecorated" href="{{ url_for('search.advanced.index') }}?genre={{ similarTrack.genre }}">{{ similarTrack.genre }}</a>
+                            </td>
+                            <td class="col-xs-1">
+                                {{ similarTrack.length|format_duration }}
+                            </td>
+                            <td class="col-xs-1">
+                                <a class="undecorated" href="{{ url_for('search.advanced.index') }}?year={{ similarTrack.year }}">{{ similarTrack.year }}</a>
+                            </td>
+                            <td class="col-xs-1">
+                                <a class="undecorated" href="{{ url_for('search.advanced.index') }}?initial_key={{ similarTrack.initialKey }}">{{ similarTrack.initialKey }}</a>
+                            </td>
+                            <td class="col-xs-1">
+                                <a class="undecorated" href="{{ url_for('search.advanced.index') }}?bpm={{ similarTrack.bpm }}">{{ similarTrack.bpm }}</a>
+                            </td>
+                            <td class="col-xs-1">
+                                {{ similarityValue }}%
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        {% if similarTracksList|length > similarTracksSoftLimit %}
+            <div class="text-center">
+                <button type="button" class="btn btn-default" data-role="similar-tracks:show-more">Pokaż więcej</button>
+            </div>
+        {% endif %}
+    {% else %}
+        <p class="lead text-center text-muted">Nie znaleziono podobnych utworów</p>
+    {% endif %}
+</div>

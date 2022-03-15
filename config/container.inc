@@ -18,7 +18,8 @@ use Assistant\Module\Directory\Repository\DirectoryRepository;
 use Assistant\Module\Mix\Extension\MixService;
 use Assistant\Module\Search\Extension\DirectorySearchService;
 use Assistant\Module\Search\Extension\TrackSearchService;
-use Assistant\Module\Track\Extension\Similarity;
+use Assistant\Module\Track\Extension\Similarity\Similarity;
+use Assistant\Module\Track\Extension\Similarity\SimilarityBuilder;
 use Assistant\Module\Track\Extension\TrackLocationArbiter;
 use Assistant\Module\Track\Extension\TrackService;
 use Assistant\Module\Track\Repository\TrackRepository;
@@ -40,6 +41,121 @@ use function DI\create;
 
 return static fn (string $baseDir, array $config): array => [
     Config::class => create()->constructor($config),
+
+    DirectoryReader::class => autowire(),
+
+    DirectoryRepository::class => function (Container $container): DirectoryRepository {
+        $storage = $container->get(Config::class)->get('storage');
+
+        $client = new MongoDBClient($storage['connection_uri']);
+        $database = $client->selectDatabase($storage['database']);
+
+        $repository = DirectoryRepository::factory($database);
+
+        return $repository;
+    },
+
+    DirectoryService::class => autowire(),
+
+    DirectorySearchService::class => autowire(),
+
+    FileReader::class => function (Container $container): FileReader {
+        $metadataParserParams = $container->get(Config::class)->get('track_metadata_parser');
+
+        $fileReader = new FileReader(
+            $container->get(Id3Adapter::class),
+            new MetadataParser($metadataParserParams),
+            $container->get(SlugifyService::class),
+        );
+
+        return $fileReader;
+    },
+
+    FileReaderFacade::class => autowire(),
+
+    Id3Adapter::class => create(),
+
+    Logger::class => function () use ($baseDir): LoggerInterface {
+        $logsDir = $baseDir . '/var/logs';
+
+        $logger = new Logger('assistant-logger');
+
+        $formatter = new LineFormatter('[%datetime%] %level_name% %message% %context% %extra%' . PHP_EOL);
+        $formatter->ignoreEmptyContextAndExtra(true);
+
+        $logger->setHandlers([
+            (new ErrorLogHandler())->setFormatter(new LineFormatter(
+                '[%datetime%] [%level_name%] %message% %context%',
+                'd.m.Y, H:i:s',
+                false,
+                true
+            )),
+            (new StreamHandler(sprintf('%s/app.error.log', $logsDir), Logger::ERROR))->setFormatter($formatter),
+            (new StreamHandler(sprintf('%s/app.debug.log', $logsDir), Logger::DEBUG))->setFormatter($formatter),
+        ]);
+
+        return $logger;
+    },
+
+    MixService::class => autowire(),
+
+    PathBreadcrumbs::class => autowire(),
+
+    ReaderFacade::class => autowire(),
+
+    RouteResolver::class => function (Container $container): RouteResolver {
+        $routeParser = $container->get(App::class)->getRouteCollector()->getRouteParser();
+        $urlResolver = new RouteResolver($routeParser);
+
+        return $urlResolver;
+    },
+
+    SimilarityBuilder::class => function (Container $container): SimilarityBuilder {
+        $parameters = $container->get(Config::class)->get(Similarity::class);
+
+        return new SimilarityBuilder(
+            $container->get(TrackSearchService::class),
+            $container->get(SimilarTracksCollectionService::class),
+            $parameters['providers_parameters'],
+            $parameters['providers_weights'],
+            $parameters['min_similarity_value'],
+            $parameters['max_tracks'],
+        );
+    },
+
+    SimilarTracksCollectionService::class => autowire(),
+
+    SlugifyService::class => create(),
+
+    TrackAutocompleteService::class => autowire(),
+
+    TrackLocationArbiter::class => autowire(),
+
+    TrackRepository::class => function (Container $container): TrackRepository {
+        $storage = $container->get(Config::class)->get('storage');
+
+        $client = new MongoDBClient($storage['connection_uri']);
+        $database = $client->selectDatabase($storage['database']);
+
+        $repository = TrackRepository::factory($database);
+
+        return $repository;
+    },
+
+    TrackSearchService::class => autowire(),
+
+    TrackService::class => autowire(),
+
+    TrackStatsRepository::class => function (Container $container): TrackStatsRepository {
+        $storage = $container->get(Config::class)->get('storage');
+
+        $client = new MongoDBClient($storage['connection_uri']);
+        $database = $client->selectDatabase($storage['database']);
+
+        $repository = TrackStatsRepository::factory($database);
+
+        return $repository;
+    },
 
     Twig::class => function () use ($baseDir): Twig {
         $paths = [
@@ -64,128 +180,4 @@ return static fn (string $baseDir, array $config): array => [
 
         return $view;
     },
-
-    Logger::class => function () use ($baseDir): LoggerInterface {
-        $logsDir = $baseDir . '/var/logs';
-
-        $logger = new Logger('assistant-logger');
-
-        $formatter = new LineFormatter('[%datetime%] %level_name% %message% %context% %extra%' . PHP_EOL);
-        $formatter->ignoreEmptyContextAndExtra(true);
-
-        $logger->setHandlers([
-            (new ErrorLogHandler())->setFormatter(new LineFormatter(
-                '[%datetime%] [%level_name%] %message% %context%',
-                'd.m.Y, H:i:s',
-                false,
-                true
-            )),
-            (new StreamHandler(sprintf('%s/app.error.log', $logsDir), Logger::ERROR))->setFormatter($formatter),
-            (new StreamHandler(sprintf('%s/app.debug.log', $logsDir), Logger::DEBUG))->setFormatter($formatter),
-        ]);
-
-        return $logger;
-    },
-
-    DirectoryReader::class => autowire(),
-
-    DirectoryRepository::class => function (Container $container): DirectoryRepository {
-        $storage = $container->get(Config::class)->get('storage');
-
-        $client = new MongoDBClient($storage['connection_uri']);
-        $database = $client->selectDatabase($storage['database']);
-
-        $repository = DirectoryRepository::factory($database);
-
-        return $repository;
-    },
-
-    DirectoryService::class => autowire(),
-
-    DirectorySearchService::class => autowire(),
-
-    Id3Adapter::class => create(),
-
-    ReaderFacade::class => autowire(),
-
-    TrackAutocompleteService::class => autowire(),
-
-    TrackLocationArbiter::class => autowire(),
-
-    TrackSearchService::class => autowire(),
-
-    TrackRepository::class => function (Container $container): TrackRepository {
-        $storage = $container->get(Config::class)->get('storage');
-
-        $client = new MongoDBClient($storage['connection_uri']);
-        $database = $client->selectDatabase($storage['database']);
-
-        $repository = TrackRepository::factory($database);
-
-        return $repository;
-    },
-
-    TrackStatsRepository::class => function (Container $container): TrackStatsRepository {
-        $storage = $container->get(Config::class)->get('storage');
-
-        $client = new MongoDBClient($storage['connection_uri']);
-        $database = $client->selectDatabase($storage['database']);
-
-        $repository = TrackStatsRepository::factory($database);
-
-        return $repository;
-    },
-
-    FileReader::class => function (Container $container): FileReader {
-        $metadataParserParams = $container->get(Config::class)->get('track_metadata_parser');
-
-        $fileReader = new FileReader(
-            $container->get(Id3Adapter::class),
-            new MetadataParser($metadataParserParams),
-            $container->get(SlugifyService::class),
-        );
-
-        return $fileReader;
-    },
-
-    FileReaderFacade::class => autowire(),
-
-    MixService::class => autowire(),
-
-    PathBreadcrumbs::class => autowire(),
-
-    RouteResolver::class => function (Container $container): RouteResolver {
-        $routeParser = $container->get(App::class)->getRouteCollector()->getRouteParser();
-        $urlResolver = new RouteResolver($routeParser);
-
-        return $urlResolver;
-    },
-
-    /**
-     * @todo Tutaj chyba należy wprowadzić klasę faktorującą, bo obecnie nie ma możliwości nadpisania parametrów
-     *       poprzez formularz na stronie utworu.
-     *
-     * @see Similarity\Provider\Musly::__construct()
-     *
-     * @todo Do zastanowienia się jak tworzyć obiekt(y), bo obecnie nie ma możliwości przekazania zależności
-     *       do dostawców
-     *
-     * @see \Assistant\Module\Track\Controller\TrackController::getSimilarTracks()
-     *
-     * @noinspection GrazieInspection
-     */
-    Similarity::class => function (Container $container): Similarity {
-        $similarity = new Similarity(
-            $container->get(TrackRepository::class),
-            $container->get(Config::class)->get('similarity'),
-        );
-
-        return $similarity;
-    },
-
-    SimilarTracksCollectionService::class => autowire(),
-
-    SlugifyService::class => create(),
-
-    TrackService::class => autowire(),
 ];

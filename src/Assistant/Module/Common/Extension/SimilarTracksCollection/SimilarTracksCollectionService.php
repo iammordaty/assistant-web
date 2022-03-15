@@ -11,7 +11,7 @@ use SplFileInfo;
 final class SimilarTracksCollectionService
 {
     private const COLLECTION_FILENAME = 'collection.musly';
-    private const SIMILAR_TRACKS_LIMIT = 200;
+    private const SIMILAR_TRACKS_LIMIT = 200; // @idea Zastanowić się nad zwiększeniem lub uelastycznieniem limitu
     private const WITH_TRACK_DISTANCE = '-o long';
 
     private Musly $musly;
