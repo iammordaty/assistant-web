@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "d36c46b1a0ec7f6074e968c06db1c2af",
+    "content-hash": "9b77097f00c614fbd7034f5c55066276",
     "packages": [
         {
             "name": "cache/adapter-common",
@@ -1076,25 +1076,25 @@
         },
         {
             "name": "iammordaty/musly-php",
-            "version": "0.4",
+            "version": "0.5.2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/iammordaty/musly-php.git",
-                "reference": "1638660ad044287e07eb98dfbee5fe264f56d492"
+                "reference": "a80e38dfa195b227bcdc3faba664961ec76bca18"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/iammordaty/musly-php/zipball/1638660ad044287e07eb98dfbee5fe264f56d492",
-                "reference": "1638660ad044287e07eb98dfbee5fe264f56d492",
+                "url": "https://api.github.com/repos/iammordaty/musly-php/zipball/a80e38dfa195b227bcdc3faba664961ec76bca18",
+                "reference": "a80e38dfa195b227bcdc3faba664961ec76bca18",
                 "shasum": ""
             },
             "require": {
-                "php": ">=7.1",
+                "php": ">=8.0",
                 "symfony/process": ">=4.2"
             },
             "require-dev": {
-                "phpstan/phpstan": ">=0.11.1",
-                "phpunit/phpunit": ">=7"
+                "phpstan/phpstan": "^1.4",
+                "phpunit/phpunit": "^9.5"
             },
             "type": "library",
             "autoload": {
@@ -1122,9 +1122,9 @@
             ],
             "support": {
                 "issues": "https://github.com/iammordaty/musly-php/issues",
-                "source": "https://github.com/iammordaty/musly-php/tree/0.4"
+                "source": "https://github.com/iammordaty/musly-php/tree/0.5.2"
             },
-            "time": "2021-09-03T19:45:42+00:00"
+            "time": "2022-01-21T13:39:56+00:00"
         },
         {
             "name": "james-heinrich/getid3",
@@ -4494,5 +4494,5 @@
         "ext-mongodb": "^1.11"
     },
     "platform-dev": [],
-    "plugin-api-version": "2.1.0"
+    "plugin-api-version": "2.2.0"
 }

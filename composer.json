@@ -33,7 +33,7 @@
         "fig/http-message-util": "^1.1",
         "guzzlehttp/guzzle": "^7.4",
         "iammordaty/key-tools": "^0.8.2",
-        "iammordaty/musly-php": "^0.4.0",
+        "iammordaty/musly-php": "^0.5.2",
         "james-heinrich/getid3": "^1.9",
         "kevinrob/guzzle-cache-middleware": "^3.3",
         "khill/php-duration": "^1.1",
