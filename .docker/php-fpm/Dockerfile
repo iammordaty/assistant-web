@@ -29,10 +29,10 @@ RUN pecl install mongodb && \
 RUN pecl install xdebug && \
     docker-php-ext-enable xdebug
 
-RUN docker-php-ext-configure zip && \
-    docker-php-ext-install zip
-
-RUN docker-php-ext-install intl
+RUN docker-php-ext-install \
+    intl \
+    opcache \
+    zip
 
 RUN apt-get -y autoremove && \
     apt-get -y clean
