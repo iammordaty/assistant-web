@@ -47,7 +47,7 @@ final class SimpleSearchController
                 $paginator = $this->searchService->getPaginator(
                     $page,
                     $results['count'],
-                    fn($page) => sprintf('%s&page=%d', $baseUrl, $page)
+                    fn ($page) => sprintf('%s&page=%d', $baseUrl, $page)
                 );
             }
         }

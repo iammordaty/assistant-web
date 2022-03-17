@@ -34,7 +34,7 @@ final class Query
         private MinMaxInfo|array|null $bpm,
         private MinMaxInfo|array|null $indexedDates,
         private ?string $parent,
-        private Regex|string|null $pathname,
+        private ?array $pathname,
     ) {
     }
 
@@ -172,9 +172,16 @@ final class Query
         }
 
         if ($this->pathname) {
-            $pathname = $this->pathname instanceof Regex
-                ? new MongoDBRegex($this->pathname->getPattern(), $this->pathname->getFlags())
-                : $this->pathname;
+            $pathname = array_map(
+                fn ($pathname) => $pathname instanceof Regex
+                    ? new MongoDBRegex($pathname->getPattern(), $pathname->getFlags())
+                    : $pathname,
+                $this->pathname
+            );
+
+            $pathname = count($pathname) === 1
+                ? $pathname[0]
+                : [ '$in' => $pathname ];
 
             $criteria['pathname'] = $pathname;
         }

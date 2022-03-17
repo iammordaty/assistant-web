@@ -49,6 +49,7 @@
                                 <input
                                     data-role="autocompleter"
                                     data-url="{{ url_for('track.track.autocomplete') }}"
+                                    data-follow-on-select="true"
                                     type="text"
                                     name="query"
                                     value="{{ form.query|default }}"
