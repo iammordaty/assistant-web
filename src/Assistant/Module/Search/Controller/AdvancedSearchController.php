@@ -4,6 +4,7 @@ namespace Assistant\Module\Search\Controller;
 
 use Assistant\Module\Common\Extension\Route;
 use Assistant\Module\Common\Extension\RouteResolver;
+use Assistant\Module\Common\Extension\SimilarTracksCollection\SimilarTracksCollectionService;
 use Assistant\Module\Search\Extension\SearchCriteriaFacade;
 use Assistant\Module\Search\Extension\TrackSearchService;
 use Psr\Http\Message\ResponseInterface as Response;
@@ -17,6 +18,7 @@ final class AdvancedSearchController
 {
     public function __construct(
         private RouteResolver $routeResolver,
+        private SimilarTracksCollectionService $similarTracksCollectionService,
         private TrackSearchService $searchService,
         private Twig $view,
     ) {
@@ -24,6 +26,11 @@ final class AdvancedSearchController
 
     /**
      * Renderuje stronę wyszukiwania
+     *
+     * Ograniczanie listy znalezionych utworów poprzez similarTracksCollectionService wrzucone na szybko.
+     * Na moduł wyszukiwania należałoby spojrzeć nieco szerzej:
+     * @see SearchCriteriaFacade::createFromFields
+     * @see TrackSearchService::getPaginator
      */
     public function index(Request $request, Response $response): Response
     {
@@ -34,6 +41,20 @@ final class AdvancedSearchController
 
         if ($this->isRequestValid($form)) {
             $page = max(1, (int) ($form['page'] ?? 1));
+
+            $trackName = $form['track'] ?? '';
+
+            if ($trackName) {
+                $track = $this->searchService->findOneByName($trackName);
+                $tracks = $this->similarTracksCollectionService->getSimilarTracks($track->getFile());
+                $tracksPathname = array_map(
+                    fn ($track) => $track->getSecondTrack()->getPathname(),
+                    $tracks->getSimilarTracks()
+                );
+
+                $form['pathname'] = array_values($tracksPathname);
+            }
+
             $results = $this->searchService->findByFields($form, $page);
 
             if ($results['count'] > TrackSearchService::MAX_TRACKS_PER_PAGE) {
@@ -43,7 +64,7 @@ final class AdvancedSearchController
                 $paginator = $this->searchService->getPaginator(
                     $page,
                     $results['count'],
-                    fn($page) => sprintf('%s&page=%d', $baseUrl, $page)
+                    fn ($page) => sprintf('%s&page=%d', $baseUrl, $page)
                 );
             }
         }
@@ -58,6 +79,8 @@ final class AdvancedSearchController
 
     private function isRequestValid(array $criteria): bool
     {
-        return !empty($criteria) || filter_input(INPUT_GET, 'submit', FILTER_VALIDATE_BOOLEAN) === true;
+        $hasAtLeastOneValue = count(array_filter(array_values($criteria))) >= 1;
+
+        return $hasAtLeastOneValue || filter_input(INPUT_GET, 'submit', FILTER_VALIDATE_BOOLEAN) === true;
     }
 }

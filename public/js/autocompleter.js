@@ -2,8 +2,8 @@
 
 // yolo
 
-$(document).ready(() => {
-    const $input = $('[data-role="autocompleter"]');
+const initAutocompleter = $input => {
+    const followOnSelect = $input.data('follow-on-select');
 
     $input.attr('autocomplete', 'off');
 
@@ -35,7 +35,20 @@ $(document).ready(() => {
 
             const item = $activeMenuItem.data('value');
 
-            window.location = item.url;
+            $input.val(item.name);
+
+            // $input.typeahead('close'); nie działa, stąd poniższy hak
+            $input.trigger('blur').focus();
+
+            if (followOnSelect) {
+                window.location = item.url;
+            }
         },
     });
+}
+
+$(() => {
+    const $inputs = $('[data-role="autocompleter"]');
+
+    $inputs.each((i, input) => initAutocompleter($(input)));
 });

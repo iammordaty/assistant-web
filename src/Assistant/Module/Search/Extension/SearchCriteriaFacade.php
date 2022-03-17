@@ -22,10 +22,15 @@ final class SearchCriteriaFacade
     ];
 
     /**
-     * @idea Z tej metody należy wyodrębnić explode-y i przenieść do kontrolera lub serwisu (raczej to pierwsze)
+     * @idea Z tej metody należy wyodrębnić explode-y i przenieść do kontrolera lub serwisu (raczej to pierwsze).
+     *       Update: raczej do klasy Request, zgodnie z sugestią poniżej.
      *
      * @idea Najlepiej byłoby z niej zrezygnować na rzecz metody przyjmującej wiele SearchCriteria.
      *       Uprości to kod, a także wyeliminuje tablice asocjacyjne na rzecz obiektów.
+     *       Rozbijanie przecinków i filtrowanie mogłoby zostać przeniesione do klasy Request, wzorem
+     *       SimilarityParametersRequest. Do klasy Request można byłoby także przenieść defaults-y, o ile byłyby
+     *       jeszcze potrzebne.
+     *
      * @see Similarity::getSimilarityCriteria(); w TrackSearchService też będzie się dało to wykorzystać
      */
     public static function createFromFields(array $fields): SearchCriteria
@@ -71,6 +76,8 @@ final class SearchCriteriaFacade
             $indexedDates = array_map(fn ($date) => (int) $date, $indexedDates);
         }
 
+        $pathname = $fields['pathname'] ?? null;
+
         $searchCriteria = new SearchCriteria(
             $name,
             $guid,
@@ -82,6 +89,8 @@ final class SearchCriteriaFacade
             $initialKeys,
             $bpm,
             $indexedDates,
+            null,
+            $pathname,
         );
 
         return $searchCriteria;
@@ -110,7 +119,7 @@ final class SearchCriteriaFacade
 
     public static function createFromPathname(Regex|string $pathname): SearchCriteria
     {
-        $searchCriteria = new SearchCriteria(pathname: $pathname);
+        $searchCriteria = new SearchCriteria(pathname: [ $pathname ]);
 
         return $searchCriteria;
     }

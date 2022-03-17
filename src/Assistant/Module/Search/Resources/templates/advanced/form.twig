@@ -61,6 +61,24 @@
         </div>
     </div>
 
+    <div class="form-group">
+        <label class="col-sm-1 control-label">
+            <span class="ellipsis"><span>Utwór</span></span>
+        </label>
+        <div class="col-sm-5">
+            <input
+                data-role="autocompleter"
+                data-url="{{ url_for('track.track.autocomplete') }}"
+                data-follow-on-select="false"
+                type="text"
+                name="track"
+                value="{{ form.track|default }}"
+                class="form-control"
+                placeholder="Wprowadź nazwę wykonawcy lub tytuł utworu"
+            >
+        </div>
+    </div>
+
     <footer>
         <button type="submit" name="submit" value="true" class="btn btn-default btn-lg pull-right">Wyszukaj</button>
     </footer>
