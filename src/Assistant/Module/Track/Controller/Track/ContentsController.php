@@ -25,7 +25,7 @@ final class ContentsController
         if (!$track) {
             $error = sprintf("Track with guid \"%s\" doesn't exist.", $guid);
 
-            $error = $response
+            $response = $response
                 ->withJson([ 'error' => $error ])
                 ->withStatus(StatusCodeInterface::STATUS_NOT_FOUND);
 
