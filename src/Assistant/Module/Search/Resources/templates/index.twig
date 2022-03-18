@@ -7,8 +7,8 @@
 {% block contentBlock %}
     {% block searchForm %}
     {% endblock %}
-    
-    {% if result.count > 0 %}
+
+    {% if result.count is defined and result.count > 0 %}
         <div class="search-result">
             <legend>Wyniki</legend>
 

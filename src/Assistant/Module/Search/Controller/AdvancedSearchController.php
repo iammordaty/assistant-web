@@ -36,7 +36,7 @@ final class AdvancedSearchController
     {
         $form = array_merge(SearchCriteriaFacade::DEFAULTS, $request->getQueryParams());
 
-        $results = [ 'count' => 0 ];
+        $results = [];
         $paginator = null;
 
         if ($this->isRequestValid($form)) {
