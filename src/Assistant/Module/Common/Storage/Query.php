@@ -20,7 +20,7 @@ final class Query
      * @param MinMaxInfo|float[]|null $bpm
      * @param MinMaxInfo|\DateTimeInterface[]|null $indexedDates
      * @param string|null $parent
-     * @param Regex|string|null $pathname
+     * @param Regex[]|string[]|null $pathname
      */
     public function __construct(
         private ?string $name,
