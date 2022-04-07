@@ -2,6 +2,7 @@
 
 namespace Assistant\Module\Search\Controller;
 
+use Assistant\Module\Common\Extension\Pagerfanta\PagerfantaFactory;
 use Assistant\Module\Common\Extension\Route;
 use Assistant\Module\Common\Extension\RouteResolver;
 use Assistant\Module\Search\Extension\TrackSearchService;
@@ -30,50 +31,45 @@ final class SimpleSearchController
     public function index(ServerRequestInterface $request, Response $response): ResponseInterface
     {
         $form = $request->getQueryParams();
+        $isFormSubmitted = $this->isFormSubmitted($form);
 
-        $results = [ 'count' => 0 ];
-        $paginator = null;
-
-        if ($this->isRequestValid($form)) {
+        if ($isFormSubmitted) {
             $name = $form['query'];
             $page = max(1, (int) ($form['page'] ?? 1));
 
-            $results = $this->searchService->findByName($name, $page);
+            [ 'count' => $count, 'tracks' => $tracks ] = $this->searchService->findByName($name, $page);
 
-            if ($results['count'] > TrackSearchService::MAX_TRACKS_PER_PAGE) {
-                $route = Route::create('search.simple.index')->withQuery([ 'query' => str_replace('-', ' ', $name) ]);
-                $baseUrl = $this->routeResolver->resolve($route);
+            if ($count === 1) {
+                /** @var Track $track */
+                $track = $tracks->current();
+                $route = Route::create('track.track.index', [ 'guid' => $track->getGuid() ]);
 
-                $paginator = $this->searchService->getPaginator(
-                    $page,
-                    $results['count'],
-                    fn ($page) => sprintf('%s&page=%d', $baseUrl, $page)
-                );
+                $redirect = $response
+                    ->withRedirect($this->routeResolver->resolve($route))
+                    ->withStatus(StatusCodeInterface::STATUS_NOT_FOUND);
+
+                return $redirect;
             }
-        }
 
-        if ($results['count'] === 1) {
-            /** @var Track $track */
-            $track = $results['tracks']->current();
-            $route = Route::create('track.track.index', [ 'guid' => $track->getGuid() ]);
-
-            $redirect = $response
-                ->withRedirect($this->routeResolver->resolve($route))
-                ->withStatus(StatusCodeInterface::STATUS_NOT_FOUND);
-
-            return $redirect;
+            $paginator = PagerfantaFactory::createWithNullAdapter(
+                $count,
+                $page,
+                TrackSearchService::MAX_TRACKS_PER_PAGE
+            );
         }
 
         return $this->view->render($response, '@search/simple/index.twig', [
             'menu' => 'search',
             'form' => $form,
-            'result' => $results,
-            'paginator' => $paginator,
+            'isFormSubmitted' => $isFormSubmitted,
+            'paginator' => $paginator ?? null,
+            'routeName' => 'search.simple.index',
+            'tracks' => $tracks ?? [],
         ]);
     }
 
-    private function isRequestValid(array $criteria): bool
+    private function isFormSubmitted(array $form): bool
     {
-        return !empty($criteria) === true;
+        return !empty($form);
     }
 }

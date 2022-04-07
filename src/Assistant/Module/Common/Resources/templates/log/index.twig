@@ -13,17 +13,9 @@
             autoRefresh: autoRefresh,
         } only %}
 
-        {% if pager.haveToPaginate() %}
-            <div class="text-center">
-                {{ pagerfanta(pager, {
-                    'proximity': 2,
-                    'prev_message': 'Poprzednia',
-                    'next_message': 'Następna',
-                    'route': {
-                        'name': 'common.log.index',
-                    }
-                }) }}
-            {% endif %}
-        </div>
+        {% include '@common/paginator.twig' with {
+            paginator: paginator,
+            routeName: 'common.log.index',
+        } only %}
     </div>
 {% endblock %}
