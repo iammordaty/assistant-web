@@ -8,7 +8,7 @@
     {% block searchForm %}
     {% endblock %}
 
-    {% if result.count is defined and result.count > 0 %}
+    {% if isFormSubmitted %}
         <div class="search-result">
             <legend>Wyniki</legend>
 
@@ -25,7 +25,7 @@
                         </tr>
                     </thead>
                     <tbody>
-                        {% for track in result.tracks %}
+                        {% for track in tracks %}
                             <tr>
                                 <td class="col-xs-6">
                                     <span class="ellipsis track-name">
@@ -53,13 +53,13 @@
                 </table>
             </div>
         </div>
-    {% elseif result.count is defined %}
-        <p class="lead text-center text-muted">Nie znaleziono utworów spełniających podane kryteria</p>
-    {% endif %}
 
-    {% if paginator %}
-        <div class="text-center">
-            {{ paginator|raw }}
-        </div>
+        {% include '@common/paginator.twig' with {
+            paginator: paginator,
+            routeName: routeName,
+            routeQuery: form,
+        } only %}
+    {% elseif isFormSubmitted and paginator.getNbResults() == 0 %}
+        <p class="lead text-center text-muted">Nie znaleziono utworów spełniających podane kryteria</p>
     {% endif %}
 {% endblock %}

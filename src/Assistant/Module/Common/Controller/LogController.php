@@ -26,13 +26,13 @@ final class LogController
 
         [ 'count' => $count, 'log' => $log ] = $this->logView->getLog(page: $page, limit: self::MAX_ENTRIES_PER_PAGE);
 
-        $pagerfanta = PagerfantaFactory::createWithNullAdapter($count, $page, self::MAX_ENTRIES_PER_PAGE);
+        $paginator = PagerfantaFactory::createWithNullAdapter($count, $page, self::MAX_ENTRIES_PER_PAGE);
 
         return $this->view->render($response, '@common/log/index.twig', [
             'menu' => 'log',
             'autoRefresh' => $page === 1,
             'log' => $log,
-            'pager' => $pagerfanta,
+            'paginator' => $paginator,
         ]);
     }
 
