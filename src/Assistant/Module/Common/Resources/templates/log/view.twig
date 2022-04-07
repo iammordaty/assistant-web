@@ -1,33 +1,52 @@
-<table class="table table-hover" data-element="log-viewer" data-log="{{ log }}" data-mtime="{{ logMtime }}" data-maxlines="{{ maxLines }}">
-    <tbody>
-        {% for line in logContent %}
-            <tr {% if line.level == 'ERROR' %}class="danger" {% elseif line.level == 'INFO' %} class="info"{% endif %}>
-                <td title="{{ line.raw }}" class="col-xs-2">{{ line.date|date('d.m.Y, H:i:s') }}</td>
-                <td
-                    class="col-xs-7"
-                    {% if line.message|length > 200 %}
-                        title="{{ line.message }}"
-                    {% endif %}
-                >
-                    {{ line.message|u.truncate(200, '...', false) }}
-                    {% if line.pathname %}"<span title="{{ line.pathname.full }}">{{ line.pathname.short }}"</span>{% endif %}
-                </td>
-                <td class="col-xs-2">{{ line.task }}</td>
-                <td class="col-xs-1 text-right">
-                    <button
-                        type="button"
-                        class="btn btn-primary-outline {% if not line.context %}disabled{% endif %}"
-                        {% if line.context %}
+<table
+    class="table table-hover"
+    data-element="log:log-view"
+    data-auto-refresh="{{ autoRefresh }}"
+    data-auto-refresh-url="{{ url_for('common.log.refresh') }}"
+>
+    {% for logEntry in log %}
+        <tr
+            data-role="log:log-entry"
+            data-log-entry-date="{{ logEntry.datetime|date(constant('DATE_RFC3339_EXTENDED')) }}"
+            {% if logEntry.levelName == 'ERROR' %}
+                class="danger"
+            {% elseif logEntry.levelName == 'INFO' %}
+                class="info"
+            {% endif %}
+        >
+            <td class="col-xs-2">{{ logEntry.datetime|date('d.m.Y, H:i:s') }}</td>
+            <td
+                class="col-xs-7"
+                {% if logEntry.message|length > 200 %}
+                    title="{{ logEntry.message }}"
+                {% endif %}
+            >
+                {{ logEntry.message|u.truncate(200, '...', false) -}}
+                {% if logEntry.pathname %}
+                    "<span title="{{ logEntry.pathname.full }}">{{ logEntry.pathname.short }}"</span>
+                {% endif %}
+            </td>
+            <td class="col-xs-2 text-nowrap">{{ logEntry.taskName }}</td>
+            <td class="col-xs-1 text-right">
+                <button
+                    class="btn btn-primary-outline {% if not logEntry.context %}disabled{% endif %}"
+                    type="button"
+                    title="Kontekst"
+                    {% if logEntry.context %}
                         data-toggle="popover"
-                        {% endif %}
-                        data-placement="bottom"
-                        data-trigger="hover"
-                        title="Kontekst"
-                        data-html="true"
-                        data-content="<pre class='raw'>{{ line.context }}</pre>"
-                    ><i class="fa fa-eye{% if not line.context %}-slash{% endif %}"></i></button>
-                </td>
-            </tr>
-        {% endfor %}
-    </tbody>
+                    {% endif %}
+                    data-content="<pre class='raw'>{{-
+                        logEntry.context|json_encode(
+                            constant('JSON_PRETTY_PRINT')
+                            b-or constant('JSON_UNESCAPED_SLASHES')
+                            b-or constant('JSON_UNESCAPED_UNICODE')
+                    )
+                    -}}</pre>"
+                    data-html="true"
+                    data-placement="bottom"
+                    data-trigger="hover"
+                ><i class="fa fa-eye{% if not logEntry.context %}-slash{% endif %}"></i></button>
+            </td>
+        </tr>
+    {% endfor %}
 </table>

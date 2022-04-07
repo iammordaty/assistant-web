@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "9f83fabd796957b247e91b5eb64f23c5",
+    "content-hash": "bab34cb9533da176dcfd091448ae417d",
     "packages": [
         {
             "name": "cache/adapter-common",
@@ -1830,108 +1830,96 @@
             "time": "2021-04-09T13:42:10+00:00"
         },
         {
-            "name": "pagerfanta/pagerfanta",
-            "version": "v3.4.0",
+            "name": "pagerfanta/core",
+            "version": "v3.6.1",
             "source": {
                 "type": "git",
-                "url": "https://github.com/BabDev/Pagerfanta.git",
-                "reference": "27d063c30978e0d9ed7ae46718b415fcb7825541"
+                "url": "https://github.com/Pagerfanta/core.git",
+                "reference": "ed751ad06edea1d88451683405e4a207f20c26ac"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/BabDev/Pagerfanta/zipball/27d063c30978e0d9ed7ae46718b415fcb7825541",
-                "reference": "27d063c30978e0d9ed7ae46718b415fcb7825541",
+                "url": "https://api.github.com/repos/Pagerfanta/core/zipball/ed751ad06edea1d88451683405e4a207f20c26ac",
+                "reference": "ed751ad06edea1d88451683405e4a207f20c26ac",
                 "shasum": ""
             },
             "require": {
                 "ext-json": "*",
                 "php": "^7.4 || ^8.0",
-                "symfony/deprecation-contracts": "^2.1",
+                "symfony/deprecation-contracts": "^2.1 || ^3.0",
                 "symfony/polyfill-php80": "^1.15"
             },
-            "conflict": {
-                "doctrine/collections": "<1.6",
-                "doctrine/dbal": "<2.12",
-                "doctrine/mongodb-odm": "<2.2.2",
-                "doctrine/orm": "<2.8",
-                "doctrine/phpcr-odm": "<1.5",
-                "ruflin/elastica": "<6.0",
-                "solarium/solarium": "<5.0",
-                "twig/twig": "<1.35 || >=2.0,<2.5"
-            },
-            "replace": {
-                "pagerfanta/core": "self.version",
-                "pagerfanta/doctrine-collections-adapter": "self.version",
-                "pagerfanta/doctrine-dbal-adapter": "self.version",
-                "pagerfanta/doctrine-mongodb-odm-adapter": "self.version",
-                "pagerfanta/doctrine-orm-adapter": "self.version",
-                "pagerfanta/doctrine-phpcr-odm-adapter": "self.version",
-                "pagerfanta/elastica-adapter": "self.version",
-                "pagerfanta/solarium-adapter": "self.version",
-                "pagerfanta/twig": "self.version"
-            },
             "require-dev": {
-                "dg/bypass-finals": "^1.3",
-                "doctrine/cache": "^1.11 || ^2.0",
-                "doctrine/collections": "^1.6",
-                "doctrine/dbal": "^2.12 || ^3.0",
-                "doctrine/mongodb-odm": "^2.2.2",
-                "doctrine/orm": "^2.8",
-                "doctrine/phpcr-odm": "^1.5",
-                "friendsofphp/php-cs-fixer": "^3.1",
-                "jackalope/jackalope-doctrine-dbal": "^1.6",
-                "phpstan/extension-installer": "^1.1",
-                "phpstan/phpstan": "^1.1.2",
-                "phpstan/phpstan-phpunit": "^1.0.0",
                 "phpunit/phpunit": "^9.5",
-                "ruflin/elastica": "^6.0 || ^7.0",
-                "solarium/solarium": "^5.0 || ^6.0",
-                "symfony/cache": "^4.4 || ^5.2 || ^6.0",
-                "symfony/phpunit-bridge": "^5.3",
-                "twig/twig": "^1.35 || ^2.5 || ^3.0"
-            },
-            "suggest": {
-                "twig/twig": "To integrate Pagerfanta with Twig"
+                "symfony/phpunit-bridge": "^5.4 || ^6.0"
             },
             "type": "library",
             "autoload": {
                 "psr-4": {
-                    "Pagerfanta\\": "lib/Core/",
-                    "Pagerfanta\\Doctrine\\Collections\\": "lib/Adapter/Doctrine/Collections/",
-                    "Pagerfanta\\Doctrine\\DBAL\\": "lib/Adapter/Doctrine/DBAL/",
-                    "Pagerfanta\\Doctrine\\MongoDBODM\\": "lib/Adapter/Doctrine/MongoDBODM/",
-                    "Pagerfanta\\Doctrine\\ORM\\": "lib/Adapter/Doctrine/ORM/",
-                    "Pagerfanta\\Doctrine\\PHPCRODM\\": "lib/Adapter/Doctrine/PHPCRODM/",
-                    "Pagerfanta\\Elastica\\": "lib/Adapter/Elastica/",
-                    "Pagerfanta\\Solarium\\": "lib/Adapter/Solarium/",
-                    "Pagerfanta\\Twig\\": "lib/Twig/"
+                    "Pagerfanta\\": "./"
                 },
                 "exclude-from-classmap": [
-                    "lib/**/Tests/"
+                    "Tests/"
                 ]
             },
             "notification-url": "https://packagist.org/downloads/",
             "license": [
                 "MIT"
             ],
-            "description": "Pagination for PHP",
+            "description": "Core Pagerfanta API",
             "keywords": [
-                "page",
-                "pagination",
-                "paginator",
-                "paging"
+                "pagerfanta"
             ],
             "support": {
-                "issues": "https://github.com/BabDev/Pagerfanta/issues",
-                "source": "https://github.com/BabDev/Pagerfanta/tree/v3.4.0"
+                "source": "https://github.com/Pagerfanta/core/tree/v3.6.1"
             },
-            "funding": [
-                {
-                    "url": "https://github.com/mbabker",
-                    "type": "github"
-                }
+            "time": "2022-03-15T23:30:46+00:00"
+        },
+        {
+            "name": "pagerfanta/twig",
+            "version": "v3.6.1",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/Pagerfanta/twig.git",
+                "reference": "0d7af77b027ffd613212abb434a40f4520f4e9d5"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/Pagerfanta/twig/zipball/0d7af77b027ffd613212abb434a40f4520f4e9d5",
+                "reference": "0d7af77b027ffd613212abb434a40f4520f4e9d5",
+                "shasum": ""
+            },
+            "require": {
+                "pagerfanta/core": "^3.0",
+                "php": "^7.4 || ^8.0",
+                "symfony/polyfill-php80": "^1.15",
+                "twig/twig": "^1.35 || ^2.5 || ^3.0"
+            },
+            "require-dev": {
+                "phpunit/phpunit": "^9.5",
+                "symfony/phpunit-bridge": "^5.4 || ^6.0"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "Pagerfanta\\Twig\\": "./"
+                },
+                "exclude-from-classmap": [
+                    "/Tests/"
+                ]
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
             ],
-            "time": "2021-11-11T00:02:17+00:00"
+            "description": "Twig integration for Pagerfanta",
+            "keywords": [
+                "pagerfanta"
+            ],
+            "support": {
+                "source": "https://github.com/Pagerfanta/twig/tree/v3.6.1"
+            },
+            "time": "2022-01-18T04:22:14+00:00"
         },
         {
             "name": "php-di/invoker",
@@ -2146,98 +2134,6 @@
                 "source": "https://github.com/PHP-DI/Slim-Bridge/tree/3.2.0"
             },
             "time": "2021-11-01T16:14:12+00:00"
-        },
-        {
-            "name": "php-extended/php-system",
-            "version": "1.4.0",
-            "source": {
-                "type": "git",
-                "url": "https://gitlab.com/php-extended/php-system.git",
-                "reference": "9e6b3c2009ef56dc123efc43900e40cdf217ace0"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://gitlab.com/api/v4/projects/php-extended%2Fphp-system/repository/archive.zip?sha=9e6b3c2009ef56dc123efc43900e40cdf217ace0",
-                "reference": "9e6b3c2009ef56dc123efc43900e40cdf217ace0",
-                "shasum": ""
-            },
-            "type": "library",
-            "autoload": {
-                "psr-4": {
-                    "PhpExtended\\System\\": "src/"
-                }
-            },
-            "notification-url": "https://packagist.org/downloads/",
-            "license": [
-                "MIT"
-            ],
-            "authors": [
-                {
-                    "name": "Anastaszor",
-                    "role": "Developer"
-                }
-            ],
-            "description": "A generic way to find informations about the running system",
-            "homepage": "https://gitlab.com/php-extended/php-system",
-            "keywords": [
-                "operating system",
-                "os",
-                "php",
-                "system"
-            ],
-            "support": {
-                "issues": "https://gitlab.com/php-extended/php-system/issues",
-                "source": "https://gitlab.com/php-extended/php-system"
-            },
-            "time": "2018-06-07T06:03:27+00:00"
-        },
-        {
-            "name": "php-extended/php-tail",
-            "version": "2.2.0",
-            "source": {
-                "type": "git",
-                "url": "https://gitlab.com/php-extended/php-tail.git",
-                "reference": "19fbd3a79ccc071954f28296b2c44754335304a0"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://gitlab.com/api/v4/projects/php-extended%2Fphp-tail/repository/archive.zip?sha=19fbd3a79ccc071954f28296b2c44754335304a0",
-                "reference": "19fbd3a79ccc071954f28296b2c44754335304a0",
-                "shasum": ""
-            },
-            "require": {
-                "php-extended/php-system": "^1.2"
-            },
-            "type": "library",
-            "autoload": {
-                "psr-4": {
-                    "PhpExtended\\Tail\\": "src/"
-                }
-            },
-            "notification-url": "https://packagist.org/downloads/",
-            "license": [
-                "MIT"
-            ],
-            "authors": [
-                {
-                    "name": "Anastaszor",
-                    "role": "Developer"
-                }
-            ],
-            "description": "A smart way to tail files depending of the environment",
-            "homepage": "https://gitlab.com/php-extended/php-tail",
-            "keywords": [
-                "cheat",
-                "mighty",
-                "naive",
-                "php",
-                "tail"
-            ],
-            "support": {
-                "issues": "https://gitlab.com/php-extended/php-tail/issues",
-                "source": "https://gitlab.com/php-extended/php-tail"
-            },
-            "time": "2018-06-07T06:04:58+00:00"
         },
         {
             "name": "phpoption/phpoption",

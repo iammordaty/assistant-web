@@ -3,18 +3,27 @@
 {% block title %}Logi{% endblock %}
 
 {% block contentBlock %}
-    <script src="/js/log.js" type="text/javascript"></script>
+    <script src="/js/log.js" type="module"></script>
 
-    {% for log in availableLogs %}
-        <div>
-            <legend><a class="undecorated" href="?log={{ log }}">{{ log }}</a></legend>
+    <div>
+        <legend>Przeglądarka logów</legend>
 
-            {% include '@common/log/view.twig' with {
-                log: log,
-                logMtime: logMtimes[log],
-                logContent: logContents[log],
-                maxLines: maxLines
-            } only %}
+        {% include '@common/log/view.twig' with {
+            log: log,
+            autoRefresh: autoRefresh,
+        } only %}
+
+        {% if pager.haveToPaginate() %}
+            <div class="text-center">
+                {{ pagerfanta(pager, {
+                    'proximity': 2,
+                    'prev_message': 'Poprzednia',
+                    'next_message': 'Następna',
+                    'route': {
+                        'name': 'common.log.index',
+                    }
+                }) }}
+            {% endif %}
         </div>
-    {% endfor %}
+    </div>
 {% endblock %}

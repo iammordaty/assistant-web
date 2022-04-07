@@ -23,11 +23,15 @@ final class DashboardController
 
     public function index(Request $request, Response $response): Response
     {
-        return $this->view->render($response, '@dashboard/index.twig', [
-            'menu' => 'dashboard',
-            'trackCountByGenre' => $this->statsRepository->getTrackCountByGenre(self::MAX_GENRES),
-            'trackCountByArtist' => $this->statsRepository->getTrackCountByArtist(self::MAX_ARTISTS),
-            'recentlyAddedTracks' => $this->trackService->getRecent(limit: self::MAX_RECENT_TRACKS),
-        ]);
+        try {
+            return $this->view->render($response, '@dashboard/index.twig', [
+                'menu' => 'dashboard',
+                'trackCountByGenre' => $this->statsRepository->getTrackCountByGenre(self::MAX_GENRES),
+                'trackCountByArtist' => $this->statsRepository->getTrackCountByArtist(self::MAX_ARTISTS),
+                'recentlyAddedTracks' => $this->trackService->getRecent(limit: self::MAX_RECENT_TRACKS),
+            ]);
+        } catch (\Exception $e) {
+            var_dump($e);exit;
+        }
     }
 }

@@ -60,9 +60,9 @@ final class Storage
      *
      * @param array $conditions
      * @param array $options
-     * @return Cursor
+     * @return BSONDocument[]|Cursor
      */
-    public function findBy(array $conditions, array $options = []): Cursor
+    public function findBy(array $conditions, array $options = []): array|Cursor
     {
         return $this->collection->find(
             $conditions,

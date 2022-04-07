@@ -8,11 +8,14 @@ use Assistant\Module\Collection\Extension\Reader\MetadataParser\MetadataParser;
 use Assistant\Module\Collection\Extension\Reader\ReaderFacade;
 use Assistant\Module\Common\Extension\Config;
 use Assistant\Module\Common\Extension\GetId3\Adapter as Id3Adapter;
+use Assistant\Module\Common\Extension\LogView;
+use Assistant\Module\Common\Extension\Pagerfanta\PagerfantaTwigRuntimeLoaderFactory;
 use Assistant\Module\Common\Extension\PathBreadcrumbs;
 use Assistant\Module\Common\Extension\RouteResolver;
 use Assistant\Module\Common\Extension\SimilarTracksCollection\SimilarTracksCollectionService;
 use Assistant\Module\Common\Extension\SlugifyService;
 use Assistant\Module\Common\Extension\Twig\DurationTwigExtension;
+use Assistant\Module\Common\Repository\LogRepository;
 use Assistant\Module\Directory\Extension\DirectoryService;
 use Assistant\Module\Directory\Repository\DirectoryRepository;
 use Assistant\Module\Mix\Extension\MixService;
@@ -27,8 +30,9 @@ use Assistant\Module\Track\Repository\TrackStatsRepository;
 use MongoDB\Client as MongoDBClient;
 use Monolog\Formatter\LineFormatter;
 use Monolog\Handler\ErrorLogHandler;
-use Monolog\Handler\StreamHandler;
+use Monolog\Handler\MongoDBHandler;
 use Monolog\Logger;
+use Pagerfanta\Twig\Extension\PagerfantaExtension;
 use Psr\Container\ContainerInterface as Container;
 use Psr\Log\LoggerInterface;
 use Slim\App;
@@ -75,27 +79,38 @@ return static fn (string $baseDir, array $config): array => [
 
     Id3Adapter::class => create(),
 
-    Logger::class => function () use ($baseDir): LoggerInterface {
-        $logsDir = $baseDir . '/var/logs';
+    Logger::class => function (Container $container) use ($baseDir): LoggerInterface {
+        $storage = $container->get(Config::class)->get('storage');
 
-        $logger = new Logger('assistant-logger');
-
-        $formatter = new LineFormatter('[%datetime%] %level_name% %message% %context% %extra%' . PHP_EOL);
-        $formatter->ignoreEmptyContextAndExtra(true);
-
-        $logger->setHandlers([
+        $handlers = [
+            new MongoDBHandler(
+                new MongoDBClient($storage['connection_uri']),
+                $storage['database'],
+                LogRepository::COLLECTION_NAME
+            ),
             (new ErrorLogHandler())->setFormatter(new LineFormatter(
                 '[%datetime%] [%level_name%] %message% %context%',
                 'd.m.Y, H:i:s',
                 false,
                 true
             )),
-            (new StreamHandler(sprintf('%s/app.error.log', $logsDir), Logger::ERROR))->setFormatter($formatter),
-            (new StreamHandler(sprintf('%s/app.debug.log', $logsDir), Logger::DEBUG))->setFormatter($formatter),
-        ]);
+        ];
 
-        return $logger;
+        return new Logger('assistant-logger', $handlers);
     },
+
+    LogRepository::class => function (Container $container): LogRepository {
+        $storage = $container->get(Config::class)->get('storage');
+
+        $client = new MongoDBClient($storage['connection_uri']);
+        $database = $client->selectDatabase($storage['database']);
+
+        $repository = LogRepository::factory($database);
+
+        return $repository;
+    },
+
+    LogView::class => autowire(),
 
     MixService::class => autowire(),
 
@@ -157,7 +172,7 @@ return static fn (string $baseDir, array $config): array => [
         return $repository;
     },
 
-    Twig::class => function () use ($baseDir): Twig {
+    Twig::class => function (Container $container) use ($baseDir): Twig {
         $paths = [
             'common' => $baseDir . '/src/Assistant/Module/Common/Resources/templates/',
             'dashboard' => $baseDir . '/src/Assistant/Module/Dashboard/Resources/templates/',
@@ -175,8 +190,12 @@ return static fn (string $baseDir, array $config): array => [
         $view = Twig::create($paths, $settings);
 
         $view->addExtension(DurationTwigExtension::factory());
-        $view->addExtension(new TwigDebugExtension());
+        $view->addExtension(new PagerfantaExtension());
         $view->addExtension(new StringExtension()); // do |u.truncate()
+        $view->addExtension(new TwigDebugExtension());
+
+        $pagerfantaRuntimeLoader = PagerfantaTwigRuntimeLoaderFactory::createRuntimeLoader($container);
+        $view->addRuntimeLoader($pagerfantaRuntimeLoader);
 
         return $view;
     },
