@@ -2,10 +2,24 @@
 
 namespace Assistant\Module\Common\Storage;
 
+use Assistant\Module\Common\Repository\LogRepository;
+use Assistant\Module\Directory\Repository\DirectoryRepository;
+use Assistant\Module\Search\Extension\DirectorySearchService;
 use Assistant\Module\Search\Extension\MinMaxInfo;
 use Assistant\Module\Search\Extension\SearchCriteria;
+use Assistant\Module\Track\Model\Track;
 use MongoDB\BSON\Regex as MongoDBRegex;
 
+/**
+ * Ta klasa jest wyspecjalizowana — jej możliwości wyszukiwania ograniczone są do utworów oraz katalogów,
+ * bez możliwości tworzenia zapytań do innych kolekcji oraz innych pól.
+ *
+ * @idea Do rozważenia: przenieść niniejszą klasę do Collection, rozdzielić względem Track i Direcotry.
+ *       Wydzielić części, które mogą być przydatne w innych kolekcjach
+ * @see DirectoryRepository
+ * @see TrackRepository
+ * @see LogRepository
+ */
 final class Query
 {
     /**

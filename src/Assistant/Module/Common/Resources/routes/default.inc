@@ -20,7 +20,7 @@ return static function (App $app): void {
             ->setName('common.log.index');
 
         $group
-            ->get('/log/ajax', [ LogController::class, 'ajax' ])
-            ->setName('common.log.ajax');
+            ->get('/log/refresh', [ LogController::class, 'refresh' ])
+            ->setName('common.log.refresh');
     });
 };

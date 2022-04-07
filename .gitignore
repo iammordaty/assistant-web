@@ -2,6 +2,5 @@
 .env
 .idea
 /var/cache/*
-/var/logs/*
 /vendor/
 @eaDir

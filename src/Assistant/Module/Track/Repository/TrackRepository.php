@@ -8,6 +8,7 @@ use Assistant\Module\Search\Extension\SearchCriteria;
 use Assistant\Module\Track\Model\Track;
 use Assistant\Module\Track\Model\TrackDto;
 use MongoDB\Database;
+use MongoDB\Model\BSONDocument;
 use Traversable;
 
 /** Repozytorium obiektów Track */
@@ -108,7 +109,7 @@ final class TrackRepository
         return $count;
     }
 
-    private static function createModel($document): Track
+    private static function createModel(BSONDocument $document): Track
     {
         $dto = TrackDto::fromStorage($document->bsonSerialize());
         $track = Track::fromDto($dto);
