@@ -14,8 +14,8 @@ final class RecentTracksController
     private IntlDateFormatter $dateFormatter;
 
     public function __construct(
-        private TrackService $trackService,
-        private Twig $view,
+        private readonly TrackService $trackService,
+        private readonly Twig $view,
     ) {
         $this->dateFormatter = new IntlDateFormatter(
             locale: 'pl_PL.utf8',
@@ -29,11 +29,12 @@ final class RecentTracksController
         $recent = [];
 
         foreach ($this->trackService->getRecent() as $track) {
-            $groupName = $this->getGroupName($track);
+            [ 'name' => $groupName, 'segments' => $groupSegments ] = $this->getGroup($track);
 
             if (!isset($recent[$groupName])) {
                 $recent[$groupName] = [
                     'name' => $groupName,
+                    'segments' => $groupSegments,
                     'tracks' => [],
                 ];
             }
@@ -47,11 +48,19 @@ final class RecentTracksController
         ]);
     }
 
-    private function getGroupName(Track $track): string
+    private function getGroup(Track $track): array
     {
-        $year = $track->getIndexedDate()->format('Y');
+        $date = $track->getIndexedDate()->format('m.Y');
         $month = $this->dateFormatter->format($track->getIndexedDate());
+        $year = $track->getIndexedDate()->format('Y');
 
-        return $year . '/' . ucfirst($month);
+        $name = $year . '-' . $month;
+
+        $segments = [
+            [ 'name' => $year, 'date' => $year ],
+            [ 'name' => ucfirst($month), 'date' => $date ],
+        ];
+
+        return [ 'name' => $name, 'segments' => $segments ];
     }
 }
