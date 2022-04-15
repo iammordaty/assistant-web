@@ -9,7 +9,6 @@ use Assistant\Module\Common\Extension\RouteResolver;
 use Assistant\Module\Common\Extension\SlugifyService;
 use Assistant\Module\Directory\Extension\DirectoryService;
 use Assistant\Module\Track\Extension\TrackService;
-use Fig\Http\Message\StatusCodeInterface;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Slim\Http\Response;
@@ -34,26 +33,22 @@ final class BrowseController
 
         if (!$guid) {
             $guid = $this->slugify->slugify($this->config->get('collection.root_dir'));
+
             $route = Route::create('directory.browse.index')->withParams([ 'guid' => $guid ]);
+            $redirectUrl = $this->routeResolver->resolve($route);
 
-            $redirect = $response
-                ->withRedirect($this->routeResolver->resolve($route))
-                ->withStatus(StatusCodeInterface::STATUS_NOT_FOUND);
-
-            return $redirect;
+            return $response->withRedirect($redirectUrl);
         }
 
         $directory = $this->directoryService->getByGuid($guid);
 
         if (!$directory) {
             $guid = $this->slugify->slugify($this->config->get('collection.root_dir'));
+
             $route = Route::create('directory.browse.index')->withParams([ 'guid' => $guid ]);
+            $redirectUrl = $this->routeResolver->resolve($route);
 
-            $redirect = $response
-                ->withRedirect($this->routeResolver->resolve($route))
-                ->withStatus(StatusCodeInterface::STATUS_NOT_FOUND);
-
-            return $redirect;
+            return $response->withRedirect($redirectUrl);
         }
 
         $directories = iterator_to_array($this->directoryService->getByDirectory($directory));

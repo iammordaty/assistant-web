@@ -10,7 +10,6 @@ use Assistant\Module\Track\Extension\Similarity\SimilarityBuilder;
 use Assistant\Module\Track\Extension\Similarity\SimilarityParametersForm;
 use Assistant\Module\Track\Extension\TrackService;
 use Assistant\Module\Track\Model\Track;
-use Fig\Http\Message\StatusCodeInterface;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Slim\Http\Response;
@@ -36,12 +35,9 @@ final class TrackController
 
         if (!$track) {
             $route = Route::create('search.simple.index')->withQuery([ 'query' => str_replace('-', ' ', $guid) ]);
+            $redirectUrl = $this->routeResolver->resolve($route);
 
-            $redirect = $response
-                ->withRedirect($this->routeResolver->resolve($route))
-                ->withStatus(StatusCodeInterface::STATUS_NOT_FOUND);
-
-            return $redirect;
+            return $response->withRedirect($redirectUrl);
         }
 
         $form = SimilarityParametersForm::create($track->toDto(), $request);

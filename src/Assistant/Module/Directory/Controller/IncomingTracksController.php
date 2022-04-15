@@ -12,7 +12,6 @@ use Assistant\Module\Common\Extension\RouteResolver;
 use Assistant\Module\Common\Extension\SlugifyService;
 use Assistant\Module\Common\Extension\TargetPathService;
 use Assistant\Module\Directory\Model\Directory;
-use Fig\Http\Message\StatusCodeInterface;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Slim\Http\Response;
@@ -37,13 +36,11 @@ final class IncomingTracksController
 
         if (!is_readable($pathname)) {
             $guid = $this->slugify->slugify($this->config->get('collection.incoming_dir'));
+
             $route = Route::create('directory.browse.index')->withParams([ 'guid' => $guid ]);
+            $redirectUrl = $this->routeResolver->resolve($route);
 
-            $redirect = $response
-                ->withRedirect($this->routeResolver->resolve($route))
-                ->withStatus(StatusCodeInterface::STATUS_NOT_FOUND);
-
-            return $redirect;
+            return $response->withRedirect($redirectUrl);
         }
 
         [ $tracks, $directories ] = $this->getCollectionItems($pathname);

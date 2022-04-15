@@ -7,7 +7,6 @@ use Assistant\Module\Common\Extension\Route;
 use Assistant\Module\Common\Extension\RouteResolver;
 use Assistant\Module\Search\Extension\TrackSearchService;
 use Assistant\Module\Track\Model\Track;
-use Fig\Http\Message\StatusCodeInterface;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Slim\Http\Response;
@@ -42,13 +41,11 @@ final class SimpleSearchController
             if ($count === 1) {
                 /** @var Track $track */
                 $track = $tracks->current();
+
                 $route = Route::create('track.track.index', [ 'guid' => $track->getGuid() ]);
+                $redirectUrl = $this->routeResolver->resolve($route);
 
-                $redirect = $response
-                    ->withRedirect($this->routeResolver->resolve($route))
-                    ->withStatus(StatusCodeInterface::STATUS_NOT_FOUND);
-
-                return $redirect;
+                return $response->withRedirect($redirectUrl);
             }
 
             $paginator = PagerfantaFactory::createWithNullAdapter(

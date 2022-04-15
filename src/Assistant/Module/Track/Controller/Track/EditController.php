@@ -7,7 +7,6 @@ use Assistant\Module\Common\Extension\Route;
 use Assistant\Module\Common\Extension\RouteResolver;
 use Assistant\Module\Track\Extension\TrackService;
 use Cocur\BackgroundProcess\BackgroundProcess;
-use Fig\Http\Message\StatusCodeInterface;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Slim\Http\Response;
@@ -133,12 +132,9 @@ final class EditController
         }
 
         $route = Route::create($routeName)->withParams($params);
+        $redirectUrl = $this->routeResolver->resolve($route);
 
-        $redirect = $response
-            ->withRedirect($this->routeResolver->resolve($route))
-            ->withStatus(StatusCodeInterface::STATUS_FOUND);
-
-        return $redirect;
+        return $response->withRedirect($redirectUrl);
     }
 
     /**
@@ -199,11 +195,8 @@ final class EditController
         }
 
         $route = Route::create($routeName)->withQuery($query);
+        $redirectUrl = $this->routeResolver->resolve($route);
 
-        $redirect = $response
-            ->withRedirect($this->routeResolver->resolve($route))
-            ->withStatus(StatusCodeInterface::STATUS_NOT_FOUND);
-
-        return $redirect;
+        return $response->withRedirect($redirectUrl);
     }
 }
