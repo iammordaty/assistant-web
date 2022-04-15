@@ -12,8 +12,8 @@
                         <i class="fa fa-home fa-lg fa-fw"></i>
                     </a>
                 </li>
-                {% for segment in month.name|split('/') %}
-                    <li>{{ segment }}</li>
+                {% for segment in month.segments %}
+                    <li><a href="{{ url_for('search.advanced.index') }}?indexed_date={{ segment.date }}" class="undecorated">{{ segment.name }}</a></li>
                 {% endfor %}
             </ol>
         </div>
