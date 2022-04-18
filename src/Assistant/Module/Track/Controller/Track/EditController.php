@@ -8,8 +8,8 @@ use Assistant\Module\Common\Extension\RouteResolver;
 use Assistant\Module\Track\Extension\TrackService;
 use Cocur\BackgroundProcess\BackgroundProcess;
 use Psr\Http\Message\ResponseInterface;
-use Psr\Http\Message\ServerRequestInterface;
 use Slim\Http\Response;
+use Slim\Http\ServerRequest;
 use Slim\Views\Twig;
 
 final class EditController
@@ -27,7 +27,7 @@ final class EditController
      * @todo Wyciągnąć z kontrolera i przerzucić do innej klasy
      * @todo Część klas (m.in. BeatportApiClient) przerzucić do containera dla wygodniejszej inicjalizacji
      */
-    public function edit(ServerRequestInterface $request, Response $response): ResponseInterface
+    public function edit(ServerRequest $request, Response $response): ResponseInterface
     {
         $pathname = $request->getAttribute('pathname');
         $track = $this->trackService->createFromFile($pathname);
@@ -36,7 +36,7 @@ final class EditController
             return $this->getNotFoundRedirect($response, $pathname);
         }
 
-        $query = $request->getQueryParams()['query'] ?? null;
+        $query = $request->getQueryParam('query');
 
         if (!$query) {
             $query = pathinfo($track->getPathname(), PATHINFO_FILENAME);
@@ -61,7 +61,7 @@ final class EditController
      * @todo Na tyle ile pozwala biblioteka, opcja usuwania innych tagów powinna usuwać zdjęcie, tag id3v1, lyrics,
      *       ape (oraz inne) oraz niewspierane pola z id3v2
      */
-    public function save(ServerRequestInterface $request, Response $response): ResponseInterface
+    public function save(ServerRequest $request, Response $response): ResponseInterface
     {
         $pathname = $request->getAttribute('pathname');
         $track = $this->trackService->createFromFile($pathname);
@@ -70,6 +70,7 @@ final class EditController
             return $this->getNotFoundRedirect($response, $pathname);
         }
 
+        // słabe, ogarnąć klasą typu request, podobnie jak w logach
         $postData = $request->getParsedBody();
 
         // @todo, to powinno dać się ustawić po stronie Adaptera jako osobne flagi, bez konieczności

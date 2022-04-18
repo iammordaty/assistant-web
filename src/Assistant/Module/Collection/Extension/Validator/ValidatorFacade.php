@@ -8,7 +8,7 @@ use Assistant\Module\Directory\Extension\DirectoryService;
 use Assistant\Module\Directory\Model\Directory;
 use Assistant\Module\Track\Extension\TrackService;
 use Assistant\Module\Track\Model\Track;
-use Psr\Container\ContainerInterface as Container;
+use Psr\Container\ContainerInterface;
 
 /** Fasada dla walidatorów plików oraz katalogów mających zostać dodanych do kolekcji */
 final class ValidatorFacade
@@ -25,7 +25,7 @@ final class ValidatorFacade
         $this->trackValidator = $trackValidator;
     }
 
-    public static function factory(Container $container): self
+    public static function factory(ContainerInterface $container): self
     {
         $directoryValidator = new DirectoryValidator(
             $container->get(DirectoryService::class)

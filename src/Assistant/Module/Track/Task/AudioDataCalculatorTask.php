@@ -13,7 +13,7 @@ use Assistant\Module\Common\Task\AbstractTask;
 use Assistant\Module\Track\Extension\TrackService;
 use KeyTools\KeyTools;
 use Monolog\Logger;
-use Psr\Container\ContainerInterface as Container;
+use Psr\Container\ContainerInterface;
 use SplFileInfo;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
@@ -49,7 +49,7 @@ final class AudioDataCalculatorTask extends AbstractTask
         ];
     }
 
-    public static function factory(Container $container): self
+    public static function factory(ContainerInterface $container): self
     {
         return new self(
             $container->get(Logger::class),

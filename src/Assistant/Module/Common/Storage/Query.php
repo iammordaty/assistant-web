@@ -4,10 +4,8 @@ namespace Assistant\Module\Common\Storage;
 
 use Assistant\Module\Common\Repository\LogRepository;
 use Assistant\Module\Directory\Repository\DirectoryRepository;
-use Assistant\Module\Search\Extension\DirectorySearchService;
 use Assistant\Module\Search\Extension\MinMaxInfo;
 use Assistant\Module\Search\Extension\SearchCriteria;
-use Assistant\Module\Track\Model\Track;
 use MongoDB\BSON\Regex as MongoDBRegex;
 
 /**
