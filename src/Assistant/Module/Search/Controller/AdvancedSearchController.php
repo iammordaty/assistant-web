@@ -6,8 +6,8 @@ use Assistant\Module\Common\Extension\Pagerfanta\PagerfantaFactory;
 use Assistant\Module\Common\Extension\SimilarTracksCollection\SimilarTracksCollectionService;
 use Assistant\Module\Search\Extension\SearchCriteriaFacade;
 use Assistant\Module\Search\Extension\TrackSearchService;
-use Psr\Http\Message\ResponseInterface as Response;
-use Psr\Http\Message\ServerRequestInterface as Request;
+use Psr\Http\Message\ResponseInterface;
+use Psr\Http\Message\ServerRequestInterface;
 use Slim\Views\Twig;
 
 /**
@@ -29,7 +29,7 @@ final class AdvancedSearchController
      * Na moduł wyszukiwania należałoby spojrzeć nieco szerzej:
      * @see SearchCriteriaFacade::createFromFields
      */
-    public function index(Request $request, Response $response): Response
+    public function index(ServerRequestInterface $request, ResponseInterface $response): ResponseInterface
     {
         $form = array_merge(SearchCriteriaFacade::DEFAULTS, $request->getQueryParams());
         $isFormSubmitted = $this->isFormSubmitted($form);

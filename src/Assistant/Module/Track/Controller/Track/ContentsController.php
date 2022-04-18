@@ -6,18 +6,18 @@ use Assistant\Module\Track\Extension\TrackService;
 use Fig\Http\Message\StatusCodeInterface;
 use Monolog\Logger;
 use Psr\Http\Message\ResponseInterface;
-use Psr\Http\Message\ServerRequestInterface;
 use Slim\Http\Response;
+use Slim\Http\ServerRequest;
 
 final class ContentsController
 {
     public function __construct(
-        private Logger $logger,
-        private TrackService $trackService,
+        private readonly Logger $logger,
+        private readonly TrackService $trackService,
     ) {
     }
 
-    public function get(ServerRequestInterface $request, Response $response): ResponseInterface
+    public function get(ServerRequest $request, Response $response): ResponseInterface
     {
         $guid = $request->getAttribute('guid');
         $track = $this->trackService->getByGuid($guid);
@@ -44,12 +44,10 @@ final class ContentsController
                 ->withStatus(StatusCodeInterface::STATUS_INTERNAL_SERVER_ERROR);
         }
 
-        $contentDisposition = sprintf('inline; filename="%s - %s"', $track->getArtist(), $track->getTitle());
-
-        $response = $response
-            ->withFile($track->getPathname())
-            ->withHeader('Content-Disposition', $contentDisposition)
-            ->withHeader('Content-Length', $track->getFile()->getSize());
+        $response = $response->withFileDownload(
+            file: $track->getPathname(),
+            name: $track->getName(),
+        );
 
         return $response;
     }

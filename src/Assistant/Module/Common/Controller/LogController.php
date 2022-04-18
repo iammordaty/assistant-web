@@ -20,7 +20,7 @@ final class LogController
     {
     }
 
-    public function index(ServerRequest $request, Response $response): ResponseInterface
+    public function index(ServerRequest $request, ResponseInterface $response): ResponseInterface
     {
         $page = $request->getQueryParam('page', 1);
 

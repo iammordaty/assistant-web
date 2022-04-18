@@ -9,7 +9,7 @@ use Assistant\Module\Directory\Model\Directory;
 use Assistant\Module\Search\Extension\TrackSearchService;
 use Assistant\Module\Track\Extension\TrackService;
 use Assistant\Module\Track\Model\Track;
-use Psr\Container\ContainerInterface as Container;
+use Psr\Container\ContainerInterface;
 
 /** Fasada dla writerów zajmujących się zapisywaniem elementów w kolekcji */
 final class WriterFacade
@@ -26,7 +26,7 @@ final class WriterFacade
         $this->trackWriter = $trackWriter;
     }
 
-    public static function factory(Container $container): self
+    public static function factory(ContainerInterface $container): self
     {
         $directoryWriter = new DirectoryWriter(
             $container->get(DirectoryService::class),

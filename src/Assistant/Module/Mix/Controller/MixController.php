@@ -3,8 +3,8 @@
 namespace Assistant\Module\Mix\Controller;
 
 use Assistant\Module\Mix\Extension\MixService;
-use Psr\Http\Message\ResponseInterface as Response;
-use Psr\Http\Message\ServerRequestInterface as Request;
+use Psr\Http\Message\ResponseInterface;
+use Slim\Http\ServerRequest;
 use Slim\Views\Twig;
 
 final class MixController
@@ -13,9 +13,9 @@ final class MixController
     {
     }
 
-    public function index(Request $request, Response $response): Response
+    public function index(ServerRequest $request, ResponseInterface $response): ResponseInterface
     {
-        if ($request->getMethod() === 'POST') { // może to powinno zostać rozdzielone?
+        if ($request->isPost()) { // może to powinno zostać rozdzielone?
             $form = $request->getParsedBody();
 
             $listing = explode(PHP_EOL, $form['listing']);

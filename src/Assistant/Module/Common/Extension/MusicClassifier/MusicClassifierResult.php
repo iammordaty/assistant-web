@@ -82,11 +82,7 @@ final class MusicClassifierResult
         return $this->file;
     }
 
-    /**
-     * @link https://jsonblob.com/67586924-f135-11eb-99e5-ffeea52be274
-     *
-     * @return MusicClassifierFeature[]
-     */
+    /** @return MusicClassifierFeature[] */
     private static function createFeatures(array $rawFeatures): array
     {
         $features = [];

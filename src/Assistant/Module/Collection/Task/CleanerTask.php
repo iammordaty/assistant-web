@@ -13,7 +13,7 @@ use Assistant\Module\Search\Extension\SearchCriteriaFacade;
 use Assistant\Module\Search\Extension\TrackSearchService;
 use Assistant\Module\Track\Extension\TrackService;
 use Monolog\Logger;
-use Psr\Container\ContainerInterface as Container;
+use Psr\Container\ContainerInterface;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
@@ -41,7 +41,7 @@ final class CleanerTask extends AbstractTask
         ];
     }
 
-    public static function factory(Container $container): self
+    public static function factory(ContainerInterface $container): self
     {
         return new self(
             $container->get(Logger::class),

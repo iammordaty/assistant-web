@@ -34,12 +34,12 @@ final class BeatportApiClient implements BeatportApiClientInterface
                 3600, // 1h, the TTL in seconds
             )
         );
-
         $stack->push($cacheMiddleware);
 
-        $stack->push(Middleware::mapRequest(function (RequestInterface $request): RequestInterface {
-            return $request->withHeader('Accept', 'application/json');
-        }));
+        $toJsonMiddleware = fn (RequestInterface $request): RequestInterface => (
+            $request->withHeader('Accept', 'application/json')
+        );
+        $stack->push(Middleware::mapRequest($toJsonMiddleware));
 
         $client = new Client([
             'base_uri' => $baseUri,

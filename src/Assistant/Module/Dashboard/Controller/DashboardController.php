@@ -4,8 +4,8 @@ namespace Assistant\Module\Dashboard\Controller;
 
 use Assistant\Module\Track\Extension\TrackService;
 use Assistant\Module\Track\Repository\TrackStatsRepository;
-use Psr\Http\Message\ResponseInterface as Response;
-use Psr\Http\Message\ServerRequestInterface as Request;
+use Psr\Http\Message\ResponseInterface;
+use Psr\Http\Message\ServerRequestInterface;
 use Slim\Views\Twig;
 
 final class DashboardController
@@ -21,17 +21,13 @@ final class DashboardController
     ) {
     }
 
-    public function index(Request $request, Response $response): Response
+    public function index(ServerRequestInterface $request, ResponseInterface $response): ResponseInterface
     {
-        try {
-            return $this->view->render($response, '@dashboard/index.twig', [
-                'menu' => 'dashboard',
-                'trackCountByGenre' => $this->statsRepository->getTrackCountByGenre(self::MAX_GENRES),
-                'trackCountByArtist' => $this->statsRepository->getTrackCountByArtist(self::MAX_ARTISTS),
-                'recentlyAddedTracks' => $this->trackService->getRecent(limit: self::MAX_RECENT_TRACKS),
-            ]);
-        } catch (\Exception $e) {
-            var_dump($e);exit;
-        }
+        return $this->view->render($response, '@dashboard/index.twig', [
+            'menu' => 'dashboard',
+            'trackCountByGenre' => $this->statsRepository->getTrackCountByGenre(self::MAX_GENRES),
+            'trackCountByArtist' => $this->statsRepository->getTrackCountByArtist(self::MAX_ARTISTS),
+            'recentlyAddedTracks' => $this->trackService->getRecent(limit: self::MAX_RECENT_TRACKS),
+        ]);
     }
 }

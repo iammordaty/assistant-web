@@ -3,22 +3,20 @@
 namespace Assistant\Module\Track\Controller\Track;
 
 use Assistant\Module\Collection\Extension\Autocomplete\TrackAutocompleteService;
-use Psr\Http\Message\ResponseInterface as Response;
-use Psr\Http\Message\ServerRequestInterface as Request;
+use Slim\Http\Response;
+use Slim\Http\ServerRequest;
 
 final class AutocompleteController
 {
-    public function __construct(private TrackAutocompleteService $trackAutocompleteService)
+    public function __construct(private readonly TrackAutocompleteService $trackAutocompleteService)
     {
     }
 
-    public function __invoke(Request $request, Response $response): Response
+    public function __invoke(ServerRequest $request, Response $response): Response
     {
-        $query = $request->getQueryParams()['query'] ?? null;
-        $results = ($this->trackAutocompleteService)(trim($query));
+        $query = trim($request->getQueryParam('query'));
+        $results = ($this->trackAutocompleteService)($query);
 
-        $response->getBody()->write(json_encode($results));
-
-        return $response->withHeader('Content-Type', 'application/json');
+        return $response->withJson($results);
     }
 }

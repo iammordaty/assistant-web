@@ -4,45 +4,43 @@ namespace Assistant\Module\Common\Controller;
 
 use Assistant\Module\Common\Extension\Config;
 use Cocur\BackgroundProcess\BackgroundProcess;
-use Psr\Http\Message\ResponseInterface as Response;
-use Psr\Http\Message\ServerRequestInterface as Request;
+use Fig\Http\Message\StatusCodeInterface;
+use Psr\Http\Message\ResponseInterface;
+use Slim\Http\Response;
+use Slim\Http\ServerRequest;
 
 final class TaskController
 {
-    private string $baseDir;
+    private readonly string $baseDir;
 
     public function __construct(Config $config)
     {
         $this->baseDir = $config->get('base_dir');
     }
 
-    public function calculateAudioData(Request $request, Response $response): Response
+    public function calculateAudioData(ServerRequest $request, Response $response): ResponseInterface
     {
-        $pathname = $request->getParsedBody()['pathname'] ?? null;
+        $pathname = $request->getParsedBodyParam('pathname');
         $command = sprintf('php %s/bin/console.php track:calculate-audio-data -w "%s"', $this->baseDir, $pathname);
 
         $backgroundProcess = new BackgroundProcess($command);
         $backgroundProcess->run();
 
-        $response->getBody()->write(json_encode([
+        return $response->withJson([
             'command' => $command,
             'pid' => $backgroundProcess->getPid(),
-        ]));
-
-        return $response->withHeader('Content-Type', 'application/json');
+        ]);
     }
 
-    public function move(Request $request, Response $response): Response
+    public function move(ServerRequest $request, Response $response): ResponseInterface
     {
         $post = $request->getParsedBody();
 
-        $response->getBody()->write(json_encode([
-            'message' => 'not-implemented :-(',
-            'post' => $post,
-        ]));
-
         return $response
-            ->withStatus(418)
-            ->withHeader('Content-Type', 'application/json');
+            ->withStatus(StatusCodeInterface::STATUS_IM_A_TEAPOT)
+            ->withJson([
+                'message' => 'not implemented (yet)',
+                'post' => $post,
+            ]);
     }
 }

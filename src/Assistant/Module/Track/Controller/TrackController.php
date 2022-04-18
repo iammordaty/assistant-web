@@ -11,8 +11,8 @@ use Assistant\Module\Track\Extension\Similarity\SimilarityParametersForm;
 use Assistant\Module\Track\Extension\TrackService;
 use Assistant\Module\Track\Model\Track;
 use Psr\Http\Message\ResponseInterface;
-use Psr\Http\Message\ServerRequestInterface;
 use Slim\Http\Response;
+use Slim\Http\ServerRequest;
 use Slim\Views\Twig;
 
 final class TrackController
@@ -28,7 +28,7 @@ final class TrackController
     ) {
     }
 
-    public function index(ServerRequestInterface $request, Response $response): ResponseInterface
+    public function index(ServerRequest $request, Response $response): ResponseInterface
     {
         $guid = $request->getAttribute('guid');
         $track = $this->trackService->getByGuid($guid);
@@ -48,7 +48,7 @@ final class TrackController
             ->createService()
             ->getSimilarTracks();
 
-        if ($request->getHeaderLine('X-Requested-With') === 'XMLHttpRequest') {
+        if ($request->isXhr()) {
             return $this->view->render($response, '@track/similarTracks/list.twig', [
                 'similarTracksList' => $similarTracks,
                 'similarTracksSoftLimit' => self::SIMILAR_TRACKS_SOFT_LIMIT,
