@@ -17,7 +17,7 @@ final class LogView
 
     public function getLog(?DateTime $fromDate = null, ?int $page = null, ?int $limit = null): array
     {
-        $query = $fromDate ? [ 'datetime' => [ '$gt' => new UTCDateTime($fromDatxe) ] ] : [];
+        $query = $fromDate ? [ 'datetime' => [ '$gt' => new UTCDateTime($fromDate) ] ] : [];
         $sort = [ 'datetime' => Storage::SORT_DESC ];
         $skip = $page ? $limit * ($page - 1) : null;
 
