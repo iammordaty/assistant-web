@@ -20,7 +20,7 @@ final class TrackAutocompleteService
     ) {
     }
 
-    /** @return Track[] */
+    /** @return TrackAutocompleteEntry[] */
     public function __invoke(string $query): array
     {
         if ($query === '') {
@@ -29,7 +29,7 @@ final class TrackAutocompleteService
 
         // krok 1: jeśli zwraca coś searchService to zwróć tylko to
 
-        [ 'count' => $count, 'tracks' => $tracks ] = $this->searchService->findByName($query, 1);
+        [ 'count' => $count, 'tracks' => $tracks ] = $this->searchService->findByName($query, page: 1);
 
         if ($count > 0) {
             return $this->toArray($tracks);
@@ -55,22 +55,24 @@ final class TrackAutocompleteService
         return $this->toArray($tracks);
     }
 
+    /**
+     * @param array|Traversable|Track[] $tracks
+     * @return TrackAutocompleteEntry[]
+     */
     private function toArray(array|Traversable $tracks): array
     {
-        $factory = function (Track $track): array {
+        $createEntry = function (Track $track): TrackAutocompleteEntry {
             $route = Route::create('track.track.index', [ 'guid' => $track->getGuid() ]);
             $url = $this->routeResolver->resolve($route);
 
-            $entry = new TrackAutocompleteEntry($track->getGuid(), $track->getName(), $url);
-
-            return $entry->toArray();
+            return new TrackAutocompleteEntry($track->getGuid(), $track->getName(), $url);
         };
 
-        $results = array_map(
-            fn (Track $track) => $factory($track),
+        $entries = array_map(
+            fn (Track $track) => $createEntry($track),
             iterator_to_array($tracks)
         );
 
-        return $results;
+        return $entries;
     }
 }
