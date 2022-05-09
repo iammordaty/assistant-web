@@ -3,6 +3,8 @@
 namespace Assistant\Module\Collection\Extension\Writer;
 
 use Assistant\Module\Collection\Model\CollectionItemInterface;
+use Assistant\Module\Common\Extension\Config;
+use Assistant\Module\Common\Extension\MusicClassifier\MusicClassifierService;
 use Assistant\Module\Common\Extension\SimilarTracksCollection\SimilarTracksCollectionService;
 use Assistant\Module\Directory\Extension\DirectoryService;
 use Assistant\Module\Directory\Model\Directory;
@@ -33,6 +35,8 @@ final class WriterFacade
         );
 
         $trackWriter = new TrackWriter(
+            $container->get(Config::class),
+            $container->get(MusicClassifierService::class),
             $container->get(TrackService::class),
             $container->get(TrackSearchService::class),
             $container->get(SimilarTracksCollectionService::class),

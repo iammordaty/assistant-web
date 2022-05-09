@@ -67,7 +67,7 @@ final class MusicClassifierService
             return $resultPathname;
         }
 
-        $filter = static fn(SplFileInfo $node): bool => (
+        $filter = static fn (SplFileInfo $node): bool => (
             str_ends_with($node->getBasename('.' . $node->getExtension()), 'inode:' . $track->getInode())
         );
 
