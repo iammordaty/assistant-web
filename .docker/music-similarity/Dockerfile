@@ -19,9 +19,8 @@ RUN apt-get update && \
 
 RUN git clone https://github.com/iammordaty/musly.git /tmp/musly && \
     (cd /tmp/musly && \
-    git checkout feature-output-mode && \
     mkdir -p build && cd build && \
-    cmake -DBUILD_STATIC=1 ..  && \
+    cmake -DBUILD_STATIC=1 -DUSE_OPENMP=1 .. && \
     make && \
     make install && \
     rm -r /tmp/musly)
