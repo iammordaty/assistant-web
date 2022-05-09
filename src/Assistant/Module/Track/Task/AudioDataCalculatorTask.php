@@ -163,8 +163,8 @@ final class AudioDataCalculatorTask extends AbstractTask
                     'metadata' => [
                         'initial_key' => $hasInitialKey === true ? $metadata['initial_key'] : null,
                         'bpm' => $hasBpm === true ? $metadata['bpm'] : null,
-                        'classificationResultFilename' => $classificationResult->getFile()?->getBasename(),
-                    ]
+                    ],
+                    'classificationResultFilename' => $classificationResult->getFile()?->getBasename(),
                 ]);
 
                 if ($writeData === true) {
