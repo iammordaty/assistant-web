@@ -27,8 +27,9 @@ final class MusicClassifierService
     private const EXTRACTOR_CONFIGURATION_PROFILE = '/essentia/profile.yaml';
 
     public function __construct(
-        private Config $config,
-        private SlugifyService $slugify,
+        private readonly Config $config,
+        private readonly MusicClassifierAudioMd5Calculator $audioMd5Calculator,
+        private readonly SlugifyService $slugify,
     ) {
     }
 
@@ -61,14 +62,15 @@ final class MusicClassifierService
 
     private function findResultFile(SplFileInfo $track): ?string
     {
-        $resultPathname = $this->generateResultFilename($track);
+        $audioMd5 = $this->audioMd5Calculator->calculate($track);
+        $resultPathname = $this->generateResultFilename($track, $audioMd5);
 
         if (file_exists($resultPathname)) {
             return $resultPathname;
         }
 
         $filter = static fn (SplFileInfo $node): bool => (
-            str_ends_with($node->getBasename('.' . $node->getExtension()), 'inode:' . $track->getInode())
+            str_ends_with($node->getBasename('.' . $node->getExtension()), 'md5:' . $audioMd5)
         );
 
         $finder = Finder::create([
@@ -88,16 +90,11 @@ final class MusicClassifierService
         return $resultFile;
     }
 
-    /**
-     * @link https://www.linuxquestions.org/questions/linux-general-1/inode-number-questions-can-they-change-and-when-are-they-reused-592388/
-     * @link https://unix.stackexchange.com/questions/192800/does-the-inode-change-when-renaming-or-moving-a-file
-     */
-    private function generateResultFilename(SplFileInfo $track): string
+    private function generateResultFilename(SplFileInfo $track, string $audioMd5): string
     {
         $basename = $this->slugify->slugify($track->getBasename('.' . $track->getExtension()));
-        $inode = $track->getInode();
 
-        $filename = sprintf('basename:%s,inode:%d.json', $basename, $inode);
+        $filename = sprintf('basename:%s,md5:%s.json', $basename, $audioMd5);
         $pathname = $this->config->get('collection.metadata_dirs.music_classifier') . '/' . $filename;
 
         return $pathname;

@@ -1,0 +1,9 @@
+#!/bin/bash
+
+COMMAND="essentia_streaming_md5 "
+
+for ARG in "$@"; do
+  COMMAND+="\"${ARG}\" "
+done
+
+sshpass -p "root" ssh -o LogLevel=quiet -o StrictHostKeyChecking=no -t root@music-classifier ${COMMAND}
