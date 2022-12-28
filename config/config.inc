@@ -59,6 +59,7 @@ return static function (string $baseDir): array {
                     'Pig & Dan',
                     'Prok & Fitch',
                     'SHDW & Obscure Shape',
+                    'Sophie and The Giants',
                     'Tube & Berger',
                     'Woolfy vs. Projections',
                     'Years & Years',
