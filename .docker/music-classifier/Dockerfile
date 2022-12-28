@@ -1,4 +1,4 @@
-FROM iammordaty/essentia:2021-08-25
+FROM iammordaty/essentia:2022-11-18
 
 ENV TERM=xterm
 ENV DEBIAN_FRONTEND=noninteractive

@@ -59,9 +59,10 @@ ENV LANG pl_PL.utf8
 # apps
 
 COPY ./bin/essentia_streaming_extractor_music /usr/local/bin/
+COPY ./bin/essentia_streaming_md5 /usr/local/bin/
 COPY ./bin/musly /usr/local/bin/
 
-RUN chmod +x /usr/local/bin/essentia_streaming_extractor_music /usr/local/bin/musly
+RUN chmod +x /usr/local/bin/essentia_streaming_extractor_music /usr/local/bin/musly /usr/local/bin/essentia_streaming_md5
 
 # composer
 
