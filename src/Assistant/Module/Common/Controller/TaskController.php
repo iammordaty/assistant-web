@@ -32,6 +32,34 @@ final class TaskController
         ]);
     }
 
+    public function removeMetadata(ServerRequest $request, Response $response): ResponseInterface
+    {
+        $pathname = $request->getParsedBodyParam('pathname');
+        $command = sprintf('php %s/bin/console.php track:remove-metadata "%s"', $this->baseDir, $pathname);
+
+        $backgroundProcess = new BackgroundProcess($command);
+        $backgroundProcess->run();
+
+        return $response->withJson([
+            'command' => $command,
+            'pid' => $backgroundProcess->getPid(),
+        ]);
+    }
+
+    public function cleanPathname(ServerRequest $request, Response $response): ResponseInterface
+    {
+        $pathname = $request->getParsedBodyParam('pathname');
+        $command = sprintf('php %s/bin/console.php track:rename --clean "%s"', $this->baseDir, $pathname);
+
+        $backgroundProcess = new BackgroundProcess($command);
+        $backgroundProcess->run();
+
+        return $response->withJson([
+            'command' => $command,
+            'pid' => $backgroundProcess->getPid(),
+        ]);
+    }
+
     public function move(ServerRequest $request, Response $response): ResponseInterface
     {
         $post = $request->getParsedBody();
