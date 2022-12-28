@@ -18,7 +18,7 @@ My web-based music collection assistant (under high development and BC changes)
 - ...?
 
 ## requirements
-- PHP >= 8.1
+- PHP 8.2
 - MongoDB >= 4.x
 - nginx
 
