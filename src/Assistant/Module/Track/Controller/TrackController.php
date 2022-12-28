@@ -55,13 +55,11 @@ final class TrackController
             ]);
         }
 
-        $pathBreadcrumbs = $this->pathBreadcrumbs->get(dirname($track->getPathname()));
-
         return $this->view->render($response, '@track/index.twig', [
             'menu' => 'track',
             'track' => $track,
             'musicalKeyInfo' => $this->getTrackMusicalKeyInfo($track),
-            'pathBreadcrumbs' => $pathBreadcrumbs,
+            'pathBreadcrumbs' => $this->pathBreadcrumbs->get($track->getFile()->getPath()),
             'form' => $form,
             'similarTracksList' => $similarTracks,
             'similarTracksSoftLimit' => self::SIMILAR_TRACKS_SOFT_LIMIT,
