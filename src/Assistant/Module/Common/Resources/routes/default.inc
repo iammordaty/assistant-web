@@ -12,6 +12,14 @@ return static function (App $app): void {
             ->setName('common.task.calculate');
 
         $group
+            ->post('/task/remove-metadata', [ TaskController::class, 'removeMetadata' ])
+            ->setName('common.task.remove');
+
+        $group
+            ->post('/task/clean-pathname', [ TaskController::class, 'cleanPathname' ])
+            ->setName('common.task.clean');
+
+        $group
             ->post('/task/move', [ TaskController::class, 'move' ])
             ->setName('common.task.move');
 

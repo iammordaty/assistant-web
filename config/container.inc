@@ -23,6 +23,7 @@ use Assistant\Module\Search\Extension\DirectorySearchService;
 use Assistant\Module\Search\Extension\TrackSearchService;
 use Assistant\Module\Track\Extension\Similarity\Similarity;
 use Assistant\Module\Track\Extension\Similarity\SimilarityBuilder;
+use Assistant\Module\Track\Extension\TrackFilenameSuggestion;
 use Assistant\Module\Track\Extension\TrackLocationArbiter;
 use Assistant\Module\Track\Extension\TrackService;
 use Assistant\Module\Track\Repository\TrackRepository;
@@ -143,6 +144,8 @@ return static fn (string $baseDir, array $config): array => [
     SlugifyService::class => create(),
 
     TrackAutocompleteService::class => autowire(),
+
+    TrackFilenameSuggestion::class => autowire(),
 
     TrackLocationArbiter::class => autowire(),
 
