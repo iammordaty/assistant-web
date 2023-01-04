@@ -5,17 +5,10 @@
 {% block contentBlock %}
     {% for month in recent %}
         <div class="directory-info">
-            <!-- @todo: wynieść do zewnętrznego szablonu i uspójnić z innymi -->
-            <ol class="breadcrumb">
-                <li>
-                    <a href="{{ url_for('directory.browse.index') }}" class="undecorated">
-                        <i class="fa fa-home fa-lg fa-fw"></i>
-                    </a>
-                </li>
-                {% for segment in month.segments %}
-                    <li><a href="{{ url_for('search.advanced.index') }}?indexed_date={{ segment.date }}" class="undecorated">{{ segment.name }}</a></li>
-                {% endfor %}
-            </ol>
+            {% include '@common/breadcrumbs.twig' with {
+                breadcrumbs: month.breadcrumbs,
+                collectionRootExtraClass: 'fa-fw',
+            } only %}
         </div>
 
         {% if month.tracks %}

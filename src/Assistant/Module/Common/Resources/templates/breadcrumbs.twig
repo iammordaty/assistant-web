@@ -1,0 +1,16 @@
+<ol class="breadcrumb" {% if style|default %}style="{{ style }}"{% endif %}>
+    {% set breadcrumb = breadcrumbs|first %}
+    {% set route = breadcrumb.route %}
+
+    <li>
+        <a href="{{ url_for(route.name, route.params, route.query) }}" class="undecorated">
+            <i class="fa fa-home fa-lg {{ collectionRootExtraClass|default }}"></i>
+        </a>
+    </li>
+
+    {% for breadcrumb in breadcrumbs[1:] %}
+        {% set route = breadcrumb.route %}
+
+        <li><a href="{{ url_for(route.name, route.params, route.query) }}" class="undecorated">{{ breadcrumb.name }}</a></li>
+    {% endfor %}
+</ol>

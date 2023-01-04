@@ -2,8 +2,9 @@
 
 namespace Assistant\Module\Directory\Controller;
 
+use Assistant\Module\Common\Extension\Breadcrumbs\BreadcrumbsBuilder;
+use Assistant\Module\Common\Extension\Breadcrumbs\UrlGenerator\BrowseCollectionRouteGenerator;
 use Assistant\Module\Common\Extension\Config;
-use Assistant\Module\Common\Extension\PathBreadcrumbs;
 use Assistant\Module\Common\Extension\Route;
 use Assistant\Module\Common\Extension\RouteResolver;
 use Assistant\Module\Common\Extension\SlugifyService;
@@ -18,8 +19,8 @@ final class BrowseController
 {
     public function __construct(
         private Config $config,
+        private BreadcrumbsBuilder $breadcrumbsBuilder,
         private DirectoryService $directoryService,
-        private PathBreadcrumbs $pathBreadcrumbs,
         private RouteResolver $routeResolver,
         private SlugifyService $slugify,
         private TrackService $trackService,
@@ -51,13 +52,18 @@ final class BrowseController
             return $response->withRedirect($redirectUrl);
         }
 
+        $breadcrumbs = $this->breadcrumbsBuilder
+            ->withPath($directory->getPathname())
+            ->withRouteGenerator(new BrowseCollectionRouteGenerator())
+            ->createBreadcrumbs();
+
         $directories = iterator_to_array($this->directoryService->getByDirectory($directory));
         $tracks = iterator_to_array($this->trackService->getByDirectory($directory));
 
         return $this->view->render($response, '@directory/index.twig', [
             'menu' => 'browse',
             'currentDirectory' => $directory,
-            'pathBreadcrumbs' => $this->pathBreadcrumbs->get($directory->getPathname()),
+            'breadcrumbs' => $breadcrumbs,
             'directories' => $directories,
             'tracks' => $tracks,
         ]);

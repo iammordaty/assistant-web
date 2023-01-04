@@ -2,6 +2,8 @@
 
 namespace Assistant\Module\Directory\Controller;
 
+use Assistant\Module\Common\Extension\Breadcrumbs\Breadcrumb;
+use Assistant\Module\Common\Extension\Route;
 use Assistant\Module\Track\Extension\TrackService;
 use Assistant\Module\Track\Model\Track;
 use IntlDateFormatter;
@@ -9,13 +11,13 @@ use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Slim\Views\Twig;
 
-final class RecentTracksController
+final readonly class RecentTracksController
 {
     private IntlDateFormatter $dateFormatter;
 
     public function __construct(
-        private readonly TrackService $trackService,
-        private readonly Twig $view,
+        private TrackService $trackService,
+        private Twig $view,
     ) {
         $this->dateFormatter = new IntlDateFormatter(
             locale: 'pl_PL.utf8',
@@ -29,12 +31,11 @@ final class RecentTracksController
         $recent = [];
 
         foreach ($this->trackService->getRecent() as $track) {
-            [ 'name' => $groupName, 'segments' => $groupSegments ] = $this->getGroup($track);
+            [ 'name' => $groupName, 'breadcrumbs' => $breadcrumbs ] = $this->getGroup($track);
 
             if (!isset($recent[$groupName])) {
                 $recent[$groupName] = [
-                    'name' => $groupName,
-                    'segments' => $groupSegments,
+                    'breadcrumbs' => $breadcrumbs,
                     'tracks' => [],
                 ];
             }
@@ -54,13 +55,16 @@ final class RecentTracksController
         $month = $this->dateFormatter->format($track->getIndexedDate());
         $year = $track->getIndexedDate()->format('Y');
 
-        $name = $year . '-' . $month;
+        $route = Route::create('search.advanced.index');
 
-        $segments = [
-            [ 'name' => $year, 'date' => $year ],
-            [ 'name' => ucfirst($month), 'date' => $date ],
+        $breadcrumbs = [
+            new Breadcrumb(Route::create('directory.browse.index')),
+            new Breadcrumb($route->withQuery([ 'indexed_date' => $year ]), $year),
+            new Breadcrumb($route->withQuery([ 'indexed_date' => $date ]), ucfirst($month)),
         ];
 
-        return [ 'name' => $name, 'segments' => $segments ];
+        $name = $year . '-' . $month;
+
+        return [ 'name' => $name, 'breadcrumbs' => $breadcrumbs ];
     }
 }

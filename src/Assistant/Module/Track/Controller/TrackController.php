@@ -3,7 +3,8 @@
 namespace Assistant\Module\Track\Controller;
 
 use Assistant\Module\Collection\Extension\MusicalKeyInfo;
-use Assistant\Module\Common\Extension\PathBreadcrumbs;
+use Assistant\Module\Common\Extension\Breadcrumbs\BreadcrumbsBuilder;
+use Assistant\Module\Common\Extension\Breadcrumbs\UrlGenerator\BrowseCollectionRouteGenerator;
 use Assistant\Module\Common\Extension\Route;
 use Assistant\Module\Common\Extension\RouteResolver;
 use Assistant\Module\Track\Extension\Similarity\SimilarityBuilder;
@@ -20,7 +21,7 @@ final class TrackController
     private const SIMILAR_TRACKS_SOFT_LIMIT = 50;
 
     public function __construct(
-        private PathBreadcrumbs $pathBreadcrumbs,
+        private BreadcrumbsBuilder $breadcrumbsBuilder,
         private RouteResolver $routeResolver,
         private SimilarityBuilder $similarityBuilder,
         private TrackService $trackService,
@@ -55,11 +56,16 @@ final class TrackController
             ]);
         }
 
+        $breadcrumbs = $this->breadcrumbsBuilder
+            ->withPath($track->getFile()->getPath())
+            ->withRouteGenerator(new BrowseCollectionRouteGenerator())
+            ->createBreadcrumbs();
+
         return $this->view->render($response, '@track/index.twig', [
             'menu' => 'track',
             'track' => $track,
             'musicalKeyInfo' => $this->getTrackMusicalKeyInfo($track),
-            'pathBreadcrumbs' => $this->pathBreadcrumbs->get($track->getFile()->getPath()),
+            'breadcrumbs' => $breadcrumbs,
             'form' => $form,
             'similarTracksList' => $similarTracks,
             'similarTracksSoftLimit' => self::SIMILAR_TRACKS_SOFT_LIMIT,
