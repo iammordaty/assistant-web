@@ -24,7 +24,7 @@
         <div class="row">
             {% include '@track/track/trackInfo.twig' with {
                 track: track,
-                pathBreadcrumbs: pathBreadcrumbs,
+                breadcrumbs: breadcrumbs,
                 extraClasses: musicalKeyInfo ? [ 'col-sm-8', 'col-md-9' ] : [],
             } only %}
 

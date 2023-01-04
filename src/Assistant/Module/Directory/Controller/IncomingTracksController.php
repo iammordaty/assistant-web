@@ -5,8 +5,9 @@ namespace Assistant\Module\Directory\Controller;
 use Assistant\Module\Collection\Extension\Finder;
 use Assistant\Module\Collection\Extension\Reader\ReaderFacade;
 use Assistant\Module\Collection\Model\CollectionItemInterface;
+use Assistant\Module\Common\Extension\Breadcrumbs\BreadcrumbsBuilder;
+use Assistant\Module\Common\Extension\Breadcrumbs\UrlGenerator\BrowseIncomingRouteGenerator;
 use Assistant\Module\Common\Extension\Config;
-use Assistant\Module\Common\Extension\PathBreadcrumbs;
 use Assistant\Module\Common\Extension\Route;
 use Assistant\Module\Common\Extension\RouteResolver;
 use Assistant\Module\Common\Extension\SlugifyService;
@@ -21,8 +22,8 @@ use SplFileInfo;
 final class IncomingTracksController
 {
     public function __construct(
+        private BreadcrumbsBuilder $breadcrumbsBuilder,
         private Config $config,
-        private PathBreadcrumbs $pathBreadcrumbs,
         private ReaderFacade $reader,
         private RouteResolver $routeResolver,
         private SlugifyService $slugify,
@@ -43,12 +44,17 @@ final class IncomingTracksController
             return $response->withRedirect($redirectUrl);
         }
 
+        $breadcrumbs = $this->breadcrumbsBuilder
+            ->withPath($pathname)
+            ->withRouteGenerator(new BrowseIncomingRouteGenerator())
+            ->createBreadcrumbs();
+
         [ $tracks, $directories ] = $this->getCollectionItems($pathname);
 
         return $this->view->render($response, '@directory/incoming.twig', [
             'menu' => 'browse',
             'pathname' => $pathname,
-            'pathBreadcrumbs' => $this->pathBreadcrumbs->get($pathname),
+            'breadcrumbs' => $breadcrumbs,
             'directories' => $directories,
             'tracks' => $tracks,
         ]);
@@ -105,5 +111,4 @@ final class IncomingTracksController
             'skip_self' => true,
         ]);
     }
-
 }

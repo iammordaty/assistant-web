@@ -6,11 +6,12 @@ use Assistant\Module\Collection\Extension\Reader\FileReader;
 use Assistant\Module\Collection\Extension\Reader\FileReaderFacade;
 use Assistant\Module\Collection\Extension\Reader\MetadataParser\MetadataParser;
 use Assistant\Module\Collection\Extension\Reader\ReaderFacade;
+use Assistant\Module\Common\Extension\Breadcrumbs\Breadcrumbs;
+use Assistant\Module\Common\Extension\Breadcrumbs\BreadcrumbsBuilder;
 use Assistant\Module\Common\Extension\Config;
 use Assistant\Module\Common\Extension\GetId3\Adapter as Id3Adapter;
 use Assistant\Module\Common\Extension\LogView;
 use Assistant\Module\Common\Extension\Pagerfanta\PagerfantaTwigRuntimeLoaderFactory;
-use Assistant\Module\Common\Extension\PathBreadcrumbs;
 use Assistant\Module\Common\Extension\RouteResolver;
 use Assistant\Module\Common\Extension\SimilarTracksCollection\SimilarTracksCollectionService;
 use Assistant\Module\Common\Extension\SlugifyService;
@@ -115,7 +116,9 @@ return static fn (string $baseDir, array $config): array => [
 
     MixService::class => autowire(),
 
-    PathBreadcrumbs::class => autowire(),
+    Breadcrumbs::class => autowire(),
+
+    BreadcrumbsBuilder::class => autowire(),
 
     ReaderFacade::class => autowire(),
 

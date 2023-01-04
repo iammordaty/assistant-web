@@ -16,16 +16,12 @@
             </button>
             #}
         </div>
-        <ol class="breadcrumb" style="padding-bottom: 8px">
-            <li>
-                <a href="{{ url_for('directory.browse.index', { guid: (pathBreadcrumbs|first).guid }) }}" class="undecorated">
-                    <i class="fa fa-home fa-lg fa-fw"></i>
-                </a>
-            </li>
-            {% for path in pathBreadcrumbs[1:] %}
-                <li><a href="{{ url_for('directory.browse.incoming', { pathname: path.pathname }) }}" class="undecorated">{{ path.path }}</a></li>
-            {% endfor %}
-        </ol>
+
+        {% include '@common/breadcrumbs.twig' with {
+            breadcrumbs: breadcrumbs,
+            style: 'padding-bottom: 8px',
+            collectionRootExtraClass: 'fa-fw',
+        } only %}
     </div>
 
     {% if directories %}
