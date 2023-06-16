@@ -1,80 +1,54 @@
-{% set titleClasses = [ 'col-xs-4', 'col-sm-3', 'col-md-2', 'text-right' ]|join(' ') %}
-{% set descriptionClasses = [ 'col-xs-8', 'col-sm-9', 'col-md-10' ]|join(' ') %}
+<dl class="ass-track-info row">
+    <dt class="col-4 col-sm-2">Gatunek</dt>
+    <dd class="col-8 col-sm-10">
+        <a class="text-reset" href="{{ url_for('search.advanced.index', query_params = { genre: track.genre }) }}">
+            {{ track.genre }}
+        </a>
+    </dd>
 
-{% set trackSearchUrl = url_for('search.advanced.index') %}
+    <dt class="col-4 col-sm-2">Album</dt>
+    <dd class="col-8 col-sm-10">{{ track.album }}</dd>
 
-<div class="col-xs-12 {{ extraClasses|join(' ') }}">
-    <div class="row">
-        <span class="{{ titleClasses }}">
-            <strong>{% if track.artists|length == 1 %}Wykonawca{% else %}Wykonawcy{% endif %}</strong>
-        </span>
-        <span class="{{ descriptionClasses }}">
-            {%- for artist in track.artists -%}
-                <a href="{{ trackSearchUrl }}?artist={{ artist|url_encode() }}" class="undecorated">{{ artist }}</a>
-                {%- if not loop.last %}, {% endif -%}
-            {%- endfor -%}
-        </span>
-    </div>
+    <dt class="col-4 col-sm-2">Wydawca</dt>
+    <dd class="col-8 col-sm-10">
+        {% if track.publisher %}
+            <a class="text-reset" href="{{ url_for('search.advanced.index', query_params = { publisher: track.publisher }) }}">
+                {{ track.publisher }}
+            </a>
+        {% endif %}
+    </dd>
 
-    <div class="row">
-        <span class="{{ titleClasses }}"><strong>Tytuł utworu</strong></span>
-        <span class="{{ descriptionClasses }}">{{ track.title }}</span>
-    </div>
+    <dt class="col-4 col-sm-2">Rok</dt>
+    <dd class="col-8 col-sm-10">
+        {% if track.year %}
+            <a class="text-reset" href="{{ url_for('search.advanced.index', query_params = { year: track.year }) }}">
+                {{ track.year }}
+            </a>
+        {% endif %}
+    </dd>
 
-    <div class="row">
-        <span class="{{ titleClasses }}"><strong>Gatunek</strong></span>
-        <span class="{{ descriptionClasses }}">
-            <a href="{{ trackSearchUrl }}?genre={{ track.genre }}" class="undecorated">{{ track.genre }}</a>
-        </span>
-    </div>
+    <dt class="col-4 col-sm-2">Ścieżka</dt>
+    <dd class="col-8 col-sm-10">{{ track.trackNumber }}</dd>
 
-    <div class="row">
-        <span class="{{ titleClasses }}"><strong>Album</strong></span>
-        <span class="{{ descriptionClasses }}">{{ track.album }}</span>
-    </div>
+    <dt class="col-4 col-sm-2">Czas trwania</dt>
+    <dd class="col-8 col-sm-10">{{ track.length|format_duration }}</dd>
 
-    <div class="row">
-        <span class="{{ titleClasses }}"><strong>Wydawca</strong></span>
-        <span class="{{ descriptionClasses }}">
-            <a href="{{ trackSearchUrl }}?publisher={{ track.publisher }}" class="undecorated">{{ track.publisher }}</a>
-        </span>
-    </div>
+    <dt class="col-4 col-sm-2">Tonacja</dt>
+    <dd class="col-8 col-sm-10">
+        <a class="text-reset" href="{{ url_for('search.advanced.index', query_params = { initial_key: track.initialKey }) }}">
+            {{ track.initialKey }}
+        </a>
+    </dd>
 
-    <div class="row">
-        <span class="{{ titleClasses }}"><strong>Czas trwania</strong></span>
-        <span class="{{ descriptionClasses }}">{{ track.length|format_duration }}</span>
-    </div>
+    <dt class="col-4 col-sm-2">BPM</dt>
+    <dd class="col-8 col-sm-10">
+        <a class="text-reset" href="{{ url_for('search.advanced.index', query_params = { bpm: track.bpm }) }}">
+            {{ track.bpm }}
+        </a>
+    </dd>
 
-    <div class="row">
-        <span class="{{ titleClasses }}"><strong>Ścieżka</strong></span>
-        <span class="{{ descriptionClasses }}">{{ track.trackNumber }}</span>
-    </div>
-
-    <div class="row">
-        <span class="{{ titleClasses }}"><strong>Rok</strong></span>
-        <span class="{{ descriptionClasses }}">
-            <a href="{{ trackSearchUrl }}?year={{ track.year }}" class="undecorated">{{ track.year }}</a>
-        </span>
-    </div>
-
-    <div class="row">
-        <span class="{{ titleClasses }}"><strong>BPM</strong></span>
-        <span class="{{ descriptionClasses }}">
-            <a href="{{ trackSearchUrl }}?bpm={{ track.bpm }}" class="undecorated">{{ track.bpm }}</a>
-        </span>
-    </div>
-
-    <div class="row">
-        <span class="{{ titleClasses }}"><strong>Tonacja</strong></span>
-        <span class="{{ descriptionClasses }}">
-            <a href="{{ trackSearchUrl }}?initial_key={{ track.initialKey }}" class="undecorated">{{ track.initialKey }}</a>
-        </span>
-    </div>
-
-    <div class="row">
-        <span class="{{ titleClasses }}"><strong>Położenie</strong></span>
-        <span class="{{ descriptionClasses }}">
-            {% include '@common/breadcrumbs.twig' with { breadcrumbs: breadcrumbs } only %}
-        </span>
-    </div>
-</div>
+    <dt class="col-4 col-sm-2">Położenie</dt>
+    <dd class="col-8 col-sm-10">
+        {% include '@common/breadcrumbs.twig' with { breadcrumbs: breadcrumbs } only %}
+    </dd>
+</dl>

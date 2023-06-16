@@ -3,6 +3,7 @@
 namespace Assistant\Module\Track\Controller\Track;
 
 use Assistant\Module\Common\Extension\GetId3\Adapter as Id3Adapter;
+use Assistant\Module\Common\Extension\MusicClassifier\MusicClassifierService;
 use Assistant\Module\Common\Extension\Route;
 use Assistant\Module\Common\Extension\RouteResolver;
 use Assistant\Module\Track\Extension\TrackService;
@@ -44,6 +45,17 @@ final class EditController
 
         $suggestions = $this->getMetadataSuggestions($query);
 
+        if ($this->trackService->getLocationArbiter()->isInCollection($pathname)) {
+            $routeName = 'track.track.index';
+            $params = [ 'guid' => $track->getGuid() ];
+        } else {
+            $routeName = 'directory.browse.incoming';
+            $params = [ 'pathname' => $track->getFile()->getPath() ];
+        }
+
+        $route = Route::create($routeName)->withParams($params);
+        $returnUrl = $this->routeResolver->resolve($route);
+
         return $this->view->render($response, '@track/edit/edit.twig', [
             'suggestions' => $suggestions,
             'menu' => 'track',
@@ -54,6 +66,7 @@ final class EditController
             'pathname' => $pathname,
             'query' => $query,
             'track' => $track,
+            'return_url' => $returnUrl,
         ]);
     }
 

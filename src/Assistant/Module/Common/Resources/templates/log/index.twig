@@ -1,21 +1,47 @@
 {% extends '@common/layout.twig' %}
 
-{% block title %}Logi{% endblock %}
+{% block title 'Logi' %}
+{% block page_header 'Przeglądarka logów' %}
 
-{% block contentBlock %}
-    <script src="/js/log.js" type="module"></script>
-
-    <div>
-        <legend>Przeglądarka logów</legend>
-
-        {% include '@common/log/view.twig' with {
-            log: log,
-            autoRefresh: autoRefresh,
-        } only %}
-
-        {% include '@common/paginator.twig' with {
-            paginator: paginator,
-            routeName: 'common.log.index',
-        } only %}
+{# @todo: Oprogramować usuwanie logów
+{% block page_actions %}
+        <div class="dropdown">
+        <a href="#" class="btn-action dropdown-toggle" data-bs-toggle="dropdown">
+            <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"></path><circle cx="12" cy="12" r="1"></circle><circle cx="12" cy="19" r="1"></circle><circle cx="12" cy="5" r="1"></circle></svg>
+        </a>
+        <div class="dropdown-menu dropdown-menu-end">
+            <button class="dropdown-item text-danger">Usuń starsze niż 7 dni</button>
+            <button class="dropdown-item text-danger">Usuń wszystkie</button>
+        </div>
     </div>
+{% endblock %}
+#}
+
+{% block content %}
+    <div class="col-12">
+        <div class="card">
+            <div class="card-table table-responsive">
+                {% include '@common/log/view.twig' with {
+                    log: log,
+                    autoRefresh: autoRefresh,
+                } only %}
+            </div>
+            <div class="card-footer d-flex align-items-center">
+                <p class="m-0 text-muted">
+                    Znaleziono {{ paginator.getNbResults|pluralize({
+                        'one': 'wpis',
+                        'few': 'wpisy',
+                        'other': 'wpisów',
+                    }) }}
+                </p>
+                <div class="ms-auto">
+                    {% include '@common/paginator.twig' with {
+                        paginator: paginator,
+                        routeName: 'common.log.index',
+                    } only %}
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="/js/log.js"></script>
 {% endblock %}

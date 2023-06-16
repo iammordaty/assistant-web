@@ -4,70 +4,27 @@
 
 {% block title %}Przeglądanie kolekcji {% if currentDirectoryWithoutSeparator %}– {{ currentDirectoryWithoutSeparator }}{% endif %}{% endblock %}
 
-{% block contentBlock %}
-    <div class="directory-info">
-        {% include '@common/breadcrumbs.twig' with { breadcrumbs: breadcrumbs } only %}
-    </div>
+{% block content %}
+    <div class="row row-deck row-cards">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">
+                        {% include '@common/breadcrumbs.twig' with { breadcrumbs: breadcrumbs } only %}
+                    </h3>
+                </div>
+                {% if directories %}
+                    <div class="card-table table-responsive">
+                        {% include '@common/directories.twig' with { directories: directories } only %}
+                    </div>
+                {% endif %}
 
-    {% if directories %}
-        <table class="table table-hover">
-            <thead>
-                <tr>
-                    <th>Nazwa katalogu</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for directory in directories %}
-                    <tr>
-                        <td>
-                            <a href="{{ url_for('directory.browse.index', { guid: directory.guid }) }}">{{ directory.name }}</a>
-                        </td>
-                    </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-    {% endif %}
-
-    {% if tracks %}
-        <div class="table-responsive">
-            <table class="table table-hover">
-                <thead>
-                    <tr>
-                        <th>Nazwa utworu</th>
-                        <th>Gatunek</th>
-                        <th>Długość</th>
-                        <th>Rok</th>
-                        <th>Tonacja</th>
-                        <th>BPM</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for track in tracks %}
-                        <tr>
-                            <td class="col-xs-6">
-                                <span class="ellipsis track-name">
-                                    <a href="{{ url_for('track.track.index', { guid: track.guid }) }}" title="{{ track.name }}">{{ track.name }}</a>
-                                </span>
-                            </td>
-                            <td class="col-xs-2">
-                                <a class="undecorated" href="{{ url_for('search.advanced.index') }}?genre={{ track.genre }}">{{ track.genre }}</a>
-                            </td>
-                            <td class="col-xs-1">
-                                {{ track.length|format_duration }}
-                            </td>
-                            <td class="col-xs-1">
-                                <a class="undecorated" href="{{ url_for('search.advanced.index') }}?year={{ track.year }}">{{ track.year }}</a>
-                            </td>
-                            <td class="col-xs-1">
-                                <a class="undecorated" href="{{ url_for('search.advanced.index') }}?initial_key={{ track.initialKey }}">{{ track.initialKey }}</a>
-                            </td>
-                            <td class="col-xs-1">
-                                <a class="undecorated" href="{{ url_for('search.advanced.index') }}?bpm={{ track.bpm }}">{{ track.bpm }}</a>
-                            </td>
-                        </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
+                {% if tracks %}
+                    <div class="card-table table-responsive">
+                        {% include '@common/tracks.twig' with { tracks: tracks } only %}
+                    </div>
+                {% endif %}
+            </div>
         </div>
-    {% endif %}
+    </div>
 {% endblock %}

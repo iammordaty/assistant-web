@@ -8,14 +8,14 @@ use Assistant\Module\Common\Extension\RouteResolver;
 use Assistant\Module\Search\Extension\TrackSearchService;
 use Assistant\Module\Track\Model\Track;
 use Psr\Http\Message\ResponseInterface;
-use Psr\Http\Message\ServerRequestInterface;
 use Slim\Http\Response;
+use Slim\Http\ServerRequest;
 use Slim\Views\Twig;
 
 /**
  * Kontroler pozwalający na wyszukiwanie utworów po nazwie lub artyście
  */
-final class SimpleSearchController
+final readonly class SimpleSearchController
 {
     public function __construct(
         private RouteResolver $routeResolver,
@@ -27,7 +27,7 @@ final class SimpleSearchController
     /**
      * Renderuje stronę wyszukiwania
      */
-    public function index(ServerRequestInterface $request, Response $response): ResponseInterface
+    public function index(ServerRequest $request, Response $response): ResponseInterface
     {
         $form = $request->getQueryParams();
         $isFormSubmitted = $this->isFormSubmitted($form);
@@ -38,7 +38,22 @@ final class SimpleSearchController
 
             [ 'count' => $count, 'tracks' => $tracks ] = $this->searchService->findByName($name, $page);
 
-            if ($count === 1) {
+            $paginator = PagerfantaFactory::createWithNullAdapter(
+                $count,
+                $page,
+                TrackSearchService::MAX_TRACKS_PER_PAGE
+            );
+
+            if ($request->isXhr()) {
+                return $this->view->render($response, '@search/common/list.twig', [
+                    'routeQuery' => $form,
+                    'paginator' => $paginator,
+                    'routeName' => 'search.advanced.index',
+                    'tracks' => $tracks,
+                ]);
+            }
+
+            if ($paginator->count() === 1) {
                 /** @var Track $track */
                 $track = $tracks->current();
 
@@ -47,15 +62,9 @@ final class SimpleSearchController
 
                 return $response->withRedirect($redirectUrl);
             }
-
-            $paginator = PagerfantaFactory::createWithNullAdapter(
-                $count,
-                $page,
-                TrackSearchService::MAX_TRACKS_PER_PAGE
-            );
         }
 
-        return $this->view->render($response, '@search/simple/index.twig', [
+        return $this->view->render($response, '@search/simple.twig', [
             'menu' => 'search',
             'form' => $form,
             'isFormSubmitted' => $isFormSubmitted,

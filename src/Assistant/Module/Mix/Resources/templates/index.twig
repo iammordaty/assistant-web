@@ -1,107 +1,150 @@
 {% extends '@common/layout.twig' %}
 
-{% block title %}Mix{% endblock %}
+{% block title 'Mix' %}
+{% block page_header 'Uporządkuj mix' %}
 
-{% block contentBlock %}
-    <style>
-        table.table-cross-hover {
-            overflow: hidden;
-            z-index: 1;
-        }
-        table.table-cross-hover td, th {
-            position: relative;
-        }
-        table.table-cross-hover td:hover::after {
-            background-color: #f5f5f5;
-            content: '\00a0';
-            height: 10000px;
-            left: 0;
-            position: absolute;
-            top: -5000px;
-            width: 100%;
-            z-index: -1;
-        }
-    </style>
-
-    <h3>Tracklista</h3>
-
-    <form method="POST">
-        <textarea name="listing" style="width: 100%; height: 250px">{{ form.listing|default }}</textarea>
-        <footer>
-            <button type="submit" name="submit" value="true" class="btn btn-default btn-lg pull-right">Prześlij</button>
-        </footer>
-    </form>
-    <div class="clearfix"></div>
-
-    {% if mix %}
-        <h3>Mix</h3>
-
-        <div class="table-responsive">
-            <table class="table table-hover">
-                <thead>
-                    <tr>
-                        <th>Nazwa utworu</th>
-                        <th>Gatunek</th>
-                        <th>Długość</th>
-                        <th>Rok</th>
-                        <th>Tonacja</th>
-                        <th>BPM</th>
-                        <th>%</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for track in mix %}
-                        <tr class="">
-                            <td class="col-xs-5">
-                                <span class="ellipsis track-name">
-                                    <a href="{{ url_for('track.track.index', { guid: track.track.guid }) }}" title="{{ track.track.name }}">{{ track.track.name }}</a>
-                                </span>
-                            </td>
-                            <td class="col-xs-2">
-                                <a class="undecorated" href="{{ url_for('search.advanced.index') }}?genre={{ track.track.genre }}">{{ track.track.genre }}</a>
-                            </td>
-                            <td class="col-xs-1">
-                                {{ track.track.length|format_duration }}
-                            </td>
-                            <td class="col-xs-1">
-                                <a class="undecorated" href="{{ url_for('search.advanced.index') }}?year={{ track.track.year }}">{{ track.track.year }}</a>
-                            </td>
-                            <td class="col-xs-1">
-                                <a class="undecorated" href="{{ url_for('search.advanced.index') }}?initial_key={{ track.track.initialKey }}">{{ track.track.initialKey }}</a>
-                            </td>
-                            <td class="col-xs-1">
-                                <a class="undecorated" href="{{ url_for('search.advanced.index') }}?bpm={{ track.track.bpm }}">{{ track.track.bpm }}</a>
-                            </td>
-                            <td class="col-xs-1">
-                                {%- if loop.index0 > 0 %} {{ track.similarityValue }}%{% else %}-{% endif %}
-                            </td>
-                        </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
+{% block content %}
+    {# <script src="https://cdn.jsdelivr.net/npm/autosize@5.0.2/dist/autosize.min.js"></script>#}
+    {# @fixme: rozbić na trzy twigi #}
+    <div class="row row-deck row-cards">
+        <div class="col-12">
+            <form method="POST" class="card">
+                <div class="card-header card-header-light">
+                    <h3 class="card-title">
+                        Tracklista
+                    </h3>
+                </div>
+                <div class="card-body">
+                    <textarea class="form-control" data-bs-toggle="autosize" name="listing" class="w-100" style="min-height: 250px">{{ form.listing|default }}</textarea>
+                </div>
+                <div class="card-footer">
+                    <div class="row align-items-center">
+                        <div class="col">
+                            {# <a href="#">Przełącz na edycję zbiorczą / Przełącz na wybór utworów</a> #}
+                        </div>
+                        <div class="col-auto">
+                            <button type="submit" class="btn btn-primary">Uporządkuj</button>
+                        </div>
+                    </div>
+                </div>
+            </form>
         </div>
 
-        <h3>Siatka podobieństwa</h3>
+        {% if mix %}
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">
+                            Mix
+                        </h3>
+                    </div>
+                    <div class="card-table table-responsive">
+                        <table class="table table-hover table-striped">
+                            <thead>
+                                <tr>
+                                    {# @fixme: Docelowo uzyć similarity/list.twig (o ile to możliwe) #}
+                                    <th style="width: 43%">Nazwa utworu</th>
+                                    <th style="width: 14%">Gatunek</th>
+                                    <th style="width: 17%">Wydawca</th>
+                                    <th style="width: 7%">Rok</th>
+                                    <th style="width: 7%">Tonacja</th>
+                                    <th style="width: 7%">BPM</th>
+                                    <th style="width: 5%">%</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for track in mix %}
+                                    <tr>
+                                        <td style="width: 45%">
+                                            <span class="ellipsis ast-track-name">
+                                                <a href="{{ url_for('track.track.index', { guid: track.track.guid }) }}" title="{{ track.track.name }}">
+                                                    {{ track.track.name }}
+                                                </a>
+                                            </span>
+                                        </td>
+                                        <td style="width: 15%" class="text-nowrap">
+                                            <a class="text-reset" href="{{ url_for('search.advanced.index', query_params = { genre: track.track.genre }) }}">
+                                                {{ track.track.genre }}
+                                            </a>
+                                        </td>
+                                        <td style="width: 19%" class="text-nowrap">
+                                            <a class="text-reset" href="{{ url_for('search.advanced.index', query_params = { publisher: track.track.publisher }) }}">
+                                                {{ track.track.publisher }}
+                                            </a>
+                                        </td>
+                                        <td style="width: 7%">
+                                            <a class="text-reset" href="{{ url_for('search.advanced.index', query_params = { year: track.track.year }) }}">
+                                                {{ track.track.year }}
+                                            </a>
+                                        </td>
+                                        <td style="width: 7%">
+                                            <a class="text-reset" href="{{ url_for('search.advanced.index', query_params = { initial_key: track.track.initialKey }) }}">
+                                                {{ track.track.initialKey }}
+                                            </a>
+                                        </td>
+                                        <td style="width: 7%">
+                                            <a class="text-reset" href="{{ url_for('search.advanced.index', query_params = { bpm: track.track.bpm }) }}">
+                                                {{ track.track.bpm }}
+                                            </a>
+                                        </td>
+                                        <td style="width: 5%">
+                                            {%- if loop.index0 > 0 %} {{ track.similarityValue }}%{% else %}-{% endif %}
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
 
-        <table class="table table-hover table-cross-hover" style="font-size: 10px">
-            <tr>
-                <td>&nbsp;</td>
-                {% for row in similarityGrid %}
-                    <td class="text-center" title="{{ row.track.name }}">
-                        <a href="{{ url_for('track.track.index', { guid: row.track.guid }) }}" class="undecorated" title="{{ row.track.name }}">{{ row.track.title }}</a>
-                    </td>
-                {% endfor %}
-            </tr>
-            {% for row in similarityGrid %}
-                <tr>
-                    <td title="{{ row.track.name }}">
-                        <a href="{{ url_for('track.track.index', { guid: row.track.guid }) }}" class="undecorated" title="{{ row.track.name }}">{{ row.track.title }}</a>
-                    </td>
-                    {% for track in row.tracks %}
-                        <td class="text-center" {% if track.similarityValue is empty %}style="background-color: #eaeaea"{% endif %}>{{ track.similarityValue|default('-') }}</td>
-                    {% endfor %}
-                </tr>
-            {% endfor %}
-        </table>
-    {% endif %}
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">
+                            Siatka podobieństwa
+                        </h3>
+                    </div>
+                    <div class="card-table table-responsive">
+                        <table class="table table-hover table-striped table-vcenter small">
+                            <tr>
+                                <td>&nbsp;</td>
+                                {% for row in similarityGrid %}
+                                    <td class="text-center" title="{{ row.track.name }}">
+                                        <a href="{{ url_for('track.track.index', { guid: row.track.guid }) }}" class="text-reset" title="{{ row.track.name }}">
+                                            {{ row.track.title }}
+                                        </a>
+                                    </td>
+                                {% endfor %}
+                            </tr>
+
+                            {% set trackCellWidth = 40 %}
+                            {% set similarityValueCellWidth = (100 - trackCellWidth) / similarityGrid|length %}
+                            {% set similarityValueCellWidth = similarityValueCellWidth|round(2) %}
+
+                            {% for row in similarityGrid %}
+                                <tr>
+                                    <td title="{{ row.track.name }}" style="width: {{ trackCellWidth }}%">
+                                        {# todo: dodać ucinanie tekstu #}
+                                        <a href="{{ url_for('track.track.index', { guid: row.track.guid }) }}" class="text-reset" title="{{ row.track.name }}">
+                                            {{ row.track.title }}
+                                        </a>
+                                    </td>
+                                    {% for track in row.tracks %}
+                                        <td class="text-center" style="width: {{ similarityValueCellWidth }}%; min-width: 8.5%" {% if track.similarityValue is empty %}style=""{% endif %}>
+                                            {% if track.similarityValue is not null %}
+                                                {{ track.similarityValue }}%
+                                            {% else %}
+                                                <span class="text-muted small">-</span>
+                                            {% endif %}
+                                        </td>
+                                    {% endfor %}
+                                </tr>
+                            {% endfor %}
+                        </table>
+                    </div>
+                </div>
+            </div>
+        {% endif %}
+    </div>
 {% endblock %}

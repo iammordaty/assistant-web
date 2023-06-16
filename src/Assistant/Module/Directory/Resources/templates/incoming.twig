@@ -2,116 +2,196 @@
 
 {% block title %}Przeglądanie oczekujących {% if pathname %}– {{ pathname }}{% endif %}{% endblock %}
 
-{% block contentBlock %}
+{% block content %}
     <script src="/js/incoming.js" type="text/javascript"></script>
-    <div class="directory-info" data-role="element" data-element-pathname="{{ pathname }}">
-        <div class="pull-right" style="display: inline-block">
-            <button type="button" class="btn btn-sm btn-default"
-                data-role="incoming-tracks:calculate-audio-data" title="Oblicz BPM i tonację">
-                <i class="fa fa-calculator"></i>
-            </button>
-            {#
-            <button type="button" class="btn btn-sm btn-default disabled">
-                <i class="fa fa-folder-open"></i>
-            </button>
-            #}
-        </div>
 
-        {% include '@common/breadcrumbs.twig' with {
-            breadcrumbs: breadcrumbs,
-            style: 'padding-bottom: 8px',
-            collectionRootExtraClass: 'fa-fw',
-        } only %}
+    {% set hasListing = directories or tracks %}
+
+    {% set header %}
+        <div class="card-header">
+            <h3 class="card-title">
+                {% include '@common/breadcrumbs.twig' with { breadcrumbs: breadcrumbs } only %}
+            </h3>
+        </div>
+    {% endset %}
+
+    <div class="row row-deck row-cards">
+        {% if hasListing %}
+            {% if directories %}
+                <div class="col-12">
+                    <div class="card">
+                        {{ header }}
+
+                        <div class="card-table table-responsive">
+                            <table class="table table-hover table-vcenter">
+                                <thead>
+                                    <tr>
+                                        <th>Nazwa katalogu</th>
+                                        <th></th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for data in directories %}
+                                        {% set directory = data.collectionItem %}
+                                        {% set targetPath = data.targetPath %}
+
+                                        <tr data-role="element" data-element-pathname="{{ directory.pathname }}" data-element-target-pathname="{{ targetPath }}">
+                                            <td>
+                                                <a href="{{ url_for('directory.browse.incoming', { pathname: directory.pathname }) }}">{{ directory.name }}</a>
+                                            </td>
+                                            <td>
+                                                <div class="btn-list flex-nowrap justify-content-end">
+                                                    <button
+                                                        class="btn btn-icon"
+                                                        data-role="incoming-tracks:calculate-audio-data"
+                                                        title="Oblicz BPM i tonację"
+                                                    >
+                                                        <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-calculator" width="24" height="24" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                                            <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+                                                            <rect x="4" y="3" width="16" height="18" rx="2"></rect>
+                                                            <rect x="8" y="7" width="8" height="3" rx="1"></rect>
+                                                            <line x1="8" y1="14" x2="8" y2="14.01"></line>
+                                                            <line x1="12" y1="14" x2="12" y2="14.01"></line>
+                                                            <line x1="16" y1="14" x2="16" y2="14.01"></line>
+                                                            <line x1="8" y1="17" x2="8" y2="17.01"></line>
+                                                            <line x1="12" y1="17" x2="12" y2="17.01"></line>
+                                                            <line x1="16" y1="17" x2="16" y2="17.01"></line>
+                                                        </svg>
+                                                    </button>
+                                                    {#
+                                                    <button
+                                                        class="btn btn-icon"
+                                                        data-role="incoming-tracks:move"
+                                                        title="Przenieś do {{ targetPath }}"
+                                                    >
+                                                        <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-folder-plus" width="24" height="24" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                                            <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+                                                            <path d="M5 4h4l3 3h7a2 2 0 0 1 2 2v8a2 2 0 0 1 -2 2h-14a2 2 0 0 1 -2 -2v-11a2 2 0 0 1 2 -2"></path>
+                                                            <line x1="12" y1="10" x2="12" y2="16"></line>
+                                                            <line x1="9" y1="13" x2="15" y2="13"></line>
+                                                        </svg>
+                                                    </button>
+                                                    #}
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            {% endif %}
+
+            {% if tracks %}
+                {% set withBreadcrumbs = not directories %}
+
+                <div class="col-12">
+                    <div class="card">
+                        {% if withBreadcrumbs %}
+                            {{ header }}
+                        {% endif %}
+
+                        <div class="card-table table-responsive">
+                            <table class="table table-hover table-vcenter" data-sortable="true">
+                                <thead>
+                                    <tr>
+                                        <th>Nazwa utworu</th>
+                                        <th>Data</th>
+                                        <th>Tonacja</th>
+                                        <th>BPM</th>
+                                        <th></th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for data in tracks %}
+                                        {% set track = data.collectionItem %}
+                                        {% set targetPath = data.targetPath %}
+
+                                        <tr data-role="element" data-element-pathname="{{ track.pathname }}" data-element-target-pathname="{{ targetPath }}">
+                                            <td style="width: 75%">
+                                                <span class="ellipsis ast-track-name d-block mb-1">
+                                                    <a class="font-weight-medium" href="{{ url_for('track.edit.edit', { pathname: track.pathname }) }}">
+                                                        {{ track.name }}
+                                                    </a>
+                                                </span>
+                                                <span class="text-muted small d-block">
+                                                    {{ track.file.filename }}
+                                                </span>
+                                            </td>
+                                            <td style="width: 12%">
+                                                <span title="{{ track.file.mtime|date('d.m.Y, H:i') }}">
+                                                    {{ track.file.mtime|datetime(constant('\IntlDateFormatter::LONG'), 'LLLL YYYY') }}
+                                                </span>
+                                            </td>
+                                            <td style="width: 7%">
+                                                {{ track.initialKey }}
+                                            </td>
+                                            <td style="width: 7%">
+                                                {{ track.bpm }}
+                                            </td>
+                                            <td>
+                                                <div class="btn-list flex-nowrap justify-content-end">
+                                                    <button
+                                                        class="btn btn-icon"
+                                                        data-role="incoming-tracks:calculate-audio-data"
+                                                        title="Oblicz BPM i tonację"
+                                                    >
+                                                        <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-calculator" width="24" height="24" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                                            <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+                                                            <rect x="4" y="3" width="16" height="18" rx="2"></rect>
+                                                            <rect x="8" y="7" width="8" height="3" rx="1"></rect>
+                                                            <line x1="8" y1="14" x2="8" y2="14.01"></line>
+                                                            <line x1="12" y1="14" x2="12" y2="14.01"></line>
+                                                            <line x1="16" y1="14" x2="16" y2="14.01"></line>
+                                                            <line x1="8" y1="17" x2="8" y2="17.01"></line>
+                                                            <line x1="12" y1="17" x2="12" y2="17.01"></line>
+                                                            <line x1="16" y1="17" x2="16" y2="17.01"></line>
+                                                        </svg>
+                                                    </button>
+                                                    <a
+                                                        class="btn btn-icon"
+                                                        href="{{ url_for('track.edit.edit', { pathname: track.pathname }) }}"
+                                                        title="Edytuj metadane"
+                                                    >
+                                                        <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-pencil" width="24" height="24" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                                            <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+                                                            <path d="M4 20h4l10.5 -10.5a1.5 1.5 0 0 0 -4 -4l-10.5 10.5v4"></path>
+                                                            <line x1="13.5" y1="6.5" x2="17.5" y2="10.5"></line>
+                                                        </svg>
+                                                    </a>
+                                                    {#
+                                                    <button
+                                                        class="btn btn-icon"
+                                                        data-role="incoming-tracks:move"
+                                                        title="Przenieś do {{ targetPath }}"
+                                                    >
+                                                        <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-folder-plus" width="24" height="24" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                                            <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+                                                            <path d="M5 4h4l3 3h7a2 2 0 0 1 2 2v8a2 2 0 0 1 -2 2h-14a2 2 0 0 1 -2 -2v-11a2 2 0 0 1 2 -2"></path>
+                                                            <line x1="12" y1="10" x2="12" y2="16"></line>
+                                                            <line x1="9" y1="13" x2="15" y2="13"></line>
+                                                        </svg>
+                                                    </button>
+                                                    #}
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            {% endif %}
+        {% else %}
+            <div class="col-12">
+                <div class="card">
+                    {{ header }}
+                </div>
+            </div>
+
+            {% include '@common/empty.twig' with { message: 'Brak utworów w podanym katalogu' } only %}
+        {% endif %}
     </div>
-
-    {% if directories %}
-        <table class="table table-hover">
-            <thead>
-                <tr>
-                    <th>Nazwa katalogu</th>
-                    <th>
-
-                    </th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for data in directories %}
-                    {% set directory = data.collectionItem %}
-                    {% set targetPath = data.targetPath %}
-
-                    <tr data-role="element" data-element-pathname="{{ directory.pathname }}" data-element-target-pathname="{{ targetPath }}">
-                        <td class="col-xs-10">
-                            <a href="{{ url_for('directory.browse.incoming', { pathname: directory.pathname }) }}">{{ directory.name }}</a>
-                        </td>
-                        <td class="col-xs-2 text-right">
-                            <button type="button" class="btn btn-sm btn-default"
-                                data-role="incoming-tracks:calculate-audio-data" title="Oblicz BPM i tonację">
-                                <i class="fa fa-calculator"></i>
-                            </button>
-                            {#
-                            <button type="button" class="btn btn-sm btn-default {% if not targetPath %}disabled{% endif %}"
-                                data-role="incoming-tracks:move" title="Przenieś do {{ targetPath }}">
-                                <i class="fa fa-folder-open"></i>
-                            </button>
-                            #}
-                        </td>
-                    </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-    {% endif %}
-
-    {% if tracks %}
-        <div class="table-responsive">
-            <table class="table table-hover">
-                <thead>
-                    <tr>
-                        <th>Nazwa utworu</th>
-                        <th>Tonacja</th>
-                        <th>BPM</th>
-                        <th></th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for data in tracks %}
-                        {% set track = data.collectionItem %}
-                        {% set targetPath = data.targetPath %}
-
-                        <tr data-role="element" data-element-pathname="{{ track.pathname }}" data-element-target-pathname="{{ targetPath }}">
-                            <td class="col-xs-8">
-                                <a class="undecorated" href="{{ url_for('track.edit.edit', { pathname: track.pathname }) }}">
-                                    {{ track.name }}
-                                </a>
-                            </td>
-                            <td class="col-xs-1">
-                                {{ track.initialKey }}
-                            </td>
-                            <td class="col-xs-1">
-                                {{ track.bpm }}
-                            </td>
-                            <td class="col-xs-2 text-right">
-                                <button type="button" class="btn btn-sm btn-default"
-                                    data-role="incoming-tracks:calculate-audio-data" title="Oblicz BPM i tonację">
-                                    <i class="fa fa-calculator"></i>
-                                </button>
-                                {#
-                                <button type="button" class="btn btn-sm btn-default"
-                                    data-role="incoming-tracks:move" title="Przenieś do {{ targetPath }}">
-                                    <i class="fa fa-folder-open"></i>
-                                </button>
-                                #}
-                                <a
-                                    type="button"
-                                    class="btn btn-sm btn-default"
-                                    title="Edytuj metadane"
-                                    href="{{ url_for('track.edit.edit', { pathname: track.pathname }) }}">
-                                    <i class="fa fa-pencil"></i>
-                                </a>
-                            </td>
-                        </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
-    {% endif %}
 {% endblock %}

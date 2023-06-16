@@ -1,32 +1,30 @@
-<div class="col-xs-12 col-sm-4 col-md-3">
-    <div class="panel panel-info key-info">
-        <div class="panel-heading">
-            <a href="{{ url_for('search.advanced.index') }}?initial_key={{ key }}" class="undecorated">{{ title }} - informacje</a>
-        </div>
-        <div class="panel-body">
-            {% if description %}
-                <p>{{ description }}</p>
-            {% endif %}
-
-            {% for key in similarKeys %}
-                <div
-                    class="row"
-                    {% if key.description %}
-                        data-toggle="popover"
-                        data-placement="left"
-                        data-trigger="hover"
-                        data-html="true"
-                        data-content="{{ key.description }}"
+<div class="card">
+    <div class="card-header card-header-light d-inline-block">
+        <a href="{{ url_for('search.advanced.index', query_params = { initial_key: key }) }}" class="text-reset">
+            {{- title -}}
+        </a> - informacje
+    </div>
+    <div class="card-body">
+        <dl class="row">
+            {% for similarKey in similarKeys %}
+                <dt
+                    class="col-7 text-right key-info-key {% if similarKey.description %} cursor-help {% endif %}"
+                    {% if similarKey.description %}
+                        data-bs-toggle="popover"
+                        data-bs-placement="left"
+                        data-bs-trigger="hover"
+                        data-bs-html="true"
+                        data-bs-content="{{ similarKey.description }}"
                     {% endif %}
                 >
-                    <span class="col-xs-4 col-sm-8 col-md-7 col-md-offset-1 text-right key-info-key">
-                        <span class="ellipsis"><strong>{{ key.title }}</strong></span>
-                    </span>
-                    <span class="col-xs-8 col-sm-4 key-info-value">
-                        <a href="{{ url_for('search.advanced.index') }}?initial_key={{ key.value }}" class="undecorated">{{ key.value }}</a>
-                    </span>
-                </div>
+                    <span class="ellipsis">{{ similarKey.title }}</span>
+                </dt>
+                <dd class="col-5 key-info-value">
+                    <a href="{{ url_for('search.advanced.index', query_params = { initial_key: similarKey.value }) }}" class="text-reset">
+                        {{ similarKey.value }}
+                    </a>
+                </dd>
             {% endfor %}
-        </div>
+        </dl>
     </div>
 </div>

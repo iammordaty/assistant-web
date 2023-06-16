@@ -12,6 +12,7 @@ final class IncomingTrack
     public function __construct(
         private string $guid,
         private ?string $artist,
+        private ?array $artists,
         private ?string $title,
         private ?string $album,
         private ?int $trackNumber,
@@ -20,6 +21,8 @@ final class IncomingTrack
         private ?string $publisher,
         private ?float $bpm,
         private ?string $initialKey,
+        private int $length,
+        private array $tags,
         private string $pathname,
     ) {
         $this->file = new SplFileInfo($this->pathname);
@@ -36,6 +39,11 @@ final class IncomingTrack
     public function getArtist(): ?string
     {
         return $this->artist;
+    }
+
+    public function getArtists(): ?array
+    {
+        return $this->artists;
     }
 
     public function getTitle(): ?string
@@ -87,6 +95,16 @@ final class IncomingTrack
     public function getInitialKey(): ?string
     {
         return $this->initialKey;
+    }
+
+    public function getLength(): int
+    {
+        return $this->length;
+    }
+
+    public function getTags(): array
+    {
+        return $this->tags;
     }
 
     /** Shorthand method oraz dla zachowania kompatybilności z klasą Track */

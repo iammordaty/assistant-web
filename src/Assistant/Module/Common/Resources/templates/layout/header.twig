@@ -1,0 +1,125 @@
+<header class="navbar navbar-expand-md" data-bs-theme="dark">
+    <div class="container-xxl">
+        <h1 class="navbar-brand navbar-brand-autodark d-none-navbar-horizontal pe-0 pe-md-3">
+            <a href="{{ url_for('dashboard') }}">
+                <svg
+                    style="width: 32px; height: 32px"
+                    xmlns="http://www.w3.org/2000/svg"
+                    class="icon icon-tabler icon-tabler-headphones"
+                    width="64"
+                    height="64"
+                    viewBox="0 0 24 24"
+                    stroke-width="1.5"
+                    stroke="currentColor"
+                    fill="none"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                >
+                    <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+                    <rect x="4" y="13" rx="2" width="5" height="7"></rect>
+                    <rect x="15" y="13" rx="2" width="5" height="7"></rect>
+                    <path d="M4 15v-3a8 8 0 0 1 16 0v3"></path>
+                </svg>
+            </a>
+        </h1>
+
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar-menu">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+
+        <div class="collapse navbar-collapse" id="navbar-menu">
+            <ul class="navbar-nav">
+                <li class="nav-item {% if menu == "dashboard" %}active{% endif %}">
+                    <a class="nav-link" href="{{ url_for('dashboard') }}">
+                        <span class="nav-link-title">
+                          Dashboard
+                        </span>
+                    </a>
+                </li>
+                <li class="nav-item {% if menu == "track" %}active{% endif %}">
+                    <a class="nav-link" href="{{ url_for('search.advanced.index') }}">
+                        <span class="nav-link-title">
+                          Utwór
+                        </span>
+                    </a>
+                </li>
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" data-bs-toggle="dropdown" data-bs-auto-close="outside" role="button">
+                        <span class="nav-link-title">
+                          Przeglądaj
+                        </span>
+                    </a>
+                    <div class="dropdown-menu">
+                        <a class="dropdown-item" href="{{ url_for('directory.browse.index') }}">
+                            Przeglądaj kolekcję
+                        </a>
+                        <a class="dropdown-item" href="{{ url_for('directory.browse.recent') }}">
+                            Przeglądaj ostatnio dodane
+                        </a>
+                        <a><hr class="dropdown-divider"></a>
+                        <a class="dropdown-item" href="{{ url_for('directory.browse.incoming') }}">
+                            Przeglądaj oczekujące
+                        </a>
+                    </div>
+                </li>
+                <li class="nav-item {% if menu == "search" %}active{% endif %}">
+                    <a class="nav-link" href="{{ url_for('search.advanced.index') }}">
+                        <span class="nav-link-title">
+                          Wyszukaj
+                        </span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link {% if menu == "mix" %}active{% endif %}" href="{{ url_for('mix.mix.index') }}">
+                        <span class="nav-link-title">
+                          Uporządkuj mix
+                        </span>
+                    </a>
+                </li>
+                <li class="nav-item {% if menu == "log" %}active{% endif %}">
+                    <a class="nav-link" href="{{ url_for('common.log.index') }}">
+                        <span class="nav-link-title">
+                          Logi
+                        </span>
+                    </a>
+                </li>
+            </ul>
+        </div>
+
+        <div class="flex-row d-none d-sm-flex">
+            <div class="col-auto ms-auto me-1">
+                <form method="GET" action="{{ url_for('search.simple.index') }}">
+                    <div class="input-icon ps-1">
+                        <input
+                            data-role="autocompleter"
+                            data-url="{{ url_for('track.track.autocomplete') }}"
+                            data-follow-on-select="true"
+                            type="text"
+                            name="query"
+                            value="{{ form.query|default }}"
+                            class="form-control dropdown-menu-right"
+                        >
+                        <span class="input-icon-addon">
+                            <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                class="icon icon-tabler icon-tabler-search"
+                                width="24"
+                                height="24"
+                                viewBox="0 0 24 24"
+                                stroke-width="1.5"
+                                stroke="currentColor"
+                                fill="none"
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                            >
+                               <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+                               <circle cx="10" cy="10" r="7"></circle>
+                               <line x1="21" y1="21" x2="15" y2="15"></line>
+                            </svg>
+                        </span>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</header>

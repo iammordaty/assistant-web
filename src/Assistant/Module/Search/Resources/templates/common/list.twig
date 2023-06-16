@@ -1,0 +1,47 @@
+<div data-role="track-search:list">
+    {% if paginator.getNbResults() %}
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">
+                        Wyniki wyszukiwania
+                    </h3>
+                    <div class="card-actions">
+                        <select class="form-select" data-role="track-search:list-sort">
+                            {# @fixme: To powinno przychodzić z PHP-a #}
+                            {# @todo: Tutaj powinna być również opcja "najlepiej dopasowane po nazwie", ale tylko simple search #}
+                            <option value="a" {% if sort == 'a' or not sort %}selected{% endif %}>Alfabetycznie</option>
+                            <option value="ad" {% if sort == 'ad' %}selected{% endif %}>Alfabetycznie malejąco</option>
+                            <option value="yd" {% if sort == 'yd' %}selected{% endif %}>Od najnowszego</option>
+                            <option value="y" {% if sort == 'y' %}selected{% endif %}>Od najstarszego</option>
+                            <option value="id" {% if sort == 'id' %}selected{% endif %}>Od ostatnio dodanego</option>
+                            <option value="i" {% if sort == 'i' %}selected{% endif %}>Od najpóźniej dodanego</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="card-table table-responsive">
+                    {% include '@common/tracks.twig' with { tracks: tracks } only %}
+                </div>
+
+                <div class="card-footer d-flex align-items-center">
+                    <p class="m-0 text-muted">
+                        Znaleziono {{ paginator.getNbResults|pluralize({
+                            'one': 'utwór',
+                            'few': 'utwory',
+                            'other': 'utworów',
+                        }) }}
+                    </p>
+                    <div class="ms-auto">
+                        {% include '@common/paginator.twig' with {
+                            paginator: paginator,
+                            routeName: routeName,
+                            routeQuery: routeQuery,
+                        } only %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    {% else %}
+        {% include '@common/empty.twig' with { message: 'Nie znaleziono utworów spełniających podane kryteria' } only %}
+    {% endif %}
+</div>

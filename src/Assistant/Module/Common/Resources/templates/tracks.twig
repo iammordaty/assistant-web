@@ -1,0 +1,50 @@
+<table class="table table-hover table-vcenter table-striped">
+    <thead>
+        <tr>
+            <th style="width: 45%">Nazwa utworu</th>
+            <th style="width: 15%">Gatunek</th>
+            <th style="width: 19%">Wydawca</th>
+            <th style="width: 7%">Rok</th>
+            <th style="width: 7%">Tonacja</th>
+            <th style="width: 7%">BPM</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for track in tracks %}
+            <tr>
+                <td style="width: 45%">
+                    <span class="ellipsis ast-track-name">
+                        <a href="{{ url_for('track.track.index', { guid: track.guid }) }}" title="{{ track.name }}">
+                            {{ track.name }}
+                        </a>
+                    </span>
+                </td>
+                <td style="width: 15%" class="text-nowrap">
+                    <a class="text-reset" href="{{ url_for('search.advanced.index', query_params = { genre: track.genre }) }}">
+                        {{ track.genre }}
+                    </a>
+                </td>
+                <td style="width: 19%" class="text-nowrap">
+                    <a class="text-reset" href="{{ url_for('search.advanced.index', query_params = { publisher: track.publisher }) }}">
+                        {{ track.publisher }}
+                    </a>
+                </td>
+                <td style="width: 7%">
+                    <a class="text-reset" href="{{ url_for('search.advanced.index', query_params = { year: track.year }) }}">
+                        {{ track.year }}
+                    </a>
+                </td>
+                <td style="width: 7%">
+                    <a class="text-reset" href="{{ url_for('search.advanced.index', query_params = { initial_key: track.initialKey }) }}">
+                        {{ track.initialKey }}
+                    </a>
+                </td>
+                <td style="width: 7%">
+                    <a class="text-reset" href="{{ url_for('search.advanced.index', query_params = { bpm: track.bpm }) }}">
+                        {{ track.bpm }}
+                    </a>
+                </td>
+            </tr>
+        {% endfor %}
+    </tbody>
+</table>

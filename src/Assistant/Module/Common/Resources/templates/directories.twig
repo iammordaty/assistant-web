@@ -1,0 +1,16 @@
+<table class="table table-hover table-striped">
+    <thead>
+        <tr>
+            <th>Nazwa katalogu</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for directory in directories %}
+            <tr>
+                <td>
+                    <a href="{{ url_for('directory.browse.index', { guid: directory.guid }) }}">{{ directory.name }}</a>
+                </td>
+            </tr>
+        {% endfor %}
+    </tbody>
+</table>

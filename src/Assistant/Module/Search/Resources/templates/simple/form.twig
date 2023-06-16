@@ -1,7 +1,5 @@
-<form method="GET" action="{{ url_for('search.simple.index') }}" class="form-horizontal search-form-simple" role="form">
-    <legend>Szybkie wyszukiwanie</legend>
-
-    <div class="input-group input-group-lg">
+<form data-role="track-search:form" method="GET" action="{{ url_for('search.simple.index') }}" role="form">
+    <div class="input-icon">
         <input
             data-role="autocompleter"
             data-url="{{ url_for('track.track.autocomplete') }}"
@@ -9,13 +7,26 @@
             type="text"
             name="query"
             value="{{ form.query|default }}"
-            class="form-control"
+            class="form-control form-control-lg"
             placeholder="Wprowadź nazwę wykonawcy lub tytuł utworu"
         >
-        <span class="input-group-btn">
-            <button class="btn btn-default btn-lg" type="submit">
-                <i class="fa fa-search"></i>
-            </button>
+        <span class="input-icon-addon">
+            <svg
+                xmlns="http://www.w3.org/2000/svg"
+                class="icon icon-tabler icon-tabler-search"
+                width="24"
+                height="24"
+                viewBox="0 0 24 24"
+                stroke-width="1.5"
+                stroke="currentColor"
+                fill="none"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+            >
+               <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+               <circle cx="10" cy="10" r="7"></circle>
+               <line x1="21" y1="21" x2="15" y2="15"></line>
+            </svg>
         </span>
     </div>
 </form>

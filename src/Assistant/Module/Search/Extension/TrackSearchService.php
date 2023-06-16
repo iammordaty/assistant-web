@@ -51,10 +51,10 @@ final class TrackSearchService
         return $this->search($criteria, $sort, $page);
     }
 
-    public function findByFields(array $fields, int $page): array
+    public function findByFields(array $fields, ?string $sort, int $page): array
     {
         $criteria = SearchCriteriaFacade::createFromFields($fields);
-        $sort = [ 'guid' => Storage::SORT_ASC ]; // docelowo jako parametr przychodzący z frontu
+        $sort = SearchSort::create($sort);
 
         return $this->search($criteria, $sort, $page);
     }

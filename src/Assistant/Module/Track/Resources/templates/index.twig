@@ -1,56 +1,85 @@
 {% extends '@common/layout.twig' %}
 
-{% block title %}{{ track.name }}{% endblock %}
+{% block title track.name %}
 
-{% block contentBlock %}
-    <div id="wave-progress" class="text-center"><i class="fa fa-cog fa-spin fa-5x"></i></div>
-    <div id="wave-container" data-track-url="{{ url_for('track.contents.get', { guid: track.guid }) }}">
-        <div id="wave-controls">
-            <i data-role="play-pause" class="fa fa-play"></i>
+{% block page_header %}
+    {% include '@track/common/header.twig' with { track: track } only %}
+{% endblock %}
+
+{% block content %}
+    <div class="row row-deck row-cards">
+        {% include '@track/common/wave.twig' with { track: track } only %}
+
+        <div class="col-sm-8 col-12">
+            <div class="card">
+                <a href="{{ url_for('search.advanced.index', query_params = {
+                    bpm: track.bpm,
+                    genre: track.genre,
+                    initial_key: track.initialKey,
+                    year: track.year,
+                    track: track.name,
+                }) }}">
+                    <div class="ast-search-similar">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-search" width="24" height="24" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                            <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+                            <circle cx="10" cy="10" r="7"></circle>
+                            <line x1="21" y1="21" x2="15" y2="15"></line>
+                        </svg>
+                    </div>
+                </a>
+                <div class="card-body">
+                    {% include '@track/track/trackInfo.twig' with {
+                        track: track,
+                        breadcrumbs: breadcrumbs,
+                    } only %}
+                </div>
+            </div>
         </div>
-        <div id="wave-time-current-time" data-time-mode="elapsed">00:00</div>
-        <div id="wave-time-track-duration" data-track-length="{{ track.length }}">{{ track.length|format_duration }}</div>
-        <div id="wave"></div>
-    </div>
 
-    <script src="/vendor/wavesurfer.js/wavesurfer.min.js" type="text/javascript"></script>
-    <script src="/js/track.js" type="module"></script>
+        <div class="col-sm-4 d-none d-sm-flex">
+            {% include '@track/track/musicalKeyInfo.twig' with musicalKeyInfo only %}
+        </div>
 
-    <div class="track-info">
-        <legend>
-            <a href="{{ url_for('search.advanced.index') }}?artist={{ track.artist }}" class="undecorated">{{ track.artist }}</a> - {{ track.title }}
-        </legend>
-
-        <div class="row">
-            {% include '@track/track/trackInfo.twig' with {
-                track: track,
-                breadcrumbs: breadcrumbs,
-                extraClasses: musicalKeyInfo ? [ 'col-sm-8', 'col-md-9' ] : [],
-            } only %}
-
-           {% if musicalKeyInfo %}
-                {% include '@track/track/musicalKeyInfo.twig' with musicalKeyInfo only %}
-           {% endif %}
+        <div class="col-12">
+            <div class="card" data-role="similar-tracks:container">
+                <div class="card-header cursor-pointer" data-role="similar-tracks:toggle-visibility">
+                    <h3 class="card-title">
+                        Podobne utwory
+                    </h3>
+                    <div class="card-actions">
+                        <input
+                            placeholder="Filtruj utwory (np. {{ track.genre|lower }}, {{ track.year }})"
+                            data-role="similar-tracks:filter"
+                            type="text"
+                            class="form-control form-control-sm"
+                            value=""
+                        >
+                    </div>
+                </div>
+                <div class="card-body d-none" data-role="similar-tracks:parameters-container">
+                    {% include '@track/similarTracks/form.twig' with {
+                        form: form,
+                        actionUrl: url_for('track.track.index', { guid: track.guid }),
+                    } only %}
+                </div>
+                <div class="card-table table-responsive">
+                    {% include '@track/similarTracks/list.twig' with {
+                        similarTracksList: similarTracksList,
+                        similarTracksSoftLimit: similarTracksSoftLimit,
+                    } only %}
+                </div>
+                <div
+                    class="card-footer {% if similarTracksList|length <= similarTracksSoftLimit %}d-none{% endif %}"
+                    data-role="similar-tracks:footer"
+                >
+                    <div class="text-center">
+                        <button type="button" class="btn" data-role="similar-tracks:show-more">Pokaż więcej</button>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 
-    <div data-role="similar-tracks:container" class="similar-tracks">
-        <legend data-role="similar-tracks:toggle-visibility" class="toggle-visibility">
-            Podobne utwory
-            <i
-                data-role="similar-tracks:toggle-visibility-icon"
-                class="fa fa-angle-double-down pull-right toggle-visibility-icon">
-            </i>
-        </legend>
-
-        {% include '@track/similarTracks/form.twig' with {
-            form: form,
-            actionUrl: url_for('track.track.index', { guid: track.guid }),
-        } only %}
-
-        {% include '@track/similarTracks/list.twig' with {
-            similarTracksList: similarTracksList,
-            similarTracksSoftLimit: similarTracksSoftLimit,
-        } only %}
-    </div>
+    <script src="/vendor/wavesurfer.min.js" type="text/javascript"></script>
+    <script src="/js/track.js"></script>
 {% endblock %}

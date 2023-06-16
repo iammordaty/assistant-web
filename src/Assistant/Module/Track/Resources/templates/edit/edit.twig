@@ -1,149 +1,148 @@
 {% extends '@common/layout.twig' %}
 
-{% block title %}{{ track.name }}{% endblock %}
+{% block title track.name %}
 
-{% block contentBlock %}
+{% block page_header %}
+    {% include '@track/common/header.twig' with { track: track } only %}
+{% endblock %}
+
+{% block content %}
     <div
+        class="d-none"
         data-role="track-suggestions:suggestions"
         data-suggestions="{{ suggestions|json_encode }}"
     ></div>
 
-    <form
-        method="GET"
-        action="{{ url_for('track.edit.edit', { pathname: pathname|url_encode }) }}"
-        class="form-horizontal"
-        role="form"
-        autocomplete="off"
-    >
-        <legend>{{ track.name }}</legend>
+    <div class="row row-deck row-cards">
+        {% include '@track/common/wave.twig' with { track: track } only %}
 
-        <div class="form-group">
-            <label class="col-sm-2 control-label">
-                <span class="ellipsis"><span>Zapytanie</span></span>
-            </label>
-            <div class="col-sm-8">
-                <div class="input-group">
-                    <input type="text" name="query" value="{{ query }}" class="form-control">
-                    <span class="input-group-btn">
-                        <button class="btn btn-default" type="submit" title="Wyszukaj ponownie" tabindex="-1">
-                            <i class="fa fa-refresh"></i>
-                        </button>
-                        <a
-                            href="https://www.google.com/search?q={{ query|url_encode }}"
-                            target="_blank"
-                            title="Otwórz wyszukiwanie w Google w nowej karcie"
-                            class="btn btn-default"
-                            tabindex="-1"
-                        >
-                            <i class="fa fa-google"></i>
-                        </a>
-                    </span>
-                </div>
-            </div>
-        </div>
+        <div class="col-12">
+            <form method="GET" action="{{ url_for('track.edit.edit', { pathname: pathname|url_encode }) }}" class="card" role="form">
+                <div class="card-body">
+                    <div class="row row-cards">
+                        <div class="col-8">
+                            <div class="row mb-2">
+                                <label class="col-3 col-form-label">Zapytanie</label>
+                                <div class="col">
+                                    <div class="input-group input-group-flat">
+                                        <input type="text" name="query" value="{{ query }}" class="form-control">
+                                        <span class="input-group-text">
+                                        <button class="btn btn-action shadow-none" type="submit" title="Wyszukaj ponownie" tabindex="-1">
+                                            <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-refresh" width="24" height="24" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"></path><path d="M20 11a8.1 8.1 0 0 0 -15.5 -2m-.5 -4v4h4"></path><path d="M4 13a8.1 8.1 0 0 0 15.5 2m.5 4v-4h-4"></path></svg>
+                                        </button>
+                                        <a
+                                            href="https://www.google.com/search?q={{ query|url_encode }}"
+                                            target="_blank"
+                                            title="Otwórz wyszukiwanie w Google w nowej karcie"
+                                            class="link-secondary ms-2"
+                                            tabindex="-1"
+                                        >
+                                           <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-world-search" width="24" height="24" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"></path><path d="M21 12a9 9 0 1 0 -9 9"></path><path d="M3.6 9h16.8"></path><path d="M3.6 15h7.9"></path><path d="M11.5 3a17 17 0 0 0 0 18"></path><path d="M12.5 3a16.984 16.984 0 0 1 2.574 8.62"></path><path d="M18 18m-3 0a3 3 0 1 0 6 0a3 3 0 1 0 -6 0"></path><path d="M20.2 20.2l1.8 1.8"></path></svg>
+                                        </a>
+                                  </span>
+                                    </div>
+                                </div>
+                            </div>
 
-        <div class="form-group">
-            <label class="col-sm-2 control-label">
-                <span class="ellipsis"><span>Znalezione utwory</span></span>
-            </label>
-            <div class="col-sm-8">
-                <select
-                    {% if not suggestions %}disabled {% endif %} class="{% if not suggestions %}disabled {% endif %}form-control"
-                    data-role="track-suggestions:base-track-selector"
-                >
-                    <!-- TODO: Dobrze byłoby mieć tę listę posortowaną: alfabetycznie albo po dacie wydania) -->
-                    <!-- update: a najlepiej: radiobutton, który tym steruje -->
+                            <div class="row {% if suggestions %}mb-2{% endif %}">
+                                <label class="col-3 col-form-label">Znalezione utwory</label>
+                                <div class="col">
+                                    <select
+                                        {% if not suggestions %}disabled {% endif %}
+                                        class="{% if not suggestions %}disabled {% endif %}form-select"
+                                        data-role="track-suggestions:base-track-selector"
+                                    >
+                                        <!-- TODO: Dobrze byłoby mieć tę listę posortowaną: alfabetycznie albo po dacie wydania) -->
+                                        <!-- update: a najlepiej: radiobutton, który tym steruje -->
 
-                    {% for suggestion in suggestions %}
-                        {% with %}
-                            {% set track = suggestion.track %}
-                            <option value="{{ suggestion.track.id }}">
-                                {# @fixme: to powinno przychodzić z phpa, ale przemyśleć jak to zrobić #}
-                                {#         uwaga, to samo jest w track-edit.js:19 #}
+                                        {% for suggestion in suggestions %}
+                                            {% with %}
+                                                {% set track = suggestion.track %}
+                                                <option value="{{ suggestion.track.id }}">
+                                                    {# @fixme: to powinno przychodzić z phpa, ale przemyśleć jak to zrobić #}
+                                                    {#         uwaga, to samo jest w track-edit.js:19 #}
 
-                                {{ track.name }}
-                                [
-                                    {{- track.releaseDate|date('d.m.Y') -}},&nbsp
-                                    {{- track.release.label -}}
-                                ]
-                            </option>
-                        {% endwith %}
-                    {% endfor %}
-                </select>
-            </div>
-        </div>
+                                                    {{ track.name }}
+                                                    [
+                                                    {{- track.releaseDate|date('d.m.Y') -}},&nbsp
+                                                    {{- track.release.label -}}
+                                                    ]
+                                                </option>
+                                            {% endwith %}
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                            </div>
 
-        <div class="form-group">
-            <div class="col-sm-offset-2 col-sm-8">
-                {% if suggestions %}
-                    <div class="well well-sm small base-track-info" data-role="track-suggestions:base-track-info">
-                        <div>
-                            <a data-role="track-url" class="undecorated" target="_blank" tabindex="-1">
-                                <span data-role="track"></span>
-                                <i class="fa fa-external-link" aria-hidden="true"></i>
-                            </a>
-                        </div>
-                        <div>
-                            <span data-role="year"></span>
-                            <span>
-                                <a data-role="release-url" class="undecorated" target="_blank" tabindex="-1">
-                                    <span data-role="release"></span>
-                                    <i class="fa fa-external-link" aria-hidden="true"></i>
-                                </a>
-                            </span>
-                            <span data-role="label"></span>
-                        </div>
-                    </div>
-                {% endif %}
-            </div>
-        </div>
-    </form>
-
-    <form method="POST" action="{{ url_for('track.edit.save', { pathname: pathname|url_encode }) }}" class="form-horizontal" style="padding-bottom: 100px" role="form">
-        <legend>Edycja metadanych</legend>
-
-        <!-- Fajnie byłoby mieć przycisk (przycisk, nic z automatu), który przepisze pojedyncze sugestie do pustych inputów -->
-
-        {% for fieldInfo in metadata.fields %}
-            <div class="form-group">
-                <label class="col-sm-2 control-label">
-                    <span class="ellipsis"><span>{{ fieldInfo.title }}</span></span>
-                </label>
-                <div class="col-sm-5">
-                    <div data-role="track-suggestions:suggestion" data-suggestion-type="{{ fieldInfo.field }}" class="input-group">
-                        <input type="text" name="{{ fieldInfo.field }}" value="{{ attribute(track, fieldInfo.field) }}" class="form-control" />
-                        <div class="input-group-btn">
-                            <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown" tabindex="-1">
-                                <span class="caret"></span>
-                            </button>
-                            <ul class="dropdown-menu dropdown-menu-right">
-                            </ul>
+                            {% if suggestions %}
+                                <div class="row">
+                                    <div class="col offset-3">
+                                        <div class="small base-track-info" data-role="track-suggestions:base-track-info">
+                                            <div>
+                                                <a data-role="track-url" class="text-reset" target="_blank" tabindex="-1"><span data-role="track"></span></a>
+                                                <svg style="width: 16px; height: 16px" xmlns="http://www.w3.org/2000/svg" class="icon align-text-bottom icon-tabler icon-tabler-external-link" width="24" height="24" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"></path><path d="M11 7h-5a2 2 0 0 0 -2 2v9a2 2 0 0 0 2 2h9a2 2 0 0 0 2 -2v-5"></path><path d="M10 14l10 -10"></path><path d="M15 4l5 0l0 5"></path></svg>
+                                            </div>
+                                            <div>
+                                                <span data-role="year"></span>
+                                                <span>
+                                                    <a data-role="release-url" class="text-reset" target="_blank" tabindex="-1"><span data-role="release"></span></a>
+                                                    <svg style="width: 16px; height: 16px" xmlns="http://www.w3.org/2000/svg" class="icon align-text-bottom icon-tabler icon-tabler-external-link" width="24" height="24" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"></path><path d="M11 7h-5a2 2 0 0 0 -2 2v9a2 2 0 0 0 2 2h9a2 2 0 0 0 2 -2v-5"></path><path d="M10 14l10 -10"></path><path d="M15 4l5 0l0 5"></path></svg>
+                                                </span>
+                                                <span data-role="label"></span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            {% endif %}
                         </div>
                     </div>
                 </div>
-            </div>
-        {% endfor %}
-
-        <div class="form-group metadata-options">
-            {% for fieldInfo in metadata.options %}
-                <div class="col-sm-offset-2 col-sm-5">
-                    <div class="checkbox">
-                        <label>
-                            <input type="checkbox" name="{{ fieldInfo.option }}" value="true"> {{ fieldInfo.title }}
-                        </label>
-                    </div>
-                </div>
-            {% endfor %}
+            </form>
         </div>
 
-        <footer style="padding-top: 50px">
-            <div class="pull-right">
-                <button type="submit" name="save" value="true" class="btn btn-success">Zapisz</button>
-                {# dodać return_url #}
-                <a href="@todo" class="btn btn-default">Anuluj</a>
-            </div>
-        </footer>
-    </form>
+        <div class="col-12">
+            <form method="POST" action="{{ url_for('track.edit.save', { pathname: pathname|url_encode }) }}" class="card" role="form">
+                <div class="card-header card-header-light">
+                    Edycja metadanych
+                </div>
+                <div class="card-body">
+                    <div class="row row-cards">
+                        <div class="col-8">
+                            {% for fieldInfo in metadata.fields %}
+                                <div class="row mb-2">
+                                    <label class="col-3 col-form-label">{{ fieldInfo.title }}</label>
+                                    <div class="col-7">
+                                        <div data-role="track-suggestions:suggestion" data-suggestion-type="{{ fieldInfo.field }}" class="input-group">
+                                            <input type="text" name="{{ fieldInfo.field }}" value="{{ attribute(track, fieldInfo.field) }}" class="form-control rounded" />
+                                            <button data-bs-toggle="dropdown" type="button" class="btn dropdown-toggle dropdown-toggle-split" tabindex="-1"></button>
+                                            <div class="dropdown-menu dropdown-menu-end w-100"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            {% endfor %}
 
+                            {% for fieldInfo in metadata.options %}
+                                <div class="row {% if loop.first %}mt-3{% endif %}">
+                                    <div class="col offset-3">
+                                        <label class="form-check">
+                                            <input class="form-check-input" type="checkbox" name="{{ fieldInfo.option }}" value="true">
+                                            <span class="form-check-label">{{ fieldInfo.title }}</span>
+                                        </label>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer d-flex align-items-center">
+                    <a style="margin-left: 1rem" href="{{ return_url }}">Powrót</a>
+                    <button type="submit" name="submit" value="true" class="btn btn-primary ms-auto">Zapisz</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="/vendor/wavesurfer.min.js" type="text/javascript"></script>
+    <script src="/js/track.js" type="text/javascript"></script>
     <script src="/js/track-edit.js" type="text/javascript"></script>
 {% endblock %}

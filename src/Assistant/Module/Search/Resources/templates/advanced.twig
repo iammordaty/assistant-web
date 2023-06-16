@@ -1,0 +1,25 @@
+{% extends '@common/layout.twig' %}
+
+{% block title -%}
+    {% if result.count is defined %}Wyniki wyszukiwania{% else %}Wyszukiwanie zaawansowane{% endif %}
+{%- endblock %}
+
+{% block content %}
+    <div data-role="track-search:container" class="row row-deck row-cards">
+        <div class="col-12">
+            {% include '@search/advanced/form.twig' with { form: form } only %}
+        </div>
+
+        {% if isFormSubmitted %}
+            {% include '@search/common/list.twig' with {
+                isFormSubmitted: isFormSubmitted,
+                paginator: paginator,
+                tracks: tracks,
+                routeName: routeName,
+                routeQuery: form,
+                sort: form.sort|default,
+            } only %}
+        {% endif %}
+    </div>
+    <script src="/js/search.js"></script>
+{% endblock %}

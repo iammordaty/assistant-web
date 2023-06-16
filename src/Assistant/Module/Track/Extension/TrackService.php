@@ -6,6 +6,7 @@ namespace Assistant\Module\Track\Extension;
 use Assistant\Module\Collection\Extension\Reader\FileReaderFacade;
 use Assistant\Module\Common\Storage\Storage;
 use Assistant\Module\Directory\Model\Directory;
+use Assistant\Module\Search\Extension\RandomTrackListGenerator;
 use Assistant\Module\Search\Extension\SearchCriteriaFacade;
 use Assistant\Module\Search\Extension\TrackSearchService;
 use Assistant\Module\Track\Model\IncomingTrack;
@@ -19,10 +20,11 @@ use Traversable;
 //        klasy zajmującej się listą (vide getByDirectory, getRecent). Jednocześnie wypadałoby
 //        rozdzielić kod SearchService-a, który wcześniej był częścią kontrolera od metod ogólnych,
 //        przy czym może to rozwiąże się samo przy pierwszym kroku.
-final class TrackService
+final readonly class TrackService
 {
     public function __construct(
         private FileReaderFacade $fileReader,
+        private RandomTrackListGenerator $randomTrackListGenerator,
         private TrackLocationArbiter $arbiter,
         private TrackRepository $trackRepository,
         private TrackSearchService $searchService,
@@ -77,6 +79,14 @@ final class TrackService
         );
 
         return $tracks;
+    }
+
+    /** @return Track[] */
+    public function getRandom(int $limit = PHP_INT_MAX): array
+    {
+        $generator = $this->randomTrackListGenerator;
+
+        return $generator($limit);
     }
 
     public function save(Track $track): bool
