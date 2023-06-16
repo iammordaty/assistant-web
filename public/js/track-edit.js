@@ -2,17 +2,21 @@
 
 // yolo
 
-var NO_SUGGESTIONS = [{ track: [], suggestions: [] }];
-
 $(document).ready(function() {
-    var rawSuggestions = $('[data-role="track-suggestions:suggestions"]').data('suggestions');
-    var SUGGESTIONS = rawSuggestions.length === 0 ? NO_SUGGESTIONS : rawSuggestions;
+    var SUGGESTIONS = $('[data-role="track-suggestions:suggestions"]').data('suggestions');
+
+    console.log('Hello!', SUGGESTIONS);
 
     var $baseTrackSelector = $('[data-role="track-suggestions:base-track-selector"]');
     var $baseTrackInfo = $('[data-role="track-suggestions:base-track-info"]');
 
     $baseTrackSelector.on('change', function () {
-        var track = SUGGESTIONS.find(el => parseInt(el.track.id) === parseInt(this.value)).track;
+        var track = (SUGGESTIONS.find(el => parseInt(el.track.id) === parseInt(this.value)) || {}).track;
+
+        if (!track) {
+            return;
+        }
+
         var releaseDate = new Date(track.releaseDate);
         var month = releaseDate.getMonth() + 1;
 
@@ -32,49 +36,46 @@ $(document).ready(function() {
 
     var $suggestion = $('[data-role="track-suggestions:suggestion"]');
 
-    $suggestion.each(function () {
-        var $element = $(this);
-        var $dropdownMenu = $element.find('.dropdown-menu');
-
-        $dropdownMenu.css('width', $element.width() + 'px');
-        $dropdownMenu.find('li a').css('padding', '6px 20px 6px 10px');
-
-        $element.find('input').on('focus', function (e) {
-            // var value = this.value;
-            //
-            // setTimeout(function () {
-            //     if (!value && $dropdownMenu.is(':hidden')) {
-            //         $element.find('.dropdown-toggle').dropdown('toggle');
-            //     }
-            // }, 100)
-        });
-    });
-
     $baseTrackSelector.on('change', function () {
-        var suggestions = SUGGESTIONS.find(el => parseInt(el.track.id) === parseInt(this.value)).suggestions;
+        var suggestions = (SUGGESTIONS.find(el => parseInt(el.track.id) === parseInt(this.value)) || {}).suggestions;
 
-        console.log({suggestions, SUGGESTIONS});
+        $suggestion.each(function () {
+            var $element = $(this);
+            var $dropdownMenu = $element.find('.dropdown-menu');
+
+            $element.find('input').on('keyup', e => setTimeout(() => {
+                if (!$dropdownMenu.is(':hidden')) {
+                    return;
+                }
+
+                const keyCode = (e.keyCode ? e.keyCode : e.which);
+                const input = $element.find('input')[0];
+                const value = input.value;
+
+                if (keyCode === 40 || (keyCode === 9 && !value && document.activeElement === input)) {
+                    $element.find('.dropdown-toggle').dropdown('toggle');
+                }
+            }, 10));
+        });
+
+        console.log('Track changed.', suggestions);
 
         $suggestion.each(function () {
             var $element = $(this);
 
-            console.log({
-                suggestionType: $element.data('suggestion-type'),
-                suggestions: suggestions[$element.data('suggestion-type')],
-            })
+            if (!suggestions) {
+                $element.find('button').addClass('d-none');
+
+                return;
+            }
 
             var suggestionType = $element.data('suggestion-type');
             var $suggestions = suggestions[suggestionType].map(suggestion => (
-                '<li><a href="#" tabindex="-1">' + suggestion + '</a>')
+                '<a class="dropdown-item" href="#" tabindex="-1">' + suggestion + '</a>')
             );
 
-            console.log({
-                $suggestions: $suggestions,
-                $suggestions_l: $suggestions.length,
-            })
-
             if ($suggestions.length === 0) {
-                $element.find('button').addClass('disabled');
+                $element.find('button').addClass('d-none');
             }
 
             // @todo: Odmienić liczebnik. Na luzie, bo obecny select jest niewygodny i trzeba sugestie ugryźć inaczej.

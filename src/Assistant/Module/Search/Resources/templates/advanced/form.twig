@@ -1,85 +1,77 @@
-<form method="GET" action="{{ url_for('search.advanced.index') }}"  class="form-horizontal search-form-advanced" role="form">
-    <legend>Wyszukiwanie</legend>
+<form data-role="track-search:form" method="GET" action="{{ url_for('search.advanced.index') }}" role="form" class="card g-3">
+    <div class="card-header card-header-light">
+        <h3 class="card-title">
+            Wyszukiwanie zaawansowane
+        </h3>
+    </div>
+    <div class="card-body">
+        <div class="row">
+            <div class="col-12 col-sm-6 mb-3">
+                <label class="form-label">Wykonawca</label>
+                <input type="text" name="artist" value="{{ form.artist }}" class="form-control">
+            </div>
 
-    <div class="form-group">
-        <label class="col-sm-1 control-label">
-            <span class="ellipsis"><span>Wykonawca</span></span>
-        </label>
-        <div class="col-sm-5">
-            <input type="text" name="artist" value="{{ form.artist }}" class="form-control" placeholder="Wykonawca">
-        </div>
-        <label class="col-sm-1 control-label">Tytuł</label>
-        <div class="col-sm-5">
-            <input type="text" name="title" value="{{ form.title }}" class="form-control" placeholder="Tytuł">
+            <div class="col-12 col-sm-6 mb-3">
+                <label class="form-label">Tytuł</label>
+                <input type="text" name="title" value="{{ form.title }}" class="form-control">
+            </div>
+
+            <div class="col-6 col-sm-4 mb-3">
+                <label class="form-label">Gatunek</label>
+                <input type="text" name="genre" value="{{ form.genre }}" placeholder="np.: House, Techno" class="form-control">
+            </div>
+
+            <div class="col-6 col-sm-4 mb-3">
+                <label class="form-label">Wydawca</label>
+                <input type="text" name="publisher" value="{{ form.publisher }}" placeholder="np.: Spectrum, Rejected" class="form-control">
+            </div>
+
+            <div class="col-6 col-sm-4 mb-3">
+                <label class="form-label">Rok wydania</label>
+                {% with %}
+                    {% set year = "now"|date('Y') %}
+                    <input type="text" name="year" value="{{ form.year }}" placeholder="np.: {{ year - 3 }} - {{ year }}, >= {{ year - 3 }}" class="form-control">
+                {% endwith %}
+            </div>
+
+            <div class="col-6 col-sm-4 mb-3">
+                <label class="form-label">Tonacja</label>
+                <input type="text" name="initial_key" value="{{ form.initial_key }}" placeholder="np.: 4A, 4B, 5A" class="form-control">
+            </div>
+
+            <div class="col-6 col-sm-4 mb-3">
+                <label class="form-label">
+                    <span class="d-none d-sm-block">Liczba uderzeń na minutę</span>
+                    <span class="d-block d-sm-none">BPM</span>
+                </label>
+                <input type="text" name="bpm" value="{{ form.bpm }}" placeholder="np.: 125 - 127, >= 130" class="form-control">
+            </div>
+
+            <div class="col-6 col-sm-4 mb-3">
+                <label class="form-label">Data dodania</label>
+                {% with %}
+                    {% set year = "now"|date('Y') %}
+                    {% set month = "now"|date('m.Y') %}
+                    <input type="text" name="indexed_date" value="{{ form.indexed_date }}" placeholder="np.: {{ year - 3 }} - {{ year }}, >= {{ year - 3 }}, {{ month }}" class="form-control">
+                {% endwith %}
+            </div>
+
+            <div class="col-sm-6 col-12 mb-3">
+                <label class="form-label">Utwór</label>
+                <input
+                    type="text"
+                    name="track"
+                    value="{{ form.track|default }}"
+                    class="form-control"
+                    data-role="autocompleter"
+                    data-url="{{ url_for('track.track.autocomplete') }}"
+                    data-follow-on-select="false"
+                    placeholder="Wprowadź nazwę wykonawcy lub tytuł utworu"
+                >
+            </div>
         </div>
     </div>
-
-    <!-- wpiąć autocompleter -->
-    <div class="form-group">
-        <label class="col-sm-1 control-label">Gatunek</label>
-        <div class="col-sm-5 col-md-3">
-            <input type="text" name="genre" value="{{ form.genre }}" class="form-control" placeholder="np. House, Tech House">
-        </div>
+    <div class="card-footer text-end">
+        <button type="submit" name="submit" value="true" class="btn btn-primary">Szukaj</button>
     </div>
-
-    <!-- wpiąć autocompleter -->
-    <div class="form-group">
-        <label class="col-sm-1 control-label">Wydawca</label>
-        <div class="col-sm-5 col-md-3">
-            <input type="text" name="publisher" value="{{ form.publisher }}" class="form-control" placeholder="np. Suara, Rejected">
-        </div>
-    </div>
-
-    <div class="form-group">
-        <label class="col-sm-1 control-label">Rok</label>
-        <div class="col-sm-5 col-md-3">
-            {% set year = "now"|date('Y') %}
-            <input name="year" value="{{ form.year }}" class="form-control" placeholder="np. {{ year - 3 }} - {{ year }}">
-        </div>
-    </div>
-
-    <!-- wpiąć x-editable i dodać opcje: perfect fourth, perfect fifth, itd -->
-    <div class="form-group">
-        <label class="col-sm-1 control-label">Tonacja</label>
-        <div class="col-sm-5 col-md-3">
-            <input type="text" name="initial_key" value="{{ form.initial_key }}" class="form-control" placeholder="np. 4A, 5A">
-        </div>
-    </div>
-
-    <div class="form-group">
-        <label class="col-sm-1 control-label" title="Liczba uderzeń na minutę">BPM</label>
-        <div class="col-sm-5 col-md-3">
-            <input type="text" name="bpm" value="{{ form.bpm }}" class="form-control" placeholder="np. => 125">
-        </div>
-    </div>
-
-    <div class="form-group">
-        <label class="col-sm-1 control-label">Dodany</label>
-        <div class="col-sm-5 col-md-3">
-            {% set year = "now"|date('Y') %}
-            <input name="indexed_date" value="{{ form.indexed_date }}" class="form-control" placeholder="np. >= {{ year - 3 }}">
-        </div>
-    </div>
-
-    <div class="form-group">
-        <label class="col-sm-1 control-label">
-            <span class="ellipsis"><span>Utwór</span></span>
-        </label>
-        <div class="col-sm-5">
-            <input
-                data-role="autocompleter"
-                data-url="{{ url_for('track.track.autocomplete') }}"
-                data-follow-on-select="false"
-                type="text"
-                name="track"
-                value="{{ form.track|default }}"
-                class="form-control"
-                placeholder="Wprowadź nazwę wykonawcy lub tytuł utworu"
-            >
-        </div>
-    </div>
-
-    <footer>
-        <button type="submit" name="submit" value="true" class="btn btn-default btn-lg pull-right">Wyszukaj</button>
-    </footer>
 </form>

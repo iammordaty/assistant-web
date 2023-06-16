@@ -4,7 +4,8 @@ namespace Assistant\Module\Common\Extension\Pagerfanta;
 
 use Assistant\Module\Common\Extension\RouteResolver;
 use Pagerfanta\Twig\Extension\PagerfantaRuntime;
-use Pagerfanta\View\TwitterBootstrap3View;
+use Pagerfanta\View\Template\TwitterBootstrap5Template;
+use Pagerfanta\View\TwitterBootstrap5View;
 use Pagerfanta\View\ViewFactory;
 use Psr\Container\ContainerInterface;
 use Twig\RuntimeLoader\FactoryRuntimeLoader;
@@ -13,7 +14,7 @@ final class PagerfantaTwigRuntimeLoaderFactory
 {
     public static function createRuntimeLoader(ContainerInterface $container): FactoryRuntimeLoader
     {
-        $view = new TwitterBootstrap3View();
+        $view = new TwitterBootstrap5View(new TwitterBootstrap5Template());
 
         $viewFactory = new ViewFactory();
         $viewFactory->add([ $view->getName() => $view ]);

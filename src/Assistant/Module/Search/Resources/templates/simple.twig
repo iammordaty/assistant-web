@@ -1,0 +1,27 @@
+{% extends '@common/layout.twig' %}
+
+{% block title 'Wyniki wyszukiwania' %}
+
+{% block content %}
+    <div data-role="track-search:container" class="row row-deck row-cards">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body">
+                    {% include '@search/simple/form.twig' with { form: form } only %}
+                </div>
+            </div>
+        </div>
+
+        {% if isFormSubmitted %}
+            {% include '@search/common/list.twig' with {
+                isFormSubmitted: isFormSubmitted,
+                paginator: paginator,
+                tracks: tracks,
+                routeName: routeName,
+                routeQuery: form,
+                sort: form.sort|default,
+            } only %}
+        {% endif %}
+    </div>
+    <script src="/js/search.js"></script>
+{% endblock %}

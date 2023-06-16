@@ -19,7 +19,7 @@ return static function (App $app): void {
             ->setName('track.track.index');
 
         $group
-            ->get('/{guid}/contents', [ ContentsController::class, 'get' ])
+            ->get('/{pathname:.*}/contents', [ ContentsController::class, 'get' ])
             ->setName('track.contents.get');
 
         $group

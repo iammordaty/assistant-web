@@ -19,11 +19,11 @@ final class ContentsController
 
     public function get(ServerRequest $request, Response $response): ResponseInterface
     {
-        $guid = $request->getAttribute('guid');
-        $track = $this->trackService->getByGuid($guid);
+        $pathname = $request->getAttribute('pathname');
+        $track = $this->trackService->createFromFile($pathname);
 
         if (!$track) {
-            $error = sprintf("Track with guid \"%s\" doesn't exist.", $guid);
+            $error = sprintf("Track \"%s\" doesn't exist.", $pathname);
 
             $response = $response
                 ->withJson([ 'error' => $error ])

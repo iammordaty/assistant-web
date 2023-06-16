@@ -1,14 +1,12 @@
 {% if paginator.haveToPaginate() %}
-    <div class="text-center">
-        {{ pagerfanta(paginator, {
-            'proximity': 2,
-            'prev_message': 'Poprzednia',
-            'next_message': 'Następna',
-            'route': {
-                'name': routeName,
-                'params': routeParams|default([]),
-                'query': routeQuery|default([]),
-            }
-        }) }}
-    </div>
+    {{ pagerfanta(paginator, {
+        'css_container_class': 'pagination m-0',
+        'prev_message': 'Poprzednia',
+        'next_message': 'Następna',
+        'route': {
+            'name': routeName,
+            'params': routeParams|default([]),
+            'query': routeQuery|default([]),
+        }
+    }) }}
 {% endif %}

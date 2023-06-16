@@ -10,22 +10,37 @@ final class LogEntry
     public function __construct(
         private readonly string $id,
         private readonly string $message,
-        private readonly array $context,
+        private array $context,
         private readonly string $levelName,
         private readonly \DateTime $datetime,
         private readonly array $extra,
     ) {
-        if (isset($context['pathname'])) {
-            $short = basename(dirname($context['pathname'])) . DIRECTORY_SEPARATOR . basename($context['pathname']);
+
+        if (isset($this->context['pathname'])) {
+            $short = sprintf(
+                "%s%s%s",
+                basename(dirname($this->context['pathname'])),
+                DIRECTORY_SEPARATOR,
+                basename($this->context['pathname'])
+            );
 
             $pathname = [
                 'short' => $short,
-                'full' => $context['pathname'],
+                'full' => $this->context['pathname'],
             ];
+
+            unset($this->context['pathname']);
         }
 
         $this->pathname = $pathname ?? [];
-        $this->taskName = $context['command'] ?? null;
+
+        if (isset($this->context['command'])) {
+            $taskName = $this->context['command'];
+
+            unset($this->context['command']);
+        }
+
+        $this->taskName = $taskName ?? null;
     }
 
     public static function fromDto(LogEntryDto $dto): self

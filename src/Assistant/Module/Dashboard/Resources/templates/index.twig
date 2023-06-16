@@ -1,47 +1,159 @@
 {% extends '@common/layout.twig' %}
 
-{% block title %}Dashboard{% endblock %}
+{% block title 'Dashboard' %}
 
-{% block contentBlock %}
-    {% include '@search/simple/form.twig' only %}
-
-    <div class="collection-overview">
-        <legend>Przegląd kolekcji</legend>
-        <div class="row">
-            <div class="col-lg-4">
-                <div class="list-group">
-                    <span class="list-group-item list-group-item-info">Top 10 gatunków</span>
-                    {% for genre, trackCount in trackCountByGenre %}
-                        <a href="{{ url_for('search.advanced.index') }}?genre={{ genre }}" class="list-group-item">
-                            <span class="badge">{{ trackCount }}</span>{{ genre }}
-                        </a>
-                    {% endfor %}
+{% block content %}
+    <div class="row row-deck row-cards">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">Szybkie wyszukiwanie</h3>
                 </div>
-            </div>
-            <div class="col-lg-4">
-                <div class="list-group">
-                    <span class="list-group-item list-group-item-info">Top 10 wykonawców</span>
-                    {% for artist, trackCount in trackCountByArtist %}
-                        <a href="{{ url_for('search.advanced.index') }}?artist={{ artist }}" class="list-group-item">
-                            <span class="badge">{{ trackCount }}</span>{{ artist }}
-                        </a>
-                    {% endfor %}
-                </div>
-            </div>
-            <div class="col-lg-4">
-                <div class="list-group">
-                    <span class="list-group-item list-group-item-info">
-                        <a href="{{ url_for('directory.browse.recent') }}" title="Pokaż więcej ostatnio dodanych">Ostatnio dodane</a>
-                    </span>
-                    {% for track in recentlyAddedTracks %}
-                        <a href="{{ url_for('track.track.index', { guid: track.guid }) }}" class="ellipsis list-group-item">
-                            <span title="{{ track.name }}">
-                                {{ track.name }}
-                            </span>
-                        </a>
-                    {% endfor %}
+                <div class="card-body mb-3">
+                    {% include '@search/simple/form.twig' %}
                 </div>
             </div>
         </div>
+
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">
+                        <a class="text-reset" href="{{ url_for('directory.browse.recent') }}" title="Pokaż więcej ostatnio dodanych">Ostatnio dodane</a>
+                    </h3>
+                </div>
+                <div class="card-table table-responsive">
+                    {% include '@common/tracks.twig' with { tracks: recentlyAddedTracks } only %}
+                </div>
+            </div>
+        </div>
+
+        <div class="col-4 d-none d-sm-flex">
+            <div class="card">
+                <div class="card-header card-header-light">
+                    <h3 class="card-title">Top 10 gatunków</h3>
+                </div>
+                <div class="card-table table-responsive">
+                    <table class="table">
+                        <tbody>
+                            {% for genre, trackCount in trackCountByGenre %}
+                                <tr>
+                                    <td>
+                                        <a class="text-reset" href="{{ url_for('search.advanced.index', query_params = { genre: genre }) }}">
+                                            {{ genre }}
+                                        </a>
+                                    </td>
+                                    <td class="w-1 fw-bold text-end">{{ trackCount }}</td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-4 d-none d-sm-flex">
+            <div class="card">
+                <div class="card-header card-header-light">
+                    <h3 class="card-title">Top 10 wykonawców</h3>
+                </div>
+                <div class="card-table table-responsive">
+                    <table class="table">
+                        <tbody>
+                            {% for artist, trackCount in trackCountByArtist %}
+                                <tr>
+                                    <td>
+                                        <a class="text-reset" href="{{ url_for('search.advanced.index', query_params = { artist: artist }) }}">
+                                            {{ artist }}
+                                        </a>
+                                    </td>
+                                    <td class="w-1 fw-bold text-end">{{ trackCount }}</td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-sm-4 col-12">
+            <div class="row row-cards">
+                <div class="col-12">
+                    <div class="card card-sm">
+                        <div class="card-body">
+                            <div class="row align-items-center">
+                                <div class="col-auto">
+                                    <span class="bg-primary text-white avatar">
+                                      <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-music" width="24" height="24" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                       <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+                                       <circle cx="6" cy="17" r="3"></circle>
+                                       <circle cx="16" cy="17" r="3"></circle>
+                                       <polyline points="9 17 9 4 19 4 19 17"></polyline>
+                                       <line x1="9" y1="8" x2="19" y2="8"></line>
+                                    </svg>
+                                    </span>
+                                </div>
+                                <div class="col">
+                                    <div class="font-weight-medium">
+                                        {{ trackCount|pluralize({
+                                            'one': 'utwór',
+                                            'few': 'utwory',
+                                            'other': 'utworów',
+                                        }) }} w kolekcji
+                                    </div>
+                                    <div class="text-muted">
+                                        {% set incomingTracksCount = incomingTracks|length %}
+                                        {% if incomingTracksCount == 0 %}
+                                            <i>brak oczekujących</i>
+                                        {% else %}
+                                            oraz <a class="text-reset" href="{{ url_for('directory.browse.incoming') }}">
+                                                {{- incomingTracksCount|pluralize({
+                                                'one': 'utwór oczekujący',
+                                                'few': 'utwory oczekujące',
+                                                'other': 'utworów oczekujących',
+                                                }) -}}
+                                            </a>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% if incomingTracks %}
+                    <div class="col-12">
+                        <div class="card" style="height: 26rem">
+                            <div class="card-body card-body-scrollable card-body-scrollable-shadow">
+                                <div class="divide-y">
+                                    {% for track in incomingTracks %}
+                                        <div class="row">
+                                            <div class="text-truncate">
+                                                <a class="text-reset" href="{{ url_for('track.edit.edit', { pathname: track.pathname }) }}">
+                                                    {{ track.name }}
+                                                </a>
+                                            </div>
+                                        </div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">
+                        Losowe utwory
+                    </h3>
+                </div>
+                <div class="card-table table-responsive">
+                    {% include '@common/tracks.twig' with { tracks: randomTracks } only %}
+                </div>
+            </div>
+        </div>
+
     </div>
 {% endblock %}

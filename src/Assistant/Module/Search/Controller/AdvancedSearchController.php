@@ -5,15 +5,17 @@ namespace Assistant\Module\Search\Controller;
 use Assistant\Module\Common\Extension\Pagerfanta\PagerfantaFactory;
 use Assistant\Module\Common\Extension\SimilarTracksCollection\SimilarTracksCollectionService;
 use Assistant\Module\Search\Extension\SearchCriteriaFacade;
+use Assistant\Module\Search\Extension\SearchSort;
 use Assistant\Module\Search\Extension\TrackSearchService;
 use Psr\Http\Message\ResponseInterface;
-use Psr\Http\Message\ServerRequestInterface;
+use Slim\Http\Response;
+use Slim\Http\ServerRequest;
 use Slim\Views\Twig;
 
 /**
  * Kontroler pozwalający na wyszukiwanie utworów po metadanych
  */
-final class AdvancedSearchController
+final readonly class AdvancedSearchController
 {
     public function __construct(
         private SimilarTracksCollectionService $similarTracksCollectionService,
@@ -27,16 +29,16 @@ final class AdvancedSearchController
      *
      * Ograniczanie listy znalezionych utworów poprzez similarTracksCollectionService wrzucone na szybko.
      * Na moduł wyszukiwania należałoby spojrzeć nieco szerzej:
-     * @see SearchCriteriaFacade::createFromFields
+     * @see SearchCriteriaFacade::createFromFields()
+     * @see TrackSearchService::search()
+     * @see SearchSort::create()
      */
-    public function index(ServerRequestInterface $request, ResponseInterface $response): ResponseInterface
+    public function index(ServerRequest $request, Response $response): ResponseInterface
     {
         $form = array_merge(SearchCriteriaFacade::DEFAULTS, $request->getQueryParams());
         $isFormSubmitted = $this->isFormSubmitted($form);
 
         if ($isFormSubmitted) {
-            $page = max(1, (int) ($form['page'] ?? 1));
-
             $trackName = $form['track'] ?? '';
 
             if ($trackName) {
@@ -51,16 +53,29 @@ final class AdvancedSearchController
                 $form['pathname'] = array_values($tracksPathname);
             }
 
-            [ 'count' => $count, 'tracks' => $tracks ] = $this->searchService->findByFields($form, $page);
+            $page = max(1, (int) ($form['page'] ?? 1));
+            $sort = $form['sort'] ?? null;
+
+            [ 'count' => $count, 'tracks' => $tracks ] = $this->searchService->findByFields($form, $sort, $page);
 
             $paginator = PagerfantaFactory::createWithNullAdapter(
                 $count,
                 $page,
                 TrackSearchService::MAX_TRACKS_PER_PAGE
             );
+
+            if ($request->isXhr()) {
+                return $this->view->render($response, '@search/common/list.twig', [
+                    'routeQuery' => $form,
+                    'sort' => $sort,
+                    'paginator' => $paginator,
+                    'routeName' => 'search.advanced.index',
+                    'tracks' => $tracks,
+                ]);
+            }
         }
 
-        return $this->view->render($response, '@search/advanced/index.twig', [
+        return $this->view->render($response, '@search/advanced.twig', [
             'menu' => 'search',
             'form' => $form,
             'isFormSubmitted' => $isFormSubmitted,

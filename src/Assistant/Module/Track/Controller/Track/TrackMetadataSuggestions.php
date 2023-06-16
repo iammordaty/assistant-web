@@ -61,7 +61,7 @@ final class TrackMetadataSuggestions
             $_ENV['GOOGLE_SEARCH_API_SEARCH_ID'],
         );
 
-        $beatportSearchTracks = new BeatportSearchTracks($beatportApiClient, $beatportTrackBuilder);
+        // $beatportSearchTracks = new BeatportSearchTracks($beatportApiClient, $beatportTrackBuilder);
         $googleBeatportSearchTracks = new GoogleBeatportSearchTracks($googleSearchApiClient, $beatportTrackBuilder);
 
         // --- wyszukiwanie utworów

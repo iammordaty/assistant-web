@@ -4,6 +4,7 @@ use Assistant\Module\Collection\Extension\Autocomplete\TrackAutocompleteService;
 use Assistant\Module\Collection\Extension\Reader\DirectoryReader;
 use Assistant\Module\Collection\Extension\Reader\FileReader;
 use Assistant\Module\Collection\Extension\Reader\FileReaderFacade;
+use Assistant\Module\Collection\Extension\Reader\IncomingFileReader;
 use Assistant\Module\Collection\Extension\Reader\MetadataParser\MetadataParser;
 use Assistant\Module\Collection\Extension\Reader\ReaderFacade;
 use Assistant\Module\Common\Extension\Breadcrumbs\Breadcrumbs;
@@ -16,6 +17,7 @@ use Assistant\Module\Common\Extension\RouteResolver;
 use Assistant\Module\Common\Extension\SimilarTracksCollection\SimilarTracksCollectionService;
 use Assistant\Module\Common\Extension\SlugifyService;
 use Assistant\Module\Common\Extension\Twig\DurationTwigExtension;
+use Assistant\Module\Common\Extension\Twig\IntlMessageFormatterTwigExtension;
 use Assistant\Module\Common\Repository\LogRepository;
 use Assistant\Module\Directory\Extension\DirectoryService;
 use Assistant\Module\Directory\Repository\DirectoryRepository;
@@ -78,6 +80,18 @@ return static fn (string $baseDir, array $config): array => [
     },
 
     FileReaderFacade::class => autowire(),
+
+    IncomingFileReader::class => function (Container $container): IncomingFileReader {
+        $metadataParserParams = $container->get(Config::class)->get('track_metadata_parser');
+
+        $fileReader = new IncomingFileReader(
+            $container->get(Id3Adapter::class),
+            new MetadataParser($metadataParserParams),
+            $container->get(SlugifyService::class),
+        );
+
+        return $fileReader;
+    },
 
     Id3Adapter::class => create(),
 
@@ -196,6 +210,7 @@ return static fn (string $baseDir, array $config): array => [
         $view = Twig::create($paths, $settings);
 
         $view->addExtension(DurationTwigExtension::factory());
+        $view->addExtension(new IntlMessageFormatterTwigExtension());
         $view->addExtension(new PagerfantaExtension());
         $view->addExtension(new StringExtension()); // do |u.truncate()
         $view->addExtension(new TwigDebugExtension());

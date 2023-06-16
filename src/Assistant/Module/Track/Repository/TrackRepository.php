@@ -109,6 +109,17 @@ final class TrackRepository
         return $count;
     }
 
+    public function aggregate(array $pipeline): Traversable
+    {
+        $documents = $this->storage->aggregate($pipeline);
+
+        foreach ($documents as $document) {
+            $track = self::createModel($document);
+
+            yield $track;
+        }
+    }
+
     private static function createModel(BSONDocument $document): Track
     {
         $dto = TrackDto::fromStorage($document->bsonSerialize());

@@ -1,61 +1,26 @@
 {% extends '@common/layout.twig' %}
 
-{% block title %}Ostatnio dodane{% endblock %}
+{% block title 'Ostatnio dodane' %}
 
-{% block contentBlock %}
-    {% for month in recent %}
-        <div class="directory-info">
-            {% include '@common/breadcrumbs.twig' with {
-                breadcrumbs: month.breadcrumbs,
-                collectionRootExtraClass: 'fa-fw',
-            } only %}
-        </div>
+{% block content %}
+    <div class="row row-deck row-cards">
+        {% for month in recent %}
+            {% if month.tracks %}
+                <div class="col-12">
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title">
+                                {% include '@common/breadcrumbs.twig' with { breadcrumbs: month.breadcrumbs } only %}
+                            </h3>
+                        </div>
+                        <div class="card-table table-responsive">
+                            {% set tracks = month.tracks|sort((trackOne, trackTwo) => trackOne.guid <=> trackTwo.guid) %}
 
-        {% if month.tracks %}
-            <div class="table-responsive">
-                <table class="table table-hover">
-                    <thead>
-                        <tr>
-                            <th>Nazwa utworu</th>
-                            <th>Gatunek</th>
-                            <th>Wydawca</th>
-                            <th>Rok</th>
-                            <th>Tonacja</th>
-                            <th>BPM</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% set tracks = month.tracks|sort((trackOne, trackTwo) => trackOne.guid <=> trackTwo.guid) %}
-
-                        {% for track in tracks %}
-                            <tr>
-                                <td class="col-xs-5">
-                                    <span class="ellipsis track-name">
-                                        <a href="{{ url_for('track.track.index', { guid: track.guid }) }}" title="{{ track.name }}">{{ track.name }}</a>
-                                    </span>
-                                </td>
-                                <td class="col-xs-2">
-                                    <a class="undecorated" href="{{ url_for('search.advanced.index') }}?genre={{ track.genre }}">{{ track.genre }}</a>
-                                </td>
-                                <td class="col-xs-2">
-                                    <span class="ellipsis">
-                                        <a class="undecorated" href="{{ url_for('search.advanced.index') }}?publisher={{ track.publisher }}">{{ track.publisher }}</a>
-                                    </span>
-                                </td>
-                                <td class="col-xs-1">
-                                    <a class="undecorated" href="{{ url_for('search.advanced.index') }}?year={{ track.year }}">{{ track.year }}</a>
-                                </td>
-                                <td class="col-xs-1">
-                                    <a class="undecorated" href="{{ url_for('search.advanced.index') }}?initial_key={{ track.initialKey }}">{{ track.initialKey }}</a>
-                                </td>
-                                <td class="col-xs-1">
-                                    <a class="undecorated" href="{{ url_for('search.advanced.index') }}?bpm={{ track.bpm }}">{{ track.bpm }}</a>
-                                </td>
-                            </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
-        {% endif %}
-    {% endfor %}
+                            {% include '@common/tracks.twig' with { tracks: tracks } only %}
+                        </div>
+                    </div>
+                </div>
+            {% endif %}
+        {% endfor %}
+    </div>
 {% endblock %}

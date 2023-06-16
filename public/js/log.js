@@ -30,8 +30,6 @@ const initAutoRefresh = $view => {
 };
 
 $(() => {
-    $('[data-toggle="popover"]').popover();
-
     $('[data-element="log:log-view"]').each((i, logView) => {
         const $view = $(logView);
 

@@ -7,12 +7,34 @@ const initAutocompleter = $input => {
 
     $input.attr('autocomplete', 'off');
 
+    const menuClasses = [
+        'typeahead',
+        'dropdown-menu',
+    ];
+
+    if ($input.hasClass('dropdown-menu-right')) {
+        menuClasses.push('dropdown-menu-right');
+    }
+
     $input.typeahead({
         autoSelect: false,
         changeInputOnMove: false,
         delay: 100,
         items: 20,
         selectOnBlur: false,
+        fitToElement: true,
+        theme: 'bootstrap5',
+        themes: {
+            bootstrap5: {
+                menu: `<div class="${menuClasses.join(' ')}" role="listbox"></div>`,
+                // klasa d-block (display: block) to szybki fix na tabler-a,
+                // który ustawiając display: flex sprawia, że źle wyświetla się podświetlony fragment
+                item: '<div class="dropdown-item d-block" role="option"></div>',
+                itemContentSelector: '.dropdown-item',
+                headerHtml: '<h6 class="dropdown-header"></h6>',
+                headerDivider: '<div class="dropdown-divider"></div>'
+            },
+        },
         source: (query, process) => $.ajax({
             dataType: 'json',
             url: $input.data('url') + '?query=' + query,
