@@ -1,5 +1,6 @@
 <?php
 
+use Assistant\Module\Common\Controller\AutocompleteController;
 use Assistant\Module\Common\Controller\LogController;
 use Assistant\Module\Common\Controller\TaskController;
 use Slim\App as App;
@@ -7,6 +8,10 @@ use Slim\Routing\RouteCollectorProxy;
 
 return static function (App $app): void {
     $app->group('/common', function (RouteCollectorProxy $group) {
+        $group
+            ->get('/autocomplete', AutocompleteController::class)
+            ->setName('common.autocomplete');
+
         $group
             ->post('/task/calculate-audio-data', [ TaskController::class, 'calculateAudioData' ])
             ->setName('common.task.calculate');

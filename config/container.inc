@@ -18,6 +18,7 @@ use Assistant\Module\Common\Extension\SimilarTracksCollection\SimilarTracksColle
 use Assistant\Module\Common\Extension\SlugifyService;
 use Assistant\Module\Common\Extension\Twig\DurationTwigExtension;
 use Assistant\Module\Common\Extension\Twig\IntlMessageFormatterTwigExtension;
+use Assistant\Module\Common\Repository\MetadataFieldAutocompleteRepository;
 use Assistant\Module\Common\Repository\LogRepository;
 use Assistant\Module\Directory\Extension\DirectoryService;
 use Assistant\Module\Directory\Repository\DirectoryRepository;
@@ -48,6 +49,17 @@ use function DI\autowire;
 use function DI\create;
 
 return static fn (string $baseDir, array $config): array => [
+    MetadataFieldAutocompleteRepository::class => function (Container $container): MetadataFieldAutocompleteRepository {
+        $storage = $container->get(Config::class)->get('storage');
+
+        $client = new MongoDBClient($storage['connection_uri']);
+        $database = $client->selectDatabase($storage['database']);
+
+        $repository = MetadataFieldAutocompleteRepository::factory($database);
+
+        return $repository;
+    },
+
     Config::class => create()->constructor($config),
 
     DirectoryReader::class => autowire(),

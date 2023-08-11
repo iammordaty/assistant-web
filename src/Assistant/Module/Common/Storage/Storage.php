@@ -192,6 +192,11 @@ final class Storage
         return $this->collection->aggregate($pipeline, $options);
     }
 
+    public function distinct(string $fieldName, array $filter = [])
+    {
+        return $this->collection->distinct($fieldName, $filter);
+    }
+
     /**
      * Tworzy indeks
      *

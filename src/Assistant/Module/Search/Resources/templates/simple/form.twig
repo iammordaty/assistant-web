@@ -1,7 +1,7 @@
 <form data-role="track-search:form" method="GET" action="{{ url_for('search.simple.index') }}" role="form">
     <div class="input-icon">
         <input
-            data-role="autocompleter"
+            data-role="track-autocompleter"
             data-url="{{ url_for('track.track.autocomplete') }}"
             data-follow-on-select="true"
             type="text"
