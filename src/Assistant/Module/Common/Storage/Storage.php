@@ -204,13 +204,6 @@ final class Storage
         return $this->collection->createIndex($key, $options);
     }
 
-    public static function toDateTime(\DateTimeInterface $dateTime): UTCDateTime
-    {
-        $utcDateTime = new UTCDateTime($dateTime->getTimestamp() * 1000);
-
-        return $utcDateTime;
-    }
-
     /**
      * Konwertuje tablicę łańcuchów zawierający identyfikator Mongo do dokumentu ObjectId
      *
