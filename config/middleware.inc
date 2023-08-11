@@ -1,5 +1,6 @@
 <?php
 
+use Fig\Http\Message\StatusCodeInterface;
 use Monolog\Logger;
 use Slim\App;
 use Slim\Exception\HttpNotFoundException;
@@ -18,18 +19,8 @@ return static function (App $app): void {
         logger: $app->getContainer()->get(Logger::class),
     );
 
-    $errorMiddleware->setErrorHandler(HttpNotFoundException::class, function (
-        \Psr\Http\Message\ServerRequestInterface $request,
-        \Throwable $exception,
-        bool $displayErrorDetails,
-        bool $logErrors,
-        bool $logErrorDetails
-    ) {
-        /**
-         * To jest tymczasowy fix na to, aby w logach nie pojawiały się błędy 404
-         *
-         * @fixme Zwracać obiekt typu response
-         */
-        return exit(404);
-    });
+    $errorMiddleware->setErrorHandler(
+        HttpNotFoundException::class,
+        fn () => $app->getResponseFactory()->createResponse(StatusCodeInterface::STATUS_NOT_FOUND)
+    );
 };
