@@ -76,6 +76,6 @@ final readonly class SimpleSearchController
 
     private function isFormSubmitted(array $form): bool
     {
-        return !empty($form);
+        return !empty($form['query']);
     }
 }

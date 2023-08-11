@@ -2,12 +2,12 @@
 
 namespace Assistant\Module\Collection\Extension\Autocomplete;
 
-final class TrackAutocompleteEntry
+final readonly class TrackAutocompleteEntry
 {
     public function __construct(
-        public readonly string $guid,
-        public readonly string $name,
-        public readonly string $url,
+        public string $guid,
+        public string $name,
+        public string $url,
     ) {
     }
 }

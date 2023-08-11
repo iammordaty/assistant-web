@@ -4,6 +4,7 @@ namespace Assistant\Module\Common\Extension\Beatport;
 
 use Assistant\Module\Common\Extension\BeatportApiClientInterface;
 use Assistant\Module\Common\Extension\TrackSearch\GoogleBeatportSearchResult;
+use Fig\Http\Message\StatusCodeInterface;
 
 final class BeatportTrackBuilder
 {
@@ -21,13 +22,16 @@ final class BeatportTrackBuilder
 
             [ 'results' => $rawCharts ] = $this->client->charts([ 'track_id' => $rawTrack['id'] ]);
             $rawTrack['charts'] = $rawCharts;
-        } catch (\Exception $e) { // yolo, obejście 403 - territory restriction
-            // var_dump($e->getMessage());
+        } catch (\Exception $e) {
+            if ($e->getCode() !== StatusCodeInterface::STATUS_FORBIDDEN) { // 403: Territory Restriction
+                // yolo, przydałoby się to komunikować na froncie w bardziej przystępny sposób
+                var_dump($e->getMessage());
+            }
 
             $rawTrack = null;
         }
 
-        if (empty($rawTrack)) {
+        if (!$rawTrack) {
             return null;
         }
 
@@ -38,13 +42,15 @@ final class BeatportTrackBuilder
 
     public function fromBeatportSearchResult(array $result): ?BeatportTrack
     {
-        // Być może to powinien być oddzielny typ (na zasadzie GoogleBeatportSearchResult), ale na tę chwilę
-        // "number" to jedyne pole, którego brakuje do utworzenia pełnego obiektu BeatportTrack... co robić?
-        // Poza tym, wyniki zwracane przez wyszukiwarkę beatport-u są gorszej jakości niż z google-a, więc
-        // warto zastanowić się czy utrzymywać tę metodę
+        // "number" to jedyne pole, którego brakuje do utworzenia pełnego obiektu BeatportTrack,
+        // ale jego brak jest irytujący. Z drugiej strony, wyszukanie utworów, a następnie pobranie
+        // ich w całości wydłuża proces ładowania się strony. Przemyśleć, może da się to załatwić
+        // poprzez wysyłanie żądań w sposób równoległy.
 
         $rawTrack = array_merge([ 'number' => null ], $result);
+
         $beatportTrack = self::createBeatportTrack($rawTrack);
+        $beatportTrack = $this->fromTrackId($beatportTrack->getId());
 
         return $beatportTrack;
     }

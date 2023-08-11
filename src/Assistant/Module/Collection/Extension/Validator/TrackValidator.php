@@ -47,9 +47,6 @@ final class TrackValidator implements ValidatorInterface
 
             throw new InvalidMetadataException($message);
         }
-
-        // TODO: tutaj, w przyszłości, powinna zawarta być także logika odpowiedzialna za wyszukiwanie
-        //       niekonsekwencji w metadanych
     }
 
     /**
@@ -66,7 +63,9 @@ final class TrackValidator implements ValidatorInterface
         $withoutInitialKey = empty($metadata['initial_key']);
         $withoutBpm = empty($metadata['bpm']);
 
-        // @TODO: Sprawdzać spacje na końcu i początku. Co jeszcze? (przypomnieć sobie najczęstsze problemy)
+        // @TODO: Sprawdzać spacje na końcu i początku.
+        //        Sprawdzać rok wydania. Jeśli podany powinien być większy niż np. 1980
+        //        Co jeszcze? (przypomnieć sobie najczęstsze problemy)
 
         return !$withoutArtist && !$withoutTitle && !$withoutInitialKey && !$withoutBpm && !$withoutGenre;
     }
