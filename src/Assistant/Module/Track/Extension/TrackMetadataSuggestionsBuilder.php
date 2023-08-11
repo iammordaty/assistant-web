@@ -172,12 +172,18 @@ final class TrackMetadataSuggestionsBuilder
         ];
 
         $bracketPos = strpos($titleCase, '(');
-
-        $releaseNameWithoutBrackets = $bracketPos === false
-            ? $titleCase
-            : trim(S::substr($titleCase, 0, $bracketPos));
+        $releaseNameWithoutBrackets = null;
 
         if ($bracketPos !== false) {
+            if ($bracketPos === 0) {
+                // np. Peggy Gou - (It Goes Like) Nanana - Extended Mix
+                $bracketPos = strpos($titleCase, ')') + 1;
+
+                $releaseNameWithoutBrackets = trim(S::substr($titleCase, $bracketPos));
+            } else {
+                $releaseNameWithoutBrackets = trim(S::substr($titleCase, 0, $bracketPos));
+            }
+
             $suggestions[] = $releaseNameWithoutBrackets;
         }
 
@@ -189,7 +195,10 @@ final class TrackMetadataSuggestionsBuilder
             //        Innymi słowy, jeśli w nawiasach jest to samo, to nie powinno być dodawane do sugestii
 
             $suggestions[] = sprintf('%s (%s Remix)', $titleCase, implode(', ', $remixers));
-            $suggestions[] = sprintf('%s (%s Remix)', $releaseNameWithoutBrackets, implode(', ', $remixers));
+
+            if ($releaseNameWithoutBrackets) {
+                $suggestions[] = sprintf('%s (%s Remix)', $releaseNameWithoutBrackets, implode(', ', $remixers));
+            }
 
             // dla świętego spokoju tutaj przydałaby się jeszcze jedna sugestia, zamieniająca ") (" na " / "
             // wynikająca z takiego przykładu.

@@ -24,20 +24,22 @@ final class BeatportApiClient implements BeatportApiClientInterface
         $this->client = $client;
     }
 
-    public static function create(string $baseUri, string $baseDir): self
+    public static function create(string $baseUri, string $authorization, string $baseDir): self
     {
         $stack = HandlerStack::create();
 
         $cacheMiddleware = new CacheMiddleware(
             new GreedyCacheStrategy(
                 new FlysystemStorage(new Local($baseDir . '/var/cache')),
-                3600, // 1h, the TTL in seconds
+                172800, // 48h, the TTL in seconds
             )
         );
         $stack->push($cacheMiddleware);
 
         $toJsonMiddleware = fn (RequestInterface $request): RequestInterface => (
-            $request->withHeader('Accept', 'application/json')
+            $request
+                ->withHeader('Accept', 'application/json')
+                ->withHeader('Authorization', $authorization)
         );
         $stack->push(Middleware::mapRequest($toJsonMiddleware));
 

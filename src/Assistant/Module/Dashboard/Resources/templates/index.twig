@@ -39,7 +39,7 @@
                             {% for genre, trackCount in trackCountByGenre %}
                                 <tr>
                                     <td>
-                                        <a class="text-reset" href="{{ url_for('search.advanced.index', query_params = { genre: genre }) }}">
+                                        <a class="text-reset" href="{{ url_for('search.advanced.index', query_params = { genre }) }}">
                                             {{ genre }}
                                         </a>
                                     </td>
@@ -63,7 +63,7 @@
                             {% for artist, trackCount in trackCountByArtist %}
                                 <tr>
                                     <td>
-                                        <a class="text-reset" href="{{ url_for('search.advanced.index', query_params = { artist: artist }) }}">
+                                        <a class="text-reset" href="{{ url_for('search.advanced.index', query_params = { artist }) }}">
                                             {{ artist }}
                                         </a>
                                     </td>

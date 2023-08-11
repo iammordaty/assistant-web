@@ -1,6 +1,5 @@
 <?php
 
-use DI\Bridge\Slim\Bridge;
 use DI\ContainerBuilder;
 use Symfony\Component\Console\Application;
 
@@ -8,9 +7,11 @@ setlocale(LC_TIME, 'pl_PL.utf8');
 
 define('BASE_DIR', dirname(__DIR__));
 
-require_once BASE_DIR . '/vendor/autoload.php';
+if (function_exists('xdebug_set_filter')) {
+    xdebug_set_filter(XDEBUG_FILTER_STACK, XDEBUG_PATH_EXCLUDE, [ BASE_DIR . '/vendor/' ]);
+}
 
-// require config and set up dependencies
+require_once BASE_DIR . '/vendor/autoload.php';
 
 $config = (require_once BASE_DIR . '/config/config.inc')(BASE_DIR);
 
@@ -19,16 +20,19 @@ $container = (new ContainerBuilder())
     ->addDefinitions((require_once BASE_DIR . '/config/container.inc')(BASE_DIR, $config))
     ->build();
 
-$app = Bridge::create($container);
+set_error_handler(function (int $type, string $msg, string $file, int $line) {
+    if (!(error_reporting() & $type)) {
+        return;
+    }
 
-(require_once BASE_DIR . '/config/middleware.inc')($app);
-
-// prepare tasks and console app
+    // raise warnings to exceptions, so they will be handled by symfony/console
+    throw new ErrorException($msg, 0, $type, $file, $line);
+});
 
 $console = new Application();
 $console->addCommands((require_once BASE_DIR . '/config/tasks.inc')($container));
 
-unset($app, $container);
+unset($container);
 
 /** @noinspection PhpUnhandledExceptionInspection */
 $console->run();

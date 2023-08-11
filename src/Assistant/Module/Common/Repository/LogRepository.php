@@ -4,15 +4,13 @@ namespace Assistant\Module\Common\Repository;
 
 use Assistant\Module\Common\Model\LogEntry;
 use Assistant\Module\Common\Model\LogEntryDto;
-use Assistant\Module\Common\Storage\Query;
 use Assistant\Module\Common\Storage\Storage;
-use Assistant\Module\Search\Extension\SearchCriteria;
 use MongoDB\Database;
 use MongoDB\Model\BSONArray;
 use MongoDB\Model\BSONDocument;
 use Traversable;
 
-/** Repozytorium obiektów Track */
+/** Repozytorium Logów */
 final class LogRepository
 {
     public const COLLECTION_NAME = 'logs';

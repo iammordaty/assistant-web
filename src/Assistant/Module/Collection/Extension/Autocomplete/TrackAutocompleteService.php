@@ -2,14 +2,13 @@
 
 namespace Assistant\Module\Collection\Extension\Autocomplete;
 
+use Assistant\Module\Common\Extension\Route;
 use Assistant\Module\Common\Extension\RouteResolver;
 use Assistant\Module\Common\Extension\SlugifyService;
-use Assistant\Module\Common\Extension\Route;
 use Assistant\Module\Common\Storage\Regex;
 use Assistant\Module\Search\Extension\SearchCriteriaFacade;
 use Assistant\Module\Search\Extension\TrackSearchService;
 use Assistant\Module\Track\Model\Track;
-use Traversable;
 
 final class TrackAutocompleteService
 {
@@ -55,11 +54,8 @@ final class TrackAutocompleteService
         return $this->toArray($tracks);
     }
 
-    /**
-     * @param array|Traversable|Track[] $tracks
-     * @return TrackAutocompleteEntry[]
-     */
-    private function toArray(array|Traversable $tracks): array
+    /** @return TrackAutocompleteEntry[] */
+    private function toArray(iterable $tracks): array
     {
         $createEntry = function (Track $track): TrackAutocompleteEntry {
             $route = Route::create('track.track.index', [ 'guid' => $track->getGuid() ]);

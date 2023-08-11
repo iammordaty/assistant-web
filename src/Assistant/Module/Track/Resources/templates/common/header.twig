@@ -2,7 +2,7 @@
 
 {% for artist in track.artists %}
     {% set trackName = trackName|replace({
-        (artist): '<a href="' ~ url_for('search.advanced.index', query_params = { artist: artist }) ~ '">' ~ artist ~ '</a>'
+        (artist): '<a href="' ~ url_for('search.advanced.index', query_params = { artist }) ~ '">' ~ artist ~ '</a>'
     }) %}
 {% endfor %}
 

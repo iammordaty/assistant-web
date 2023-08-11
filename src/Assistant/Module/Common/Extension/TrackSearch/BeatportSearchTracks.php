@@ -35,10 +35,11 @@ final class BeatportSearchTracks
         $response = $this->client->search([
             'q' => $this->slugify->slugify($query),
             'type' => 'tracks',
+            'per_page' => 10,
         ]);
 
         $beatportTracks = array_map(
-            fn($rawTrack) => $this->trackBuilder->fromBeatportSearchResult($rawTrack),
+            fn ($rawTrack) => $this->trackBuilder->fromBeatportSearchResult($rawTrack),
             $response['tracks']
         );
 
