@@ -1,0 +1,28 @@
+{
+  "namespaces": [
+    {
+      "namespace": "common",
+      "path": "src/Assistant/Module/Common/Resources/templates"
+    },
+    {
+      "namespace": "dashboard",
+      "path": "src/Assistant/Module/Dashboard/Resources/templates"
+    },
+    {
+      "namespace": "directory",
+      "path": "src/Assistant/Module/Directory/Resources/templates"
+    },
+    {
+      "namespace": "mix",
+      "path": "src/Assistant/Module/Mix/Resources/templates"
+    },
+    {
+      "namespace": "search",
+      "path": "src/Assistant/Module/Search/Resources/templates"
+    },
+    {
+      "namespace": "track",
+      "path": "src/Assistant/Module/Track/Resources/templates"
+    }
+  ]
+}
