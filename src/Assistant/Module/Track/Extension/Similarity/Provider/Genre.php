@@ -26,6 +26,12 @@ final class Genre extends AbstractProvider
         ['Deep House', 'Electronic', 50],
         ['Deep House', 'Electro House', 50],
 
+        ['Progressive House', 'Indie Dance', 80],
+        ['Progressive House', 'Electro House', 65],
+        ['Progressive House', 'Electronic', 60],
+        ['Progressive House', 'Techno', 50],
+        ['Progressive House', 'Progressive Trance', 40],
+
         ['Tech House', 'Techno', 90],
         ['Tech House', 'Indie Dance', 70],
         ['Tech House', 'Electro House', 65],
@@ -36,9 +42,9 @@ final class Genre extends AbstractProvider
         ['Techno', 'Hard Trance', 85],
         ['Trance', 'Hard House', 85],
         ['Techno', 'Minimal', 85],
+        ['Techno', 'Electronic', 75],
         ['Techno', 'Deep House', 55],
         ['Techno', 'Indie Dance', 50],
-        ['Techno', 'Electronic', 50],
 
         ['Trance', 'Progressive Trance', 90],
         ['Trance', 'Hard Trance', 85],
