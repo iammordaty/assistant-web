@@ -9,7 +9,6 @@ final class Genre extends AbstractProvider
     /** {@inheritDoc} */
     public const NAME = 'Genre';
 
-    /** @var array */
     private array $similarityMapBase = [
         ['House', 'Tech House', 90],
         ['House', 'Progressive House', 90],
@@ -77,7 +76,7 @@ final class Genre extends AbstractProvider
     }
 
     /** {@inheritDoc} */
-    public function getCriteria(Track $baseTrack): array
+    public function getCriteria(Track $baseTrack): ?array
     {
         $genres = [];
 
@@ -87,9 +86,10 @@ final class Genre extends AbstractProvider
             }
         }
 
-        // $baseTrack->getGenre() jest innym, niewymienionym gatunkiem (np. HardStyle, Hard-House)
+        // $baseTrack->getGenre() jest innym, niewymienionym gatunkiem (np. HardStyle, Hard-House),
+        // więc rezygnujemy z tego filtra, bo uniemożliwia to zwrócenie podobnych utworów.
         if (empty($genres)) {
-            $genres[] = $baseTrack->getGenre();
+            return null;
         }
 
         return $genres;
