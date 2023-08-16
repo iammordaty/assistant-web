@@ -106,6 +106,10 @@ final class RenameTrackTask extends AbstractTask
             }
 
             $target .= sprintf('.%s', strtolower($track->getFile()->getExtension()));
+
+            $target = str_replace([ '/', ':' ], '-', $target);
+            $target = str_replace('"', '\'', $target);
+            $target = str_replace([ '*', '?' ], '', $target);
         } elseif ($input->getOption('target')) {
             $target = $input->getOption('target');
         } else {
