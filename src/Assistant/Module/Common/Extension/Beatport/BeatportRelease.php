@@ -2,49 +2,33 @@
 
 namespace Assistant\Module\Common\Extension\Beatport;
 
-final class BeatportRelease
+use DateTime;
+use DateTimeInterface;
+
+final readonly class BeatportRelease
 {
-    public function __construct(
-        private string $url,
-        private string $name,
-        private string $label,
+    private function __construct(
+        public string $url,
+        public string $name,
+        public string $label,
+        public int $trackCount,
+        public string $date,
     ) {
     }
 
-    public static function create($release): BeatportRelease
+    public static function create(array $release): self
     {
         $url = sprintf('%s/%s/%s/%d', Beatport::DOMAIN, Beatport::TYPE_RELEASE, $release['slug'], $release['id']);
+        $releaseDate = (new DateTime($release['new_release_date']))->format(DateTimeInterface::ATOM);
 
-        $beatportRelease = new BeatportRelease(
+        $beatportRelease = new self(
             url: $url,
             name: $release['name'],
             label: $release['label']['name'],
+            trackCount: $release['track_count'],
+            date: $releaseDate,
         );
 
         return $beatportRelease;
-    }
-
-    public function toArray(): array
-    {
-        return [
-            'url' => $this->url,
-            'name' => $this->name,
-            'label' => $this->label,
-        ];
-    }
-
-    public function getUrl(): string
-    {
-        return $this->url;
-    }
-
-    public function getName(): string
-    {
-        return $this->name;
-    }
-
-    public function getLabel(): string
-    {
-        return $this->label;
     }
 }

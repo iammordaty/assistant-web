@@ -17,7 +17,7 @@ $(document).ready(function() {
             return;
         }
 
-        var releaseDate = new Date(track.releaseDate);
+        var releaseDate = new Date(track.release.date);
         var month = releaseDate.getMonth() + 1;
 
         $baseTrackInfo.find('[data-role="track"]').text(track.name);

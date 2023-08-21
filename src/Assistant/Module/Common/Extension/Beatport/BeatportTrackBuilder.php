@@ -6,13 +6,10 @@ use Assistant\Module\Common\Extension\BeatportApiClientInterface;
 use Assistant\Module\Common\Extension\TrackSearch\GoogleBeatportSearchResult;
 use Fig\Http\Message\StatusCodeInterface;
 
-final class BeatportTrackBuilder
+final readonly class BeatportTrackBuilder
 {
-    private BeatportApiClientInterface $client;
-
-    public function __construct(BeatportApiClientInterface $client)
+    public function __construct(private BeatportApiClientInterface $client)
     {
-        $this->client = $client;
     }
 
     public function fromTrackId(int $trackId): ?BeatportTrack
@@ -20,8 +17,11 @@ final class BeatportTrackBuilder
         try {
             $rawTrack = $this->client->track($trackId);
 
-            [ 'results' => $rawCharts ] = $this->client->charts([ 'track_id' => $rawTrack['id'] ]);
-            $rawTrack['charts'] = $rawCharts;
+            $rawCharts = $this->client->charts([ 'track_id' => $rawTrack['id'] ]);
+            $rawTrack['charts'] = $rawCharts['results'];
+
+            $rawReleases = $this->client->releases([ 'id' => $rawTrack['release']['id'] ]);
+            $rawTrack['release'] = $rawReleases['results'][0];
         } catch (\Exception $e) {
             if ($e->getCode() !== StatusCodeInterface::STATUS_FORBIDDEN) { // 403: Territory Restriction
                 // yolo, przydałoby się to komunikować na froncie w bardziej przystępny sposób
@@ -49,8 +49,7 @@ final class BeatportTrackBuilder
 
         $rawTrack = array_merge([ 'number' => null ], $result);
 
-        $beatportTrack = self::createBeatportTrack($rawTrack);
-        $beatportTrack = $this->fromTrackId($beatportTrack->getId());
+        $beatportTrack = $this->fromTrackId($rawTrack['id']);
 
         return $beatportTrack;
     }

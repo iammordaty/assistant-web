@@ -5,46 +5,36 @@ namespace Assistant\Module\Common\Extension;
 use GuzzleHttp\Client;
 use GuzzleHttp\ClientInterface;
 use GuzzleHttp\HandlerStack;
-use GuzzleHttp\Middleware;
 use Kevinrob\GuzzleCache\CacheMiddleware;
 use Kevinrob\GuzzleCache\Storage\FlysystemStorage;
 use Kevinrob\GuzzleCache\Strategy\GreedyCacheStrategy;
 use League\Flysystem\Adapter\Local;
-use Psr\Http\Message\RequestInterface;
 
-/**
- * To jest tymczasowa wersja klasy, używana do czasu uzyskania dostępu do https://api.beatport.com/v4/
- */
 final class BeatportApiClient implements BeatportApiClientInterface
 {
-    private ClientInterface $client;
-
-    public function __construct(ClientInterface $client)
+    private function __construct(private ClientInterface $client)
     {
-        $this->client = $client;
     }
 
-    public static function create(string $baseUri, string $authorization, string $baseDir): self
+    public static function create(Config $config): self
     {
         $stack = HandlerStack::create();
 
         $cacheMiddleware = new CacheMiddleware(
             new GreedyCacheStrategy(
-                new FlysystemStorage(new Local($baseDir . '/var/cache')),
+                new FlysystemStorage(new Local($config->get('base_dir') . '/var/cache')),
                 172800, // 48h, the TTL in seconds
             )
         );
         $stack->push($cacheMiddleware);
 
-        $toJsonMiddleware = fn (RequestInterface $request): RequestInterface => (
-            $request
-                ->withHeader('Accept', 'application/json')
-                ->withHeader('Authorization', $authorization)
-        );
-        $stack->push(Middleware::mapRequest($toJsonMiddleware));
+        $beatportApiConfig = $config->get(self::class);
+
+        $authMiddleware = BeatportAuthMiddleware::factory($beatportApiConfig, $config->get('base_dir') . '/var/');
+        $stack->push($authMiddleware);
 
         $client = new Client([
-            'base_uri' => $baseUri,
+            'base_uri' => $beatportApiConfig['api_url'],
             'handler' => $stack,
         ]);
 
@@ -66,6 +56,17 @@ final class BeatportApiClient implements BeatportApiClientInterface
     {
         $url = 'v4/catalog/tracks/' . $trackId;
         $response = $this->client->get($url);
+
+        $contents = json_decode($response->getBody()->getContents(), true);
+
+        return $contents;
+    }
+
+    public function releases(array $query): array
+    {
+        $response = $this->client->get('v4/catalog/releases', [
+            'query' => $query,
+        ]);
 
         $contents = json_decode($response->getBody()->getContents(), true);
 
