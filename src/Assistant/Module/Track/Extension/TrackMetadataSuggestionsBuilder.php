@@ -1,6 +1,5 @@
 <?php
 
-// Wrzucone na szybko, być może powinno leżeć bliżej modelu
 namespace Assistant\Module\Track\Extension;
 
 use Assistant\Module\Common\Extension\Beatport\BeatportChart;
@@ -29,28 +28,28 @@ final class TrackMetadataSuggestionsBuilder
 
         // TODO: Zastanowić się jak ogarnąć powyższe.
 
-        $artist = $this->getArtist($beatportTrack->getArtists(), $beatportTrack->getTitle());
+        $artist = $this->getArtist($beatportTrack->artists, $beatportTrack->title);
 
         $title = $this->getTitle(
-            $beatportTrack->getTitle(),
-            $beatportTrack->getMixName(),
-            $beatportTrack->getRemixers(),
+            $beatportTrack->title,
+            $beatportTrack->mixName,
+            $beatportTrack->remixers,
         );
 
-        $album = $this->getAlbum($beatportTrack->getRelease()->getName(), $beatportTrack->getRemixers());
-        $trackNumber = $this->getTrackNumber($beatportTrack->getTrackNumber());
-        $year = $this->getYear($beatportTrack->getReleaseDate());
-        $genre = $this->getGenre($beatportTrack->getGenre(), $beatportTrack->getSubGenre());
-        $publisher = $this->getPublisher($beatportTrack->getRelease()->getLabel());
+        $album = $this->getAlbum($beatportTrack->release->name, $beatportTrack->remixers);
+        $trackNumber = $this->getTrackNumber($beatportTrack->trackNumber);
+        $year = $this->getYear($beatportTrack->release->date);
+        $genre = $this->getGenre($beatportTrack->genre, $beatportTrack->subGenre);
+        $publisher = $this->getPublisher($beatportTrack->release->label);
         $bpm = $this->getBpm();
         $initialKey = $this->getInitialKey();
 
         $tags = $this->getTags(
-            $beatportTrack->getArtists(), // artyści wyciągnięci z title jako feat
-            $beatportTrack->getRemixers(),
-            $beatportTrack->getGenre(),
-            $beatportTrack->getSubGenre(),
-            $beatportTrack->getCharts(),
+            $beatportTrack->artists, // artyści wyciągnięci z title jako feat
+            $beatportTrack->remixers,
+            $beatportTrack->genre,
+            $beatportTrack->subGenre,
+            $beatportTrack->charts,
         );
 
         $metadataSuggestions = new TrackMetadataSuggestions(
@@ -83,7 +82,7 @@ final class TrackMetadataSuggestionsBuilder
         // 1. tutaj artysta "Bertie Blackman" zapisany jest jako ciąg w title, nie ma go w tablicy artists
         // </editor-fold>
 
-        // Jeśli feat jest w title to faworyzować wielkość znaków z title'a
+        // Jeśli feat jest w title to faworyzować wielkość znaków z title-a.
         // Jeśli feat istnieje w tablicy $artists, to ją stamtąd usuwać
 
         $result = preg_match('/[\s(](?:feat|ft?)\.?\s([\w, &\.]+)/ui', $title, $matches);
@@ -94,7 +93,7 @@ final class TrackMetadataSuggestionsBuilder
 
         $artists = array_values(array_filter(
             $artists,
-            static fn($artist) => S::toLowerCase($artist) !== S::toLowerCase($featuredArtist)
+            static fn ($artist) => S::toLowerCase($artist) !== S::toLowerCase($featuredArtist)
         ));
 
         $artistsCount = count($artists);
@@ -122,52 +121,62 @@ final class TrackMetadataSuggestionsBuilder
 
         if ($featuredArtist) {
             $suggestions = array_map(
-                static fn($suggestion) => sprintf('%s feat. %s', $suggestion, $featuredArtist),
+                static fn ($suggestion) => sprintf('%s feat. %s', $suggestion, $featuredArtist),
                 $suggestions
             );
         }
 
-        $suggestions = self::getUniqueSortedSuggestions($suggestions);
+        $suggestions = self::sorted(self::unique($suggestions));
 
         return $suggestions;
     }
 
     private function getTitle(string $name, string $mixName, ?array $remixers): array
     {
-        $removeFeat = static function (string $title): string {
-            $regex = '/(?:\s|\()(?:feat|ft?)\.?\s([\w, &\.]+)\)?/iu';
+            $name = str_replace(
+                [ ' an ', ' at ', ' of ', ' in ', ' the ' ],
+                [ ' An ', ' At ', ' Of ', ' In ', ' The ' ],
+                $name
+            );
 
-            return S::collapseWhitespace(preg_replace($regex, ' ', $title));
-        };
-
-        $nameTitleCase = $removeFeat(S::toTitleCase($name));
+        $nameTitleCase = self::removeFeat(S::toTitleCase($name));
 
         $suggestions = [
-            str_replace(['(', ')'], ['[', ']'], $removeFeat(S::toTitleCase($name))),
+            str_replace([ '(', ')' ], [ '[', ']' ], $nameTitleCase),
             sprintf('%s [%s]', $nameTitleCase, $mixName),
         ];
 
         if ($remixers) {
             $suggestions[] = sprintf('%s [%s Remix]', $nameTitleCase, implode(', ', $remixers));
+
+            foreach ($suggestions as $suggestion) {
+                if (str_contains($suggestion, ') (')) {
+                    $suggestions[] = str_replace(') (', ' / ', $suggestion);
+                }
+
+                if (str_contains($suggestion, '] [')) {
+                    $suggestions[] = str_replace('] [', ' / ', $suggestion);
+                }
+            }
         }
 
-        $suggestions = self::getUniqueSortedSuggestions($suggestions);
+        $suggestions = self::sorted(self::unique($suggestions));
 
         return $suggestions;
     }
 
     private function getAlbum(string $releaseName, ?array $remixers): array
     {
-        $removeFeat = static function (string $title): string {
-            $regex = '/(?:\s|\()(?:feat|ft?)\.?\s([\w, &\.]+)\)?/iu';
+        $releaseName = str_replace(
+            [ ' an ', ' at ', ' of ', ' in ', ' the ' ],
+            [ ' An ', ' At ', ' Of ', ' In ', ' The ' ],
+            $releaseName
+        );
 
-            return S::collapseWhitespace(preg_replace($regex, ' ', $title));
-        };
-
-        $titleCase = $removeFeat(S::toTitleCase($releaseName));
+        $titleCase = self::removeFeat(S::toTitleCase($releaseName));
 
         $suggestions = [
-            $removeFeat($releaseName),
+            self::removeFeat($releaseName),
             $titleCase,
         ];
 
@@ -176,7 +185,7 @@ final class TrackMetadataSuggestionsBuilder
 
         if ($bracketPos !== false) {
             if ($bracketPos === 0) {
-                // np. Peggy Gou - (It Goes Like) Nanana - Extended Mix
+                // dla np. Peggy Gou - (It Goes Like) Nanana - Extended Mix usuwamy tylko (It Goes Like), reszta zostaje
                 $bracketPos = strpos($titleCase, ')') + 1;
 
                 $releaseNameWithoutBrackets = trim(S::substr($titleCase, $bracketPos));
@@ -188,25 +197,24 @@ final class TrackMetadataSuggestionsBuilder
         }
 
         if ($remixers) {
-            // @todo: wyeliminować sytuację w której
-            //        tytuł utworu to: Blinding Lights [Joris Voorn Remix]
-            //        album utworu to: Blinding Lights (Joris Voorn Remix)
-            //        a wygenerowana sugestia to: Blinding Lights (Joris Voorn Remix) (Joris Voorn Remix)
-            //        Innymi słowy, jeśli w nawiasach jest to samo, to nie powinno być dodawane do sugestii
+            $remixName = implode(', ', $remixers) . ' Remix';
 
-            $suggestions[] = sprintf('%s (%s Remix)', $titleCase, implode(', ', $remixers));
+            if (!str_contains($titleCase, $remixName)) {
+                $suggestions[] = sprintf('%s (%s)', $titleCase, $remixName);
+            }
 
             if ($releaseNameWithoutBrackets) {
                 $suggestions[] = sprintf('%s (%s Remix)', $releaseNameWithoutBrackets, implode(', ', $remixers));
             }
 
-            // dla świętego spokoju tutaj przydałaby się jeszcze jedna sugestia, zamieniająca ") (" na " / "
-            // wynikająca z takiego przykładu.
-            // In The Air Tonight (Club Remixes) (Passenger 10 Remix)
-            // to samo dotyczy tytułu utworu
+            foreach ($suggestions as $suggestion) {
+                if (str_contains($suggestion, ') (')) {
+                    $suggestions[] = str_replace(') (', ' / ', $suggestion);
+                }
+            }
         }
 
-        $suggestions = self::getUniqueSortedSuggestions($suggestions);
+        $suggestions = self::sorted(self::unique($suggestions));
 
         return $suggestions;
     }
@@ -222,9 +230,9 @@ final class TrackMetadataSuggestionsBuilder
         return $suggestions;
     }
 
-    private function getYear(\DateTime $releaseDate): array
+    private function getYear(string $releaseDate): array
     {
-        $suggestions = [ (int) $releaseDate->format('Y') ];
+        $suggestions = [ (int) (new \DateTime($releaseDate))->format('Y') ];
 
         return $suggestions;
     }
@@ -262,21 +270,22 @@ final class TrackMetadataSuggestionsBuilder
             'Melodic House & Techno' => 'Progressive House',
             'Minimal / Deep Tech' => 'Deep House',
             'Nu Disco / Disco' => 'Indie Dance', // :/
+            'Organic House / Downtempo' => 'House',
             'Progressive' => 'Progressive House',
             'Techno (Peak Time / Driving)' => 'Techno',
             'Techno (Raw / Deep / Hypnotic)' => 'Techno',
         ];
 
-        $beatportGenres = self::getUniqueSortedSuggestions($beatportGenres);
+        $beatportGenres = self::sorted(self::unique($beatportGenres));
 
         $suggestions = array_map(
-            static fn($beatportGenre) => $beatportGenreToCollectionGenreMap[$beatportGenre] ?? $beatportGenre,
+            static fn ($beatportGenre) => $beatportGenreToCollectionGenreMap[$beatportGenre] ?? $beatportGenre,
             $beatportGenres
         );
 
         array_push($suggestions, ...$collectionGenres);
 
-        $suggestions = self::getUniqueSuggestions($suggestions);
+        $suggestions = self::unique($suggestions);
 
         return $suggestions;
     }
@@ -291,7 +300,7 @@ final class TrackMetadataSuggestionsBuilder
             $suggestions[] = trim(S::substr($titleCase, 0, $bracketPos));
         }
 
-        $suggestions = self::getUniqueSortedSuggestions($suggestions);
+        $suggestions = self::sorted(self::unique($suggestions));
 
         return $suggestions;
     }
@@ -342,33 +351,37 @@ final class TrackMetadataSuggestionsBuilder
         }
 
         if ($charts) {
-            $officialCharts = array_filter($charts, fn(BeatportChart $chart) => $chart->isOfficial());
+            $officialCharts = array_filter($charts, fn (BeatportChart $chart) => $chart->isOfficial);
 
             foreach ($officialCharts as $chart) {
-                $suggestions[] = $chart->getArtist();
+                $suggestions[] = $chart->artist;
 
-                array_push($suggestions, ...$chart->getGenres());
+                array_push($suggestions, ...$chart->genres);
             }
         }
 
         // plus, w przyszłości, tagi wygenerowane przez Essentię
 
-        $suggestions = self::getUniqueSortedSuggestions($suggestions);
+        $suggestions = self::sorted(self::unique($suggestions));
 
         return $suggestions;
     }
 
-    // rozdzielić. niech to będzie unique(s) i sorted(s), czyli: unique(sorted($array));
-    private static function getUniqueSortedSuggestions(array $suggestions): array
+    private static function removeFeat(string $string): string
     {
-        $unique = self::getUniqueSuggestions($suggestions);
+        $regex = '/(?:\s|\()(?:feat|ft?)\.?\s([\w, &\.]+)\)?/iu';
 
-        natcasesort($unique);
-
-        return array_values($unique);
+        return S::collapseWhitespace(preg_replace($regex, ' ', $string));
     }
 
-    private static function getUniqueSuggestions(array $suggestions): array
+    private static function sorted(array $suggestions): array
+    {
+        natcasesort($suggestions);
+
+        return array_values($suggestions);
+    }
+
+    private static function unique(array $suggestions): array
     {
         $result = array_unique($suggestions);
 

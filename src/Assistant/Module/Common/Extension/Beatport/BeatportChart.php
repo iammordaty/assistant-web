@@ -2,23 +2,27 @@
 
 namespace Assistant\Module\Common\Extension\Beatport;
 
-final class BeatportChart
+final readonly class BeatportChart
 {
-    public function __construct(
-        private string $url,
-        private ?string $artist,
-        private bool $isOfficial,
-        private string $name,
-        private array $genres,
+    private function __construct(
+        public string $url,
+        public ?string $artist,
+        /**
+         * Określa, że lista została stworzona przez DJ-a, producenta, lub zespół zarejestrowany na Beatport
+         * (np. Voorn-a), a nie "zwykłego" użytkownika portalu
+         */
+        public bool $isOfficial,
+        public string $name,
+        public array $genres,
     ) {
     }
 
-    public static function create($chart): BeatportChart
+    public static function create(array $chart): self
     {
         $url = sprintf('%s/%s/%s/%d', Beatport::DOMAIN, Beatport::TYPE_CHARTS, $chart['slug'], $chart['id']);
-        $genres = array_map(static fn($genre) => $genre['name'], $chart['genres']);
+        $genres = array_map(static fn ($genre) => $genre['name'], $chart['genres']);
 
-        $beatportChart = new BeatportChart(
+        $beatportChart = new self(
             url: $url,
             artist: $chart['artist']['name'] ?? null,
             isOfficial: isset($chart['artist']),
@@ -27,36 +31,5 @@ final class BeatportChart
         );
 
         return $beatportChart;
-    }
-
-    public function getUrl(): string
-    {
-        return $this->url;
-    }
-
-    public function getArtist(): ?string
-    {
-        return $this->artist;
-    }
-
-    /**
-     * Określa że lista została stworzona przez DJ-a / producenta / zespół zarejestrowany na beatport (np. Voorna),
-     * a nie "zwykłego" użytkownika portalu
-     *
-     * @return bool
-     */
-    public function isOfficial(): bool
-    {
-        return $this->isOfficial;
-    }
-
-    public function getName(): string
-    {
-        return $this->name;
-    }
-
-    public function getGenres(): array
-    {
-        return $this->genres;
     }
 }

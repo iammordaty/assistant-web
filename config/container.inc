@@ -24,6 +24,7 @@ use Assistant\Module\Directory\Repository\DirectoryRepository;
 use Assistant\Module\Mix\Extension\MixService;
 use Assistant\Module\Search\Extension\DirectorySearchService;
 use Assistant\Module\Search\Extension\TrackSearchService;
+use Assistant\Module\Track\Extension\BeatportTrackMetadataSuggestionsService;
 use Assistant\Module\Track\Extension\Similarity\Similarity;
 use Assistant\Module\Track\Extension\Similarity\SimilarityBuilder;
 use Assistant\Module\Track\Extension\TrackFilenameSuggestion;
@@ -165,6 +166,8 @@ return static fn (string $baseDir, array $config): array => [
     TrackFilenameSuggestion::class => autowire(),
 
     TrackLocationArbiter::class => autowire(),
+
+    BeatportTrackMetadataSuggestionsService::class => autowire(),
 
     TrackRepository::class => function (Container $container): TrackRepository {
         $storage = $container->get(Config::class)->get('storage');

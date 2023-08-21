@@ -26,7 +26,7 @@ final class GoogleBeatportSearchTracks
         $response = $this->client->search(trim($query));
 
         $results = array_map(
-            static fn($rawResult) => GoogleBeatportSearchResult::factory($rawResult),
+            static fn ($rawResult) => GoogleBeatportSearchResult::factory($rawResult),
             $response
         );
 
@@ -34,12 +34,12 @@ final class GoogleBeatportSearchTracks
         // https://docs.guzzlephp.org/en/stable/quickstart.html#concurrent-requests
 
         $beatportTracks = array_map(
-            fn($result) => $this->trackBuilder->fromGoogleBeatportSearchResult($result),
+            fn ($result) => $this->trackBuilder->fromGoogleBeatportSearchResult($result),
             $results
         );
 
         $beatportTracks = array_merge(
-            array_filter($beatportTracks, static fn($beatportTrack) => $beatportTrack !== null)
+            array_filter($beatportTracks, static fn ($beatportTrack) => $beatportTrack !== null)
         );
 
         return $beatportTracks;

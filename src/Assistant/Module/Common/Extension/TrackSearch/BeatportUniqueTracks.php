@@ -20,16 +20,14 @@ final class BeatportUniqueTracks
         return $this;
     }
 
-    /**
-     * @return BeatportTrack[]
-     */
+    /** @return BeatportTrack[] */
     public function get(): array
     {
         $unique = [];
 
-        // upewnić się, że id jest unikalne, tzn. utwór od danym id przynależy do jednego release-id
+        // Upewnić się, że id jest unikalne, tzn. utwór od danym id przynależy do jednego release-id
         foreach ($this->beatportTracks as $beatportTrack) {
-            $unique[$beatportTrack->getId()] = $beatportTrack;
+            $unique[$beatportTrack->id] = $beatportTrack;
         }
 
         return array_values($unique);

@@ -3,9 +3,9 @@
 namespace Assistant\Module\Track\Controller\Track;
 
 use Assistant\Module\Common\Extension\GetId3\Adapter as Id3Adapter;
-use Assistant\Module\Common\Extension\MusicClassifier\MusicClassifierService;
 use Assistant\Module\Common\Extension\Route;
 use Assistant\Module\Common\Extension\RouteResolver;
+use Assistant\Module\Track\Extension\BeatportTrackMetadataSuggestionsService;
 use Assistant\Module\Track\Extension\TrackService;
 use Cocur\BackgroundProcess\BackgroundProcess;
 use Psr\Http\Message\ResponseInterface;
@@ -19,15 +19,11 @@ final class EditController
         private Id3Adapter $id3Adapter,
         private RouteResolver $routeResolver,
         private TrackService $trackService,
+        private BeatportTrackMetadataSuggestionsService $trackMetadataSuggestions,
         private Twig $view,
     ) {
     }
 
-    /**
-     * @todo Dodać pole wyszukiwania, z którego beatportowa będzie próbowała pobrać dane (artist - title, url, id)
-     * @todo Wyciągnąć z kontrolera i przerzucić do innej klasy
-     * @todo Część klas (m.in. BeatportApiClient) przerzucić do containera dla wygodniejszej inicjalizacji
-     */
     public function edit(ServerRequest $request, Response $response): ResponseInterface
     {
         $pathname = $request->getAttribute('pathname');
@@ -43,7 +39,7 @@ final class EditController
             $query = pathinfo($track->getPathname(), PATHINFO_FILENAME);
         }
 
-        $suggestions = $this->getMetadataSuggestions($query);
+        $suggestions = $this->trackMetadataSuggestions->get($query);
 
         if ($this->trackService->getLocationArbiter()->isInCollection($pathname)) {
             $routeName = 'track.track.index';
@@ -70,10 +66,6 @@ final class EditController
         ]);
     }
 
-    /**
-     * @todo Na tyle ile pozwala biblioteka, opcja usuwania innych tagów powinna usuwać zdjęcie, tag id3v1, lyrics,
-     *       ape (oraz inne) oraz niewspierane pola z id3v2
-     */
     public function save(ServerRequest $request, Response $response): ResponseInterface
     {
         $pathname = $request->getAttribute('pathname');
@@ -151,25 +143,7 @@ final class EditController
         return $response->withRedirect($redirectUrl);
     }
 
-    /**
-     * @fixme Przy problemach z połączeniem wywala się cała aplikacja, poprawić.
-     * @todo Dodać obsługę generowanie sugestii z metadanych pliku oraz nazwy pliku
-     */
-    private function getMetadataSuggestions(string $query): array
-    {
-        // roboczo. może powinno zostać rozdzielone na więcej klas
-        // - budującą obiekty klas, które wyszukują kawałki
-        // - klasę, która wyszukuje kawałki
-        // - klasę odpowiedzialną za budowanie sugestii na podstawie znalezionych utworów
-        //
-        // ale jeszcze do zastanowienia się na spokojnie
-
-        $trackMetadataSuggestions = TrackMetadataSuggestions::factory();
-
-        return $trackMetadataSuggestions->get($query);
-    }
-
-    // to w sumie mogłoby być w modelu Track
+    /** @todo Przenieść do innej klasy */
     private static function getEditableMetadataFields(): array
     {
         return [
@@ -186,7 +160,7 @@ final class EditController
     }
 
     /**
-     * @todo Przenieść do innej klasy, chyba tej samej co getMetadataSuggestions, bo związanej z widokiem
+     * @todo Przenieść do innej klasy
      *
      * @return string[][]
      */

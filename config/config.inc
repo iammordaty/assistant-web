@@ -1,5 +1,10 @@
 <?php
 
+use Assistant\Module\Common\Extension\BeatportApiClient;
+use Assistant\Module\Common\Extension\TrackSearch\BeatportSearchTracks;
+use Assistant\Module\Common\Extension\TrackSearch\GoogleBeatportSearchTracks;
+use Assistant\Module\Common\Extension\TrackSearch\GoogleSearchApiClient;
+use Assistant\Module\Track\Extension\BeatportTrackMetadataSuggestionsService;
 use Assistant\Module\Track\Extension\Similarity\Similarity;
 use Assistant\Module\Track\Extension\Similarity\Provider\Bpm;
 use Assistant\Module\Track\Extension\Similarity\Provider\MusicalKey;
@@ -95,6 +100,27 @@ return static function (string $baseDir): array {
             ],
             'min_similarity_value' => 60,
             'max_tracks' => 200,
+        ],
+
+        BeatportApiClient::class => [
+            'api_url' => $_ENV['BEATPORT_API_URL'],
+            'client_id' => $_ENV['BEATPORT_API_CLIENT_ID'],
+            'client_secret' => $_ENV['BEATPORT_API_CLIENT_SECRET'],
+            'username' => $_ENV['BEATPORT_API_USERNAME'],
+            'password' => $_ENV['BEATPORT_API_PASSWORD'],
+        ],
+
+        BeatportTrackMetadataSuggestionsService::class => [
+            BeatportSearchTracks::class => [
+                'enabled' => filter_var($_ENV['USE_BEATPORT_SEARCH'], FILTER_VALIDATE_BOOLEAN),
+            ],
+            GoogleSearchApiClient::class => [
+                'api_key' => $_ENV['GOOGLE_SEARCH_API_KEY'],
+                'search_id' => $_ENV['GOOGLE_SEARCH_API_SEARCH_ID'],
+            ],
+            GoogleBeatportSearchTracks::class => [
+                'enabled' => filter_var($_ENV['USE_GOOGLE_SEARCH'], FILTER_VALIDATE_BOOLEAN),
+            ],
         ],
     ];
 
