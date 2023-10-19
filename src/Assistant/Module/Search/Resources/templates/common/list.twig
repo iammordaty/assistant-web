@@ -9,7 +9,9 @@
                     <div class="card-actions">
                         <select class="form-select" data-role="track-search:list-sort">
                             {# @fixme: To powinno przychodzić z PHP-a #}
-                            {# @todo: Tutaj powinna być również opcja "najlepiej dopasowane po nazwie", ale tylko simple search #}
+                            {% if withTextScoreSort %}
+                                <option value="t" {% if sort == 't' or not sort %}selected{% endif %}>Najlepsze dopasowanie</option>
+                            {% endif %}
                             <option value="a" {% if sort == 'a' or not sort %}selected{% endif %}>Alfabetycznie</option>
                             <option value="ad" {% if sort == 'ad' %}selected{% endif %}>Alfabetycznie malejąco</option>
                             <option value="yd" {% if sort == 'yd' %}selected{% endif %}>Od najnowszego</option>

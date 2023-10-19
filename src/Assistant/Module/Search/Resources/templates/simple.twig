@@ -12,6 +12,7 @@
             </div>
         </div>
 
+        {# @fixme: Domyślne sortowanie powinno przychodzić z PHP-a, podobnie jak możliwości sortowania w list.twig #}
         {% if isFormSubmitted %}
             {% include '@search/common/list.twig' with {
                 isFormSubmitted: isFormSubmitted,
@@ -19,7 +20,8 @@
                 tracks: tracks,
                 routeName: routeName,
                 routeQuery: form,
-                sort: form.sort|default,
+                sort: form.sort|default('t'),
+                withTextScoreSort: true,
             } only %}
         {% endif %}
     </div>
