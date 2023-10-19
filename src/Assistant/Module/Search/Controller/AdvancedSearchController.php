@@ -58,6 +58,8 @@ final readonly class AdvancedSearchController
 
             [ 'count' => $count, 'tracks' => $tracks ] = $this->searchService->findByFields($form, $sort, $page);
 
+            unset($form['pathname']);
+
             $paginator = PagerfantaFactory::createWithNullAdapter(
                 $count,
                 $page,
@@ -67,10 +69,11 @@ final readonly class AdvancedSearchController
             if ($request->isXhr()) {
                 return $this->view->render($response, '@search/common/list.twig', [
                     'routeQuery' => $form,
-                    'sort' => $sort,
                     'paginator' => $paginator,
                     'routeName' => 'search.advanced.index',
                     'tracks' => $tracks,
+                    'sort' => $sort,
+                    'withTextScoreSort' => true,
                 ]);
             }
         }

@@ -35,8 +35,9 @@ final readonly class SimpleSearchController
         if ($isFormSubmitted) {
             $name = $form['query'];
             $page = max(1, (int) ($form['page'] ?? 1));
+            $sort = $form['sort'] ?? null;
 
-            [ 'count' => $count, 'tracks' => $tracks ] = $this->searchService->findByName($name, $page);
+            [ 'count' => $count, 'tracks' => $tracks ] = $this->searchService->findByName($name, $sort, $page);
 
             $paginator = PagerfantaFactory::createWithNullAdapter(
                 $count,
@@ -48,8 +49,10 @@ final readonly class SimpleSearchController
                 return $this->view->render($response, '@search/common/list.twig', [
                     'routeQuery' => $form,
                     'paginator' => $paginator,
-                    'routeName' => 'search.advanced.index',
+                    'routeName' => 'search.simple.index',
                     'tracks' => $tracks,
+                    'sort' => $form['sort'],
+                    'withTextScoreSort' => true,
                 ]);
             }
 

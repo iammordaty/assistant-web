@@ -43,10 +43,10 @@ final class TrackSearchService
         return $track;
     }
 
-    public function findByName(string $name, int $page): array
+    public function findByName(string $name, ?string $sort, int $page): array
     {
         $criteria = SearchCriteriaFacade::createFromName($name);
-        $sort = Storage::SORT_TEXT_SCORE_DESC;
+        $sort = SearchSort::create($sort, default: SearchSort::TEXT_SCORE);
 
         return $this->search($criteria, $sort, $page);
     }
@@ -54,7 +54,7 @@ final class TrackSearchService
     public function findByFields(array $fields, ?string $sort, int $page): array
     {
         $criteria = SearchCriteriaFacade::createFromFields($fields);
-        $sort = SearchSort::create($sort);
+        $sort = SearchSort::create($sort, default: SearchSort::ARTIST);
 
         return $this->search($criteria, $sort, $page);
     }

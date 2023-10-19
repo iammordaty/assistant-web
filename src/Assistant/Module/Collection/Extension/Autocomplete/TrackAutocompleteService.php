@@ -7,6 +7,7 @@ use Assistant\Module\Common\Extension\RouteResolver;
 use Assistant\Module\Common\Extension\SlugifyService;
 use Assistant\Module\Common\Storage\Regex;
 use Assistant\Module\Search\Extension\SearchCriteriaFacade;
+use Assistant\Module\Search\Extension\SearchSort;
 use Assistant\Module\Search\Extension\TrackSearchService;
 use Assistant\Module\Track\Model\Track;
 
@@ -28,7 +29,11 @@ final class TrackAutocompleteService
 
         // krok 1: jeśli zwraca coś searchService to zwróć tylko to
 
-        [ 'count' => $count, 'tracks' => $tracks ] = $this->searchService->findByName($query, page: 1);
+        [ 'count' => $count, 'tracks' => $tracks ] = $this->searchService->findByName(
+            $query,
+            sort: SearchSort::TEXT_SCORE,
+            page: 1
+        );
 
         if ($count > 0) {
             return $this->toArray($tracks);
