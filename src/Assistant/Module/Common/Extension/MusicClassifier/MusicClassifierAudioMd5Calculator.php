@@ -28,7 +28,7 @@ final class MusicClassifierAudioMd5Calculator
             ->run();
 
         if (!$process->isSuccessful()) {
-            throw new MusicClassifierException($process);
+            throw new MusicClassifierProcessException($process);
         }
 
         // Przykładowy output:

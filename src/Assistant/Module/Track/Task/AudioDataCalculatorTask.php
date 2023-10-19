@@ -8,7 +8,7 @@ use Assistant\Module\Common\Extension\GetId3\Adapter as Id3Adapter;
 use Assistant\Module\Common\Extension\GetId3\Exception\GetId3Exception;
 use Assistant\Module\Common\Extension\MusicClassifier\MusicClassifierResult;
 use Assistant\Module\Common\Extension\MusicClassifier\MusicClassifierService;
-use Assistant\Module\Common\Extension\MusicClassifier\MusicClassifierException;
+use Assistant\Module\Common\Extension\MusicClassifier\MusicClassifierProcessException;
 use Assistant\Module\Common\Task\AbstractTask;
 use Assistant\Module\Track\Extension\TrackService;
 use KeyTools\KeyTools;
@@ -178,7 +178,7 @@ final class AudioDataCalculatorTask extends AbstractTask
                 }
 
                 $this->logger->debug('Track processing completed successfully');
-            } catch (MusicClassifierException $e) {
+            } catch (MusicClassifierProcessException $e) {
                 $this->stats['error']['classifier']++;
 
                 $this->logger->error($e->getMessage(), [
