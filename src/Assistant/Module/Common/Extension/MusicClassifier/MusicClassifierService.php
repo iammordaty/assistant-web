@@ -51,7 +51,14 @@ final class MusicClassifierService
                 ->run();
 
             if (!$process->isSuccessful()) {
-                throw new MusicClassifierException($process);
+                if (file_exists($resultFile)) {
+                    // Music classifier exception:
+                    // YamlOutput: error when double-checking the output file; it doesn't match the expected output
+
+                    unlink($resultFile);
+                }
+
+                throw new MusicClassifierProcessException($process);
             }
         }
 

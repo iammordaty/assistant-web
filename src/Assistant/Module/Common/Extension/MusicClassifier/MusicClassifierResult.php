@@ -19,7 +19,7 @@ final class MusicClassifierResult
      * @param array $rawResult
      * @param SplFileInfo|null $file
      */
-    public function __construct(
+    private function __construct(
         private string $musicalKey,
         private float $bpm,
         private string $chromaprint,
@@ -34,6 +34,10 @@ final class MusicClassifierResult
     {
         if (is_string($filename)) {
             $filename = new SplFileInfo($filename);
+        }
+
+        if (!is_readable($filename)) {
+            throw new MusicClassifierResultFileNotFoundException($filename);
         }
 
         $rawResult = json_decode(file_get_contents($filename), true);
