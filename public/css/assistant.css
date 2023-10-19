@@ -140,3 +140,7 @@
 table .ast-track-name {
     min-width: 300px;
 }
+
+.ast-table-no-select td {
+    user-select: none;
+}
