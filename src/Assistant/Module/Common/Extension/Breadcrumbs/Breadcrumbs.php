@@ -37,7 +37,7 @@ final readonly class Breadcrumbs
             $dirs[] = $name;
 
             $breadcrumb = new Breadcrumb(
-                routeOrRouteGenerator: fn (Breadcrumb $breadcrumb): Route => $routeGenerator($breadcrumb),
+                routeOrRouteGenerator: fn (Breadcrumb $breadcrumb): ?Route => $routeGenerator($breadcrumb),
                 name: $name,
                 guid: implode(DIRECTORY_SEPARATOR, $guids),
                 pathname: DIRECTORY_SEPARATOR . implode(DIRECTORY_SEPARATOR, $dirs),

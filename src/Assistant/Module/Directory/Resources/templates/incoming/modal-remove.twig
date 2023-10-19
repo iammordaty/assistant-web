@@ -1,0 +1,17 @@
+<div class="modal" id="modal-remove" tabindex="-1" aria-modal="true" role="dialog">
+    <form action="{{ url_for('common.task.remove') }}" method="POST">
+        <input type="hidden" name="elements">
+        <div class="modal-dialog modal-sm modal-dialog-centered" role="document">
+            <div class="modal-content">
+                <div class="modal-body">
+                    <div class="modal-title">Jesteś pewien?</div>
+                    <div>Jeśli będziesz kontynuował, zaznaczone pliki zostaną usunięte z dysku.</div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn me-auto" data-bs-dismiss="modal">Nie</button>
+                    <button type="submit" class="btn btn-danger">Tak, usuń</button>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>

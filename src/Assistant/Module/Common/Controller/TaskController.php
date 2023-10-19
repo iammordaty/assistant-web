@@ -3,17 +3,18 @@
 namespace Assistant\Module\Common\Controller;
 
 use Assistant\Module\Common\Extension\Config;
+use Assistant\Module\Common\Extension\Route;
+use Assistant\Module\Common\Extension\RouteResolver;
 use Cocur\BackgroundProcess\BackgroundProcess;
-use Fig\Http\Message\StatusCodeInterface;
 use Psr\Http\Message\ResponseInterface;
 use Slim\Http\Response;
 use Slim\Http\ServerRequest;
 
-final class TaskController
+final readonly class TaskController
 {
-    private readonly string $baseDir;
+    private string $baseDir;
 
-    public function __construct(Config $config)
+    public function __construct(private RouteResolver $routeResolver, Config $config)
     {
         $this->baseDir = $config->get('base_dir');
     }
@@ -60,15 +61,41 @@ final class TaskController
         ]);
     }
 
-    public function move(ServerRequest $request, Response $response): ResponseInterface
+    public function rename(ServerRequest $request, Response $response): ResponseInterface
     {
-        $post = $request->getParsedBody();
+        $collectionItems = json_decode($request->getParsedBodyParam('elements'), true);
+        $format = $request->getParsedBodyParam('format');
+        $markAsReady = $request->getParsedBodyParam('mark_as_ready') ? '--mark-as-ready' : '';
 
-        return $response
-            ->withStatus(StatusCodeInterface::STATUS_IM_A_TEAPOT)
-            ->withJson([
-                'message' => 'not implemented (yet)',
-                'post' => $post,
-            ]);
+        foreach ($collectionItems as $pathname) {
+            $command = sprintf(
+                'php %s/bin/console.php track:rename %s --format="%s" "%s"',
+                $this->baseDir,
+                $markAsReady,
+                $format,
+                $pathname
+            );
+
+            shell_exec($command);
+        }
+
+        $route = Route::create('directory.browse.incoming');
+        $redirectUrl = $this->routeResolver->resolve($route);
+
+        return $response->withRedirect($redirectUrl);
+    }
+
+    public function remove(ServerRequest $request, Response $response): ResponseInterface
+    {
+        $collectionItems = json_decode($request->getParsedBodyParam('elements'), true);
+
+        foreach ($collectionItems as $pathname) {
+            unlink($pathname);
+        }
+
+        $route = Route::create('directory.browse.incoming');
+        $redirectUrl = $this->routeResolver->resolve($route);
+
+        return $response->withRedirect($redirectUrl);
     }
 }

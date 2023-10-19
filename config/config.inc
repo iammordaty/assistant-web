@@ -33,6 +33,7 @@ return static function (string $baseDir): array {
                 '/collection/Other',
             ],
             'incoming_dir' => '/collection/_new',
+            'ready_dir' => '/collection/_new/_zrobione',
             'metadata_dirs' => [
                 'music_similarity' => '/metadata/musly',
                 'music_classifier' => '/metadata/essentia',

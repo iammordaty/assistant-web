@@ -13,15 +13,19 @@ return static function (App $app): void {
 
         $group
             ->post('/task/remove-metadata', [ TaskController::class, 'removeMetadata' ])
-            ->setName('common.task.remove');
+            ->setName('common.task.remove-metadata');
 
         $group
             ->post('/task/clean-pathname', [ TaskController::class, 'cleanPathname' ])
             ->setName('common.task.clean');
 
         $group
-            ->post('/task/move', [ TaskController::class, 'move' ])
-            ->setName('common.task.move');
+            ->post('/task/rename', [ TaskController::class, 'rename' ])
+            ->setName('common.task.rename');
+
+        $group
+            ->post('/task/remove', [ TaskController::class, 'remove' ])
+            ->setName('common.task.remove');
 
         $group
             ->get('/log', [ LogController::class, 'index' ])

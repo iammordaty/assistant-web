@@ -1,0 +1,63 @@
+<div class="modal" id="modal-rename" tabindex="-1" aria-modal="true" role="dialog">
+    <form action="{{ url_for('common.task.rename') }}" method="POST">
+        <input type="hidden" name="elements">
+        <div class="modal-dialog modal-dialog-centered" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Zmień nazwę</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-4">
+                        <div class="form-selectgroup form-selectgroup-boxes d-flex flex-column">
+                            <label class="form-selectgroup-item flex-fill">
+                                <input type="radio" name="format" value="%artist% - %title%" class="form-selectgroup-input" checked="checked">
+                                <div class="form-selectgroup-label d-flex align-items-center p-3">
+                                    <div class="me-3">
+                                        <span class="form-selectgroup-check"></span>
+                                    </div>
+                                    <div>
+                                        <i>artysta</i> - <i>tytuł utworu</i>
+                                    </div>
+                                </div>
+                            </label>
+                            <label class="form-selectgroup-item flex-fill">
+                                <input type="radio" name="format" value="%artist%/%album%/%artist% - %track_number% - %title%" class="form-selectgroup-input">
+                                <div class="form-selectgroup-label d-flex align-items-center p-3">
+                                    <div class="me-3">
+                                        <span class="form-selectgroup-check"></span>
+                                    </div>
+                                    <div>
+                                        <i>artysta</i> / <i>album</i> / <i>artysta</i> - <i>numer utworu</i> - <i>tytuł utworu</i>
+                                    </div>
+                                </div>
+                            </label>
+                            {#
+                            <label class="form-selectgroup-item flex-fill">
+                                <input type="radio" name="format" value="custom" class="form-selectgroup-input">
+                                <div class="form-selectgroup-label d-flex align-items-center p-3">
+                                    <div class="me-3">
+                                        <span class="form-selectgroup-check"></span>
+                                    </div>
+                                    <input type="text" name="custom" class="form-control rounded">
+                                </div>
+                            </label>
+                            #}
+                        </div>
+                    </div>
+
+                    <div class="mb-3 p-3 pt-0 pb-0">
+                        <label class="form-check">
+                            <input class="form-check-input" type="checkbox" name="mark_as_ready" value="1">
+                            <span class="form-check-label">Oznacz jako gotowy (przenieś do katalogu <i>_zrobione</i>)</span>
+                        </label>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn me-auto" data-bs-dismiss="modal">Anuluj</button>
+                    <button type="submit" class="btn btn-primary">Zmień nazwę</button>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
