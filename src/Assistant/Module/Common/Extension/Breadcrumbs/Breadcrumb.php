@@ -7,7 +7,7 @@ use Closure;
 
 final readonly class Breadcrumb
 {
-    public Route $route;
+    public ?Route $route;
 
     public function __construct(
         Closure|Route $routeOrRouteGenerator,
