@@ -134,8 +134,8 @@ final class TrackMetadataSuggestionsBuilder
     private function getTitle(string $name, string $mixName, ?array $remixers): array
     {
             $name = str_replace(
-                [ ' an ', ' at ', ' of ', ' in ', ' the ' ],
-                [ ' An ', ' At ', ' Of ', ' In ', ' The ' ],
+                [ ' a ', ' an ', ' at ', ' of ', ' in ', ' the ' ],
+                [ ' A ', ' An ', ' At ', ' Of ', ' In ', ' The ' ],
                 $name
             );
 
@@ -168,8 +168,8 @@ final class TrackMetadataSuggestionsBuilder
     private function getAlbum(string $releaseName, ?array $remixers): array
     {
         $releaseName = str_replace(
-            [ ' an ', ' at ', ' of ', ' in ', ' the ' ],
-            [ ' An ', ' At ', ' Of ', ' In ', ' The ' ],
+            [ ' a ', ' an ', ' at ', ' of ', ' in ', ' the ' ],
+            [ ' A ', ' An ', ' At ', ' Of ', ' In ', ' The ' ],
             $releaseName
         );
 
