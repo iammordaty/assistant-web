@@ -33,7 +33,7 @@ set_error_handler(function (int $type, string $msg, string $file, int $line) {
 $console = new Application();
 $console->addCommands((require_once $baseDir . '/config/tasks.inc')($container));
 
-unset($baseDir, $container);
+unset($baseDir, $config, $container);
 
 /** @noinspection PhpUnhandledExceptionInspection */
 $console->run();
