@@ -43,6 +43,8 @@ final class BeatportSearchTracks
             $response['tracks']
         );
 
-        return $beatportTracks;
+        $beatportTracks = array_filter($beatportTracks, fn (?BeatportTrack $track) => $track !== null);
+
+        return [ ...$beatportTracks ];
     }
 }
