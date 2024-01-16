@@ -11,6 +11,7 @@ use Assistant\Module\Track\Extension\Similarity\SimilarityBuilder;
 use Assistant\Module\Track\Extension\Similarity\SimilarityParametersForm;
 use Assistant\Module\Track\Extension\TrackService;
 use Assistant\Module\Track\Model\Track;
+use Fig\Http\Message\StatusCodeInterface;
 use Psr\Http\Message\ResponseInterface;
 use Slim\Http\Response;
 use Slim\Http\ServerRequest;
@@ -70,6 +71,25 @@ final class TrackController
             'similarTracksList' => $similarTracks,
             'similarTracksSoftLimit' => self::SIMILAR_TRACKS_SOFT_LIMIT,
         ]);
+    }
+
+    public function favorite(ServerRequest $request, Response $response): ResponseInterface
+    {
+        $guid = $request->getAttribute('guid');
+        $track = $this->trackService->getByGuid($guid);
+
+        if (!$track) {
+            return $response->withStatus(StatusCodeInterface::STATUS_NOT_FOUND);
+        }
+
+        $track = $track->withIsFavorite(!$track->getIsFavorite());
+        $result = $this->trackService->save($track);
+
+        return $response->withStatus(
+            $result
+                ? StatusCodeInterface::STATUS_NO_CONTENT
+                : StatusCodeInterface::STATUS_INTERNAL_SERVER_ERROR
+        );
     }
 
     /** Zwraca klucze podobne do klucza podanego utworu */

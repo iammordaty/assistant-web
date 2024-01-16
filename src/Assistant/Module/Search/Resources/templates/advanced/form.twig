@@ -69,6 +69,13 @@
                     placeholder="Wprowadź nazwę wykonawcy lub tytuł utworu"
                 >
             </div>
+
+            <div class="col-sm-12 col-12 mb-3">
+                <label class="form-check">
+                    <input class="form-check-input" type="checkbox" name="is_favorite" value="true" {% if form.is_favorite|default %} checked="checked" {% endif %}>
+                    <span class="form-check-label">Polubiony</span>
+                </label>
+            </div>
         </div>
     </div>
     <div class="card-footer text-end">

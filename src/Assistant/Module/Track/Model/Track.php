@@ -37,6 +37,7 @@ final class Track implements CollectionItemInterface
     private ?string $initialKey;
     private int $length;
     private array $tags;
+    private bool $isFavorite;
     private string $metadataMd5;
     private string $parent;
     private string $pathname;
@@ -59,6 +60,7 @@ final class Track implements CollectionItemInterface
         ?string $initialKey,
         int $length,
         array $tags,
+        bool $isFavorite,
         string $metadataMd5,  // @idea: być może to powinno być wyliczane w modelu
         string $parent,
         string $pathname,
@@ -80,6 +82,7 @@ final class Track implements CollectionItemInterface
         $this->initialKey = $initialKey;
         $this->length = $length;
         $this->tags = $tags;
+        $this->isFavorite = $isFavorite;
         $this->metadataMd5 = $metadataMd5;
         $this->parent = $parent;
         $this->pathname = $pathname;
@@ -104,6 +107,7 @@ final class Track implements CollectionItemInterface
             $dto->getInitialKey(),
             $dto->getLength(),
             $dto->getTags()->getArrayCopy(),
+            $dto->getIsFavorite(),
             $dto->getMetadataMd5(),
             $dto->getParent(),
             $dto->getPathname(),
@@ -247,6 +251,19 @@ final class Track implements CollectionItemInterface
     public function getTags(): array
     {
         return $this->tags;
+    }
+
+    public function getIsFavorite(): bool
+    {
+        return $this->isFavorite;
+    }
+
+    public function withIsFavorite(bool $isFavorite): self
+    {
+        $clone = clone $this;
+        $clone->isFavorite = $isFavorite;
+
+        return $clone;
     }
 
     public function getMetadataMd5(): string
