@@ -1,0 +1,152 @@
+{#
+    - [x] Lista tagów niech się przewija w poziomie
+    - Żeby wizualnie odróżnić utwory mające linkowanie i komentarze użyć text-muted na tych, które nie mają (albo użyć ikon typu filled)
+    - Dodać skróty klawiaturowe, np. e - edytuj utwór, t - edytuj tagi, c - komentarze, itd
+    - Niech będzie możliwe dodawanie powiązań do wszystkiego - labeli, tagów, artystów oraz utworów.
+    - Pomysł: dodać możliwośc przypisywania aliasów do utworu
+    - Zastanowić się jak zapisywać oba powyższe punkty, żeby dało się sensowanie po tym szukać.
+        - Wspólne pole w mongo?
+        - Elasticsearch albo jakaś alternatywa?
+    - Chwilowo do edycji podlinkowana jest ta sama strona co dla Incoming, ale to trzeba rozdzielić, bo
+        - Nie ma sensu ładowania sugestii poprzez beatport (trwa długo)
+        - Nie ma sensu wyświetlania checkboxów na usunięcie metadanych czy obliczanie tonacji i bpm
+        - Prawdopodobnie potrzebne będą inne (nowe) pola, których w Incoming być nie powinno (np. guid utworu, nazwa pliku)
+        - Po zmianie jakichkolwiek danych w utworze w kolekcji, powinny zostać one przeindeksowane, a w Incoming - nie
+
+        Połączenie wszystkiego w jeden kontroler i jeden szablon sprawi, że będą one pełne warunków na obecność pliku w kolekcji.
+#}
+
+{# @var track \Assistant\Module\Track\Model\Track #}
+
+<div class="row pb-3 pt-2">
+    <div class="col-auto btn-list">
+        <div
+            class="btn ast-btn-switch-icon"
+            data-action-url="{{ url_for('track.track.favorite', { guid: track.guid }) }}"
+            data-action="track:toggle-favorite"
+            data-bs-toggle="tooltip"
+            title="Polub utwór"
+        >
+            <div class="switch-icon switch-icon-fade {% if track.isFavorite %}active{% endif %}">
+                <span class="switch-icon-a text-secondary">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-heart" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                        <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+                        <path d="M19.5 12.572l-7.5 7.428l-7.5 -7.428a5 5 0 1 1 7.5 -6.566a5 5 0 1 1 7.5 6.572"></path>
+                    </svg>
+                </span>
+                <span class="switch-icon-b text-google">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-heart-filled" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                        <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+                        <path d="M6.979 3.074a6 6 0 0 1 4.988 1.425l.037 .033l.034 -.03a6 6 0 0 1 4.733 -1.44l.246 .036a6 6 0 0 1 3.364 10.008l-.18 .185l-.048 .041l-7.45 7.379a1 1 0 0 1 -1.313 .082l-.094 -.082l-7.493 -7.422a6 6 0 0 1 3.176 -10.215z" stroke-width="0" fill="currentColor"></path>
+                    </svg>
+                </span>
+            </div>
+        </div>
+
+        <button class="btn btn-icon text-muted" title="Komentarze" data-bs-toggle="tooltip">
+            <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-message" width="24" height="24" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+                <path d="M8 9h8"></path>
+                <path d="M8 13h6"></path>
+                <path d="M18 4a3 3 0 0 1 3 3v8a3 3 0 0 1 -3 3h-5l-5 3v-3h-2a3 3 0 0 1 -3 -3v-8a3 3 0 0 1 3 -3h12z"></path>
+            </svg>
+        </button>
+
+        <button class="btn btn-icon text-muted" title="Zobacz powiązania" data-bs-toggle="tooltip">
+            <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-link" width="24" height="24" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+                <path d="M9 15l6 -6"></path>
+                <path d="M11 6l.463 -.536a5 5 0 0 1 7.071 7.072l-.534 .464"></path>
+                <path d="M13 18l-.397 .534a5.068 5.068 0 0 1 -7.127 0a4.972 4.972 0 0 1 0 -7.071l.524 -.463"></path>
+            </svg>
+        </button>
+
+        <button class="btn btn-icon text-muted" title="Porównaj z innym utworem" data-bs-toggle="tooltip">
+            <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-music-question" width="24" height="24" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+                <path d="M3 17a3 3 0 1 0 6 0a3 3 0 0 0 -6 0"></path>
+                <path d="M9 17v-13h10v7"></path>
+                <path d="M9 8h10"></path>
+                <path d="M19 22v.01"></path>
+                <path d="M19 19a2.003 2.003 0 0 0 .914 -3.782a1.98 1.98 0 0 0 -2.414 .483"></path>
+            </svg>
+        </button>
+
+        <button class="btn btn-icon text-muted" data-bs-toggle="dropdown">
+            <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-dots-vertical" width="24" height="24" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+                <path d="M12 12m-1 0a1 1 0 1 0 2 0a1 1 0 1 0 -2 0"></path>
+                <path d="M12 19m-1 0a1 1 0 1 0 2 0a1 1 0 1 0 -2 0"></path>
+                <path d="M12 5m-1 0a1 1 0 1 0 2 0a1 1 0 1 0 -2 0"></path>
+            </svg>
+        </button>
+        <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
+            <a class="dropdown-item py-2" href="{{ url_for('track.edit.edit', { pathname: track.pathname }) }}">Edytuj dane utworu</a>
+            <a class="dropdown-item py-2" href="#">Edytuj tagi utworu</a>
+            <div class="dropdown-divider m-2"></div>
+            <a class="dropdown-item py-2 text-danger" href="#">Usuń utwór z kolekcji</a>
+        </div>
+    </div>
+
+    <div class="col btn-list text-nowrap pe-2">
+        <div class="ast-track-tag-list overflow-auto">
+            <a href="#" class="btn">
+                <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-hash" width="24" height="24" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"></path><path d="M5 9l14 0"></path><path d="M5 15l14 0"></path><path d="M11 4l-4 16"></path><path d="M17 4l-4 16"></path></svg>
+                radio
+            </a>
+
+            <a href="#" class="btn">
+                <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-hash" width="24" height="24" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"></path><path d="M5 9l14 0"></path><path d="M5 15l14 0"></path><path d="M11 4l-4 16"></path><path d="M17 4l-4 16"></path></svg>
+                bright
+            </a>
+
+            <a href="#" class="btn">
+                <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-hash" width="24" height="24" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"></path><path d="M5 9l14 0"></path><path d="M5 15l14 0"></path><path d="M11 4l-4 16"></path><path d="M17 4l-4 16"></path></svg>
+                inspirational
+            </a>
+
+            <a href="#" class="btn">
+                <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-hash" width="24" height="24" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"></path><path d="M5 9l14 0"></path><path d="M5 15l14 0"></path><path d="M11 4l-4 16"></path><path d="M17 4l-4 16"></path></svg>
+                powerful
+            </a>
+
+            <a href="#" class="btn">
+                <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-hash" width="24" height="24" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"></path><path d="M5 9l14 0"></path><path d="M5 15l14 0"></path><path d="M11 4l-4 16"></path><path d="M17 4l-4 16"></path></svg>
+                uplifting
+            </a>
+
+            <!-- -->
+
+            <a href="#" class="btn">
+                <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-hash" width="24" height="24" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"></path><path d="M5 9l14 0"></path><path d="M5 15l14 0"></path><path d="M11 4l-4 16"></path><path d="M17 4l-4 16"></path></svg>
+                radio
+            </a>
+
+            <a href="#" class="btn">
+                <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-hash" width="24" height="24" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"></path><path d="M5 9l14 0"></path><path d="M5 15l14 0"></path><path d="M11 4l-4 16"></path><path d="M17 4l-4 16"></path></svg>
+                bright
+            </a>
+
+            <a href="#" class="btn">
+                <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-hash" width="24" height="24" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"></path><path d="M5 9l14 0"></path><path d="M5 15l14 0"></path><path d="M11 4l-4 16"></path><path d="M17 4l-4 16"></path></svg>
+                inspirational
+            </a>
+
+            <a href="#" class="btn">
+                <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-hash" width="24" height="24" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"></path><path d="M5 9l14 0"></path><path d="M5 15l14 0"></path><path d="M11 4l-4 16"></path><path d="M17 4l-4 16"></path></svg>
+                powerful
+            </a>
+
+            <a href="#" class="btn">
+                <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-hash" width="24" height="24" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"></path><path d="M5 9l14 0"></path><path d="M5 15l14 0"></path><path d="M11 4l-4 16"></path><path d="M17 4l-4 16"></path></svg>
+                uplifting
+            </a>
+
+
+            <a href="#" class="btn">
+                <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-hash" width="24" height="24" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"></path><path d="M5 9l14 0"></path><path d="M5 15l14 0"></path><path d="M11 4l-4 16"></path><path d="M17 4l-4 16"></path></svg>
+                radio
+            </a>
+        </div>
+    </div>
+</div>

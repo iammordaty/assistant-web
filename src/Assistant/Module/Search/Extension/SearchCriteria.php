@@ -16,6 +16,7 @@ final class SearchCriteria
      * @param MinMaxInfo|int[]|null $years
      * @param string[]|null $initialKeys
      * @param MinMaxInfo|float[]|null $bpm
+     * @param true|null $isFavorite
      * @param MinMaxInfo|\DateTimeInterface[]|null $indexedDates
      * @param Regex|string|null $parent
      * @param Regex[]|string[]|null $pathname
@@ -30,6 +31,7 @@ final class SearchCriteria
         private MinMaxInfo|array|null $years = null,
         private ?array $initialKeys = null,
         private MinMaxInfo|array|null $bpm = null,
+        private true|null $isFavorite = null,
         private MinMaxInfo|array|null $indexedDates = null,
         private Regex|string|null $parent = null,
         private ?array $pathname = null,
@@ -84,6 +86,11 @@ final class SearchCriteria
     public function getBpm(): MinMaxInfo|array|null
     {
         return $this->bpm;
+    }
+
+    public function getIsFavorite(): true|null
+    {
+        return $this->isFavorite;
     }
 
     /** @return MinMaxInfo|\DateTimeInterface[]|null */

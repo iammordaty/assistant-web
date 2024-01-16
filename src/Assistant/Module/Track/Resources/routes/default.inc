@@ -19,6 +19,10 @@ return static function (App $app): void {
             ->setName('track.track.index');
 
         $group
+            ->post('/{guid}/favorite', [ TrackController::class, 'favorite' ])
+            ->setName('track.track.favorite');
+
+        $group
             ->get('/{pathname:.*}/contents', [ ContentsController::class, 'get' ])
             ->setName('track.contents.get');
 

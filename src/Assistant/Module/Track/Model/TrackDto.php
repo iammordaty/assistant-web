@@ -24,6 +24,7 @@ final class TrackDto
         private string $initialKey,
         private int $length,
         private BSONArray $tags,
+        private ?bool $isFavorite,
         private string $metadataMd5,
         private string $parent,
         private string $pathname,
@@ -49,6 +50,7 @@ final class TrackDto
             $document->initial_key,
             $document->length,
             $document->tags,
+            $document->is_favorite ?? false,
             $document->metadata_md5,
             $document->parent,
             $document->pathname,
@@ -81,6 +83,7 @@ final class TrackDto
             $track->getInitialKey(),
             $track->getLength(),
             new BSONArray($track->getTags()),
+            $track->getIsFavorite(),
             $track->getMetadataMd5(),
             $track->getParent(),
             $track->getPathname(),
@@ -108,6 +111,7 @@ final class TrackDto
             'initial_key' => $this->initialKey,
             'length' => $this->length,
             'tags' => $this->tags,
+            'is_favorite' => $this->isFavorite,
             'metadata_md5' => $this->metadataMd5,
             'parent' => $this->parent,
             'pathname' => $this->pathname,
@@ -179,6 +183,11 @@ final class TrackDto
     public function getLength(): int
     {
         return $this->length;
+    }
+
+    public function getIsFavorite(): bool
+    {
+        return $this->isFavorite;
     }
 
     public function getMetadataMd5(): string

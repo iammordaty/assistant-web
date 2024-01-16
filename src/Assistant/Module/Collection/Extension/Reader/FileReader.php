@@ -44,6 +44,7 @@ final class FileReader implements ReaderInterface
             initialKey: $metadata['initial_key'],
             length: $this->id3Adapter->getTrackLength(),
             tags: [],
+            isFavorite: false,
             metadataMd5: md5(json_encode($metadata)),
             parent: $this->slugify->slugifyPath($node->getPath()),
             pathname: $node->getPathname(),

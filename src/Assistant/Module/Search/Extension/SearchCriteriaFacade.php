@@ -15,6 +15,7 @@ final class SearchCriteriaFacade
         'guid' => '',
         'indexed_date' => '',
         'initial_key' => '',
+        'is_favorite' => null,
         'name' => '',
         'publisher' => '',
         'title' => '',
@@ -46,7 +47,7 @@ final class SearchCriteriaFacade
 
         $publishers = explode(',', trim($fields['publisher']));
         $publishers = self::unique($publishers);
-        $publishers = array_map(fn ($publisher) => Regex::startsWith($publisher), $publishers) ?: null;
+        $publishers = array_map(fn ($publisher) => Regex::containsWordPart($publisher), $publishers) ?: null;
 
         $years = YearMinMaxExpressionParser::parse($fields['year']);
 
@@ -68,6 +69,8 @@ final class SearchCriteriaFacade
             $bpm = array_map(fn ($value) => (float) $value, $bpm);
         }
 
+        $isFavorite = filter_var($fields['is_favorite'], FILTER_VALIDATE_BOOLEAN) ?: null;
+
         $indexedDates = DateTimeMinMaxExpressionParser::parse($fields['indexed_date']);
 
         if (!$indexedDates) {
@@ -88,6 +91,7 @@ final class SearchCriteriaFacade
             $years,
             $initialKeys,
             $bpm,
+            $isFavorite,
             $indexedDates,
             null,
             $pathname,

@@ -30,6 +30,7 @@ final class Query
      * @param MinMaxInfo|int[]|null $years
      * @param string[]|null $initialKeys
      * @param MinMaxInfo|float[]|null $bpm
+     * @param true|null $isFavorite
      * @param MinMaxInfo|\DateTimeInterface[]|null $indexedDates
      * @param string|null $parent
      * @param Regex[]|string[]|null $pathname
@@ -44,6 +45,7 @@ final class Query
         private MinMaxInfo|array|null $years,
         private ?array $initialKeys,
         private MinMaxInfo|array|null $bpm,
+        private true|null $isFavorite,
         private MinMaxInfo|array|null $indexedDates,
         private ?string $parent,
         private ?array $pathname,
@@ -62,6 +64,7 @@ final class Query
             $criteria->getYears(),
             $criteria->getInitialKeys(),
             $criteria->getBpm(),
+            $criteria->getIsFavorite(),
             $criteria->getIndexedDates(),
             $criteria->getParent(),
             $criteria->getPathname(),
@@ -165,6 +168,10 @@ final class Query
             }
 
             $criteria['bpm'] = $bpm;
+        }
+
+        if ($this->isFavorite) {
+            $criteria['is_favorite'] = $this->isFavorite;
         }
 
         if ($this->indexedDates) {

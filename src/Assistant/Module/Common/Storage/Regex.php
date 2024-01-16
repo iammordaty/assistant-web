@@ -38,6 +38,13 @@ final class Regex
         return $regex;
     }
 
+    public static function containsWordPart(string $pattern, ?array $flags = [ self::REGEX_CASE_INSENSITIVE ]): self
+    {
+        $regex = Regex::create('\b' . $pattern, $flags);
+
+        return $regex;
+    }
+
     public static function create(string $expression, array $flags = []): self
     {
         return new self($expression, implode('', $flags));

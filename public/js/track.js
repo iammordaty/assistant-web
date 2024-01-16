@@ -1,5 +1,7 @@
 /* global $ */
 
+import toggleFavorite from './modules/toggle-favorite.js';
+
 function formatSeconds(ss) {
 	var result = '',
 		s,
@@ -278,4 +280,8 @@ $(function () {
 
 		debounce(() => reloadSimilarTracks($form), isCheckbox ? 50 : 400);
 	});
+
+	// -- akcje
+
+	$('[data-action="track:toggle-favorite"]').on('click', e => toggleFavorite(e.currentTarget));
 });
