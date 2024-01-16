@@ -50,6 +50,10 @@ final class Genre extends AbstractProvider
         ['Trance', 'Hard Trance', 85],
         ['Trance', 'Progressive House', 60],
         ['Trance', 'Electronic', 50],
+
+        ['Psy-Trance', 'Hard Trance', 85],
+        ['Psy-Trance', 'Trance', 70],
+        ['Psy-Trance', 'Techno', 60],
     ];
 
     public function __construct()
