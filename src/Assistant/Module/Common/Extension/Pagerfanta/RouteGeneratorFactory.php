@@ -6,9 +6,9 @@ use Assistant\Module\Common\Extension\Route;
 use Assistant\Module\Common\Extension\RouteResolver;
 use Pagerfanta\RouteGenerator\RouteGeneratorFactoryInterface;
 
-final class RouteGeneratorFactory implements RouteGeneratorFactoryInterface
+final readonly class RouteGeneratorFactory implements RouteGeneratorFactoryInterface
 {
-    public function __construct(private readonly RouteResolver $routeResolver)
+    public function __construct(private RouteResolver $routeResolver)
     {
     }
 
