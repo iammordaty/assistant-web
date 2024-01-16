@@ -61,7 +61,7 @@
             [ ...tooltipTriggerList ].map(trigger => new bootstrap.Tooltip(trigger));
 
             const popoverTriggerList = document.querySelectorAll('[data-bs-toggle="popover"]');
-            [ ...popoverTriggerList ].map(popover => new bootstrap.Popover(popover));
+            [ ...popoverTriggerList ].map(trigger => new bootstrap.Popover(trigger));
 
             const tableSortableList = document.querySelectorAll('[data-sortable="true"]');
             [ ...tableSortableList ].map(table => {
