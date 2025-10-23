@@ -23,7 +23,7 @@ RUN apt-get update && \
 RUN pecl install inotify && \
     docker-php-ext-enable inotify
 
-RUN pecl install mongodb && \
+RUN pecl install mongodb-1.16.2 && \
     docker-php-ext-enable mongodb
 
 RUN pecl install xdebug && \
