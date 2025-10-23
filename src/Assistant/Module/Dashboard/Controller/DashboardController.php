@@ -34,11 +34,19 @@ final readonly class DashboardController
 
     public function index(ServerRequestInterface $request, ResponseInterface $response): ResponseInterface
     {
+        $trackCount = $this->searchService->count(new SearchCriteria());
+
+        if ($trackCount === 0) {
+            return $this->view->render($response, '@dashboard/welcome.twig', [
+                'menu' => 'dashboard',
+            ]);
+        }
+
         return $this->view->render($response, '@dashboard/index.twig', [
             'menu' => 'dashboard',
             'trackCountByGenre' => $this->statsRepository->getTrackCountByGenre(self::MAX_GENRES),
             'trackCountByArtist' => $this->statsRepository->getTrackCountByArtist(self::MAX_ARTISTS),
-            'trackCount' => $this->searchService->count(new SearchCriteria()),
+            'trackCount' => $trackCount,
             'incomingTracks' => $this->getIncomingTracks(),
             'randomTracks' => $this->trackService->getRandom(self::MAX_RANDOM_TRACKS),
             'recentlyAddedTracks' => $this->trackService->getRecent(limit: self::MAX_RECENT_TRACKS),
