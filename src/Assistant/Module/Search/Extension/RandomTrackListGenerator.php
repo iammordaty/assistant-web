@@ -60,6 +60,10 @@ final class RandomTrackListGenerator
     {
         $oldestDate = $this->getOldestIndexedDate();
 
+        if (!$oldestDate) {
+            return [];
+        }
+
         $this->debugInfo['from'] = $oldestDate->format('d.m.Y');
 
         $parts = random_int(4, 6);
@@ -172,7 +176,7 @@ final class RandomTrackListGenerator
             [ 'indexed_date' => Storage::SORT_ASC ],
         );
 
-        $oldestDate = $track->getIndexedDate();
+        $oldestDate = $track?->getIndexedDate();
 
         return $oldestDate;
     }
