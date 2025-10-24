@@ -68,7 +68,7 @@ final class RemoveMetadataTask extends AbstractTask
 
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
-        $this->logger->info('Task executed', self::getInputParams($input));
+        $this->logger->debug('Task executed', self::getInputParams($input));
 
         $pathname = $input->getArgument('pathname');
         $track = $this->trackService->createFromFile($pathname);

@@ -32,8 +32,8 @@ use Assistant\Module\Track\Extension\TrackLocationArbiter;
 use Assistant\Module\Track\Extension\TrackService;
 use Assistant\Module\Track\Repository\TrackRepository;
 use Assistant\Module\Track\Repository\TrackStatsRepository;
+use gfaugere\Monolog\Formatter\ColoredLineFormatter;
 use MongoDB\Client as MongoDBClient;
-use Monolog\Formatter\LineFormatter;
 use Monolog\Handler\ErrorLogHandler;
 use Monolog\Handler\MongoDBHandler;
 use Monolog\Logger;
@@ -96,7 +96,7 @@ return static fn (string $baseDir, array $config): array => [
 
     Id3Adapter::class => create(),
 
-    Logger::class => function (Container $container) use ($baseDir): LoggerInterface {
+    Logger::class => function (Container $container): LoggerInterface {
         $storage = $container->get(Config::class)->get('storage');
 
         $handlers = [
@@ -105,11 +105,21 @@ return static fn (string $baseDir, array $config): array => [
                 $storage['database'],
                 LogRepository::COLLECTION_NAME
             ),
-            (new ErrorLogHandler())->setFormatter(new LineFormatter(
+            (new ErrorLogHandler(level: Logger::INFO))->setFormatter(new ColoredLineFormatter(
                 '[%datetime%] [%level_name%] %message% %context%',
-                'd.m.Y, H:i:s',
+                'H:i:s',
                 false,
-                true
+                true,
+                [
+                    Logger::DEBUG => "\033[0;37m",
+                    Logger::INFO => "\033[0;37m",
+                    Logger::NOTICE => "\033[0;33m",
+                    Logger::WARNING => "\033[1;33m",
+                    Logger::ERROR => "\033[0;31m",
+                    Logger::CRITICAL => "\033[1;31m",
+                    Logger::ALERT => "\033[4;41m",
+                    Logger::EMERGENCY => "\033[4;41m",
+                ]
             )),
         ];
 

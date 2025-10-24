@@ -8,11 +8,10 @@ use Assistant\Module\Common\Storage\Storage;
 use DateTime;
 use MongoDB\BSON\UTCDateTime;
 
-final class LogView
+final readonly class LogView
 {
-    public function __construct(
-        private readonly LogRepository $repository
-    ) {
+    public function __construct(private LogRepository $repository)
+    {
     }
 
     public function getLog(?DateTime $fromDate = null, ?int $page = null, ?int $limit = null): array

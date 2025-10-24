@@ -76,7 +76,7 @@ final class RenameTrackTask extends AbstractTask
 
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
-        $this->logger->info('Task executed', self::getInputParams($input));
+        $this->logger->debug('Task executed', self::getInputParams($input));
 
         $pathname = $input->getArgument('pathname');
         $track = $this->trackService->createFromFile($pathname);
@@ -163,7 +163,7 @@ final class RenameTrackTask extends AbstractTask
             'target' => $target->getPathname(),
         ]);
 
-        $this->logger->info('Task finished');
+        $this->logger->debug('Task finished');
 
         return self::SUCCESS;
     }

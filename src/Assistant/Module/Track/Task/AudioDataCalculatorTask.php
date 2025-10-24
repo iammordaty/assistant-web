@@ -83,7 +83,7 @@ final class AudioDataCalculatorTask extends AbstractTask
 
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
-        $this->logger->info('Task executed', self::getInputParams($input));
+        $this->logger->debug('Task executed', self::getInputParams($input));
 
         $skipCalculated = $input->getOption('skip-calculated');
         $writeData = $input->getOption('write-data');
@@ -125,10 +125,11 @@ final class AudioDataCalculatorTask extends AbstractTask
                 if ($skipCalculated === true && $hasInitialKey === true && $hasBpm === true) {
                     $this->stats['skipped']['already_calculated']++;
 
-                    $this->logger->debug(
-                        'Track is already calculated (bpm and initial_key exists), skipping',
-                        [ 'bpm' => $metadata['bpm'], 'initial_key' => $metadata['initial_key'] ]
-                    );
+                    $this->logger->debug('Track is already calculated (bpm and initial_key exists), skipping', [
+                        'pathname' => $track->getPathname(),
+                        'bpm' => $metadata['bpm'],
+                        'initial_key' => $metadata['initial_key'],
+                    ]);
 
                     unset($file, $track, $metadata);
 
@@ -141,9 +142,10 @@ final class AudioDataCalculatorTask extends AbstractTask
                 if ($this->isTrackHasSameData($metadata, $audioData) === true) {
                     $this->stats['skipped']['same_data']++;
 
-                    $this->logger->debug('Track has the same audio data, update is not necessary', [
-                        'initial_key' => $metadata['initial_key'],
+                    $this->logger->debug('Track has the same audio data, skipping', [
+                        'pathname' => $file->getPathname(),
                         'bpm' => $metadata['bpm'],
+                        'initial_key' => $metadata['initial_key'],
                         'classificationResultFilename' => $classificationResult->getFile()?->getBasename(),
                     ]);
 
@@ -159,7 +161,8 @@ final class AudioDataCalculatorTask extends AbstractTask
                     $this->stats['mismatch']['bpm']++;
                 }
 
-                $this->logger->debug(sprintf('%s track audio data', $writeData ? 'Updating' : 'Calculated'), [
+                $this->logger->info(sprintf('%s track audio data', $writeData ? 'Updating' : 'Calculated'), [
+                    'pathname' => $file->getPathname(),
                     'audioData' => $audioData,
                     'metadata' => [
                         'initial_key' => $hasInitialKey === true ? $metadata['initial_key'] : null,
@@ -174,13 +177,16 @@ final class AudioDataCalculatorTask extends AbstractTask
                     $this->id3->writeMetadata($metadata);
 
                     if ($this->id3->getWriterWarnings()) {
-                        $this->logger->warning('Track metadata saved with warnings', $this->id3->getWriterWarnings());
+                        $this->logger->warning('Track metadata saved with warnings', [
+                            'pathname' => $file->getPathname(),
+                            'warnings' => $this->id3->getWriterWarnings()
+                        ]);
                     }
 
                     $this->stats['updated']++;
                 }
 
-                $this->logger->debug('Track processing completed successfully');
+                $this->logger->debug('Track processing completed successfully', [ 'pathname' => $file->getPathname() ]);
             } catch (MusicClassifierProcessException $e) {
                 $this->stats['error']['classifier']++;
 
@@ -213,7 +219,7 @@ final class AudioDataCalculatorTask extends AbstractTask
             }
         }
 
-        $this->logger->info('Task finished', $this->stats);
+        $this->logger->debug('Task finished', $this->stats);
 
         return self::SUCCESS;
     }

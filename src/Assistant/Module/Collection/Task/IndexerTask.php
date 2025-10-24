@@ -154,9 +154,10 @@ final class IndexerTask extends AbstractTask
         );
 
         foreach ($nodesToIndex as $node) {
-            $this->logger->info('Processing node', [ 'pathname' => $node->getPathname() ]);
+            $this->logger->debug('Processing node', [ 'pathname' => $node->getPathname() ]);
 
             try {
+                /** @var Directory|Track $element */
                 $element = $this->reader->read($node);
                 $this->validator->validate($element);
 
@@ -166,40 +167,38 @@ final class IndexerTask extends AbstractTask
                     $this->fixedIndexedDate
                 );
 
-                /** @uses Track::withIndexedDate() */
-                /** @uses Directory::withIndexedDate() */
                 $element = $element->withIndexedDate($indexedDate);
 
                 $this->writer->save($element);
 
                 $this->stats['added'][$node->getType()]++;
 
-                $this->logger->info('Node processing completed successfully');
-            } catch (InvalidMetadataException) {
+                $this->logger->debug('Node processing completed successfully', [ 'pathname' => $node->getPathname() ]);
+            } catch (InvalidMetadataException $e) {
                 $this->stats['invalid_metadata']++;
 
-                $this->logger->warning('Track does not contains metadata');
+                $this->logger->warning($e->getMessage(), [
+                    'pathname' => $node->getPathname(),
+                    'errors' => $e->errors,
+                ]);
             } catch (DuplicatedElementException $e) {
                 $this->stats['duplicated']++;
 
-                $this->logger->debug($e->getMessage());
+                $this->logger->debug($e->getMessage(), [  'pathname' => $node->getPathname() ]);
             } catch (SimilarTracksCollectionException | GetId3Exception $e) {
                 $this->stats['error']++;
 
-                /** @uses Track::toDto() */
-                /** @uses Directory::toDto() */
-                $this->logger->error(
-                    $e->getMessage(),
-                    [ 'element' => isset($element) ? $element->toDto()->toStorage() : null ]
-                );
+                $this->logger->error($e->getMessage(), [
+                    'element' => isset($element) ? $element->toDto()->toStorage() : null,
+                    'pathname' => isset($element) ? $element->getPathname() : null,
+                ]);
             } catch (Throwable $e) {
                 $this->stats['error']++;
 
-                /** @uses Track::toDto() */
-                /** @uses Directory::toDto() */
                 $this->logger->critical($e->getMessage(), [
                     'element' => isset($element) ? $element->toDto()->toStorage() : null,
-                    'stacktrace' => debug_backtrace(),
+                    'pathname' => isset($element) ? $element->getPathname() : null,
+                    'stacktrace' => $e->getTrace(),
                 ]);
 
                 return self::FAILURE;
@@ -208,7 +207,20 @@ final class IndexerTask extends AbstractTask
             }
         }
 
-        $this->logger->info('Task finished', $this->stats);
+        if ($this->stats['error'] > 0 || $this->stats['invalid_metadata'] > 0) {
+            $level = $this->stats['error'] ? Logger::ERROR : Logger::WARNING;
+
+            $message = sprintf(
+                'Task finished with %s error(s) and %s warning(s).',
+                $this->stats['error'],
+                $this->stats['invalid_metadata']
+            );
+        } else {
+            $level = Logger::INFO;
+            $message = 'Task finished.';
+        }
+
+        $this->logger->log($level, $message, $this->stats);
 
         return self::SUCCESS;
     }

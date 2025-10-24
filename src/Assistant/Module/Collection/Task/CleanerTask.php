@@ -71,7 +71,7 @@ final class CleanerTask extends AbstractTask
     /** Rozpoczyna proces usuwania nieistniejących elementów z kolekcji */
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
-        $this->logger->info('Task executed', self::getInputParams($input));
+        $this->logger->debug('Task executed', self::getInputParams($input));
 
         $force = (bool) $input->getOption('force');
         $pathname = $input->getArgument('pathname');
@@ -82,7 +82,7 @@ final class CleanerTask extends AbstractTask
         $this->stats['removed']['file'] = $this->removeTracks($searchCriteria, $force);
         $this->stats['removed']['dir'] = $this->removeDirectories($searchCriteria, $force);
 
-        $this->logger->info('Task finished', $this->stats);
+        $this->logger->debug('Task finished', $this->stats);
 
         return self::SUCCESS;
     }
