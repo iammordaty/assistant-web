@@ -16,7 +16,7 @@
         <script src="/vendor/jquery.tablesorter.min.js"></script>
         <script src="/vendor/tabler.min.js"></script>
         <script src="/vendor/bootstrap3-typeahead.min.js" type="text/javascript"></script>
-        <script src="/js/autocompleter.js" type="text/javascript"></script>
+        <script src="/js/common.js" type="module"></script>
     </head>
     <body>
         <div class="page">
@@ -31,7 +31,13 @@
                                     <h2 class="page-title">
                                         {% block page_header %}{% endblock %}
                                     </h2>
+                                    {% if block('page_header_description') is not empty %}
+                                        <p class="text-muted fs-5 mb-0">
+                                            {% block page_header_description %}{% endblock %}
+                                        </p>
+                                    {% endif %}
                                 </div>
+
                                 {% if block('page_actions') is not empty %}
                                     <div class="col-auto ms-auto">
                                         <div class="btn-list">
@@ -52,24 +58,15 @@
                 </div>
             </div>
         </div>
-    </body>
-    <script>
-        ((() => {
-            'use strict';
 
-            const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]');
-            [ ...tooltipTriggerList ].map(trigger => new bootstrap.Tooltip(trigger));
+        <script>
+            'use strict'
 
-            const popoverTriggerList = document.querySelectorAll('[data-bs-toggle="popover"]');
-            [ ...popoverTriggerList ].map(trigger => new bootstrap.Popover(trigger));
-
-            const tableSortableList = document.querySelectorAll('[data-sortable="true"]');
-            [ ...tableSortableList ].map(table => {
-                const $table = $(table);
-
-                $table.tablesorter();
-                $table.find('th').addClass('cursor-pointer');
+            $(() => {
+                initTooltips(document)
+                initPopovers(document)
+                initSortableTables(document)
             });
-        })());
-    </script>
+        </script>
+    </body>
 </html>

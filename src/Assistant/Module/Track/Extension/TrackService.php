@@ -1,6 +1,5 @@
 <?php
 
-// Wrzucone na szybko, być może powinno leżeć bliżej modelu
 namespace Assistant\Module\Track\Extension;
 
 use Assistant\Module\Collection\Extension\Reader\FileReaderFacade;
@@ -43,7 +42,7 @@ final readonly class TrackService
 
     /**
      * @param Directory $directory
-     * @return Track[]|Traversable
+     * @return Track[]
      */
     public function getByDirectory(Directory $directory): array|Traversable
     {

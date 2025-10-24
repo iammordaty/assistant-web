@@ -8,111 +8,70 @@ use SplFileInfo;
 
 final class Track implements CollectionItemInterface
 {
-    private ?string $id;
-    private string $guid;
-    private string $artist;
-    private array $artists;
-    private string $title;
-    private string $name;
-    private ?string $album;
-    private ?int $trackNumber;
-    private ?int $year;
-    private string $genre;
-    private ?string $publisher;
-
-    /**
-     * @fixme nulle dla bpm i klucza dozwolone tylko tymczasowo, ze względu na to że niektóre kawałki ich nie mają
-     *        (np. Laidback Luke - 05 - Break Down The House [Acapella]). To powinno być ograne w jakoś inaczej,
-     *        ale bez zezwolenia na pustą wartość, np. poprzez wcześniejszą walidację w IndexerTask.
-     *
-     * @var float|null
-     */
-    private ?float $bpm;
-
-    /**
-     * @fixme jak wyżej
-     *
-     * @var string|null
-     */
-    private ?string $initialKey;
-    private int $length;
-    private array $tags;
-    private bool $isFavorite;
-    private string $metadataMd5;
-    private string $parent;
-    private string $pathname;
-    private DateTime $modifiedDate;
-    private ?DateTime $indexedDate;
+    public string $name;
+    private string|int|null $trackNumber;
+    private bool $trackNumberHasLeadingZero;
     private ?SplFileInfo $file = null;
 
+    /**
+     * @fixme: nulle dla bpm i klucza dozwolone tylko tymczasowo, ze względu na to że niektóre kawałki ich nie mają
+     *        c(np. Laidback Luke - 05 - Break Down The House [Acapella]). To powinno być ograne w jakoś inaczej,
+     *         ale bez zezwolenia na pustą wartość, np. poprzez wcześniejszą walidację w IndexerTask.
+     */
     public function __construct(
-        ?string $id,
-        string $guid,
-        string $artist,
-        array $artists,
-        string $title,
-        ?string $album,
-        ?int $trackNumber,
-        ?int $year,
-        string $genre,
-        ?string $publisher,
-        ?float $bpm,
-        ?string $initialKey,
-        int $length,
-        array $tags,
-        bool $isFavorite,
-        string $metadataMd5,  // @idea: być może to powinno być wyliczane w modelu
-        string $parent,
-        string $pathname,
-        DateTime $modifiedDate,
-        ?DateTime $indexedDate = null,
+        private ?string $id,
+        public string $guid,
+        private string $artist,
+        public array $artists,
+        public string $title,
+        private ?string $album,
+        string|int|null $trackNumber,
+        private ?int $year,
+        public string $genre,
+        private ?string $publisher,
+        public ?float $bpm,
+        public ?string $initialKey,
+        public int $length,
+        private array $tags,
+        private bool $isFavorite,
+        private string $metadataMd5,  // @idea: być może to powinno być wyliczane w modelu
+        private string $parent,
+        private string $pathname,
+        private DateTime $modifiedDate,
+        private ?DateTime $indexedDate = null,
     ) {
-        $this->id = $id;
-        $this->guid = $guid;
-        $this->artist = $artist;
-        $this->artists = $artists;
-        $this->title = $title;
         $this->name = $artist . ' - ' . $title;
-        $this->album = $album;
-        $this->trackNumber = $trackNumber;
-        $this->year = $year;
-        $this->genre = $genre;
-        $this->publisher = $publisher;
-        $this->bpm = $bpm;
-        $this->initialKey = $initialKey;
-        $this->length = $length;
-        $this->tags = $tags;
-        $this->isFavorite = $isFavorite;
-        $this->metadataMd5 = $metadataMd5;
-        $this->parent = $parent;
-        $this->pathname = $pathname;
-        $this->modifiedDate = $modifiedDate;
-        $this->indexedDate = $indexedDate;
+
+        $this->trackNumber = $trackNumber !== null ? (int) $trackNumber : null;
+        $this->trackNumberHasLeadingZero
+            = is_string($trackNumber)
+            && (int) $trackNumber < 10
+            && $trackNumber[0] === '0';
     }
 
     public static function fromDto(TrackDto $dto): self
     {
         $track = new self(
-            (string) $dto->getObjectId(),
-            $dto->getGuid(),
-            $dto->getArtist(),
-            $dto->getArtists()->getArrayCopy(),
-            $dto->getTitle(),
-            $dto->getAlbum(),
-            $dto->getTrackNumber(),
-            $dto->getYear(),
-            $dto->getGenre(),
-            $dto->getPublisher(),
-            $dto->getBpm(),
-            $dto->getInitialKey(),
-            $dto->getLength(),
-            $dto->getTags()->getArrayCopy(),
-            $dto->getIsFavorite(),
-            $dto->getMetadataMd5(),
-            $dto->getParent(),
-            $dto->getPathname(),
-            $dto->getModifiedDate()->toDateTime(),
-            $dto->getIndexedDate()->toDateTime(),
+            (string) $dto->objectId,
+            $dto->guid,
+            $dto->artist,
+            $dto->artists->getArrayCopy(),
+            $dto->title,
+            $dto->album,
+            $dto->trackNumber,
+            $dto->year,
+            $dto->genre,
+            $dto->publisher,
+            $dto->bpm,
+            $dto->initialKey,
+            $dto->length,
+            $dto->tags->getArrayCopy(),
+            $dto->isFavorite,
+            $dto->metadataMd5,
+            $dto->parent,
+            $dto->pathname,
+            $dto->modifiedDate->toDateTime(),
+            $dto->indexedDate->toDateTime(),
         );
 
         return $track;
@@ -186,6 +145,11 @@ final class Track implements CollectionItemInterface
         return $this->trackNumber;
     }
 
+    public function isTrackNumberHasLeadingZero(): bool
+    {
+        return $this->trackNumberHasLeadingZero;
+    }
+
     public function getYear(): ?int
     {
         return $this->year;
@@ -253,6 +217,14 @@ final class Track implements CollectionItemInterface
         return $this->tags;
     }
 
+    public function withTags(array $tags): self
+    {
+        $clone = clone $this;
+        $clone->tags = $tags;
+
+        return $clone;
+    }
+
     public function getIsFavorite(): bool
     {
         return $this->isFavorite;
@@ -279,6 +251,15 @@ final class Track implements CollectionItemInterface
     public function getPathname(): string
     {
         return $this->pathname;
+    }
+
+    public function withPathname(string $pathname): self
+    {
+        $clone = clone $this;
+        $clone->pathname = $pathname;
+        $clone->file = new SplFileInfo($pathname);
+
+        return $clone;
     }
 
     public function getModifiedDate(): DateTime
@@ -314,5 +295,14 @@ final class Track implements CollectionItemInterface
         }
 
         return $this->file;
+    }
+
+    public function withFile(SplFileInfo $file): self
+    {
+        $clone = clone $this;
+        $clone->file = $file;
+        $clone->pathname = $file->getPathname();
+
+        return $clone;
     }
 }

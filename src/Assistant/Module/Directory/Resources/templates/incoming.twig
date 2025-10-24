@@ -96,7 +96,7 @@
                             </table>
                         </div>
 
-                        <div data-role="incoming-tracks:elements:actions" class="card-footer align-items-center d-none ">
+                        <div data-role="incoming-tracks:elements:actions" class="card-footer align-items-center d-none">
                             <p class="m-0 text-muted" data-role="incoming-tracks:elements:selected-count"></p>
                             <div class="btn-list ms-auto">
                                 {% include '@directory/incoming/elements-actions.twig' with {} only %}
@@ -151,7 +151,7 @@
                                                 <span class="ellipsis ast-track-name d-block mb-1">
                                                     <a
                                                         class="font-weight-medium"
-                                                        href="{{ url_for('track.edit.edit', { pathname: track.pathname }) }}"
+                                                        href="{{ url_for('incoming-track.edit.edit', { pathname: track.pathname }) }}"
                                                     >
                                                         {{ track.name }}
                                                     </a>
@@ -215,7 +215,7 @@
                             </table>
                         </div>
 
-                        <div data-role="incoming-tracks:elements:actions" class="card-footer align-items-center d-none ">
+                        <div data-role="incoming-tracks:elements:actions" class="card-footer align-items-center d-none">
                             <p class="m-0 text-muted" data-role="incoming-tracks:elements:selected-count"></p>
                             <div class="btn-list ms-auto">
                                 {% include '@directory/incoming/elements-actions.twig' with {} only %}

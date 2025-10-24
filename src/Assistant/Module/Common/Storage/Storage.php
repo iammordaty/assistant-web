@@ -3,7 +3,6 @@
 namespace Assistant\Module\Common\Storage;
 
 use MongoDB\BSON\ObjectId;
-use MongoDB\BSON\UTCDateTime;
 use MongoDB\Collection;
 use MongoDB\Driver\Cursor;
 use MongoDB\Model\BSONDocument;
@@ -22,13 +21,7 @@ final class Storage
         $this->collection = $collection;
     }
 
-    /**
-     * Zwraca dokument na podstawie podanych kryteriów
-     *
-     * @param array $conditions
-     * @param array $options
-     * @return BSONDocument|null
-     */
+    /** Zwraca dokument na podstawie podanych kryteriów */
     public function findOneBy(array $conditions, array $options = []): ?BSONDocument
     {
         $document = $this->collection->findOne(
@@ -40,14 +33,8 @@ final class Storage
         return $document;
     }
 
-    /**
-     * Zwraca dokument na podstawie jego identyfikatora
-     *
-     * @param ObjectId|string $id
-     * @param array $options
-     * @return BSONDocument|null
-     */
-    public function findOneById($id, array $options = []): ?BSONDocument
+    /** Zwraca dokument na podstawie jego identyfikatora */
+    public function findOneById(ObjectId|string $id, array $options = []): ?BSONDocument
     {
         return $this->findOneBy(
             [ '_id' => $this->idToObjectId($id) ],
@@ -58,8 +45,6 @@ final class Storage
     /**
      * Zwraca dokumenty na podstawie podanych kryteriów
      *
-     * @param array $conditions
-     * @param array $options
      * @return BSONDocument[]|Cursor
      */
     public function findBy(array $conditions, array $options = []): array|Cursor
@@ -70,13 +55,7 @@ final class Storage
         );
     }
 
-    /**
-     * Zwraca dokumenty na podstawie listy identyfikatorów
-     *
-     * @param array $ids
-     * @param array $fields
-     * @return Cursor
-     */
+    /** Zwraca dokumenty na podstawie listy identyfikatorów */
     public function findById(array $ids, array $fields = []): Cursor
     {
         return $this->findBy(
@@ -85,12 +64,7 @@ final class Storage
         );
     }
 
-    /**
-     * Dodaje dokument do bazy danych
-     *
-     * @param array $data
-     * @return int
-     */
+    /** Dodaje dokument do bazy danych */
     public function insert(array $data): int
     {
         $filtered = $this->filter($data);
@@ -100,13 +74,7 @@ final class Storage
         return $result->getInsertedCount();
     }
 
-    /**
-     * Aktualizuje dokument na podstawie przekazanych kryteriów
-     *
-     * @param array $conditions
-     * @param array $data
-     * @return int
-     */
+    /** Aktualizuje dokument na podstawie przekazanych kryteriów */
     public function update(array $conditions, array $data): int
     {
         if (array_key_exists('_id', $data) === true) {
@@ -124,14 +92,8 @@ final class Storage
         return $result->getModifiedCount();
     }
 
-    /**
-     * Aktualizuje dokument na podstawie jego identyfikatora
-     *
-     * @param ObjectId|string $id
-     * @param array $data
-     * @return bool
-     */
-    public function updateById($id, array $data): bool
+    /** Aktualizuje dokument na podstawie jego identyfikatora */
+    public function updateById(ObjectId|string $id, array $data): bool
     {
         $result = $this->update(
             [ '_id' => $this->idToObjectId($id) ],
@@ -154,13 +116,8 @@ final class Storage
         return $result->getDeletedCount();
     }
 
-    /**
-     * Usuwa dokument o podanym identyfikatorze
-     *
-     * @param ObjectId|string $id
-     * @return bool
-     */
-    public function removeById($id): bool
+    /** Usuwa dokument o podanym identyfikatorze */
+    public function removeById(ObjectId|string $id): bool
     {
         $result = $this->removeBy(
             [ '_id' => $this->idToObjectId($id) ]
@@ -169,36 +126,19 @@ final class Storage
         return $result === 1;
     }
 
-    /**
-     * Zwraca informację o liczbie dokumentów w kolekcji na podstawie podanych kryteriów
-     *
-     * @param array $conditions
-     * @return int
-     */
+    /** Zwraca informację o liczbie dokumentów w kolekcji na podstawie podanych kryteriów */
     public function count(array $conditions = []): int
     {
         return $this->collection->countDocuments($conditions);
     }
 
-    /**
-     * Agreguje dane na podstawie podanych kryteriów
-     *
-     * @param array $pipeline
-     * @param array $options
-     * @return \Traversable
-     */
+    /** Agreguje dane na podstawie podanych kryteriów */
     public function aggregate(array $pipeline, array $options = []): \Traversable
     {
         return $this->collection->aggregate($pipeline, $options);
     }
 
-    /**
-     * Tworzy indeks
-     *
-     * @param array $key
-     * @param array $options
-     * @return string
-     */
+    /** Tworzy indeks */
     public function createIndex(array $key, array $options = []): string
     {
         return $this->collection->createIndex($key, $options);
@@ -221,23 +161,13 @@ final class Storage
         return $objectIds;
     }
 
-    /**
-     * Konwertuje łańcuch zawierający identyfikator Mongo do dokumentu ObjectId
-     *
-     * @param ObjectId|string $rawId
-     * @return ObjectId
-     */
-    private function idToObjectId($rawId): ObjectId
+    /** Konwertuje łańcuch zawierający identyfikator Mongo do dokumentu ObjectId */
+    private function idToObjectId(ObjectId|string $rawId): ObjectId
     {
         return $rawId instanceof ObjectId ? $rawId : new ObjectId($rawId);
     }
 
-    /**
-     * Filtruje dane przed ich zapisem do bazy danych
-     *
-     * @param array $data
-     * @return array
-     */
+    /** Filtruje dane przed ich zapisem do bazy danych */
     private function filter(array $data): array
     {
         return array_filter($data, fn($value) => $value !== null);

@@ -4,9 +4,7 @@ namespace Assistant\Module\Collection\Extension\Reader\MetadataParser;
 
 use Assistant\Module\Collection\Extension\Reader\MetadataParser\MetadataField\MetadataFieldInterface;
 
-/**
- * Fasada dla parserów operujący na metadanych
- */
+/** Fasada dla parserów operujących na metadanych */
 final class MetadataParser
 {
     /** Lista nazw obsługiwanych parserów pól metadanych */
@@ -63,7 +61,7 @@ final class MetadataParser
     {
         foreach ($this->parserNames as $parserName) {
             $className = sprintf('%s\MetadataField\%s', __NAMESPACE__, ucfirst($parserName));
-            $parserParameters = $this->parameters[ $parserName ] ?? null;
+            $parserParameters = $this->parameters[$parserName] ?? null;
 
             $this->parsers[$parserName] = new $className($parserParameters);
 

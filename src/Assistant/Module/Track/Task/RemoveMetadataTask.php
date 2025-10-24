@@ -49,10 +49,15 @@ final class RemoveMetadataTask extends AbstractTask
                 'pathname',
                 InputArgument::REQUIRED,
                 'Pathname to track',
-            )->addOption('all', 'a', InputOption::VALUE_NONE, 'Removes all metadata fields instead of unsupported');
+            )->addOption(
+                'keep-supported-fields',
+                'k',
+                InputOption::VALUE_NONE,
+                'Keeps supported metadata fields instead of removing them',
+            );
     }
 
-    protected function interact(InputInterface $input, OutputInterface $output)
+    protected function interact(InputInterface $input, OutputInterface $output): void
     {
         $pathname = $input->getArgument('pathname');
 

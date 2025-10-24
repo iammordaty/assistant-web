@@ -17,7 +17,7 @@
         {% include '@track/common/wave.twig' with { track: track } only %}
 
         <div class="col-12">
-            <form method="GET" action="{{ url_for('track.edit.edit', { pathname: pathname|url_encode }) }}" class="card" role="form">
+            <form method="GET" action="{{ url_for('incoming-track.edit.edit', { pathname: pathname|url_encode }) }}" class="card" role="form">
                 <div class="card-body">
                     <div class="row row-cards">
                         <div class="col-8">
@@ -101,7 +101,7 @@
         </div>
 
         <div class="col-12">
-            <form method="POST" action="{{ url_for('track.edit.save', { pathname: pathname|url_encode }) }}" class="card" role="form">
+            <form method="POST" action="{{ url_for('incoming-track.edit.save', { pathname: pathname|url_encode }) }}" class="card" role="form">
                 <div class="card-header card-header-light">
                     Edycja metadanych
                 </div>
@@ -142,7 +142,7 @@
         </div>
     </div>
 
-    <script src="/vendor/wavesurfer.min.js" type="text/javascript"></script>
+    <script src="https://unpkg.com/wavesurfer.js@7" type="text/javascript"></script>
     <script src="/js/track.js" type="module"></script>
     <script src="/js/track-edit.js" type="text/javascript"></script>
 {% endblock %}

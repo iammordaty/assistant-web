@@ -36,7 +36,11 @@ final readonly class TaskController
     public function removeMetadata(ServerRequest $request, Response $response): ResponseInterface
     {
         $pathname = $request->getParsedBodyParam('pathname');
-        $command = sprintf('php %s/bin/console.php track:remove-metadata "%s"', $this->baseDir, $pathname);
+        $command = sprintf(
+            'php %s/bin/console.php track:remove-metadata --keep-supported-fields "%s"',
+            $this->baseDir,
+            $pathname
+        );
 
         $backgroundProcess = new BackgroundProcess($command);
         $backgroundProcess->run();
@@ -83,6 +87,19 @@ final readonly class TaskController
         $redirectUrl = $this->routeResolver->resolve($route);
 
         return $response->withRedirect($redirectUrl);
+    }
+
+    public function reindexSimilarTracksCollection(ServerRequest $request, Response $response): ResponseInterface
+    {
+        $command = sprintf('php %s/bin/console.php collection:reindex-similar-tracks', $this->baseDir);
+
+        $backgroundProcess = new BackgroundProcess($command);
+        $backgroundProcess->run();
+
+        return $response->withJson([
+            'command' => $command,
+            'pid' => $backgroundProcess->getPid(),
+        ]);
     }
 
     public function remove(ServerRequest $request, Response $response): ResponseInterface

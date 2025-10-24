@@ -6,9 +6,9 @@ use Assistant\Module\Collection\Extension\Autocomplete\TrackAutocompleteService;
 use Slim\Http\Response;
 use Slim\Http\ServerRequest;
 
-final class AutocompleteController
+final readonly class AutocompleteController
 {
-    public function __construct(private readonly TrackAutocompleteService $trackAutocompleteService)
+    public function __construct(private TrackAutocompleteService $trackAutocompleteService)
     {
     }
 

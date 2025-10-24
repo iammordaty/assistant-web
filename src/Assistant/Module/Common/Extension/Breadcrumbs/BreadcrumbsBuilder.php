@@ -2,6 +2,10 @@
 
 namespace Assistant\Module\Common\Extension\Breadcrumbs;
 
+/**
+ * @idea: Może ta klasa powinna nazywać się np. DirectoryTreeBuilder albo PathTreeBuilder, bo
+ *        nie zawsze wykorzystywana jest w kontekście budowania breadcrumbs-ów sensu stricte
+ */
 final readonly class BreadcrumbsBuilder
 {
     private string $path;
@@ -14,16 +18,18 @@ final readonly class BreadcrumbsBuilder
 
     public function withPath(string $path): self
     {
-        $this->path = $path;
+        $clone = clone $this;
+        $clone->path = $path;
 
-        return $this;
+        return $clone;
     }
 
     public function withRouteGenerator(callable $routeGenerator): self
     {
-        $this->routeGenerator = $routeGenerator;
+        $clone = clone $this;
+        $clone->routeGenerator = $routeGenerator;
 
-        return $this;
+        return $clone;
     }
 
     /** @return Breadcrumb[] */

@@ -8,6 +8,7 @@ final class SimilarTracksResultList
 {
     private SplFileInfo $baseTrack;
 
+    /** @var SimilarTracksResult[] */
     private array $similarTracks;
 
     public function __construct(SplFileInfo $baseTrack, SimilarTracksResult ...$similarTracks)
@@ -30,15 +31,11 @@ final class SimilarTracksResultList
             $baseTrack = new SplFileInfo($baseTrack);
         }
 
-        $similarTracks = array_map(function ($similarTrack) use ($baseTrack): SimilarTracksResult {
-            $similarTracksResult = SimilarTracksResult::factory(
-                $baseTrack,
-                $similarTrack['track-origin'],
-                $similarTrack['track-distance']
-            );
-
-            return $similarTracksResult;
-        }, $similarTracks);
+        $similarTracks = array_map(fn ($similarTrack): SimilarTracksResult => SimilarTracksResult::factory(
+            $baseTrack,
+            $similarTrack['track-origin'],
+            $similarTrack['track-distance']
+        ), $similarTracks);
 
         return new self($baseTrack, ...$similarTracks);
     }

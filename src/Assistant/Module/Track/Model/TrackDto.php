@@ -7,29 +7,29 @@ use MongoDB\BSON\UTCDateTime;
 use MongoDB\Model\BSONArray;
 use stdClass;
 
-final class TrackDto
+final readonly class TrackDto
 {
     public function __construct(
-        private ?ObjectId $objectId,
-        private string $guid,
-        private string $artist,
-        private BSONArray $artists,
-        private string $title,
-        private ?string $album,
-        private ?int $trackNumber,
-        private ?int $year,
-        private string $genre,
-        private ?string $publisher,
-        private float $bpm,
-        private string $initialKey,
-        private int $length,
-        private BSONArray $tags,
-        private ?bool $isFavorite,
-        private string $metadataMd5,
-        private string $parent,
-        private string $pathname,
-        private UTCDateTime $modifiedDate,
-        private ?UTCDateTime $indexedDate,
+        public ?ObjectId $objectId,
+        public string $guid,
+        public string $artist,
+        public BSONArray $artists,
+        public string $title,
+        public ?string $album,
+        public ?int $trackNumber,
+        public ?int $year,
+        public string $genre,
+        public ?string $publisher,
+        public float $bpm,
+        public string $initialKey,
+        public int $length,
+        public BSONArray $tags,
+        public ?bool $isFavorite,
+        public string $metadataMd5,
+        public string $parent,
+        public string $pathname,
+        public UTCDateTime $modifiedDate,
+        public ?UTCDateTime $indexedDate,
     ) {
     }
 

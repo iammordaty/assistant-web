@@ -7,7 +7,7 @@
 {% endblock %}
 
 {% block content %}
-    <div class="row row-deck row-cards">
+    <div class="row row-deck row-cards" data-role="track:container" data-track-edit-url="{{ url_for('track.edit.edit', { pathname: track.pathname }) }}">
         {% include '@track/common/wave.twig' with { track: track } only %}
 
         <div class="col-12 mt-1">
@@ -84,6 +84,6 @@
         </div>
     </div>
 
-    <script src="/vendor/wavesurfer.min.js" type="text/javascript"></script>
+    <script src="https://unpkg.com/wavesurfer.js@7" type="text/javascript"></script>
     <script type="module" src="/js/track.js"></script>
 {% endblock %}

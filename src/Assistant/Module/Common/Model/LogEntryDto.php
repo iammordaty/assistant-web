@@ -2,20 +2,21 @@
 
 namespace Assistant\Module\Common\Model;
 
+use DateTime;
 use MongoDB\Model\BSONArray;
 use stdClass;
 
-final class LogEntryDto
+final readonly class LogEntryDto
 {
     public function __construct(
-        public readonly string $objectId,
-        public readonly string $message,
-        public readonly array $context,
-        public readonly string $levelName,
-        public readonly \DateTime $datetime,
-        public readonly array $extra,
-        public readonly ?string $taskName,
-        public readonly ?array $pathname,
+        public string $objectId,
+        public string $message,
+        public array $context,
+        public string $levelName,
+        public DateTime $datetime,
+        public array $extra,
+        public ?string $taskName,
+        public ?array $pathname,
     ) {
     }
 

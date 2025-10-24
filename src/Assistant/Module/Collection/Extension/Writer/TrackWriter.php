@@ -14,14 +14,14 @@ use Assistant\Module\Track\Extension\TrackService;
 use Assistant\Module\Track\Model\Track;
 
 /** Writer dla elementów będących utworami muzycznymi */
-final class TrackWriter implements WriterInterface
+final readonly class TrackWriter implements WriterInterface
 {
     public function __construct(
-        private readonly Config $config,
-        private readonly MusicClassifierService $musicClassifierService,
-        private readonly TrackService $trackService,
-        private readonly TrackSearchService $searchService,
-        private readonly SimilarTracksCollectionService $similarTracksCollectionService,
+        private Config $config,
+        private MusicClassifierService $musicClassifierService,
+        private TrackService $trackService,
+        private TrackSearchService $searchService,
+        private SimilarTracksCollectionService $similarTracksCollectionService,
     ) {
     }
 
@@ -42,8 +42,15 @@ final class TrackWriter implements WriterInterface
         } else {
             $collectionItem = $collectionItem
                 ->withId($indexedTrack->getId())
+                ->withIsFavorite($indexedTrack->getIsFavorite())
+                ->withTags($indexedTrack->getTags())
                 ->withIndexedDate($indexedTrack->getIndexedDate())
                 ->withModifiedDate($indexedTrack->getModifiedDate());
+
+            // Jeśli wyniku zmiany metadanych zmiana uległa nazwa pliku, to trzeba do dodać ponownie
+            if (!$this->isInSimilarTracksCollection($indexedTrack)) {
+                $this->addToSimilarTracksCollection($indexedTrack);
+            }
         }
 
         $this->trackService->save($collectionItem);
@@ -74,13 +81,18 @@ final class TrackWriter implements WriterInterface
         return $guid;
     }
 
+    private function isInSimilarTracksCollection(Track $collectionItem): bool
+    {
+        return $this->similarTracksCollectionService->hasTrack($collectionItem->getFile());
+    }
+
     private function addToSimilarTracksCollection(Track $collectionItem): void
     {
         $this->similarTracksCollectionService->add($collectionItem->getFile());
     }
 
     /**
-     * Przenosi roboczy plik z wynikiem klasyfikacji utworu do katalogu z metadanymi, wg poniższego schematu
+     * Przenosi plik z wynikiem klasyfikacji utworu do katalogu z metadanymi, wg poniższego schematu
      * /collection/a/b/c/track.mp3 -> /metadata/essentia/a/b/c/track.json
      **/
     private function moveClassificationResultFile(

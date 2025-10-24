@@ -2,10 +2,11 @@
 
 namespace Assistant\Module\Track\Controller\Track;
 
+use Assistant\Module\Common\Extension\Config;
 use Assistant\Module\Common\Extension\GetId3\Adapter as Id3Adapter;
 use Assistant\Module\Common\Extension\Route;
 use Assistant\Module\Common\Extension\RouteResolver;
-use Assistant\Module\Track\Extension\BeatportTrackMetadataSuggestionsService;
+use Assistant\Module\Track\Extension\TrackRenameService;
 use Assistant\Module\Track\Extension\TrackService;
 use Cocur\BackgroundProcess\BackgroundProcess;
 use Psr\Http\Message\ResponseInterface;
@@ -16,10 +17,11 @@ use Slim\Views\Twig;
 final class EditController
 {
     public function __construct(
+        private Config $config,
         private Id3Adapter $id3Adapter,
         private RouteResolver $routeResolver,
         private TrackService $trackService,
-        private BeatportTrackMetadataSuggestionsService $trackMetadataSuggestions,
+        private TrackRenameService $trackRenameService,
         private Twig $view,
     ) {
     }
@@ -27,40 +29,22 @@ final class EditController
     public function edit(ServerRequest $request, Response $response): ResponseInterface
     {
         $pathname = $request->getAttribute('pathname');
-        $track = $this->trackService->createFromFile($pathname);
+        $track = $this->trackService->getByPathname($pathname);
 
         if (!$track) {
             return $this->getNotFoundRedirect($response, $pathname);
         }
 
-        $query = $request->getQueryParam('query');
-
-        if (!$query) {
-            $query = pathinfo($track->getPathname(), PATHINFO_FILENAME);
-        }
-
-        $suggestions = $this->trackMetadataSuggestions->get($query);
-
-        if ($this->trackService->getLocationArbiter()->isInCollection($pathname)) {
-            $routeName = 'track.track.index';
-            $params = [ 'guid' => $track->getGuid() ];
-        } else {
-            $routeName = 'directory.browse.incoming';
-            $params = [ 'pathname' => $track->getFile()->getPath() ];
-        }
-
-        $route = Route::create($routeName)->withParams($params);
+        $route = Route::create('track.track.index')->withParams([ 'guid' => $track->getGuid() ]);
         $returnUrl = $this->routeResolver->resolve($route);
 
-        return $this->view->render($response, '@track/edit/edit.twig', [
-            'suggestions' => $suggestions,
+        return $this->view->render($response, '@track/track/edit/edit.twig', [
             'menu' => 'track',
-            'metadata' => [
-                'fields' => self::getEditableMetadataFields(),
-                'options' => self::getMetadataOptions(),
+            'track_data' => [
+                'fields' => self::getTrackEditableFields(),
+                'options' => self::getTrackOptions(),
             ],
             'pathname' => $pathname,
-            'query' => $query,
             'track' => $track,
             'return_url' => $returnUrl,
         ]);
@@ -69,7 +53,7 @@ final class EditController
     public function save(ServerRequest $request, Response $response): ResponseInterface
     {
         $pathname = $request->getAttribute('pathname');
-        $track = $this->trackService->createFromFile($pathname);
+        $track = $this->trackService->getByPathname($pathname);
 
         if (!$track) {
             return $this->getNotFoundRedirect($response, $pathname);
@@ -78,16 +62,9 @@ final class EditController
         // słabe, ogarnąć klasą typu request, podobnie jak w logach
         $postData = $request->getParsedBody();
 
-        // @todo, to powinno dać się ustawić po stronie Adaptera jako osobne flagi, bez konieczności
-        //        nadpisywania całej tablicy (dot. setId3WriterOptions)
-
-        $this->id3Adapter
-            ->setFile($track->getFile())
-            ->setId3WriterOptions([
-                'tag_encoding' => 'UTF-8',
-                'tagformats' => [ 'id3v2.3' ],
-                'remove_other_tags' => isset($postData['remove-other-tags']),
-            ]);
+        $this
+            ->id3Adapter
+            ->setFile($track->getFile());
 
         $metadata = [
             'artist' => $postData['artist'],
@@ -118,7 +95,14 @@ final class EditController
         }
 
         // @todo: try...catch i wyświetlenie ew. wyjątku na froncie
-        $this->id3Adapter->writeId3v2Metadata($metadata, isset($postData['remove-other-tags']));
+        try {
+            $this->id3Adapter->writeMetadata($metadata);
+        } catch (\Exception $e) {
+            var_dump($e->getMessage());
+            var_dump($this->id3Adapter->getWriterErrors());
+            var_dump($this->id3Adapter->getWriterWarnings());
+            exit;
+        }
 
         if (isset($postData['task:calculate-audio-data'])) {
             $command = sprintf(
@@ -129,33 +113,91 @@ final class EditController
             (new BackgroundProcess($command))->run();
         }
 
-        if ($this->trackService->getLocationArbiter()->isInCollection($pathname)) {
-            $routeName = 'track.track.index';
-            $params = [ 'guid' => $track->getGuid() ];
-        } else {
-            $routeName = 'track.edit.edit';
-            $params = [ 'pathname' => $track->getFile()->getPathname() ];
+        if ($postData['guid'] !== $track->getGuid()) {
+            $track = $track->withGuid($postData['guid']);
+
+            $this->trackService->save($track);
         }
 
-        $route = Route::create($routeName)->withParams($params);
+        $trackPathname = $track->getPathname();
+
+        if (
+            $postData['artist'] !== $track->getArtist()
+            || $postData['title'] !== $track->getTitle()
+            || $postData['album'] !== (string) $track->getAlbum()
+            || $postData['trackNumber'] !== (string) $track->getTrackNumber()
+        ) {
+            // Warunek do Arbitra
+            $isSingle = str_contains($track->getFile()->getPathname(), '/collection/Singles');
+
+            if ($isSingle) {
+                $format = '%artist%/%album%/%artist% - %track_number% - %title%';
+            } else {
+                $format = '%artist% - %title%';
+            }
+
+            $file = $this->trackRenameService->rename($track, $format, markAsReady: false);
+
+            $track = $track->withFile($file);
+
+            $this->trackService->save($track);
+
+            $trackPathname = $track->getPathname();
+
+            foreach ($this->trackRenameService->getLeftoverPaths() as $leftoverPath) {
+                $command = sprintf(
+                    'php %s/bin/console.php collection:clean "%s"',
+                    $this->config->get('base_dir'),
+                    $leftoverPath
+                );
+
+                shell_exec($command);
+            }
+
+            foreach ($this->trackRenameService->getCreatedPaths() as $createdPath) {
+                $command = sprintf(
+                    'php /data/bin/console.php collection:index -i pathname "%s"',
+                    $createdPath
+                );
+
+                shell_exec($command);
+            }
+        }
+
+        $command = sprintf(
+            'php /data/bin/console.php collection:index -i pathname "%s"',
+            $trackPathname
+        );
+
+        shell_exec($command);
+
+        // jeśli zmieniła się nazwa artysty lub tytuł utworu to zmienił się także guid
+        // dlatego pobieramy utwór raz jeszcze, na podstawie ścieżki aby móc przekierować na nowy guid
+        $track = $this->trackService->getByPathname($trackPathname);
+
+        $route = Route::create('track.track.index')->withParams([ 'guid' => $track->getGuid() ]);
         $redirectUrl = $this->routeResolver->resolve($route);
 
         return $response->withRedirect($redirectUrl);
     }
 
     /** @todo Przenieść do innej klasy */
-    private static function getEditableMetadataFields(): array
+    private static function getTrackEditableFields(): array
     {
+        // todo: dodać typ - array (dla pola artists i tags), string i date
+
         return [
-            [ 'field' => 'artist', 'title' => 'Wykonawca' ],
-            [ 'field' => 'title', 'title' => 'Tytuł utworu' ],
-            [ 'field' => 'album', 'title' => 'Album' ],
-            [ 'field' => 'trackNumber', 'title' => 'Nr ścieżki' ],
-            [ 'field' => 'publisher', 'title' => 'Wydawca' ],
-            [ 'field' => 'genre', 'title' => 'Gatunek' ],
-            [ 'field' => 'year', 'title' => 'Rok' ],
-            [ 'field' => 'initialKey', 'title' => 'Tonacja' ],
-            [ 'field' => 'bpm', 'title' => 'BPM' ],
+            [ 'field' => 'guid', 'title' => 'GUID', 'type' => 'string' ],
+            // [ 'field' => 'pathname', 'title' => 'Nazwa pliku', 'type' => 'string' ],
+            [ 'field' => 'artist', 'title' => 'Wykonawca', 'type' => 'string' ],
+            [ 'field' => 'title', 'title' => 'Tytuł utworu', 'type' => 'string' ],
+            [ 'field' => 'album', 'title' => 'Album', 'type' => 'string' ],
+            [ 'field' => 'trackNumber', 'title' => 'Nr ścieżki', 'type' => 'string' ],
+            [ 'field' => 'publisher', 'title' => 'Wydawca', 'type' => 'string' ],
+            [ 'field' => 'genre', 'title' => 'Gatunek', 'type' => 'string' ],
+            [ 'field' => 'year', 'title' => 'Rok', 'type' => 'string' ],
+            [ 'field' => 'initialKey', 'title' => 'Tonacja', 'type' => 'string' ],
+            [ 'field' => 'bpm', 'title' => 'BPM', 'type' => 'string' ],
         ];
     }
 
@@ -164,25 +206,17 @@ final class EditController
      *
      * @return string[][]
      */
-    private static function getMetadataOptions(): array
+    private static function getTrackOptions(): array
     {
         return [
-            [ 'option' => 'remove-other-tags', 'title' => 'Usuń pozostałe metadane zapisane w pliku' ],
+            // [ 'option' => 'remove-other-tags', 'title' => 'Usuń pozostałe metadane zapisane w pliku' ],
             [ 'option' => 'task:calculate-audio-data', 'title' => 'Oblicz tonację i BPM utworu' ],
         ];
     }
 
     private function getNotFoundRedirect(Response $response, string $pathname): ResponseInterface
     {
-        if ($this->trackService->getLocationArbiter()->isInCollection($pathname)) {
-            $routeName = 'search.simple.index';
-            $query = [ 'query' => str_replace('-', ' ', $pathname) ];
-        } else {
-            $routeName = 'directory.browse.incoming';
-            $query = [];
-        }
-
-        $route = Route::create($routeName)->withQuery($query);
+        $route = Route::create('search.simple.index')->withQuery([ 'query' => str_replace('-', ' ', $pathname) ]);
         $redirectUrl = $this->routeResolver->resolve($route);
 
         return $response->withRedirect($redirectUrl);

@@ -11,7 +11,6 @@ use Assistant\Module\Common\Extension\Config;
 use Assistant\Module\Common\Extension\Route;
 use Assistant\Module\Common\Extension\RouteResolver;
 use Assistant\Module\Common\Extension\SlugifyService;
-use Assistant\Module\Common\Extension\TargetPathService;
 use Assistant\Module\Directory\Model\Directory;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
@@ -19,7 +18,7 @@ use Slim\Http\Response;
 use Slim\Views\Twig;
 use SplFileInfo;
 
-final class IncomingTracksController
+final readonly class IncomingTracksController
 {
     public function __construct(
         private BreadcrumbsBuilder $breadcrumbsBuilder,
@@ -65,22 +64,17 @@ final class IncomingTracksController
         $tracks = [];
         $directories = [];
 
-        $targetPathService = TargetPathService::factory();
-
         foreach ($this->getNodes($pathname) as $node) {
             /** @var CollectionItemInterface $collectionItem */
             $collectionItem = $this->reader->read($node);
-            $targetPath = $targetPathService->getTargetPath($node);
 
             if ($node->isFile()) {
                 $tracks[] = [
                     'collectionItem' => $collectionItem,
-                    'targetPath' => $targetPath,
                 ];
             } elseif ($node->isDir()) {
                 $directories[] = [
                     'collectionItem' => $collectionItem,
-                    'targetPath' => $targetPath,
                 ];
             }
         }

@@ -15,7 +15,6 @@ final class LogEntry
         private readonly \DateTime $datetime,
         private readonly array $extra,
     ) {
-
         if (isset($this->context['pathname'])) {
             $short = sprintf(
                 "%s%s%s",

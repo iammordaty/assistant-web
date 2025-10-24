@@ -7,6 +7,8 @@ use SplFileInfo;
 final class IncomingTrack
 {
     private string $name;
+    private string|int|null $trackNumber;
+    private bool $trackNumberHasLeadingZero;
     private SplFileInfo $file;
 
     public function __construct(
@@ -15,7 +17,7 @@ final class IncomingTrack
         private ?array $artists,
         private ?string $title,
         private ?string $album,
-        private ?int $trackNumber,
+        $trackNumber,
         private ?int $year,
         private ?string $genre,
         private ?string $publisher,
@@ -26,9 +28,16 @@ final class IncomingTrack
         private string $pathname,
     ) {
         $this->file = new SplFileInfo($this->pathname);
+
         $this->name = $artist && $title
-            ? $artist . ' - ' . $title
+            ? sprintf('%s - %s', $artist, $title)
             : $this->file->getBasename(sprintf('.%s', $this->file->getExtension()));
+
+        $this->trackNumber = $trackNumber !== null ? (int) $trackNumber : null;
+        $this->trackNumberHasLeadingZero
+            = is_string($trackNumber)
+            && (int) $trackNumber < 10
+            && $trackNumber[0] === '0';
     }
 
     public function getGuid(): string
@@ -72,6 +81,11 @@ final class IncomingTrack
         return $this->trackNumber;
     }
 
+    public function isTrackNumberHasLeadingZero(): bool
+    {
+        return $this->trackNumberHasLeadingZero;
+    }
+
     public function getYear(): ?int
     {
         return $this->year;
@@ -111,6 +125,15 @@ final class IncomingTrack
     public function getPathname(): string
     {
         return $this->pathname;
+    }
+
+    public function withPathname(string $pathname): self
+    {
+        $clone = clone $this;
+        $clone->pathname = $pathname;
+        $clone->file = new SplFileInfo($pathname);
+
+        return $clone;
     }
 
     public function getFile(): SplFileInfo

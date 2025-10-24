@@ -133,11 +133,11 @@ final class TrackMetadataSuggestionsBuilder
 
     private function getTitle(string $name, string $mixName, ?array $remixers): array
     {
-            $name = str_replace(
-                [ ' a ', ' an ', ' at ', ' of ', ' in ', ' the ' ],
-                [ ' A ', ' An ', ' At ', ' Of ', ' In ', ' The ' ],
-                $name
-            );
+        $name = str_replace(
+            [ ' a ', ' an ', ' at ', ' of ', ' in ', ' the ' ],
+            [ ' A ', ' An ', ' At ', ' Of ', ' In ', ' The ' ],
+            $name
+        );
 
         $nameTitleCase = self::removeFeat(S::toTitleCase($name));
 
@@ -268,8 +268,9 @@ final class TrackMetadataSuggestionsBuilder
             'Funky / Groove / Jackin\' House' => 'House',
             'Leftfield House & Techno' => 'House',
             'Melodic House & Techno' => 'Progressive House',
+            'Melodic House' => 'Progressive House',
             'Minimal / Deep Tech' => 'Deep House',
-            'Nu Disco / Disco' => 'Indie Dance', // :/
+            'Nu Disco / Disco' => 'Indie Dance', // za duże uproszczenie, to powinien być osobny gatunek
             'Organic House / Downtempo' => 'House',
             'Progressive' => 'Progressive House',
             'Techno (Peak Time / Driving)' => 'Techno',

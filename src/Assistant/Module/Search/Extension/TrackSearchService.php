@@ -86,8 +86,8 @@ final class TrackSearchService
 
     private function search(SearchCriteria $criteria, array $sort, int $page): array
     {
-        $limit = TrackSearchService::MAX_TRACKS_PER_PAGE;
-        $skip = ($page - 1) * TrackSearchService::MAX_TRACKS_PER_PAGE;
+        $limit = self::MAX_TRACKS_PER_PAGE;
+        $skip = ($page - 1) * self::MAX_TRACKS_PER_PAGE;
 
         $tracks = $this->findBy($criteria, $sort, $limit, $skip);
         $count = $this->count($criteria);

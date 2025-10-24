@@ -34,7 +34,7 @@
         "gfaugere/monolog-colored-line": "^1.0",
         "guzzlehttp/guzzle": "^7.7",
         "iammordaty/key-tools": "^0.8.2",
-        "iammordaty/musly-php": "^0.5.2",
+        "iammordaty/musly-php": "^0.6.0",
         "james-heinrich/getid3": "^1.9",
         "kevinrob/guzzle-cache-middleware": "^4.1",
         "khill/php-duration": "^1.1",
@@ -49,6 +49,7 @@
         "slim/twig-view": "^3.3",
         "symfony/console": "^5.3",
         "symfony/finder": "^5.3",
+        "symfony/var-dumper": "^5.4",
         "twig/string-extra": "^3.6",
         "twig/twig": "^3.6",
         "vlucas/phpdotenv": "^5.5"

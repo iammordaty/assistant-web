@@ -1,0 +1,54 @@
+{% extends '@common/layout.twig' %}
+
+{% block title track.name %}
+
+{% block page_header %}
+    {% include '@track/common/header.twig' with { track: track } only %}
+{% endblock %}
+
+{% block content %}
+    <div class="row row-deck row-cards">
+        {% include '@track/common/wave.twig' with { track: track } only %}
+
+        <div class="col-12">
+            <form method="POST" action="{{ url_for('track.edit.save', { pathname: pathname|url_encode }) }}" class="card" role="form">
+                <div class="card-header card-header-light">
+                    Edycja danych utworu
+                </div>
+                <div class="card-body">
+                    <div class="row row-cards">
+                        <div class="col-8">
+                            {% for fieldInfo in track_data.fields %}
+                                <div class="row mb-2">
+                                    <label class="col-3 col-form-label">{{ fieldInfo.title }}</label>
+                                    <div class="col-7">
+                                        <input type="text" name="{{ fieldInfo.field }}" value="{{ attribute(track, fieldInfo.field) }}" class="form-control rounded" />
+                                    </div>
+                                </div>
+                            {% endfor %}
+
+                            {% for fieldInfo in track_data.options %}
+                                <div class="row {% if loop.first %}mt-3{% endif %}">
+                                    <div class="col offset-3">
+                                        <label class="form-check">
+                                            <input class="form-check-input" type="checkbox" name="{{ fieldInfo.option }}" value="true">
+                                            <span class="form-check-label">{{ fieldInfo.title }}</span>
+                                        </label>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer d-flex align-items-center">
+                    <a style="margin-left: 1rem" href="{{ return_url }}">Powrót</a>
+                    <button type="submit" name="submit" value="true" class="btn btn-primary ms-auto">Zapisz</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="/vendor/wavesurfer.min.js" type="text/javascript"></script>
+    <script src="/js/track.js" type="module"></script>
+    <script src="/js/track-edit.js" type="text/javascript"></script>
+{% endblock %}

@@ -72,6 +72,7 @@ return static function (string $baseDir): array {
                     'Pe & Dan',
                     'Pep & Rash',
                     'Pig & Dan',
+                    'Pitchy & Scratchy',
                     'Prok & Fitch',
                     'SHDW & Obscure Shape',
                     'Sophie and The Giants',
@@ -106,7 +107,7 @@ return static function (string $baseDir): array {
         BeatportApiClient::class => [
             'api_url' => $_ENV['BEATPORT_API_URL'],
             'client_id' => $_ENV['BEATPORT_API_CLIENT_ID'],
-            'client_secret' => $_ENV['BEATPORT_API_CLIENT_SECRET'],
+            'client_secret' => $_ENV['BEATPORT_API_CLIENT_SECRET'] ?? null,
             'username' => $_ENV['BEATPORT_API_USERNAME'],
             'password' => $_ENV['BEATPORT_API_PASSWORD'],
         ],

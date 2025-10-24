@@ -10,7 +10,7 @@ use SplFileInfo;
 
 final class SimilarTracksCollectionService
 {
-    private const COLLECTION_FILENAME = 'collection.musly';
+    private const COLLECTION_PATHNAME = 'collection.musly';
     private const SIMILAR_TRACKS_LIMIT = 200; // @idea Zastanowić się nad zwiększeniem lub uelastycznieniem limitu
     private const WITH_TRACK_DISTANCE = '-o long';
 
@@ -18,20 +18,28 @@ final class SimilarTracksCollectionService
 
     public function __construct(private Config $config)
     {
-        $pathname = $this->config->get('collection.metadata_dirs.music_similarity') . '/' . self::COLLECTION_FILENAME;
+        $pathname = $this->config->get('collection.metadata_dirs.music_similarity') . '/' . self::COLLECTION_PATHNAME;
+
+        $musly = new Musly();
 
         $collection = new Collection([
             'pathname' => $pathname,
             'jukeboxPathname' => Collection::USE_DEFAULT_JUKEBOX_PATHNAME,
         ]);
 
-        $this->musly = new Musly([ 'collection' => $collection ]);
+        if (!$collection->isInitialized()) {
+            $musly->initializeCollection($collection);
+        }
+
+        $musly->setCollection($collection);
+
+        $this->musly = $musly;
     }
 
-    public function add(SplFileInfo $track): bool
+    public function add(SplFileInfo $collectionItem): bool
     {
         try {
-            $this->musly->analyze($track->getPathname());
+            $this->musly->analyze($collectionItem->getPathname());
         } catch (RuntimeException $e) {
             $error = sprintf('An error occurred while adding track to collection: %s.', $e->getMessage());
 

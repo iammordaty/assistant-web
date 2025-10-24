@@ -6,9 +6,9 @@ use Assistant\Module\Collection\Extension\Finder;
 use Assistant\Module\Common\Extension\Config;
 use Assistant\Module\Common\Extension\GetId3\Adapter as Id3Adapter;
 use Assistant\Module\Common\Extension\GetId3\Exception\GetId3Exception;
+use Assistant\Module\Common\Extension\MusicClassifier\MusicClassifierProcessException;
 use Assistant\Module\Common\Extension\MusicClassifier\MusicClassifierResult;
 use Assistant\Module\Common\Extension\MusicClassifier\MusicClassifierService;
-use Assistant\Module\Common\Extension\MusicClassifier\MusicClassifierProcessException;
 use Assistant\Module\Common\Task\AbstractTask;
 use Assistant\Module\Track\Extension\TrackService;
 use KeyTools\KeyTools;
@@ -224,13 +224,7 @@ final class AudioDataCalculatorTask extends AbstractTask
         return self::SUCCESS;
     }
 
-    /**
-     * Określa, czy dane zawarte w metadanych pliku są takie same jak te obliczone przez music classifier service
-     *
-     * @param array|null $metadata
-     * @param array $audioData
-     * @return bool
-     */
+    /** Określa, czy dane zawarte w metadanych pliku są takie same jak te obliczone przez music classifier service */
     private function isTrackHasSameData(?array $metadata, array $audioData): bool
     {
         if (isset($metadata['bpm']) === false || isset($metadata['initial_key']) === false) {
@@ -243,11 +237,7 @@ final class AudioDataCalculatorTask extends AbstractTask
         return $hasSameBpm && $hasSameInitialKey;
     }
 
-    /**
-     * @param string $pathname
-     * @param bool $recursive
-     * @return SplFileInfo[]|Finder
-     */
+    /** @return SplFileInfo[]|Finder */
     private function getFiles(string $pathname, bool $recursive): array|Finder
     {
         return Finder::create([

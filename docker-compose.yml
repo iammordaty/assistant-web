@@ -57,7 +57,7 @@ services:
             - assistant
         hostname: assistant-music-classifier
         ports:
-            - 22
+            - "22"
         volumes:
             - ${ASSISTANT_COLLECTION_VOLUME}:/collection
             - ${ASSISTANT_METADATA_VOLUME}:/metadata
@@ -71,12 +71,11 @@ services:
             - assistant
         hostname: assistant-music-similarity
         ports:
-            - 22
+            - "22"
         volumes:
             - ${ASSISTANT_COLLECTION_VOLUME}:/collection
             - ${ASSISTANT_METADATA_VOLUME}:/metadata
 
 networks:
     assistant:
-        name: assistant-network
-
+        name: "assistant-network"

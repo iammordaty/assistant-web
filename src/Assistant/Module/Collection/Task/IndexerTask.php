@@ -28,9 +28,7 @@ use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Question\Question;
 use Throwable;
 
-/**
- * Task indeksujący utwory oraz katalogi znajdujące się w kolekcji
- */
+/** Task indeksujący utwory oraz katalogi znajdujące się w kolekcji */
 final class IndexerTask extends AbstractTask
 {
     protected static $defaultName = 'collection:index';
@@ -100,8 +98,10 @@ final class IndexerTask extends AbstractTask
             );
     }
 
-    protected function initialize(InputInterface $input, OutputInterface $output)
+    protected function initialize(InputInterface $input, OutputInterface $output): void
     {
+        parent::initialize($input, $output);
+
         $indexingDateStrategy = IndexingDateStrategy::tryFrom($input->getOption('indexing-date-strategy'));
 
         if (!$indexingDateStrategy) {
@@ -121,7 +121,7 @@ final class IndexerTask extends AbstractTask
         $this->indexedDateStrategy = $indexingDateStrategy;
     }
 
-    protected function interact(InputInterface $input, OutputInterface $output)
+    protected function interact(InputInterface $input, OutputInterface $output): void
     {
         if ($this->indexedDateStrategy === IndexingDateStrategy::FIXED_DATE) {
             $answer = $this

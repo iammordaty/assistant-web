@@ -20,9 +20,9 @@ final readonly class BeatportTrack
         public ?string $subGenre,
         /** @var BeatportChart[]|null */
         public ?array $charts,
-        public int $length,
-        public int $bpm,
-        public string $key,
+        public ?int $length,
+        public ?int $bpm,
+        public ?string $key,
     ) {
     }
 
@@ -50,7 +50,7 @@ final readonly class BeatportTrack
             charts: $charts ?: null,
             length: $track['length_ms'],
             bpm: $track['bpm'],
-            key: $track['key']['name'],
+            key: $track['key']['name'] ?? null,
         );
 
         return $beatportTrack;

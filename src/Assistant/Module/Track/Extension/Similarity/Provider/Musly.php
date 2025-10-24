@@ -29,6 +29,8 @@ final class Musly extends AbstractProvider
                 // @fixme: błąd powinien być komunikowany na froncie w normalny sposób
                 var_dump($e->getMessage());
 
+                $this->similarTracks = SimilarTracksResultList::factory($baseTrack->getFile(), []);
+
                 return 0;
             }
         }
@@ -39,7 +41,7 @@ final class Musly extends AbstractProvider
     }
 
     /** {@inheritDoc} */
-    public function getCriteria(Track $baseTrack): mixed
+    public function getCriteria(Track $baseTrack): null
     {
         return null;
     }

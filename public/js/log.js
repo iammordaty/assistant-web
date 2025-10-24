@@ -12,19 +12,13 @@ const initAutoRefresh = $view => {
         }, response => {
             const $entries = $(response).find('[data-role="log:log-entry"]');
 
-            console.log({
-                $entriesL: $entries.length,
-                $entries: $entries,
-                response: response
-            });
-
             if ($entries.length === 0) {
                 return;
             }
 
             $view.prepend($entries)
 
-            $('[data-toggle="popover"]').popover();
+            initPopovers($view[0]);
         });
     }, 2000);
 };

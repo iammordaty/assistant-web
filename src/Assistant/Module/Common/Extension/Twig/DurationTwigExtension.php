@@ -15,16 +15,14 @@ class DurationTwigExtension extends AbstractExtension
         $this->duration = $duration;
     }
 
-    public static function factory(?Duration $duration = null): DurationTwigExtension
+    public static function factory(?Duration $duration = null): self
     {
         $duration = $duration ?: new Duration();
 
         return new self($duration);
     }
 
-    /**
-     * {@inheritdoc}
-     */
+    /** {@inheritdoc} */
     public function getFilters(): array
     {
         return [

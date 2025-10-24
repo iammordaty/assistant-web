@@ -17,7 +17,7 @@ final readonly class BeatportAuthMiddleware
     private function __construct(
         private string $apiUrl,
         private string $clientId,
-        private string $clientSecret,
+        private ?string $clientSecret,
         private string $username,
         private string $password,
         private string $cacheDir,
@@ -39,7 +39,7 @@ final readonly class BeatportAuthMiddleware
     public function __invoke(callable $handler): callable
     {
         return function (RequestInterface $request, array $options) use ($handler) {
-            [ 'token_type' => $tokenType, 'access_token' => $accessToken ] = $x = $this->getAccessToken();
+            [ 'token_type' => $tokenType, 'access_token' => $accessToken ] = $this->getAccessToken();
 
             $request = $request->withHeader('Authorization', sprintf('%s %s', $tokenType, $accessToken));
 
