@@ -117,13 +117,13 @@ final class Similarity
                 throw new \RuntimeException($message);
             }
 
-            $providerNames[] = $providerName;
-
             if (in_array($providerName, $providerNames)) {
                 $message = sprintf('Provider class "%s" has duplicate name "%s"', $provider::class, $providerName);
 
                 throw new \RuntimeException($message);
             }
+
+            $providerNames[] = $providerName;
 
             unset($providerName, $provider);
         }
