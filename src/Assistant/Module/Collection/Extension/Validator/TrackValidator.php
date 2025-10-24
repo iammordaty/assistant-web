@@ -4,69 +4,70 @@ namespace Assistant\Module\Collection\Extension\Validator;
 
 use Assistant\Module\Collection\Extension\Validator\Exception\DuplicatedElementException;
 use Assistant\Module\Collection\Extension\Validator\Exception\InvalidMetadataException;
-use Assistant\Module\Common\Extension\GetId3\Adapter as Id3Adapter;
+use Assistant\Module\Collection\Extension\Validator\TrackValidator\TrackMetadataValidator;
 use Assistant\Module\Collection\Model\CollectionItemInterface;
+use Assistant\Module\Common\Extension\SimilarTracksCollection\SimilarTracksCollectionService;
 use Assistant\Module\Track\Extension\TrackService;
+use Assistant\Module\Track\Model\IncomingTrack;
 use Assistant\Module\Track\Model\Track;
+use KeyTools\KeyTools;
+use Psr\Container\ContainerInterface;
 
 /** Walidator elementów będących plikami */
-final class TrackValidator implements ValidatorInterface
+final readonly class TrackValidator implements ValidatorInterface
 {
-    public function __construct(
+    private function __construct(
         private TrackService $trackService,
-        private Id3Adapter $id3Adapter
+        private SimilarTracksCollectionService $similarTracksCollectionService,
+        private TrackMetadataValidator $metadataValidator,
     ) {
+    }
+
+    public static function factory(ContainerInterface $container): self
+    {
+        return new self(
+            $container->get(TrackService::class),
+            $container->get(SimilarTracksCollectionService::class),
+            new TrackMetadataValidator(KeyTools::NOTATION_KEYS_CAMELOT_KEY),
+        );
     }
 
     /** Weryfikuje czy plik (utwór muzyczny) może zostać dodany do bazy danych kolekcji */
     public function validate(CollectionItemInterface $collectionItem): void
     {
-        /** @var Track $track */
+        /** @var IncomingTrack|Track $track */
         $track = $collectionItem;
 
-        $indexedTrack = $this->trackService->getByPathname($collectionItem->getPathname());
+        $isTrackDuplicated = $this->isTrackDuplicated($track);
 
-        // Sprawdź artystów po ew. zmianach wyjątków ich rozbijania w parserze metadanych
-        $hasSameArtist = $track->getArtists() === $indexedTrack?->getArtists();
-        $hasSameMetadata = $track->getMetadataMd5() === $indexedTrack?->getMetadataMd5();
-
-        if ($hasSameMetadata && $hasSameArtist) {
-            $message = sprintf('Track "%s" is already in database.', $track->getGuid());
+        if ($isTrackDuplicated) {
+            $message = sprintf('Track "%s" is already in database.', $track->getName());
 
             throw new DuplicatedElementException($message);
         }
 
-        $metadata = $this->id3Adapter
-            ->setFile($track->getFile())
-            ->readId3v2Metadata();
+        // @idea: warto jeszcze dorzucić sprawdzanie bitrate-u (cbr, 320 kbps)
 
-        $hasValidMetadata = $this->validateMetadata($metadata);
+        $result = ($this->metadataValidator)($track);
 
-        if (!$hasValidMetadata) {
-            $message = sprintf('Track %s does\'t contains metadata.', $track->getFile()->getBasename());
+        if (!$result->isValid) {
+            $message = sprintf(
+                'Track %s does not contain metadata or it is invalid.',
+                $track->getFile()->getBasename()
+            );
 
-            throw new InvalidMetadataException($message);
+            throw new InvalidMetadataException($message, $track->getFile(), $result->errors);
         }
     }
 
-    /**
-     * @todo Rzucać wyjątek zawierający tablicę z błędami lub zwracać [ bool $isValid, array $errors ]
-     *
-     * @param array $metadata
-     * @return bool
-     */
-    private function validateMetadata(array $metadata): bool
+    private function isTrackDuplicated(Track $track): bool
     {
-        $withoutArtist = empty($metadata['artist']);
-        $withoutTitle = empty($metadata['title']);
-        $withoutGenre = empty($metadata['genre']);
-        $withoutInitialKey = empty($metadata['initial_key']);
-        $withoutBpm = empty($metadata['bpm']);
+        $existingTrack = $this->trackService->getByPathname($track->getPathname());
 
-        // @TODO: Sprawdzać spacje na końcu i początku.
-        //        Sprawdzać rok wydania. Jeśli podany powinien być większy niż np. 1980
-        //        Co jeszcze? (przypomnieć sobie najczęstsze problemy)
+        $hasSameArtists = $track->getArtists() === $existingTrack?->getArtists();
+        $hasSameMetadata = $track->getMetadataMd5() === $existingTrack?->getMetadataMd5();
+        $isInSimilarTracksCollection = $this->similarTracksCollectionService->hasTrack($track->getFile());
 
-        return !$withoutArtist && !$withoutTitle && !$withoutInitialKey && !$withoutBpm && !$withoutGenre;
+        return $hasSameMetadata && $hasSameArtists && $isInSimilarTracksCollection;
     }
 }

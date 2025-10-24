@@ -6,12 +6,18 @@ use Assistant\Module\Collection\Extension\Validator\Exception\DuplicatedElementE
 use Assistant\Module\Collection\Model\CollectionItemInterface;
 use Assistant\Module\Directory\Extension\DirectoryService;
 use Assistant\Module\Directory\Model\Directory;
+use Psr\Container\ContainerInterface;
 
 /** Walidator elementów będących katalogami */
-final class DirectoryValidator implements ValidatorInterface
+final readonly class DirectoryValidator implements ValidatorInterface
 {
-    public function __construct(private DirectoryService $directoryService)
+    private function __construct(private DirectoryService $directoryService)
     {
+    }
+
+    public static function factory(ContainerInterface $container): self
+    {
+        return new self($container->get(DirectoryService::class));
     }
 
     /** Waliduje katalog pod kątem możliwości dodania go do bazy danych */
