@@ -42,6 +42,10 @@ final class MusicClassifierResult
 
         $rawResult = json_decode(file_get_contents($filename), true);
 
+        if (!$rawResult) {
+            throw new MusicClassifierResultFileMalformedException($filename, json_last_error_msg());
+        }
+
         $musicalKey = $rawResult['tonal']['chords_key'] . ' ' . $rawResult['tonal']['chords_scale'];
         $bpm = round($rawResult['rhythm']['bpm'], 1);
         $chromaprint = $rawResult['chromaprint']['string'][0];
