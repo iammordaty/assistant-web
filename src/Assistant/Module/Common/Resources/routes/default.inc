@@ -28,6 +28,13 @@ return static function (App $app): void {
             ->setName('common.task.remove');
 
         $group
+            ->post(
+                '/task/reindex-similar-tracks-collection',
+                [ TaskController::class, 'reindexSimilarTracksCollection' ]
+            )
+            ->setName('common.task.reindex-similar-tracks-collection');
+
+        $group
             ->get('/log', [ LogController::class, 'index' ])
             ->setName('common.log.index');
 
