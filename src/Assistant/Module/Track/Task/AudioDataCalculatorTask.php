@@ -103,14 +103,15 @@ final class AudioDataCalculatorTask extends AbstractTask
             try {
                 $metadata = $this->id3
                     ->setFile($track->getFile())
-                    ->readId3v2Metadata();
+                    ->analyze()
+                    ->getMetadata();
 
-                if ($this->id3->getTrackLength() / 60 > 20) {
+                if ($this->id3->getTrackDuration() / 60 > 20) {
                     $this->stats['skipped']['too_long']++;
 
                     $this->logger->debug(
                         'Track is too long, skipping...',
-                        [ 'length' => $this->id3->getTrackLength() / 60 ]
+                        [ 'pathname' => $track->getPathname(), 'length' => $this->id3->getTrackDuration() / 60 ]
                     );
 
                     unset($file, $track, $metadata);
@@ -168,7 +169,9 @@ final class AudioDataCalculatorTask extends AbstractTask
                 ]);
 
                 if ($writeData === true) {
-                    $this->id3->writeId3v2Metadata($audioData);
+                    $metadata = array_merge($metadata, $audioData);
+
+                    $this->id3->writeMetadata($metadata);
 
                     if ($this->id3->getWriterWarnings()) {
                         $this->logger->warning('Track metadata saved with warnings', $this->id3->getWriterWarnings());

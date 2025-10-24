@@ -2,58 +2,49 @@
 
 namespace Assistant\Module\Common\Extension\GetId3\Adapter\Metadata;
 
-use Assistant\Module\Common\Extension\GetId3\Adapter\Metadata as BaseMetadata;
+use Assistant\Module\Common\Extension\GetId3\Adapter\MetadataAdapterInterface;
+use Assistant\Module\Track\Extension\TrackMetadataFields;
 
-class Id3v2 extends BaseMetadata
+final class Id3v2 implements MetadataAdapterInterface
 {
-    private array $fields = [
-        'artist',
-        'title',
-        'album',
-        'publisher',
-        'track_number',
-        'year',
-        'genre',
-        'bpm',
-        'initial_key',
-    ];
+    private array $rawInfo = [];
 
-    /**
-     * {@inheritDoc}
-     */
+    public function setRawInfo(array $rawInfo): self
+    {
+        $this->rawInfo = $rawInfo;
+
+        return $this;
+    }
+
+    /** {@inheritDoc} */
     public function getMetadata(): array
     {
-        if (isset($this->rawInfo['tags']['id3v2']) === false) {
+        $rawId3v2Info = $this->rawInfo['tags']['id3v2'] ?? [];
+
+        if (!isset($rawId3v2Info)) {
             return [];
         }
 
         $metadata = [ ];
 
-        foreach ($this->rawInfo['tags']['id3v2'] as $field => $value) {
-            if (in_array($field, $this->fields) && !empty($value[0])) {
-                switch ($field) {
-                    case 'track_number':
-                    case 'year':
-                        $metadata[$field] = (int) $value[0];
-                        break;
+        foreach ($rawId3v2Info as $field => $value) {
+            $firstValue = $value[0] ?? null;
 
-                    case 'bpm':
-                        $metadata[$field] = (float) $value[0];
-                        break;
-
-                    default:
-                        $metadata[$field] = $value[0];
-                        break;
-                }
+            if (!TrackMetadataFields::isSupportedMetadataField($field) || !$firstValue) {
+                continue;
             }
+
+            $metadata[$field] = match ($field) {
+                TrackMetadataFields::TRACK_NUMBER, TrackMetadataFields::YEAR => (int) $firstValue,
+                TrackMetadataFields::BPM => (float) $firstValue,
+                default => $firstValue,
+            };
         }
 
         return $metadata;
     }
 
-    /**
-     * {@inheritDoc}
-     */
+    /** {@inheritDoc} */
     public function prepareMetadata(array $metadata): array
     {
         $rawId3v2Info = $this->rawInfo['tags']['id3v2'] ?? [];
@@ -66,7 +57,7 @@ class Id3v2 extends BaseMetadata
         }
 
         foreach ($metadata as $field => $value) {
-            if (in_array($field, $this->fields)) {
+            if (TrackMetadataFields::isSupportedMetadataField($field)) {
                 $rawId3v2Info[$field] = [ (string) $value ];
             }
         }

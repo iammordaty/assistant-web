@@ -73,20 +73,19 @@ final class RemoveMetadataTask extends AbstractTask
         $pathname = $input->getArgument('pathname');
         $track = $this->trackService->createFromFile($pathname);
 
-        $this->id3Adapter
-            ->setFile($track->getFile())
-            ->setId3WriterOptions([
-                'tag_encoding' => 'UTF-8',
-                'tagformats' => [ 'id3v2.3' ],
-                'remove_other_tags' => true,
-            ]);
+        $this
+            ->id3Adapter
+            ->setFile($track->getFile());
 
-        $removeAllMetadata = $input->getOption('all');
-        $metadata = $removeAllMetadata ? [] : $this->id3Adapter->readId3v2Metadata();
+        $keepSupportedFields = $input->getOption('keep-supported');
 
-        $this->id3Adapter->writeId3v2Metadata($metadata, true);
+        $metadata = $keepSupportedFields
+            ? $this->id3Adapter->analyze()->getMetadata()
+            : [];
 
-        $this->logger->info('Task finished', $this->stats);
+        $this->id3Adapter->writeMetadata($metadata);
+
+        $this->logger->debug('Task finished', $this->stats);
 
         return self::SUCCESS;
     }

@@ -2,171 +2,130 @@
 
 namespace Assistant\Module\Common\Extension\GetId3;
 
+use Assistant\Module\Common\Extension\GetId3\Adapter\Id3ReaderOptions;
+use Assistant\Module\Common\Extension\GetId3\Adapter\Id3WriterOptions;
 use Assistant\Module\Common\Extension\GetId3\Adapter\Metadata\Id3v2;
+use Assistant\Module\Common\Extension\GetId3\Adapter\MetadataAdapterInterface;
 use Assistant\Module\Common\Extension\GetId3\Exception\ReadException;
 use Assistant\Module\Common\Extension\GetId3\Exception\WriteException;
 use getID3;
-use getid3_write_id3v2;
 use getid3_writetags;
 use SplFileInfo;
-
-// TODO: Zobaczyć dlaczego nie działa usuwanie tagów APE
-// TODO: Poprawić settery ustawiania opcji
+use Throwable;
 
 final class Adapter
 {
-    private array $id3ReaderOptions = [
-        'encoding' => 'UTF-8',
-        'option_tag_id3v1' => false,
-        'option_tag_id3v2' => true,
-        'option_tag_lyrics3' => false,
-        'option_tag_apetag' => false,
-        'option_tags_process' => true,
-        'option_tags_html' => false,
-        'option_extra_info' => false,
-        'option_save_attachments' => false,
-        'option_md5_data' => false,
-    ];
-
-    private array $id3WriterOptions = [
-        'tag_encoding' => 'UTF-8',
-        'tagformats' => [ 'id3v2.3' ],
-        'remove_other_tags' => false,
-    ];
-
-    private getID3 $id3Reader;
-
-    private getid3_writetags $id3Writer;
-
     private SplFileInfo $file;
 
-    private array $rawInfo = [];
+    private getID3 $id3Reader;
+    private getid3_writetags $id3Writer;
 
-    // @todo: możliwe że jest inne podzielenie parametrów (poprzez settery, a może nową klasę z parametrami),
-    //        bo obecnie korzystanie z niniejszej klasy jest niewygodne
-    public function __construct(
-        SplFileInfo $file = null,
-        ?array $id3ReaderOptions = null,
-        ?array $id3WriterOptions = null,
-    ) {
+    private array $metadata = [];
+    private ?int $trackDuration = null;
+
+    public function __construct(private MetadataAdapterInterface $metadataAdapter = new Id3v2())
+    {
         $this->id3Reader = new getID3();
+        $this->setId3ReaderOptions(Id3ReaderOptions::defaults());
 
         $this->id3Writer = new getid3_writetags();
-        $this->id3Writer->tag_encoding = $this->id3WriterOptions['tag_encoding'];
-        $this->id3Writer->tagformats = $this->id3WriterOptions['tagformats'];
-        $this->id3Writer->remove_other_tags = $this->id3WriterOptions['remove_other_tags'];
-
-        if ($file !== null) {
-            $this->setFile($file);
-        }
-
-        if ($id3ReaderOptions !== null) {
-            $this->setId3ReaderOptions($id3ReaderOptions);
-        }
-
-        if ($id3WriterOptions !== null) {
-            $this->setId3WriterOptions($id3WriterOptions);
-        }
+        $this->setId3WriterOptions(Id3WriterOptions::defaults());
     }
 
-    /**
-     * Analizuje plik (utwór muzyczny) i odczytuje zawarte w nim metadane
-     *
-     * @deprecated Problematyczne, nie używać. Docelowo do usunięcia.
-     *
-     * @param SplFileInfo $file
-     * @return self
-     */
+    /** Analizuje plik (utwór muzyczny) i odczytuje zawarte w nim metadane */
     public function setFile(SplFileInfo $file): self
     {
-        $this->rawInfo = [ ];
+        $this->reset();
+
         $this->file = $file;
 
         return $this;
     }
 
-    public function setId3ReaderOptions(array $id3ReaderOptions): self
+    public function setId3ReaderOptions(Id3ReaderOptions $id3ReaderOptions): self
     {
-        $this->id3ReaderOptions = $id3ReaderOptions;
-
-        $this->id3Reader->setOption($this->id3ReaderOptions);
+        $this->id3Reader->setOption($id3ReaderOptions->toArray());
 
         return $this;
     }
 
-    public function setId3WriterOptions(array $id3WriterOptions): self
+    public function setId3WriterOptions(Id3WriterOptions $id3WriterOptions): self
     {
-        $this->id3WriterOptions = $id3WriterOptions;
+        /**
+         * To jest zakomentowane, ponieważ ustawienie $id3WriterOptions->overwriteTags na false rzuca wyjątek:
+         * "$id3Writer->overwrite_tags=false is known to be buggy in this version of getID3.
+         * Check http://github.com/JamesHeinrich/getID3 for a newer version."
+         *
+         * @see https://github.com/JamesHeinrich/getID3/blob/master/getid3/write.php#L505
+         */
+        // $this->id3Writer->overwrite_tags = $id3WriterOptions->overwriteTags;
 
-        $this->id3Writer->tag_encoding = $this->id3WriterOptions['tag_encoding'];
-        $this->id3Writer->tagformats = $this->id3WriterOptions['tagformats'];
-        $this->id3Writer->remove_other_tags = $this->id3WriterOptions['remove_other_tags'];
+        $this->id3Writer->remove_other_tags = $id3WriterOptions->removeOtherTags;
+        $this->id3Writer->tag_encoding = $id3WriterOptions->encoding;
+        $this->id3Writer->tagformats = $id3WriterOptions->tagFormats;
 
         return $this;
     }
 
-    /**
-     * Zwraca metadane zawarte w pliku (utworze muzycznym)
-     *
-     * @return array
-     *
-     * @throws ReadException
-     */
-    public function readId3v2Metadata(): array
+    /** Analizuje dane zawarte w pliku (utworze muzycznym) */
+    public function analyze(): self
     {
+        $this->reset();
+
         try {
-            $this->rawInfo = $this->id3Reader->analyze($this->file->getPathname());
-        } catch (\Throwable $e) {
+            $rawInfo = $this->id3Reader->analyze($this->file->getPathname());
+        } catch (Throwable $e) {
             $message = sprintf('Unable to read metadata from "%s": %s', $this->file->getPathname(), $e->getMessage());
 
-            throw new ReadException($message);
+            throw new ReadException($message, previous: $e);
         }
 
-        return (new Id3v2($this->rawInfo))->getMetadata();
+        $this->metadata = $this->metadataAdapter->setRawInfo($rawInfo)->getMetadata();
+        $this->trackDuration = isset($rawInfo['playtime_seconds'])
+            ? (int) $rawInfo['playtime_seconds']
+            : null;
+
+        return $this;
+    }
+
+    /** Zwraca metadane odczytane z pliku (utworu muzycznego) */
+    public function getMetadata(): array
+    {
+        return $this->metadata;
     }
 
     /** Zwraca długość utworu muzycznego w sekundach */
-    public function getTrackLength(): ?int
+    public function getTrackDuration(): ?int
     {
-        return isset($this->rawInfo['playtime_seconds']) ? (int) $this->rawInfo['playtime_seconds'] : null;
+        return $this->trackDuration;
     }
 
     /**
      * Zapisuje podane metadane w pliku (utworze muzycznym)
      *
-     * @todo $mode = 'overwrite' / 'append', lub - najlepiej - dwie osobne metody publiczne
+     * Uwaga, ta metoda działa w ten sposób, że zapisuje tylko te pola, które zostaną przekazane.
+     * Oznacza to, że jeśli aplikacja przekaże tutaj tylko klucz i tonację, to pozostałe pola (np. artysta, tytuł, rok)
+     * zostaną usunięte z pliku. Zob. komentarz w setId3ReaderOptions.
      *
-     * @param array $metadata
-     * @param bool $overwrite
-     * @return bool
-     *
-     * @throws WriteException
+     * @idea: Zastanowić się nad zabezpieczeniem powyższego albo wprowadzić flagę jawnie kontrolującą ww. zachowanie
      */
-    public function writeId3v2Metadata(array $metadata, bool $overwrite = false): bool
+    public function writeMetadata(array $metadata): bool
     {
-        $this->id3Writer->warnings = [];
-        $this->id3Writer->errors = [];
-
         $fileModificationTime = $this->file->getMTime();
 
-        if ($overwrite) {
-            $this->rawInfo = [];
-
-            $id3v2Writer = new getid3_write_id3v2();
-            $id3v2Writer->filename = $this->file->getPathname();
-            $id3v2Writer->RemoveID3v2();
-
-            unset($id3v2Writer);
-        }
-
-        if (empty($this->rawInfo)) {
-            $this->rawInfo = $this->id3Reader->analyze($this->file->getPathname());
-        }
-
         $this->id3Writer->filename = $this->file->getPathname();
-        $this->id3Writer->tag_data = (new Id3v2($this->rawInfo))->prepareMetadata($metadata);
+
+        if ($this->id3Writer->remove_other_tags) {
+            $this->id3Writer->DeleteTags(Id3WriterOptions::TAGS_TO_REMOVE);
+
+            $this->id3Writer->errors = []; // ignorujemy błędy mówiące o tym, że jakiegoś taga nie ma
+        }
+
+        $this->id3Writer->tag_data = $this->metadataAdapter->setRawInfo([])->prepareMetadata($metadata);
 
         $result = $this->id3Writer->WriteTags();
+
+        $this->id3Reader->analyze($this->file->getPathname());
 
         touch($this->file->getPathname(), $fileModificationTime);
 
@@ -206,5 +165,14 @@ final class Adapter
         }
 
         return $errors;
+    }
+
+    private function reset(): void
+    {
+        $this->metadata = [];
+        $this->trackDuration = null;
+
+        $this->id3Writer->warnings = [];
+        $this->id3Writer->errors = [];
     }
 }

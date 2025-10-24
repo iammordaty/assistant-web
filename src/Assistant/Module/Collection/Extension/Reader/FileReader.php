@@ -24,7 +24,8 @@ final class FileReader implements ReaderInterface
     {
         $metadata = $this->id3Adapter
             ->setFile($node)
-            ->readId3v2Metadata();
+            ->analyze()
+            ->getMetadata();
 
         $parsedMetadata = $this->metadataParser->parse($metadata);
         $modifiedDate = (new \DateTime())->setTimestamp($node->getMTime());
@@ -42,7 +43,7 @@ final class FileReader implements ReaderInterface
             publisher: $metadata['publisher'] ?? null,
             bpm: $metadata['bpm'],
             initialKey: $metadata['initial_key'],
-            length: $this->id3Adapter->getTrackLength(),
+            length: $this->id3Adapter->getTrackDuration(),
             tags: [],
             isFavorite: false,
             metadataMd5: md5(json_encode($metadata)),

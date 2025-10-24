@@ -25,7 +25,8 @@ final class IncomingFileReader implements ReaderInterface
     {
         $metadata = $this->id3Adapter
             ->setFile($node)
-            ->readId3v2Metadata();
+            ->analyze()
+            ->getMetadata();
 
         $parsedMetadata = $this->metadataParser->parse($metadata);
 
@@ -41,7 +42,7 @@ final class IncomingFileReader implements ReaderInterface
             publisher: $metadata['publisher'] ?? null,
             bpm: $metadata['bpm'] ?? null,
             initialKey: $metadata['initial_key'] ?? null,
-            length: $this->id3Adapter->getTrackLength(),
+            length: $this->id3Adapter->getTrackDuration(),
             tags: [],
             pathname: $node->getPathname(),
         );
