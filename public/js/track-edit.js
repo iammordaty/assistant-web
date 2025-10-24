@@ -48,11 +48,11 @@ $(document).ready(function() {
                     return;
                 }
 
-                const keyCode = (e.keyCode ? e.keyCode : e.which);
+                const key = (e.key ? e.key : e.which);
                 const input = $element.find('input')[0];
                 const value = input.value;
 
-                if (keyCode === 40 || (keyCode === 9 && !value && document.activeElement === input)) {
+                if (key === 'ArrowDown' || (key === 'Tab' && !value && document.activeElement === input)) {
                     $element.find('.dropdown-toggle').dropdown('toggle');
                 }
             }, 10));

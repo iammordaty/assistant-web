@@ -1,43 +1,19 @@
 /* global $ */
 
+import formatSeconds from './modules/format-seconds.js';
+import renderWaveform from './modules/render-waveform.js';
 import toggleFavorite from './modules/toggle-favorite.js';
-
-function formatSeconds(ss) {
-	var result = '',
-		s,
-		m,
-		h,
-		d;
-
-	s = Math.floor(ss % 60);
-	m = Math.floor((ss % 3600) / 60);
-	h = Math.floor((ss % 86400) / 3600);
-	d = Math.floor((ss % 2592000) / 86400);
-
-	if (d > 0) {
-		result += d + ':';
-	}
-
-	if (h > 0) {
-		result += (h < 10 ? '0' : '') + h + ':';
-	}
-
-	result += (m < 10 ? '0' : '') + m + ':';
-	result += (s < 10 ? '0' : '') + s;
-
-	return (ss < 0 ? '-' : '') + result;
-}
 
 $(function () {
 	const $wave = $('#wave-container');
 
 	const wavesurfer = WaveSurfer.create({
-		container: document.querySelector('#wave'),
-		cursorColor: 'rgb(248, 250, 252)',
+		container: $wave[0],
+		cursorWidth: 0,
 		height: $wave[0].offsetHeight,
-		progressColor: '#666',
-		waveColor: '#999',
-	});
+		progressColor: '#191919',
+		renderFunction: renderWaveform,
+	})
 
 	const $trackPlayPause = $('[data-role="track:play-pause"]');
 
@@ -51,50 +27,40 @@ $(function () {
 		$('#wave-container').css('visibility', 'visible').hide().fadeIn('slow');
 	});
 
-	window.wavesurfer = wavesurfer;
-
-	wavesurfer.on('seek', function () {
+	wavesurfer.on('interaction', function () {
 		if (!wavesurfer.isPlaying()) {
 			wavesurfer.play();
 		}
 	});
 
-	let wavesurferPlayInterval = null;
+	const $currentTimeIndicator = $('#wave-time-current-time');
+
+	wavesurfer.on('timeupdate', (currentTime) => {
+		const trackDuration = wavesurfer.getDuration();
+		let prefix = '';
+		let time;
+
+		if ($currentTimeIndicator.data('time-mode') === 'elapsed') {
+			prefix = '';
+			time = currentTime;
+		} else {
+			prefix = '-';
+			time = trackDuration - currentTime;
+		}
+
+		$currentTimeIndicator.html(prefix + formatSeconds(time));
+	});
 
 	wavesurfer.on('play', function () {
-		var $currentTimeIndicator = $('#wave-time-current-time'),
-			trackDuration = wavesurfer.getDuration(),
-			prefix = '',
-			time;
-
 		$trackPlayPause.addClass('active');
-
-		wavesurferPlayInterval = setInterval(
-			function () {
-				if ($currentTimeIndicator.data('time-mode') === 'elapsed') {
-					prefix = '';
-					time = wavesurfer.getCurrentTime();
-				} else {
-					prefix = '-';
-					time = trackDuration - wavesurfer.getCurrentTime();
-				}
-
-				$('#wave-time-current-time').html(prefix + formatSeconds(time));
-			},
-			500
-		);
 	});
 
 	wavesurfer.on('pause', function () {
 		$trackPlayPause.removeClass('active');
-
-		clearInterval(wavesurferPlayInterval);
 	});
 
 	wavesurfer.on('finish', function () {
 		$trackPlayPause.removeClass('active');
-
-		clearInterval(wavesurferPlayInterval);
 	});
 
 	wavesurfer.on('error', function () {
@@ -130,10 +96,16 @@ $(function () {
 			return;
 		}
 
-		if (e.which === 32) {
+		if (e.which === 32) { // spacja
 			e.preventDefault();
 
 			wavesurfer.playPause();
+		}
+
+		if (e.which === 69) { // "e"
+			const editUrl = $('[data-role="track:container"]').data('track-edit-url');
+
+			window.location.href = editUrl;
 		}
 	})
 
@@ -261,7 +233,7 @@ $(function () {
 
 	$form.data('previous-state', $form.serialize());
 
-	$form.find('input').on('keyup change', function ()  {
+	$form.find('input').on('keyup change', function () {
 		const currentFormState = $form.serialize();
 		const previousFormState = $form.data('previous-state');
 
