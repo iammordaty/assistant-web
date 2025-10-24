@@ -17,7 +17,13 @@ final class Genre extends AbstractProvider
         ['House', 'Indie Dance', 75],
         ['House', 'Techno', 60],
         ['House', 'Club', 60],
+        ['House', 'Dance', 55],
+        ['House', 'UK Garage', 55],
+        ['House', 'Afro House', 55],
+        ['House', 'Acid House', 55],
+        ['House', 'Tribal House', 55],
         ['House', 'Electronic', 50],
+        ['House', 'Electro', 50],
 
         ['Deep House', 'Indie Dance', 95],
         ['Deep House', 'Progressive House', 85],
@@ -36,15 +42,24 @@ final class Genre extends AbstractProvider
         ['Tech House', 'Indie Dance', 70],
         ['Tech House', 'Electro House', 65],
         ['Tech House', 'Progressive House', 60],
+        ['Tech House', 'UK Garage', 60],
         ['Tech House', 'Electronic', 50],
+
+        ['Afro House', 'House', 90],
+        ['Afro House', 'Deep House', 85],
+        ['Afro House', 'Indie Dance', 80],
+        ['Afro House', 'Progressive House', 70],
+        ['Afro House', 'Tech House', 70],
+        ['Afro House', 'Electronic', 60],
 
         ['Techno', 'Hard Techno', 85],
         ['Techno', 'Hard Trance', 85],
-        ['Trance', 'Hard House', 85],
+        ['Techno', 'Hard House', 85],
         ['Techno', 'Minimal', 85],
         ['Techno', 'Electronic', 75],
         ['Techno', 'Deep House', 55],
         ['Techno', 'Indie Dance', 50],
+        ['Techno', 'Electro', 50],
 
         ['Trance', 'Progressive Trance', 90],
         ['Trance', 'Hard Trance', 85],
@@ -52,6 +67,8 @@ final class Genre extends AbstractProvider
         ['Trance', 'Electronic', 50],
 
         ['Psy-Trance', 'Hard Trance', 85],
+        ['Psy-Trance', 'Hard House', 70],
+        ['Psy-Trance', 'Hard Dance', 70],
         ['Psy-Trance', 'Trance', 70],
         ['Psy-Trance', 'Techno', 60],
     ];

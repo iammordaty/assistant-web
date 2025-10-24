@@ -24,9 +24,15 @@ final class MusicalKey extends AbstractProvider
     }
 
     /** {@inheritDoc} */
-    public function getCriteria(Track $baseTrack): array
+    public function getCriteria(Track $baseTrack): ?array
     {
-        $similarKeys = array_keys($this->similarityMap[$baseTrack->getInitialKey()]);
+        $initialKeySimilarityMap = $this->similarityMap[$baseTrack->getInitialKey()] ?? null;
+
+        if (!$initialKeySimilarityMap) {
+            return null;
+        }
+
+        $similarKeys = array_keys($initialKeySimilarityMap);
 
         return $similarKeys;
     }
@@ -38,14 +44,14 @@ final class MusicalKey extends AbstractProvider
 
         foreach (KeyTools::NOTATION_KEYS_CAMELOT_KEY as $keyCode) {
             $this->similarityMap[$keyCode] = [
-                $keyCode => self::MAX_SIMILARITY_VALUE,
+                $keyTools->noChange($keyCode) => self::MAX_SIMILARITY_VALUE,
+                $keyTools->relativeMinorToMajor($keyCode) => 95,
                 $keyTools->perfectFourth($keyCode) => 95,
                 $keyTools->perfectFifth($keyCode) => 95,
-                $keyTools->dominantRelative($keyCode) => 90,
-                $keyTools->minorThird($keyCode) => 80,
-                $keyTools->relativeMinorToMajor($keyCode) => 80,
+                $keyTools->dominantRelative($keyCode) => 65,
+                $keyTools->minorThird($keyCode) => 65,
                 $keyTools->wholeStep($keyCode) => 65,
-                $keyTools->halfStep($keyCode) => 55,
+                $keyTools->halfStep($keyCode) => 65,
             ];
         }
     }

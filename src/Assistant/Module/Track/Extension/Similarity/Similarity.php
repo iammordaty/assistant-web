@@ -106,9 +106,21 @@ final class Similarity
     /** Przygotowuje moduł podobieństwa do użycia */
     private function setup(): void
     {
+        $providerNames = [];
+
         foreach ($this->providers as $provider) {
-            if (!$provider->getName()) {
+            $providerName = $provider->getName();
+
+            if (!$providerName) {
                 $message = sprintf('Provider class "%s" has invalid name (name can not be empty)', $provider::class);
+
+                throw new \RuntimeException($message);
+            }
+
+            $providerNames[] = $providerName;
+
+            if (in_array($providerName, $providerNames)) {
+                $message = sprintf('Provider class "%s" has duplicate name "%s"', $provider::class, $providerName);
 
                 throw new \RuntimeException($message);
             }
