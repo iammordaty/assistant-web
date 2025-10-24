@@ -72,4 +72,32 @@ final class SimilarTracksCollectionService
 
         return $tracks;
     }
+
+    public function initializeCollection(): bool
+    {
+        return $this->musly->initializeCollection($this->musly->getCollection());
+    }
+
+    public function getCollectionPathname(): string
+    {
+        return self::COLLECTION_PATHNAME;
+    }
+
+    public function getJukeboxPathname(): ?string
+    {
+        return $this->musly->getCollection()->getJukeboxPathname();
+    }
+
+    public function hasTrack(SplFileInfo $track): bool
+    {
+        try {
+            $tracks = $this->getTracks();
+        } catch (SimilarTracksCollectionException) {
+            return false;
+        }
+
+        $paths = array_map(fn (array $muslyTrack): string => $muslyTrack['track-origin'], $tracks);
+
+        return in_array($track->getPathname(), $paths);
+    }
 }
