@@ -3,13 +3,8 @@
 namespace Assistant\Module\Track\Task;
 
 use Assistant\Module\Collection\Task\CollectionGuard;
-use Assistant\Module\Common\Extension\Breadcrumbs\Breadcrumb;
-use Assistant\Module\Common\Extension\Breadcrumbs\BreadcrumbsBuilder;
-use Assistant\Module\Common\Extension\Breadcrumbs\UrlGenerator\EmptyRouteGenerator;
-use Assistant\Module\Common\Extension\Config;
-use Assistant\Module\Common\Extension\GetId3\Adapter as Id3Adapter;
 use Assistant\Module\Common\Task\AbstractTask;
-use Assistant\Module\Track\Extension\TrackFilenameSuggestion;
+use Assistant\Module\Track\Extension\TrackRenameService;
 use Assistant\Module\Track\Extension\TrackService;
 use Monolog\Logger;
 use Psr\Container\ContainerInterface;
@@ -24,11 +19,8 @@ final class RenameTrackTask extends AbstractTask
 
     public function __construct(
         Logger $logger,
-        private BreadcrumbsBuilder $breadcrumbsBuilder,
-        private Config $config,
-        private Id3Adapter $id3Adapter,
-        private TrackFilenameSuggestion $trackFilenameSuggestion,
         private TrackService $trackService,
+        private TrackRenameService $trackRenameService,
     ) {
         parent::__construct($logger);
     }
@@ -37,11 +29,8 @@ final class RenameTrackTask extends AbstractTask
     {
         return new self(
             $container->get(Logger::class),
-            $container->get(BreadcrumbsBuilder::class),
-            $container->get(Config::class),
-            $container->get(Id3Adapter::class),
-            $container->get(TrackFilenameSuggestion::class),
             $container->get(TrackService::class),
+            $container->get(TrackRenameService::class),
         );
     }
 
@@ -65,13 +54,17 @@ final class RenameTrackTask extends AbstractTask
         $pathname = $input->getArgument('pathname');
 
         if (!file_exists($pathname)) {
-            throw new \RuntimeException("Target {$pathname} does not exists");
+            throw new \RuntimeException("File {$pathname} does not exists");
         }
 
         $track = $this->trackService->createFromFile($pathname);
 
         $guard = new CollectionGuard($this->trackService, $this->getHelper('question'), $input, $output);
         $guard($track);
+
+        if ($this->trackService->getLocationArbiter()->isInCollection($track) && $input->getOption('mark-as-ready')) {
+            throw new \RuntimeException("File {$pathname} is in collection so it cannot be marked as ready.");
+        }
     }
 
     protected function execute(InputInterface $input, OutputInterface $output): int
@@ -82,102 +75,23 @@ final class RenameTrackTask extends AbstractTask
         $track = $this->trackService->createFromFile($pathname);
 
         if ($input->getOption('clean')) {
-            $target = $this->trackFilenameSuggestion->getSuggestedFilename($track->getFile());
+            $target = $this->trackRenameService->clean($track);
         } elseif ($format = $input->getOption('format')) {
-            $metadata = $this->id3Adapter
-                ->setFile($track->getFile())
-                ->readId3v2Metadata();
-
-            $metadata = array_merge(array_filter($metadata, fn ($field) => trim($field)));
-
-            if (empty($metadata)) {
-                throw new \RuntimeException('Cannot prepare target filename: no metadata');
-            }
-
-            $metadata = array_map(function ($field) {
-                if (is_numeric($field)) {
-                    return $field;
-                }
-
-                $field = str_replace([ '/', ':' ], '-', $field);
-                $field = str_replace('"', '\'', $field);
-                $field = str_replace([ '*', '?' ], '', $field);
-
-                return $field;
-            }, $metadata);
-
-            if (isset($metadata['track_number']) && $metadata['track_number'] < 10) {
-                $metadata['track_number'] = '0' . $metadata['track_number'];
-            }
-
-            $placeholders = array_map(fn ($placeholder) => "%$placeholder%", array_keys($metadata));
-            $target = strtr($format, array_combine($placeholders, $metadata));
-
-            if (str_contains($target, '%')) {
-                preg_match_all('/%[a-z]+%/', $target, $matches);
-
-                $message = sprintf(
-                    'Cannot prepare target filename: some metadata fields are empty (%s)',
-                    implode(', ', $matches[0])
-                );
-
-                throw new \RuntimeException($message);
-            }
-
-            $target .= sprintf('.%s', strtolower($track->getFile()->getExtension()));
-        } elseif ($input->getOption('target')) {
-            $target = $input->getOption('target');
+            $target = $this->trackRenameService->rename($track, $format, $input->getOption('mark-as-ready'));
+        } elseif ($targetString = $input->getOption('target')) {
+            $target = $this->trackRenameService->target($track, $targetString);
         } else {
             // todo: niech w komunikacie będzie coś mądrzejszego, np. obsługiwane tryby działania
             throw new \RuntimeException('No option');
         }
 
-        if ($input->getOption('mark-as-ready')) {
-            $target = sprintf('%s/%s', basename($this->config->get('collection.ready_dir')), $target);
-        }
-
-        $target = sprintf('%s/%s', $track->getFile()->getPath(), $target);
-        $target = new \SplFileInfo($target);
-
-        if (file_exists($target->getPathname())) {
-            throw new \RuntimeException("Target {$target->getPathname()} already exists!");
-        }
-
-        $modificationTime = $track->getFile()->getMTime();
-        $directories = $this->getNonExistedPaths($target);
-
-        if (!file_exists($target->getPath()) && !mkdir($target->getPath(), 0777, true)) {
-            throw new \RuntimeException("Can\'t create directory {$target->getPath()}.");
-        }
-
-        if (rename($track->getPathname(), $target->getPathname()) === false) {
-            throw new \RuntimeException("Can\'t rename {$track->getPathname()} to {$target->getPathname()}.");
-        }
-
-        foreach ($directories as $path) {
-            touch($path, $modificationTime, $modificationTime);
-        }
-
-        $this->logger->debug('Renaming track', [
-            'pathname' => $track->getFile()->getBasename(),
-            'target' => $target->getPathname(),
+        $this->logger->info('Successfully renamed track', [
+            'pathname' => $target->getPathname(),
+            'target' => $target->getPathname()
         ]);
 
         $this->logger->debug('Task finished');
 
         return self::SUCCESS;
-    }
-
-    private function getNonExistedPaths(\SplFileInfo $target): array
-    {
-        $breadcrumbs = $this->breadcrumbsBuilder
-            ->withPath($target->getPath())
-            ->withRouteGenerator(new EmptyRouteGenerator())
-            ->createBreadcrumbs();
-
-        $paths = array_map(fn (Breadcrumb $breadcrumb) => $breadcrumb->pathname, $breadcrumbs);
-        $paths = array_filter($paths, fn (string $pathname) => !file_exists($pathname));
-
-        return [ ...$paths ];
     }
 }
