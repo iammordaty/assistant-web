@@ -1,6 +1,9 @@
-*~
 .env
 .idea
-/var/cache/*
-/vendor/
+.yarn/*
 @eaDir
+*~
+/var/*
+/vendor/
+node_modules
+public/js/mix.dist.js

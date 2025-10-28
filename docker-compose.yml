@@ -48,6 +48,20 @@ services:
             - ${ASSISTANT_METADATA_VOLUME}:/metadata
             - ./.docker/php-fpm/conf/php.ini:/usr/local/etc/php/php.ini
 
+    builder:
+        image: node:20
+        container_name: assistant-builder
+        restart: on-failure
+        networks:
+            - assistant
+        hostname: assistant-builder
+        environment:
+            - TZ=Europe/Warsaw
+        volumes:
+            - ${ASSISTANT_FRONTEND_VOLUME}:/data
+        working_dir: /data
+        command: bash -c "corepack enable && yarn install && yarn watch"
+
     music-classifier:
         build: ./.docker/music-classifier
         image: assistant-music-classifier

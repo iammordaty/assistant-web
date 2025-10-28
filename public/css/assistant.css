@@ -73,7 +73,7 @@
 #wave-time-current-time, #wave-time-track-duration {
     position: absolute;
     z-index: 100;
-    bottom: 35px;
+    bottom: 20px;
     cursor: default;
     color: var(--tblr-black)!important;
 }
@@ -149,6 +149,10 @@ table .ast-track-name {
     min-width: 300px;
 }
 
+table .ast-track-name span {
+    width: 25px;
+}
+
 .ast-table-no-select td {
     user-select: none;
 }
@@ -158,4 +162,119 @@ table .ast-track-name {
     min-height: calc(var(--tblr-btn-line-height) * var(--tblr-btn-font-size) + var(--tblr-btn-padding-y) * 2 + var(--tblr-btn-border-width) * 2);
     padding-left: 8px;
     padding-right: 0;
+}
+
+.track-avatar-hoverable {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.track-avatar-hoverable .avatar-initials,
+.track-avatar-hoverable .avatar-drag-icon {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: opacity 0.2s;
+}
+
+.track-avatar-hoverable .avatar-drag-icon {
+    opacity: 0;
+    cursor: pointer;
+}
+
+.track-avatar-hoverable:hover .avatar-initials {
+    opacity: 0;
+}
+
+.track-avatar-hoverable:hover .avatar-drag-icon {
+    opacity: 1;
+}
+
+.ast-track-item:hover .track-avatar-hoverable .avatar-drag-icon {
+    opacity: 1;
+}
+
+.ast-track-meta .breadcrumb-item + .breadcrumb-item::before,
+.ast-attempt-header .breadcrumb-item + .breadcrumb-item::before {
+    content: '•';
+}
+
+.ast-breadcrumb-dotted .breadcrumb-item + .breadcrumb-item::before {
+    content: '•';
+}
+
+.ast-track-item {
+    transition: background-color 0.2s;
+}
+
+.ast-track-item:hover {
+    background-color: rgba(var(--tblr-primary-rgb), 0.16);
+}
+
+.ast-track-item:hover .track-avatar-hoverable .avatar-initials {
+    opacity: 0;
+}
+
+.track-actions {
+    gap: 0.25rem;
+    opacity: 0;
+    transition: opacity 0.2s;
+}
+
+.ast-track-item:hover .track-actions {
+    opacity: 1;
+}
+
+.ast-track-action-edit-entry,
+.ast-track-action-delete {
+    opacity: 0.7;
+    transition: opacity 0.2s, background 0.2s;
+}
+
+.ast-track-action-edit-entry:hover,
+.ast-track-action-delete:hover {
+    opacity: 1;
+    background: var(--tblr-bg-secondary, #f6f8fa);
+}
+
+.attempt-header-actions {
+    display: flex;
+    gap: 0.25rem;
+    opacity: 0;
+    transition: opacity 0.2s;
+}
+
+.card:hover .attempt-header-actions {
+    opacity: 0.5;
+}
+
+.ast-attempt-header:hover .attempt-header-actions {
+    opacity: 1;
+}
+
+.attempt-action-button {
+    opacity: 0.7;
+    transition: opacity 0.2s, background 0.2s;
+}
+
+.attempt-action-button:hover {
+    opacity: 1;
+    background: var(--tblr-bg-secondary, #f6f8fa);
+}
+
+/* New comment row opacity control via CSS instead of React */
+.ast-new-comment-row {
+    opacity: 0.25;
+    transition: opacity 0.2s ease;
+}
+
+.ast-new-comment-row:focus-within {
+    opacity: 1;
 }

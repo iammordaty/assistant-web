@@ -58,7 +58,13 @@
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link {% if menu == "mix" %}active{% endif %}" href="{{ url_for('mix.mix.index') }}">
+                    <a class="nav-link {% if menu == "mix" %}active{% endif %}" href="{{ url_for('mix.list.index') }}">
+                        <span class="nav-link-title">
+                          Miksy
+                        </span>
+                    </a>
+                </li>
+                    <a class="nav-link {% if menu == "mix" %}active{% endif %}" href="{{ url_for('mix.harmonize.index') }}">
                         <span class="nav-link-title">
                           Uporządkuj mix
                         </span>

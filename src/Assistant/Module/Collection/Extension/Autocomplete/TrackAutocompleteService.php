@@ -66,7 +66,17 @@ final class TrackAutocompleteService
             $route = Route::create('track.track.index', [ 'guid' => $track->getGuid() ]);
             $url = $this->routeResolver->resolve($route);
 
-            return new TrackAutocompleteEntry($track->getGuid(), $track->getName(), $url);
+            return new TrackAutocompleteEntry(
+                $track->getGuid(),
+                $track->getArtists(),
+                $track->getTitle(),
+                $track->getName(),
+                $track->getGenre(),
+                $track->getLength(),
+                $track->getBpm(),
+                $track->getInitialKey(),
+                $url,
+            );
         };
 
         $entries = array_map(

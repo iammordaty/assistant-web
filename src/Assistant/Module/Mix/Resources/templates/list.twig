@@ -1,0 +1,116 @@
+{% extends '@common/layout.twig' %}
+
+{% block title 'Lista miksów' %}
+
+{% block page_header 'Lista miksów' %}
+{% block page_header_description '&nbsp;' %}
+
+{# TODO: Pociąć na mniejsze szablony #}
+
+{% block page_actions %}
+    <a href="" class="btn btn-primary">
+        <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="24"
+            height="24"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.25"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            class="icon icon-tabler icons-tabler-outline icon-tabler-music-plus"><path stroke="none" d="M0 0h24v24H0z" fill="none"
+        />
+            <path d="M3 17a3 3 0 1 0 6 0a3 3 0 0 0 -6 0" />
+            <path d="M9 17v-13h10v8" />
+            <path d="M9 8h10" />
+            <path d="M16 19h6" />
+            <path d="M19 16v6" />
+        </svg>
+        Nowy miks
+    </a>
+{% endblock %}
+
+{% block content %}
+<div class="row row-deck row-cards">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-table table-responsive">
+                <table class="table table-hover table-vcenter table-striped">
+                    <thead>
+                        <tr>
+                            <th>Nazwa / Opis</th>
+                            <th></th>
+                            <th>Data utworzenia</th>
+                            <th>Ostatnia modyfikacja</th>
+                            <th class="w-1"></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {# @var mix \Assistant\Module\Mix\Model\Mix #}
+                        {% for mix in mixes %}
+                            <tr>
+                                <td>
+                                    <a
+                                        href="{{ url_for('mix.edit.index', { 'guid': mix.guid }) }}"
+                                        class="d-inline-block mb-1"
+                                        {% if mix.comment %}
+                                            data-bs-toggle="tooltip"
+                                            data-bs-placement="bottom"
+                                            title="{{ mix.comment }}"
+                                        {% endif %}
+                                    >
+                                        {{ mix.name }}
+                                    </a>
+                                    {% if mix.description %}
+                                        <span class="text-muted small d-block">
+                                            {{ mix.description }}
+                                        </span>
+                                    {% endif %}
+                                </td>
+                                <td class="text-muted">{{ mix.attempts|length|pluralize({
+                                    'one': 'próba',
+                                    'few': 'próby',
+                                    'other': 'prób',
+                                }) }}</td>
+                                <td class="text-muted">{{ mix.created|date('d.m.Y, H:i') }}</td>
+                                <td class="text-muted">{{ mix.modified|date('d.m.Y, H:i') }}</td>
+                                <td>
+                                    <a href="{{ url_for('mix.edit.index', { 'guid': mix.guid }) }}" class="btn btn-icon">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-music-share">
+                                            <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+                                            <path d="M3 17a3 3 0 1 0 6 0a3 3 0 0 0 -6 0" />
+                                            <path d="M9 17v-13h10v9" />
+                                            <path d="M9 8h10" />
+                                            <path d="M16 22l5 -5" />
+                                            <path d="M21 21.5v-4.5h-4.5" />
+                                        </svg>
+                                    </a>
+                                </td>
+                            </tr>
+                        {% else %}
+                            {% include '@common/empty.twig' with { message: 'Brak miksów do wyświetlenia' } only %}
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="card-footer d-flex align-items-center">
+                <p class="m-0 text-muted">
+                    Znaleziono {{ paginator.getNbResults|pluralize({
+                        'one': 'miks',
+                        'few': 'miksy',
+                        'other': 'miksów',
+                    }) }}
+                </p>
+                <div class="ms-auto">
+                    {% include '@common/paginator.twig' with {
+                        paginator: paginator,
+                        routeName: 'mix.list.index',
+                    } only %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -22,6 +22,7 @@ use Assistant\Module\Common\Repository\LogRepository;
 use Assistant\Module\Directory\Extension\DirectoryService;
 use Assistant\Module\Directory\Repository\DirectoryRepository;
 use Assistant\Module\Mix\Extension\MixService;
+use Assistant\Module\Mix\Repository\MixRepository;
 use Assistant\Module\Search\Extension\DirectorySearchService;
 use Assistant\Module\Search\Extension\TrackSearchService;
 use Assistant\Module\Track\Extension\BeatportTrackMetadataSuggestionsService;
@@ -138,6 +139,17 @@ return static fn (string $baseDir, array $config): array => [
     },
 
     LogView::class => autowire(),
+
+    MixRepository::class => function (Container $container): MixRepository {
+        $storage = $container->get(Config::class)->get('storage');
+
+        $client = new MongoDBClient($storage['connection_uri']);
+        $database = $client->selectDatabase($storage['database']);
+
+        $repository = MixRepository::factory($database);
+
+        return $repository;
+    },
 
     MixService::class => autowire(),
 

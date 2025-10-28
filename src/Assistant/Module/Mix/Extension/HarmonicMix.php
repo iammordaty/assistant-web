@@ -5,7 +5,7 @@ namespace Assistant\Module\Mix\Extension;
 use Assistant\Module\Mix\Extension\Strategy\NextTrackStrategy;
 use Assistant\Module\Track\Model\Track;
 
-final class Mix
+final class HarmonicMix
 {
     private array $mix;
 

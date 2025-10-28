@@ -1,8 +1,6 @@
-/*global $*/
+/* global $ */
 
-// yolo
-
-const initAutocompleter = $input => {
+export default function ($input, onSelect) {
     const followOnSelect = $input.data('follow-on-select');
 
     $input.attr('autocomplete', 'off');
@@ -57,10 +55,18 @@ const initAutocompleter = $input => {
 
             const item = $activeMenuItem.data('value');
 
-            $input.val(item.name);
+            $input
+                .val(item.name)
+                .attr('data-track', JSON.stringify(item));
 
             // $input.typeahead('close'); nie działa, stąd poniższy hak
             $input.trigger('blur').focus();
+
+            if (onSelect && typeof onSelect === 'function') {
+                console.log('onSelect', item);
+
+                onSelect(item);
+            }
 
             if (followOnSelect) {
                 window.location = item.url;
@@ -68,9 +74,3 @@ const initAutocompleter = $input => {
         },
     });
 }
-
-$(() => {
-    const $inputs = $('[data-role="autocompleter"]');
-
-    $inputs.each((i, input) => initAutocompleter($(input)));
-});

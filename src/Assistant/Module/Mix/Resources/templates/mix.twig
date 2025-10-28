@@ -1,0 +1,22 @@
+{% extends '@common/layout.twig' %}
+
+{# @var mix \Assistant\Module\Mix\Model\Mix #}
+
+{% block title mix.name %}
+
+{#
+    po wypchnięciu innych zmian zrobić nastpującą zmianę: nazwę bloku page_header w layout.twig zmienić na page_title,
+    page_header-em zrobić wnętrze <div class="page-header" i tutaj nadpisać ten blok.
+#}
+
+{% block content %}
+    <div
+        id="mix-app-root"
+        data-mix="{{ mix|json_encode }}"
+        data-autocomplete-url="{{ url_for('track.track.autocomplete') }}"
+        data-save-attempt-url="{{ url_for('mix.edit.save', { guid: mix.guid }) }}"
+        data-save-mix-url="{{ url_for('mix.edit.properties', { guid: mix.guid }) }}"
+    ></div>
+
+    <script src="/js/mix.dist.js"></script>
+{% endblock %}
