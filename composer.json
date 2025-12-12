@@ -2,6 +2,8 @@
     "name": "iammordaty/assistant-web",
     "description": "My music collection assistant",
 
+    "version": "25.0.0",
+
     "authors": [
         {
             "name": "iammordaty",
@@ -20,7 +22,7 @@
     },
 
     "require": {
-        "php": "~8.2",
+        "php": "~8.5",
         "ext-inotify": "*",
         "ext-json": "*",
         "ext-mongodb": "*",
@@ -28,7 +30,7 @@
         "cache/simple-cache-bridge": "^1.2",
         "caseyamcl/configula": "^4.2",
         "cocur/background-process": "^0.7.0",
-        "cocur/slugify": "^4.3",
+        "cocur/slugify": "^4.1",
         "danielstjules/stringy": "^3.1",
         "fig/http-message-util": "^1.1",
         "gfaugere/monolog-colored-line": "^1.0",
@@ -38,7 +40,8 @@
         "james-heinrich/getid3": "^1.9",
         "kevinrob/guzzle-cache-middleware": "^4.1",
         "khill/php-duration": "^1.1",
-        "mongodb/mongodb": "^1.11",
+        "kint-php/kint": "^6.1",
+        "mongodb/mongodb": "^2.1",
         "monolog/monolog": "^2.10",
         "pagerfanta/core": "^4.1",
         "pagerfanta/twig": "^4.1",
@@ -49,11 +52,11 @@
         "slim/twig-view": "^3.3",
         "symfony/console": "^5.3",
         "symfony/finder": "^5.3",
-        "symfony/var-dumper": "^5.4",
         "twig/string-extra": "^3.6",
         "twig/twig": "^3.6",
-        "vlucas/phpdotenv": "^5.5"
+        "vlucas/phpdotenv": "^5.6"
     },
+
     "require-dev": {
         "phpunit/phpunit": "^9.5"
     }

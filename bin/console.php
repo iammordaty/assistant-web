@@ -8,11 +8,12 @@ setlocale(LC_TIME, 'pl_PL.utf8');
 
 $baseDir = dirname(__DIR__);
 
+require_once $baseDir . '/vendor/autoload.php';
+
 if (function_exists('xdebug_set_filter')) {
+    /** @noinspection DebugFunctionUsageInspection */
     xdebug_set_filter(XDEBUG_FILTER_STACK, XDEBUG_PATH_EXCLUDE, [ $baseDir . '/vendor/' ]);
 }
-
-require_once $baseDir . '/vendor/autoload.php';
 
 $config = (require_once $baseDir . '/config/config.inc')($baseDir);
 

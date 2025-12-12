@@ -1,4 +1,4 @@
-FROM php:8.2-fpm
+FROM php:8.5-fpm
 
 ENV DEBIAN_FRONTEND=noninteractive
 ENV TERM=xterm
@@ -23,15 +23,11 @@ RUN apt-get update && \
 RUN pecl install inotify && \
     docker-php-ext-enable inotify
 
-RUN pecl install mongodb-1.16.2 && \
+RUN pecl install mongodb && \
     docker-php-ext-enable mongodb
-
-RUN pecl install xdebug && \
-    docker-php-ext-enable xdebug
 
 RUN docker-php-ext-install \
     intl \
-    opcache \
     zip
 
 RUN apt-get -y autoremove && \
@@ -54,7 +50,7 @@ RUN echo "pl_PL.UTF-8 UTF-8" >> /etc/locale.gen && \
     dpkg-reconfigure -f noninteractive tzdata && \
     locale-gen --purge
 
-ENV LANG pl_PL.utf8
+ENV LANG=pl_PL.utf8
 
 # apps
 
