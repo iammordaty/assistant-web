@@ -3,16 +3,22 @@
 namespace Assistant\Module\Mix\Extension;
 
 use Assistant\Module\Common\Storage\Storage;
+use Assistant\Module\Mix\Extension\Mix\AttemptSaveRequest;
+use Assistant\Module\Mix\Extension\Mix\MixSaveRequest;
 use Assistant\Module\Mix\Extension\Strategy\MostSimilarTrackStrategy;
-use Assistant\Module\Mix\Model\Mix as MixModel;
+use Assistant\Module\Mix\Model\Attempt;
+use Assistant\Module\Mix\Model\AttemptDto;
+use Assistant\Module\Mix\Model\Mix;
 use Assistant\Module\Mix\Repository\MixRepository;
 use Assistant\Module\Search\Extension\TrackSearchService;
 use Assistant\Module\Track\Extension\Similarity\SimilarityBuilder;
 use Assistant\Module\Track\Model\Track;
+use Cocur\Slugify\Slugify;
+use DateTime;
 
 final class MixService
 {
-    public const MAX_MIXES_PER_PAGE = 50;
+    public const int MAX_MIXES_PER_PAGE = 50;
 
     public function __construct(
         private MixRepository $repository,
@@ -21,7 +27,7 @@ final class MixService
     ) {
     }
 
-    public function getByGuid(string $guid): ?MixModel
+    public function getByGuid(string $guid): ?Mix
     {
         $mix = $this->repository->findOneBy([ 'guid' => $guid ]);
 
@@ -29,11 +35,7 @@ final class MixService
             return null;
         }
 
-        foreach ($mix->attempts as $attempt) {
-            foreach ($attempt->trackList as $trackEntry) {
-                $trackEntry->track = $this->searchService->findOneByGuid($trackEntry->trackGuid);
-            }
-        }
+        $this->hydrate($mix);
 
         return $mix;
     }
@@ -56,15 +58,103 @@ final class MixService
         ];
     }
 
-    public function save(MixModel $mix): MixModel
+    public function createNewMix(): Mix
     {
-        $result = $this->repository->save($mix);
+        $mix = Mix::create(
+            guid: '',
+            name: 'Nowy miks',
+        );
 
-        if (!$result) {
-            throw new \Exception('Failed to save mix');
+        return $mix;
+    }
+
+    public function saveMix(?Mix $mix, MixSaveRequest $request): Mix
+    {
+        if (!$mix) {
+            $mix = $this->createNewMix();
         }
 
-        return $this->getByGuid($mix->guid);
+        $updatedMix = Mix::create(
+            guid: $this->getUniqueGuid($mix->guid, $request->name),
+            name: $request->name,
+            description: $request->description,
+            created: $request->created,
+            modified: $request->modified,
+            performed: $request->performed,
+            comment: $request->comment,
+            attempts: $mix->attempts,
+        );
+
+        $this->repository->save($mix, $updatedMix);
+
+        return $updatedMix;
+    }
+
+    public function saveAttempt(Mix $mix, AttemptSaveRequest $attemptRequest): Mix
+    {
+        $updatedAttempt = Attempt::fromDto(AttemptDto::fromRequest($attemptRequest));
+
+        $attempts = $mix->attempts;
+
+        if ($attemptRequest->id) {
+            $attempts = array_map(
+                fn (Attempt $attempt) => $attempt->id === $attemptRequest->id ? $updatedAttempt : $attempt,
+                $attempts
+            );
+        }  else {
+            $attempts[] = $updatedAttempt;
+        }
+
+        $updatedMix = Mix::create(
+            guid: $mix->guid,
+            name: $mix->name,
+            description: $mix->description,
+            created: $mix->created,
+            modified: new DateTime('now', new \DateTimeZone('UTC')),
+            performed: $mix->performed,
+            comment: $mix->comment,
+            attempts: $attempts
+        );
+
+        $this->repository->save($mix, $updatedMix);
+
+        foreach ($updatedMix->attempts as $attempt) {
+            foreach ($attempt->trackList as $trackEntry) {
+                $trackEntry->track = $this->searchService->findOneByGuid($trackEntry->trackGuid);
+            }
+        }
+
+        return $updatedMix;
+    }
+
+    public function deleteMix(Mix $mix): bool
+    {
+        return $this->repository->delete($mix);
+    }
+
+    private function getUniqueGuid(?string $currentGuid, string $name): string
+    {
+        $slug = (new Slugify())->slugify($name);
+
+        if ($slug === $currentGuid) {
+            return $currentGuid;
+        }
+
+        $isAvailable = fn (string $guid): bool =>
+            !$this->repository->findOneBy([ 'guid' => $guid ])
+            || $guid === $currentGuid;
+
+        if ($isAvailable($slug)) {
+            return $slug;
+        }
+
+        $number = 2;
+
+        while (!$isAvailable(sprintf('%s-%s', $slug, $number))) {
+            $number++;
+        }
+
+        return sprintf('%s-%s', $slug, $number);
     }
 
     /**
@@ -118,5 +208,18 @@ final class MixService
         }
 
         return $tracks;
+    }
+
+    /**
+     * @idea: Tu przydałoby się zebrać wszystkie guid-y i wykonać jedno zapytanie do bazy,
+     *        ale obecnie nie ma takiej możliwości w SearchCriteria. Do dorobienia.
+     */
+    private function hydrate(Mix $mix): void
+    {
+        foreach ($mix->attempts as $attempt) {
+            foreach ($attempt->trackList as $trackEntry) {
+                $trackEntry->track = $this->searchService->findOneByGuid($trackEntry->trackGuid);
+            }
+        }
     }
 }

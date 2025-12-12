@@ -11,6 +11,23 @@ export default (routeName, params = {}) => {
             const query = new URLSearchParams(params).toString();
             return `/search/advanced${query ? `?${query}` : ''}`;
 
+        case 'mix.mix.view':
+            if (!params.guid) {
+                throw new Error('Missing "guid" parameter for route "mix.mix.view"');
+            }
+
+            return `/mix/${encodeURIComponent(params.guid)}`;
+
+        case 'mix.mix.save-mix':
+            return params.guid ? `/mix/${encodeURIComponent(params.guid)}` : '/mix';
+
+        case 'mix.mix.save-attempt':
+            if (!params.guid) {
+                throw new Error('Missing "guid" parameter for route "mix.mix.save-attempt"');
+            }
+
+            return `/mix/${encodeURIComponent(params.guid)}/attempt`;
+
         default:
             throw new Error(`Unknown route: ${routeName}`);
     }

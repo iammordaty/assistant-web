@@ -49,6 +49,13 @@ const TrackEntryModal = ({ track = null, comments = [], autocompleteUrl, onSave,
             setTrackComments(sortComments(prepareCommentsForModal(comments)));
             
             if (inputRef.current) {
+                if (track === null) {
+                    inputRef.current.value = '';
+                    inputRef.current.removeAttribute('data-track');
+                } else {
+                    inputRef.current.value = track.name || '';
+                }
+                
                 initAutocompleter($(inputRef.current), setCurrentTrack);
             }
         }

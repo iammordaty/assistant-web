@@ -7,8 +7,8 @@ use MongoDB\Model\BSONDocument;
 final class CommentDto
 {
     public function __construct(
-        public int $time,
-        public string $type,
+        public ?int $time,
+        public ?string $type,
         public string $content,
     ) {}
 
@@ -30,7 +30,25 @@ final class CommentDto
         );
     }
 
+    public static function fromJson(array $comment): self
+    {
+        return new self(
+            $comment['time'],
+            $comment['type'],
+            $comment['content']
+        );
+    }
+
     public function toStorage(): array
+    {
+        return [
+            'time' => $this->time,
+            'type' => $this->type,
+            'content' => $this->content,
+        ];
+    }
+
+    public function toJson(): array
     {
         return [
             'time' => $this->time,

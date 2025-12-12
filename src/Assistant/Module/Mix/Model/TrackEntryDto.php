@@ -40,13 +40,60 @@ final class TrackEntryDto
         );
     }
 
+    public static function fromJson(array $entry): self
+    {
+        $comments = array_map(
+            fn (array $comment) => CommentDto::fromJson($comment),
+            $entry['comments'] ?? []
+        );
+
+        return new self(
+            trackGuid: $entry['trackGuid'],
+            track: null,
+            comments: $comments,
+        );
+    }
+
     public function toStorage(): array
     {
         return [
             'track' => $this->trackGuid,
             'comments' => array_map(
                 fn (CommentDto $dto) => $dto->toStorage(),
-                $this->comments
+                $this->comments,
+            ),
+        ];
+    }
+
+    public function toJson(): array
+    {
+        $trackToJson = fn (Track $track): array => [
+            'guid' => $track->getGuid(),
+            'artist' => $track->getArtist(),
+            'artists' => $track->getArtists(),
+            'title' => $track->getTitle(),
+            'name' => $track->getName(),
+            'album' => $track->getAlbum(),
+            'trackNumber' => $track->getTrackNumber(),
+            'year' => $track->getYear(),
+            'genre' => $track->genre,
+            'publisher' => $track->getPublisher(),
+            'bpm' => $track->bpm,
+            'initialKey' => $track->initialKey,
+            'length' => $track->length,
+            'tags' => $track->getTags(),
+            'isFavorite' => $track->getIsFavorite(),
+            'metadataMd5' => $track->getMetadataMd5(),
+            'parent' => $track->getParent(),
+            'pathname' => $track->getPathname(),
+        ];
+
+        return [
+            'trackGuid' => $this->trackGuid,
+            'track' => $this->track ? $trackToJson($this->track) : null,
+            'comments' => array_map(
+                fn (CommentDto $dto) => $dto->toJson(),
+                $this->comments,
             ),
         ];
     }

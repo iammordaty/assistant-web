@@ -2,74 +2,98 @@
 
 namespace Assistant\Module\Mix\Extension\Mix;
 
+use DateTime;
+use Fig\Http\Message\StatusCodeInterface;
 use InvalidArgumentException;
 use Slim\Http\ServerRequest;
 
-final class MixSaveRequest
+final readonly class MixSaveRequest
 {
-    public function __construct(
+    private function __construct(
         public string $name,
-        public string $description,
+        public ?string $description,
         public ?string $comment,
-        public ?string $created,
-        public ?string $modified,
-        public ?string $performed,
+        public DateTime $created,
+        public ?DateTime $modified,
+        public ?DateTime $performed,
     ) {
     }
 
     public static function create(ServerRequest $request): self
     {
-        $postData = $request->getParsedBody();
-        
-        if (!is_array($postData)) {
-            throw new InvalidArgumentException('Request body must be an array');
+        $body = $request->getParsedBody();
+
+        $name = $body['name'] ?? null;
+
+        if (!$name) {
+            throw new InvalidArgumentException(
+                'Parameter "name" is required.',
+                StatusCodeInterface::STATUS_BAD_REQUEST
+            );
         }
 
-        if (!isset($postData['name'])) {
-            throw new InvalidArgumentException('Mix name is required');
-        }
-        
-        $name = $postData['name'];
-        if (!is_string($name) || empty(trim($name))) {
-            throw new InvalidArgumentException('Mix name must be a non-empty string');
+        $description = $body['description'] ?? null;
+
+        $comment = $body['comment'] ?? null;
+
+        $created = $body['created'] ?? new DateTime();
+
+        if (is_string($created)) {
+            $created = new DateTime($created);
+
+            /* Docelowo:
+            $created = DateTime::createFromFormat(DateTime::ATOM, $created);
+
+            if (!$created) {
+                throw new InvalidArgumentException(
+                    'Parameter "created" has an invalid value (must be a valid date in ISO8601 format)',
+                    StatusCodeInterface::STATUS_BAD_REQUEST
+                );
+            }
+            */
         }
 
-        if (!isset($postData['description'])) {
-            throw new InvalidArgumentException('Mix description is required');
-        }
-        
-        $description = $postData['description'];
-        if (!is_string($description)) {
-            throw new InvalidArgumentException('Mix description must be a string');
+        $modified = $body['modified'] ?? null;
+
+        if (is_string($modified)) {
+            $modified = new DateTime($modified);
+
+            /* Docelowo:
+            $modified = DateTime::createFromFormat(DateTime::ATOM, $modified);
+
+            if (!$modified) {
+                throw new InvalidArgumentException(
+                    'Parameter "modified" has an invalid value (must be a valid date in ISO8601 format)',
+                    StatusCodeInterface::STATUS_BAD_REQUEST
+                );
+            }
+            */
         }
 
-        $comment = $postData['comment'] ?? null;
-        if ($comment !== null && !is_string($comment)) {
-            throw new InvalidArgumentException('Mix comment must be a string or null');
-        }
+        $performed = $body['performed'] ?? null;
 
-        $created = $postData['created'] ?? null;
-        if ($created !== null && (!is_string($created) || empty($created))) {
-            throw new InvalidArgumentException('Created date must be a non-empty string or null');
-        }
+        if (is_string($performed)) {
+            $performed = new DateTime($performed);
 
-        $modified = $postData['modified'] ?? null;
-        if ($modified !== null && (!is_string($modified) || empty($modified))) {
-            throw new InvalidArgumentException('Modified date must be a non-empty string or null');
-        }
+            /* Docelowo:
+            $performed = DateTime::createFromFormat(DateTime::ATOM, $performed);
 
-        $performed = $postData['performed'] ?? null;
-        if ($performed !== null && (!is_string($performed) || empty($performed))) {
-            throw new InvalidArgumentException('Performed date must be a non-empty string or null');
+            if (!$performed) {
+                throw new InvalidArgumentException(
+                    'Parameter "performed" has an invalid value (must be a valid date in ISO8601 format)',
+                    StatusCodeInterface::STATUS_BAD_REQUEST
+                );
+            }
+            */
         }
 
         return new self(
             trim($name),
-            $description,
-            $comment,
+            trim($description),
+            trim($comment),
             $created,
             $modified,
-            $performed
+            $performed,
         );
     }
 } 

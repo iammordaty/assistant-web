@@ -3,17 +3,16 @@
 namespace Assistant\Module\Mix\Controller;
 
 use Assistant\Module\Mix\Extension\Mix\AttemptSaveRequest;
+use Assistant\Module\Mix\Extension\Mix\MixPropertiesData;
 use Assistant\Module\Mix\Extension\Mix\MixSaveRequest;
 use Assistant\Module\Mix\Extension\MixService;
-use Assistant\Module\Mix\Model\AttemptDto;
-use Assistant\Module\Mix\Model\Mix;
-use Assistant\Module\Mix\Model\MixDto;
-use DateTime;
+use Fig\Http\Message\StatusCodeInterface;
 use InvalidArgumentException;
 use Psr\Http\Message\ResponseInterface;
 use Slim\Http\Response;
 use Slim\Http\ServerRequest;
 use Slim\Views\Twig;
+use Throwable;
 
 final class MixController
 {
@@ -21,14 +20,29 @@ final class MixController
     {
     }
 
-    public function index(ServerRequest $request, Response $response): ResponseInterface
+    public function create(ServerRequest $request, Response $response): ResponseInterface
+    {
+        $mix = $this->mixService->createNewMix();
+
+        return $this->view->render($response, '@mix/mix.twig', [
+            'menu' => 'mix',
+            'mix' => $mix->toDto()->toJson(),
+        ]);
+    }
+
+    public function view(ServerRequest $request, Response $response): ResponseInterface
     {
         $guid = $request->getAttribute('guid');
         $mix = $this->mixService->getByGuid($guid);
 
-        if (isset($request->getQueryParams()['dump'])) {
-            /** @noinspection DebugFunctionUsageInspection */
-            dump($mix, $mix->toDto()->toJson());
+        if (!$mix) {
+            return $response
+                ->withJson([ 'message' => sprintf('Mix "%s" does not exist.', $guid)])
+                ->withStatus(StatusCodeInterface::STATUS_NOT_FOUND);
+        }
+
+        if ($request->getQueryParam('dump') !== null) {
+            d($mix, $mix->toDto()->toJson());
         }
 
         return $this->view->render($response, '@mix/mix.twig', [
@@ -37,85 +51,115 @@ final class MixController
         ]);
     }
 
-    /* @fixme: wygenerowane przez AI */
-    public function saveMixProperties(ServerRequest $request, Response $response): Response
+    public function saveMix(ServerRequest $request, Response $response): Response
     {
-        try {
-            $guid = $request->getAttribute('guid');
-            $mix = $this->mixService->getByGuid($guid);
+        $guid = $request->getAttribute('guid');
 
-            if (!$mix) {
-                return $response->withJson([ 'error' => 'Mix not found' ], 404);
+        try {
+            $mixRequest = MixSaveRequest::create($request);
+
+            $mix = null;
+
+            if ($guid) {
+                $mix = $this->mixService->getByGuid($guid);
+
+                if (!$mix) {
+                    return $response
+                        ->withJson([ 'message' => sprintf('Mix "%s" does not exist.', $guid)])
+                        ->withStatus(StatusCodeInterface::STATUS_NOT_FOUND);
+                }
             }
 
-            $mixRequest = MixSaveRequest::create($request);
-            $mixDto = $mix->toDto();
-
-            $created = $mixRequest->created ? new DateTime($mixRequest->created) : $mixDto->created;
-            $modified = new DateTime();
-            $performed = $mixRequest->performed ? new DateTime($mixRequest->performed) : $mixDto->performed;
-
-            $updatedMixDto = new MixDto(
-                $mixDto->guid,
-                $mixRequest->name,
-                $mixRequest->description,
-                $created,
-                $modified,
-                $performed,
-                $mixRequest->comment,
-                $mixDto->attempts
-            );
-
-            $mix = $this->mixService->save(Mix::fromDto($updatedMixDto));
-
-            return $response->withJson($mix->toDto()->toJson());    
+            $savedMix = $this->mixService->saveMix($mix, $mixRequest);
+            
+            return $response->withJson($savedMix->toDto()->toJson());
         } catch (InvalidArgumentException $e) {
-            return $response->withJson([ 'error' => $e->getMessage() ], 400);
+            return $response
+                ->withJson([ 'message' => $e->getMessage() ])
+                ->withStatus(StatusCodeInterface::STATUS_BAD_REQUEST);
+        } catch (Throwable $e) {
+            $body = [
+                'message' => $e->getMessage(),
+                'file' => pathinfo($e->getFile(), PATHINFO_FILENAME) . ':' . $e->getLine(),
+            ];
+
+            return $response
+                ->withJson($body)
+                ->withStatus(StatusCodeInterface::STATUS_INTERNAL_SERVER_ERROR);
         }
     }
 
-    /* @fixme: wygenerowane przez AI */
     public function saveAttempt(ServerRequest $request, Response $response): Response
     {
+        $guid = $request->getAttribute('guid');
+
         try {
-            $guid = $request->getAttribute('guid');
+            $attemptRequest = AttemptSaveRequest::create($request);
+
             $mix = $this->mixService->getByGuid($guid);
 
             if (!$mix) {
-                return $response->withJson([ 'error' => 'Mix not found' ], 404);
+                return $response
+                    ->withJson([ 'message' => sprintf('Mix "%s" does not exist.', $guid)])
+                    ->withStatus(StatusCodeInterface::STATUS_NOT_FOUND);
             }
 
-            $attemptRequest = AttemptSaveRequest::create($request);
-
-            $mixDto = $mix->toDto();
-
-            $attemptIndex = $attemptRequest->number - 1;
-
-            if (!isset($mixDto->attempts[$attemptIndex])) {
-                return $response->withJson([ 'error' => 'Attempt not found' ], 404);
-            }
-
-            $updatedAttempt = AttemptDto::fromRequest($attemptRequest);
-
-            $attempts = $mixDto->attempts;
-            $attempts[$attemptIndex] = $updatedAttempt;
-
-            $updatedMixDto = new MixDto(
-                $mixDto->guid,
-                $mixDto->name,
-                $mixDto->description,
-                $mixDto->created,
-                new DateTime(),
-                $mixDto->performed,
-                $mixDto->comment,
-                $attempts
-            );
-
-            $mix = $this->mixService->save(Mix::fromDto($updatedMixDto));
-
-            return $response->withJson($mix->toDto()->toJson());
+            $savedMix = $this->mixService->saveAttempt($mix, $attemptRequest);
+            
+            return $response->withJson($savedMix->toDto()->toJson());
         } catch (InvalidArgumentException $e) {
-            return $response->withJson(['error' => $e->getMessage()], 400);
+            return $response
+                ->withJson([ 'message' => $e->getMessage() ])
+                ->withStatus(StatusCodeInterface::STATUS_BAD_REQUEST);
+        } catch (Throwable $e) {
+            $body = [
+                'message' => $e->getMessage(),
+                'file' => pathinfo($e->getFile(), PATHINFO_FILENAME) . ':' . $e->getLine(),
+            ];
+
+            return $response
+                ->withStatus(StatusCodeInterface::STATUS_INTERNAL_SERVER_ERROR)
+                ->withJson($body);
+        }
+    }
+
+    public function deleteMix(ServerRequest $request, Response $response): Response
+    {
+        $guid = $request->getAttribute('guid');
+
+        if (!$guid) {
+            return $response
+                ->withJson([ 'message' => 'Invalid mix identifier' ])
+                ->withStatus(StatusCodeInterface::STATUS_BAD_REQUEST);
+        }
+
+        try {
+            $mix = $this->mixService->getByGuid($guid);
+
+            if (!$mix) {
+                return $response
+                    ->withJson([ 'message' => sprintf('Mix "%s" does not exist.', $guid)])
+                    ->withStatus(StatusCodeInterface::STATUS_NOT_FOUND);
+            }
+
+            $result = $this->mixService->deleteMix($mix);
+            
+            if (!$result) {
+                return $response
+                    ->withJson([ 'message' => 'Failed to delete mix' ])
+                    ->withStatus(StatusCodeInterface::STATUS_INTERNAL_SERVER_ERROR);
+            }
+            
+            return $response->withStatus(StatusCodeInterface::STATUS_NO_CONTENT);
+        } catch (Throwable $e) {
+            $body = [
+                'message' => $e->getMessage(),
+                'file' => pathinfo($e->getFile(), PATHINFO_FILENAME) . ':' . $e->getLine(),
+            ];
+
+            return $response
+                ->withStatus(StatusCodeInterface::STATUS_INTERNAL_SERVER_ERROR)
+                ->withJson($body);
         }
     }
 }

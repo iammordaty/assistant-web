@@ -244,32 +244,6 @@ table .ast-track-name span {
     background: var(--tblr-bg-secondary, #f6f8fa);
 }
 
-.attempt-header-actions {
-    display: flex;
-    gap: 0.25rem;
-    opacity: 0;
-    transition: opacity 0.2s;
-}
-
-.card:hover .attempt-header-actions {
-    opacity: 0.5;
-}
-
-.ast-attempt-header:hover .attempt-header-actions {
-    opacity: 1;
-}
-
-.attempt-action-button {
-    opacity: 0.7;
-    transition: opacity 0.2s, background 0.2s;
-}
-
-.attempt-action-button:hover {
-    opacity: 1;
-    background: var(--tblr-bg-secondary, #f6f8fa);
-}
-
-/* New comment row opacity control via CSS instead of React */
 .ast-new-comment-row {
     opacity: 0.25;
     transition: opacity 0.2s ease;

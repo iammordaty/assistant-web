@@ -28,7 +28,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (!mixAppRoot) {
         console.error('Element #mix-app-root nie został znaleziony.');
-        
+
         return;
     }
 

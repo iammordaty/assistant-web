@@ -6,38 +6,52 @@ use DateTime;
 
 final readonly class Mix
 {
-    public function __construct(
+    private function __construct(
         public string $guid,
         public string $name,
-        public string $description,
+        public ?string $description,
         public DateTime $created,
         public DateTime $modified,
         public ?DateTime $performed,
         public ?string $comment,
         /** @var Attempt[] */
         public array $attempts,
-    ) {}
+    ) {
+    }
 
-    public function withAttempt(Attempt $attempt): self
-    {
-        $attempts = $this->attempts;
-        $attempts[] = $attempt;
+    public static function create(
+        string $guid,
+        string $name,
+        ?string $description = null,
+        DateTime $created = new DateTime(),
+        DateTime $modified = new DateTime(),
+        ?DateTime $performed = null,
+        ?string $comment = null,
+        array $attempts = [],
+    ): self {
+        if (!$attempts) {
+            $emptyAttempt = Attempt::createEmpty();
 
-        return new self(
-            $this->guid,
-            $this->name,
-            $this->description,
-            $this->created,
-            new DateTime(),
-            $this->performed,
-            $this->comment,
-            $attempts
+            $attempts = [ $emptyAttempt ];
+        }
+
+        $mix = new self(
+            guid: $guid,
+            name: $name,
+            description: $description,
+            created: $created,
+            modified: $modified,
+            performed: $performed,
+            comment: $comment,
+            attempts: $attempts,
         );
+
+        return $mix;
     }
 
     public static function fromDto(MixDto $dto): self
     {
-        return new self(
+        return self::create(
             $dto->guid,
             $dto->name,
             $dto->description,
@@ -46,7 +60,7 @@ final readonly class Mix
             $dto->performed,
             $dto->comment,
             array_map(
-                fn (AttemptDto $v) => Attempt::fromDto($v),
+                fn (AttemptDto $attemptDto) => Attempt::fromDto($attemptDto),
                 $dto->attempts
             )
         );

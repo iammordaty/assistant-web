@@ -16,14 +16,22 @@ return static function (App $app): void {
         ->setName('mix.harmonize.index');
 
     $app
-        ->map(['GET', 'POST'], '/mix/{guid}', [ MixController::class, 'index' ])
-        ->setName('mix.edit.index');
+        ->get('/mix/create', [ MixController::class, 'create' ])
+        ->setName('mix.mix.create');
 
     $app
-        ->post('/mix/{guid}/save', [ MixController::class, 'saveAttempt'])
-        ->setName('mix.edit.save');
+        ->get('/mix/{guid}', [ MixController::class, 'view'])
+        ->setName('mix.mix.view');
 
     $app
-        ->post('/mix/{guid}/properties', [ MixController::class, 'saveMixProperties'])
-        ->setName('mix.edit.properties');
+        ->post('/mix[/{guid}]', [ MixController::class, 'saveMix'])
+        ->setName('mix.mix.save-mix');
+
+    $app
+        ->post('/mix/{guid}/attempt', [ MixController::class, 'saveAttempt'])
+        ->setName('mix.mix.save-attempt');
+
+    $app
+        ->delete('/mix/{guid}', [ MixController::class, 'deleteMix'])
+        ->setName('mix.mix.delete');
 };

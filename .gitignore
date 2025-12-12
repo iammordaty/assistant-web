@@ -7,3 +7,4 @@
 /vendor/
 node_modules
 public/js/mix.dist.js
+public/js/mix.dist.js.map

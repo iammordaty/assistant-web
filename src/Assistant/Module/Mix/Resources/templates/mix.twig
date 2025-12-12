@@ -14,8 +14,8 @@
         id="mix-app-root"
         data-mix="{{ mix|json_encode }}"
         data-autocomplete-url="{{ url_for('track.track.autocomplete') }}"
-        data-save-attempt-url="{{ url_for('mix.edit.save', { guid: mix.guid }) }}"
-        data-save-mix-url="{{ url_for('mix.edit.properties', { guid: mix.guid }) }}"
+        data-save-attempt-url="{{ url_for('mix.mix.save-attempt', { guid: mix.guid }) }}"
+        data-save-mix-url="{{ url_for('mix.mix.save-mix', { guid: mix.guid }) }}"
     ></div>
 
     <script src="/js/mix.dist.js"></script>

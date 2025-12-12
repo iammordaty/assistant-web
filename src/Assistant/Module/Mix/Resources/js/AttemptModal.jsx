@@ -13,11 +13,11 @@ const AttemptModal = ({ comment = '', date = '', onSave, onClose, isOpen }) => {
 
     const handleSave = () => {
         const formData = new FormData(formRef.current);
-        const data = {
-            comment: formData.get('comment') || '',
-            date: formData.get('date') || ''
-        };
-        onSave(data);
+
+        onSave({
+            comment: formData.get('comment'),
+            date: formData.get('date'),
+        });
     };
 
     return (

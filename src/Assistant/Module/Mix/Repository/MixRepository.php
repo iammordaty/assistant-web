@@ -7,7 +7,6 @@ use Assistant\Module\Mix\Model\Mix;
 use Assistant\Module\Mix\Model\MixDto;
 use MongoDB\Database;
 use MongoDB\Model\BSONDocument;
-use Traversable;
 
 /** Repozytorium Mixów */
 final class MixRepository
@@ -36,9 +35,9 @@ final class MixRepository
             return null;
         }
 
-        $directory = self::createModel($document);
+        $mix = self::createModel($document);
 
-        return $directory;
+        return $mix;
     }
 
     /**
@@ -46,14 +45,14 @@ final class MixRepository
      * @param array|null $sort
      * @param int|null $limit
      * @param int|null $skip
-     * @return Mix[]|Traversable
+     * @return Mix[]|iterable
      */
     public function findBy(
         ?array $query = [],
         ?array $sort = null,
         ?int $limit = null,
         ?int $skip = null
-    ): array|Traversable {
+    ): iterable {
         $documents = $this->storage->findBy($query, options: [
             'sort' => $sort,
             'limit' => $limit,
@@ -61,9 +60,9 @@ final class MixRepository
         ]);
 
         foreach ($documents as $document) {
-            $logEntry = self::createModel($document);
+            $mix = self::createModel($document);
 
-            yield $logEntry;
+            yield $mix;
         }
     }
 
@@ -79,29 +78,33 @@ final class MixRepository
         return $count;
     }
 
-    public function save(Mix $mix): bool
+    // Tu do przemyślenia jeszcze: jeśli mix będzie miał mongoId nie trzeba będzie przekazywać dwóch parametrów
+    public function save(Mix $mix, Mix $updatedMix): bool
     {
-        $dto = $mix->toDto();
-        
-        // Sprawdź czy miks już istnieje w bazie
-        $existingDocument = $this->storage->findOneBy(['guid' => $dto->guid]);
-        
-        if ($existingDocument) {
-            // Update istniejącego miksu
-            $modifiedCount = $this->storage->update(['guid' => $dto->guid], $dto->toStorage());
-            return $modifiedCount > 0;
-        } else {
-            // Insert nowego miksu
-            $result = $this->storage->insert($dto->toStorage());
-            return $result;
-        }
+        $dto = $updatedMix->toDto();
+
+        $guid = $mix->guid ?? $dto->guid;
+        $hasMix = (bool) $this->storage->count([ 'guid' => $guid ]);
+
+        $result = $hasMix
+            ? $this->storage->update([ 'guid' => $guid ], $dto->toStorage())
+            : $this->storage->insert($dto->toStorage());
+
+        return (bool) $result;
+    }
+
+    public function delete(Mix $mix): bool
+    {
+        $result = (bool) $this->storage->removeBy([ 'guid' => $mix->guid ]);
+
+        return $result;
     }
 
     private static function createModel(BSONDocument $document): Mix
     {
         $dto = MixDto::fromStorage($document->bsonSerialize());
-        $logEntry = Mix::fromDto($dto);
+        $mix = Mix::fromDto($dto);
 
-        return $logEntry;
+        return $mix;
     }
 }

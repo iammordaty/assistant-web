@@ -1,6 +1,6 @@
 import { useState } from 'react';
 
-const DATA_FALLBACK = '(⊙.☉)7';
+const DATE_FALLBACK = '(⊙.☉)7';
 
 const styles = {
     backgroundColor: 'rgba(255, 255, 255, 0.8)',
@@ -50,14 +50,14 @@ const formatBuildSize = sizeKb => {
     }
 };
 
-export default AppBuildInfo = ({ buildInfo }) => {
+export default function ({ buildInfo }) {
     const [isHovered, setIsHovered] = useState(false);
 
     const breadcrumbItems = !!buildInfo ? [
         formatBuildDate(buildInfo.buildDate),
         formatBuildTime(buildInfo.buildTimeMs),
         formatBuildSize(buildInfo.buildSizeKb),
-      ] : [DATA_FALLBACK];
+      ] : [DATE_FALLBACK];
 
     return (
         <div

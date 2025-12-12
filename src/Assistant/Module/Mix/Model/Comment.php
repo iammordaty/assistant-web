@@ -5,8 +5,8 @@ namespace Assistant\Module\Mix\Model;
 final readonly class Comment
 {
     public function __construct(
-        public int $time,
-        public string $type,
+        public ?int $time,
+        public ?string $type,
         public string $content,
     ) {}
 

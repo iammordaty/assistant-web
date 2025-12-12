@@ -10,7 +10,8 @@ use MongoDB\Model\BSONDocument;
 
 final class AttemptDto
 {
-    public function __construct(
+    private function __construct(
+        public ?string $id,
         public DateTime $created,
         public ?string $comment,
         /** @var TrackEntryDto[] */
@@ -18,18 +19,24 @@ final class AttemptDto
     ) {
     }
 
-    public static function fromStorage(BSONDocument $version): self
+    public static function fromStorage(BSONDocument $attempt): self
     {
+        /** @var UTCDateTime $created */
+        $created = $attempt['created'];
+
         /** @var BSONArray $trackList */
-        $trackList = $version->trackList;
+        $trackList = $attempt['trackList'];
+
+        $trackList = array_map(
+            fn (BSONDocument $entry) => TrackEntryDto::fromStorage($entry),
+            $trackList->getArrayCopy()
+        );
 
         return new self(
-            $version->created->toDateTime(),
-            $version->comment ?? null,
-            array_map(
-                fn ($item) => TrackEntryDto::fromStorage($item),
-                $trackList->getArrayCopy()
-            )
+            $attempt['id'],
+            $created->toDateTime(),
+            $attempt['comment'],
+            $trackList,
         );
     }
 
@@ -41,34 +48,25 @@ final class AttemptDto
         );
 
         return new self(
-            $attempt->created,
-            $attempt->comment,
-            $trackList
+            id: $attempt->id,
+            created: $attempt->created,
+            comment: $attempt->comment,
+            trackList: $trackList,
         );
     }
 
     public static function fromRequest(AttemptSaveRequest $request): self
     {
-        $trackListDto = array_map(function($trackEntryData) {
-            $comments = array_map(function($commentData) {
-                return new CommentDto(
-                    $commentData['time'] ?? 0,
-                    $commentData['type'] ?? 'general',
-                    $commentData['content']
-                );
-            }, $trackEntryData['comments']);
-
-            return new TrackEntryDto(
-                $trackEntryData['trackGuid'],
-                null, // track będzie załadowany przez MixService
-                $comments
-            );
-        }, $request->trackList);
+        $trackList = array_map(
+            fn (array $entry) => TrackEntryDto::fromJson($entry),
+            $request->trackList
+        );
 
         return new self(
-            new DateTime($request->created),
+            $request->id,
+            $request->created,
             $request->comment,
-            $trackListDto
+            $trackList,
         );
     }
 
@@ -80,7 +78,23 @@ final class AttemptDto
         );
 
         return [
+            'id' => $this->id,
             'created' => new UTCDateTime($this->created->getTimestamp() * 1000),
+            'comment' => $this->comment,
+            'trackList' => $trackList,
+        ];
+    }
+
+    public function toJson(): array
+    {
+        $trackList = array_map(
+            fn (TrackEntryDto $dto) => $dto->toJson(),
+            $this->trackList,
+        );
+
+        return [
+            'id' => $this->id,
+            'created' => $this->created->format(DateTime::ATOM),
             'comment' => $this->comment,
             'trackList' => $trackList,
         ];

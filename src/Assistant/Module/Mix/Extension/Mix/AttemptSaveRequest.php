@@ -2,14 +2,14 @@
 
 namespace Assistant\Module\Mix\Extension\Mix;
 
-use InvalidArgumentException;
+use DateTime;
 use Slim\Http\ServerRequest;
 
 final class AttemptSaveRequest
 {
-    public function __construct(
-        public int $number,
-        public string $created,
+    private function __construct(
+        public ?string $id,
+        public DateTime $created,
         public ?string $comment,
         public array $trackList,
     ) {
@@ -17,70 +17,31 @@ final class AttemptSaveRequest
 
     public static function create(ServerRequest $request): self
     {
-        $postData = $request->getParsedBody();
-        
-        if (!is_array($postData)) {
-            throw new InvalidArgumentException('Request body must be an array');
-        }
+        $body = $request->getParsedBody();
 
-        if (!isset($postData['number'])) {
-            throw new InvalidArgumentException('Attempt number is required');
-        }
-        
-        $number = (int) $postData['number'];
-        if ($number <= 0) {
-            throw new InvalidArgumentException('Attempt number must be greater than 0');
-        }
+        $id = $body['id'] ?? null;
 
-        if (!isset($postData['created'])) {
-            throw new InvalidArgumentException('Created date is required');
-        }
-        
-        $created = $postData['created'];
-        if (!is_string($created) || empty($created)) {
-            throw new InvalidArgumentException('Created date must be a non-empty string');
-        }
+        $created = $body['created'] ?? new DateTime();
 
-        // Walidacja listy utworów
-        if (!isset($postData['trackList'])) {
-            throw new InvalidArgumentException('Track list is required');
-        }
-        
-        $trackList = $postData['trackList'];
-        if (!is_array($trackList)) {
-            throw new InvalidArgumentException('Track list must be an array');
-        }
+        if (is_string($created)) {
+            $created = new DateTime($created);
 
-        foreach ($trackList as $index => $trackEntry) {
-            if (!is_array($trackEntry)) {
-                throw new InvalidArgumentException("Track entry at index {$index} must be an array");
+            /* Docelowo:
+            $created = DateTime::createFromFormat(DateTime::ATOM, $created);
+
+            if (!$created) {
+                throw new InvalidArgumentException(
+                    'Parameter "created" has an invalid value (must be a valid date in ISO8601 format)',
+                    StatusCodeInterface::STATUS_BAD_REQUEST
+                );
             }
-            
-            if (!isset($trackEntry['trackGuid'])) {
-                throw new InvalidArgumentException("Track entry at index {$index} missing trackGuid");
-            }
-            
-            if (!isset($trackEntry['comments']) || !is_array($trackEntry['comments'])) {
-                throw new InvalidArgumentException("Track entry at index {$index} missing or invalid comments array");
-            }
-            
-            // Walidacja komentarzy
-            foreach ($trackEntry['comments'] as $commentIndex => $comment) {
-                if (!is_array($comment)) {
-                    throw new InvalidArgumentException("Comment at track {$index}, comment {$commentIndex} must be an array");
-                }
-                
-                if (!isset($comment['content'])) {
-                    throw new InvalidArgumentException("Comment at track {$index}, comment {$commentIndex} missing content");
-                }
-            }
+            */
         }
 
-        return new self(
-            $number,
-            $created,
-            $postData['comment'] ?? null,
-            $trackList
-        );
+        $comment = $body['comment'] ?? null;
+
+        $trackList = $body['trackList'] ?? [];
+
+        return new self($id, $created, $comment, $trackList);
     }
-} 
+}

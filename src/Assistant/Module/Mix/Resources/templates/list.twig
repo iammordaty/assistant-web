@@ -8,7 +8,7 @@
 {# TODO: Pociąć na mniejsze szablony #}
 
 {% block page_actions %}
-    <a href="" class="btn btn-primary">
+    <a href="{{ url_for('mix.mix.create') }}" class="btn btn-primary">
         <svg
             xmlns="http://www.w3.org/2000/svg"
             width="24"
@@ -52,7 +52,7 @@
                             <tr>
                                 <td>
                                     <a
-                                        href="{{ url_for('mix.edit.index', { 'guid': mix.guid }) }}"
+                                        href="{{ url_for('mix.mix.view', { 'guid': mix.guid }) }}"
                                         class="d-inline-block mb-1"
                                         {% if mix.comment %}
                                             data-bs-toggle="tooltip"
@@ -76,16 +76,34 @@
                                 <td class="text-muted">{{ mix.created|date('d.m.Y, H:i') }}</td>
                                 <td class="text-muted">{{ mix.modified|date('d.m.Y, H:i') }}</td>
                                 <td>
-                                    <a href="{{ url_for('mix.edit.index', { 'guid': mix.guid }) }}" class="btn btn-icon">
-                                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-music-share">
-                                            <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
-                                            <path d="M3 17a3 3 0 1 0 6 0a3 3 0 0 0 -6 0" />
-                                            <path d="M9 17v-13h10v9" />
-                                            <path d="M9 8h10" />
-                                            <path d="M16 22l5 -5" />
-                                            <path d="M21 21.5v-4.5h-4.5" />
-                                        </svg>
-                                    </a>
+                                    <div class="btn-list flex-nowrap">
+                                        <a href="{{ url_for('mix.mix.view', { 'guid': mix.guid }) }}" class="btn btn-icon">
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-music-share">
+                                                <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+                                                <path d="M3 17a3 3 0 1 0 6 0a3 3 0 0 0 -6 0" />
+                                                <path d="M9 17v-13h10v9" />
+                                                <path d="M9 8h10" />
+                                                <path d="M16 22l5 -5" />
+                                                <path d="M21 21.5v-4.5h-4.5" />
+                                            </svg>
+                                        </a>
+                                        <button
+                                            class="btn btn-icon"
+                                            data-role="mix:delete"
+                                            data-mix-guid="{{ mix.guid }}"
+                                            data-mix-name="{{ mix.name }}"
+                                            title="Usuń miks"
+                                        >
+                                            <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-trash" width="24" height="24" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                                <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+                                                <path d="M4 7l16 0"></path>
+                                                <path d="M10 11l0 6"></path>
+                                                <path d="M14 11l0 6"></path>
+                                                <path d="M5 7l1 12a2 2 0 0 0 2 2h8a2 2 0 0 0 2 -2l1 -12"></path>
+                                                <path d="M9 7v-3a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v3"></path>
+                                            </svg>
+                                        </button>
+                                    </div>
                                 </td>
                             </tr>
                         {% else %}
@@ -113,4 +131,8 @@
         </div>
     </div>
 </div>
+
+{% include '@mix/list/modal-delete.twig' %}
+
+<script src="/js/mix.js" type="text/javascript"></script>
 {% endblock %}
