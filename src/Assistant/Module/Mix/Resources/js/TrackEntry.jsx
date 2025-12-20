@@ -1,24 +1,93 @@
-import React from 'react';
-import { IconCaretUpDown, IconEdit, IconMessage, IconTrash } from '@tabler/icons-react';
+import { useRef } from 'react';
+import { IconArrowBackUp, IconCaretUpDown, IconEdit, IconMessage, IconMoodSmile, IconTrash } from '@tabler/icons-react';
 
 import TrackAvatar from './TrackAvatar';
 import formatSeconds from '@public/js/modules/format-seconds.js';
 import urlFor from '@public/js/modules/url-for.js';
 
-const TrackEntry = React.memo(({ trackEntry, onEdit, onDelete }) => {
+const TrackEntry = ({ 
+    trackEntry, 
+    index,
+    isHighlighted,
+    dragState,
+    dragHandlers,
+    onEdit, 
+    onDelete,
+    onHighlight
+}) => {
+    const rowRef = useRef(null);
+    const avatarRef = useRef(null);
     const { track, comments } = trackEntry;
 
     if (!track) {
         return null;
     }
 
+    const handleDragStart = (e) => {
+        if (rowRef.current && avatarRef.current) {
+            const rowRect = rowRef.current.getBoundingClientRect();
+            const avatarRect = avatarRef.current.getBoundingClientRect();
+            e.dataTransfer.setDragImage(
+                rowRef.current,
+                e.clientX - rowRect.left,
+                avatarRect.top - rowRect.top + avatarRect.height / 2
+            );
+        }
+        e.dataTransfer.effectAllowed = 'move';
+        dragHandlers.onDragStart(index);
+    };
+
+    const handleDragOver = (e) => {
+        e.preventDefault();
+        
+        if (!rowRef.current) {
+            return;
+        }
+
+        const rect = rowRef.current.getBoundingClientRect();
+        
+        dragHandlers.onDragOver(index, e.clientY < rect.top + rect.height * 0.20);
+    };
+
+    const handleDrop = (e) => {
+        e.preventDefault();
+
+        dragHandlers.onDrop();
+    };
+
+    const isCancel = dragState?.cancel;
+
     return (
-        <div className="row ast-track-item py-2 align-items-center rounded-3">
+        <div 
+            ref={rowRef}
+            className="row ast-track-item py-2 align-items-center rounded-3"
+            data-highlighted={isHighlighted || undefined}
+            data-dragging={dragState?.dragging || undefined}
+            data-cancel={isCancel || undefined}
+            data-indicator={dragState?.indicator}
+            data-shift={dragState?.shift}
+            onMouseEnter={onHighlight}
+            onDoubleClick={onEdit}
+            onDragOver={handleDragOver}
+            onDrop={handleDrop}
+        >
             <div className="col d-flex align-items-center">
-                <div className="avatar track-avatar-hoverable me-3">
+                <div 
+                    ref={avatarRef}
+                    className="avatar track-avatar-hoverable me-3"
+                    draggable
+                    onDragStart={handleDragStart}
+                    onDragEnd={dragHandlers.onDragEnd}
+                >
                     <TrackAvatar track={track} />
                     <span className="avatar-drag-icon">
-                        <IconCaretUpDown className="icon" stroke={1.5} />
+                        {isCancel ? (
+                            <IconMoodSmile className="icon" stroke={1.5} />
+                        ) : dragState?.dragging ? (
+                            <IconArrowBackUp className="icon" stroke={1.5} />
+                        ) : (
+                            <IconCaretUpDown className="icon" stroke={1.5} />
+                        )}
                     </span>
                 </div>
                 <div>
@@ -114,6 +183,6 @@ const TrackEntry = React.memo(({ trackEntry, onEdit, onDelete }) => {
             </div>
         </div>
     );
-});
+};
 
 export default TrackEntry;

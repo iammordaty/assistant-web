@@ -3,6 +3,7 @@
 namespace Assistant\Module\Mix\Model;
 
 use DateTime;
+use DateTimeImmutable;
 use MongoDB\BSON\UTCDateTime;
 use MongoDB\Model\BSONArray;
 use MongoDB\Model\BSONDocument;
@@ -14,9 +15,9 @@ final class MixDto
         public string $guid,
         public string $name,
         public ?string $description,
-        public DateTime $created,
-        public DateTime $modified,
-        public ?DateTime $performed,
+        public DateTimeImmutable $created,
+        public DateTimeImmutable $modified,
+        public ?DateTimeImmutable $performed,
         public ?string $comment,
         /** @var AttemptDto[] */
         public array $attempts,
@@ -37,9 +38,9 @@ final class MixDto
             guid: $document->guid,
             name: $document->name,
             description: $document->description,
-            created: $document->created->toDateTime(),
-            modified: $document->modified->toDateTime(),
-            performed: isset($document->performed) ? $document->performed->toDateTime() : null,
+            created: $document->created->toDateTimeImmutable(),
+            modified: $document->modified->toDateTimeImmutable(),
+            performed: isset($document->performed) ? $document->performed->toDateTimeImmutable() : null,
             comment: $document->comment,
             attempts: $attempts,
         );

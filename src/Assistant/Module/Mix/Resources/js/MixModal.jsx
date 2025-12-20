@@ -1,26 +1,22 @@
 import { useEffect, useRef, useState } from 'react';
 import Modal from './Modal';
+import { formatDateTimeForInput } from './utils/dateUtils';
 
 const MixModal = ({
-    name = '',
-    description = '',
-    comment = '',
-    created = '',
-    modified = '',
-    performed = '',
+    mix,
     onSave,
     onClose,
     isOpen
 }) => {
-    const [currentName, setCurrentName] = useState(name);
+    const [currentName, setCurrentName] = useState(mix?.name || '');
     const nameInputRef = useRef();
     const formRef = useRef();
 
     useEffect(() => {
-        if (isOpen) {
-            setCurrentName(name);
+        if (isOpen && mix) {
+            setCurrentName(mix.name || '');
         }
-    }, [isOpen, name]);
+    }, [isOpen, mix]);
 
     const handleModalOpen = () => {
         if (nameInputRef.current) {
@@ -73,7 +69,7 @@ const MixModal = ({
                             className="form-control"
                             rows="3"
                             placeholder="Wprowadź opis miksu..."
-                            defaultValue={description}
+                            defaultValue={mix?.description || ''}
                         />
                     </div>
                     <div className="mb-3">
@@ -84,7 +80,7 @@ const MixModal = ({
                                     name="created"
                                     type="datetime-local"
                                     className="form-control"
-                                    defaultValue={created}
+                                    defaultValue={formatDateTimeForInput(mix?.created)}
                                 />
                             </div>
                             <div className="col-4">
@@ -93,7 +89,7 @@ const MixModal = ({
                                     name="modified"
                                     type="datetime-local"
                                     className="form-control"
-                                    defaultValue={modified}
+                                    defaultValue={formatDateTimeForInput(mix?.modified)}
                                 />
                             </div>
                             <div className="col-4">
@@ -102,7 +98,7 @@ const MixModal = ({
                                     name="performed"
                                     type="datetime-local"
                                     className="form-control"
-                                    defaultValue={performed}
+                                    defaultValue={formatDateTimeForInput(mix?.performed)}
                                 />
                             </div>
                         </div>
@@ -114,7 +110,7 @@ const MixModal = ({
                             className="form-control"
                             rows="4"
                             placeholder="Dodaj komentarz do miksu..."
-                            defaultValue={comment}
+                            defaultValue={mix?.comment || ''}
                         />
                     </div>
                 </div>

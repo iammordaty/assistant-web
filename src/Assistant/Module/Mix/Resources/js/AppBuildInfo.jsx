@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, version as REACT_VERSION } from 'react';
 
 const DATE_FALLBACK = '(⊙.☉)7';
 
@@ -21,6 +21,7 @@ const styles = {
 
 const formatBuildDate = isoString => {
     if (!isoString) return null;
+
     return (new Date(isoString)).toLocaleString('pl-PL', {
         day: '2-digit',
         month: '2-digit',
@@ -31,23 +32,23 @@ const formatBuildDate = isoString => {
 };
 
 const formatBuildTime = timeMs => {
-    if (!timeMs && timeMs !== 0) return null;
+    if (!timeMs) return null;
+
     if (timeMs < 1000) {
         return `${timeMs}ms`;
-    } else {
-        const timeInSeconds = parseFloat((timeMs / 1000).toFixed(2));
-        return `${timeInSeconds}s`;
     }
+
+    return `${(parseFloat((timeMs / 1000).toFixed(2)))}s`;
 };
 
 const formatBuildSize = sizeKb => {
-    if (!sizeKb && sizeKb !== 0) return null;
+    if (!sizeKb) return null;
+
     if (sizeKb < 1024) {
         return `~${Math.floor(sizeKb)}KB`;
-    } else {
-        const sizeInMb = parseFloat((sizeKb / 1024).toFixed(2));
-        return `~${sizeInMb}MB`;
     }
+
+    return `~${(parseFloat((sizeKb / 1024).toFixed(2)))}MB`;
 };
 
 export default function ({ buildInfo }) {
@@ -59,11 +60,13 @@ export default function ({ buildInfo }) {
         formatBuildSize(buildInfo.buildSizeKb),
       ] : [DATE_FALLBACK];
 
+    breadcrumbItems.push(`React ${REACT_VERSION}`);
+
     return (
         <div
             style={{
                 ...styles,
-                opacity: isHovered ? 1 : 0.3,
+                opacity: isHovered ? 1 : 0.4,
             }}
             onMouseEnter={() => setIsHovered(true)}
             onMouseLeave={() => setIsHovered(false)}

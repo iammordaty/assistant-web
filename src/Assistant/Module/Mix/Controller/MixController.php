@@ -3,7 +3,6 @@
 namespace Assistant\Module\Mix\Controller;
 
 use Assistant\Module\Mix\Extension\Mix\AttemptSaveRequest;
-use Assistant\Module\Mix\Extension\Mix\MixPropertiesData;
 use Assistant\Module\Mix\Extension\Mix\MixSaveRequest;
 use Assistant\Module\Mix\Extension\MixService;
 use Fig\Http\Message\StatusCodeInterface;

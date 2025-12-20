@@ -49,17 +49,19 @@ const Modal = ({ isOpen, onClose, onOpen, title, children, className = '', ...pr
         >
             <div className={modalClasses}>
                 <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-                    <div className="modal-header">
-                        <h5 className="modal-title">{title}</h5>
-                        {onClose && (
-                        <button
-                            type="button"
-                            className="btn-close"
-                            onClick={onClose}
-                            aria-label="Close"
-                        />
-                        )}
-                    </div>
+                    {title && ( 
+                        <div className="modal-header">
+                            <h5 className="modal-title">{title}</h5>
+                            {onClose && (
+                            <button
+                                type="button"
+                                className="btn-close"
+                                onClick={onClose}
+                                aria-label="Close"
+                            />
+                            )}
+                        </div>
+                    )}
                     {children}
                 </div>
             </div>

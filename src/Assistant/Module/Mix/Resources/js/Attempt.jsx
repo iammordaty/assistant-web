@@ -1,16 +1,13 @@
 import TrackEntry from './TrackEntry';
 import formatSeconds from '@public/js/modules/format-seconds.js';
+import { useDragReorder } from './hooks/useDragReorder';
 
 const calculateTrackListDuration = (trackList) => {
     if (!trackList || trackList.length === 0) {
         return 0;
     }
 
-    return trackList.reduce((total, trackEntry) => {
-        const trackLength = trackEntry.track.length;
-
-        return total + trackLength;
-    }, 0);
+    return trackList.reduce((total, trackEntry) => total + trackEntry.track.length, 0);
 };
 
 const AttemptHeader = ({ attempt, onEdit }) => {
@@ -39,39 +36,53 @@ const AttemptHeader = ({ attempt, onEdit }) => {
     );
 };
 
-const Attempt = ({ attempt, onEditTrack, onAddTrack, onDeleteTrack, onEditAttempt }) => (
-    <div className="card mb-5">
-        <AttemptHeader
-            attempt={attempt}
-            onEdit={onEditAttempt}
-        />
+const Attempt = ({ attempt, highlightedTrackIndex, onHighlightTrack, onEditTrack, onAddTrack, onDeleteTrack, onEditAttempt, onReorderTracks }) => {
+    const trackListLength = attempt.trackList.length;
+    
+    const { handlers, getItemState } = useDragReorder(
+        trackListLength,
+        (fromIndex, toIndex) => onReorderTracks(attempt, fromIndex, toIndex)
+    );
 
-        <div className="card-body">
-            {attempt.trackList.length === 0 ? (
-                <div className="empty p-3 opacity-75">
-                    <p className="empty-title">Ta próba nie ma jeszcze utworów</p>
-                    <p className="empty-subtitle text-secondary">
-                        Kliknij "Dodaj utwór" poniżej, aby rozpocząć
-                    </p>
-                </div>
-            ) : (
-                attempt.trackList.map((trackEntry, idx) => (
-                    <TrackEntry
-                        key={trackEntry.track.guid + idx + (trackEntry.comments || []).length}
-                        trackEntry={trackEntry}
-                        onEdit={() => onEditTrack(trackEntry.track, trackEntry.comments || [], idx)}
-                        onDelete={() => onDeleteTrack(attempt, trackEntry)}
-                    />
-                ))
-            )}
-        </div>
+    return (
+        <div className="card mb-5">
+            <AttemptHeader
+                attempt={attempt}
+                onEdit={onEditAttempt}
+            />
 
-        <div className="card-footer text-center">
-            <button className="btn btn-primary" onClick={onAddTrack}>
-                Dodaj utwór
-            </button>
+            <div className="card-body">
+                {trackListLength === 0 ? (
+                    <div className="empty p-3 opacity-75">
+                        <p className="empty-title">Ta próba nie ma jeszcze utworów</p>
+                        <p className="empty-subtitle text-secondary">
+                            Kliknij "Dodaj utwór" poniżej, aby rozpocząć
+                        </p>
+                    </div>
+                ) : (
+                    attempt.trackList.map((trackEntry, idx) => (
+                        <TrackEntry
+                            key={trackEntry.track.guid + idx + (trackEntry.comments || []).length}
+                            trackEntry={trackEntry}
+                            index={idx}
+                            isHighlighted={highlightedTrackIndex === idx}
+                            dragState={getItemState(idx, idx === trackListLength - 1)}
+                            dragHandlers={handlers}
+                            onEdit={() => onEditTrack(trackEntry.track, trackEntry.comments || [], idx)}
+                            onDelete={() => onDeleteTrack(attempt, trackEntry)}
+                            onHighlight={() => onHighlightTrack(idx)}
+                        />
+                    ))
+                )}
+            </div>
+
+            <div className="card-footer text-center">
+                <button className="btn btn-primary" onClick={onAddTrack}>
+                    Dodaj utwór
+                </button>
+            </div>
         </div>
-    </div>
-);
+    );
+};
 
 export default Attempt;

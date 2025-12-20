@@ -2,13 +2,14 @@
 
 namespace Assistant\Module\Mix\Model;
 
-use DateTime;
+use DateTimeImmutable;
+use DateTimeZone;
 
 final class Attempt
 {
     private function __construct(
         public ?string $id,
-        public readonly DateTime $created,
+        public readonly DateTimeImmutable $created,
         public readonly ?string $comment,
         /** @var TrackEntry[] */
         public readonly array $trackList,
@@ -20,7 +21,7 @@ final class Attempt
     {
         return new self(
             id: null,
-            created: new DateTime('now', new \DateTimeZone('UTC')),
+            created: new DateTimeImmutable('now', new DateTimeZone('UTC')),
             comment: null,
             trackList: [],
         );

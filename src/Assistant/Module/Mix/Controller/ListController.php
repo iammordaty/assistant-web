@@ -29,6 +29,7 @@ final class ListController
         return $this->view->render($response, '@mix/list.twig', [
             'menu' => 'mix',
             'mixes' => $mixes,
+            'hasMixes' => $count > 0,
             'paginator' => $paginator,
         ]);
     }

@@ -2,7 +2,7 @@
 
 namespace Assistant\Module\Mix\Model;
 
-use DateTime;
+use DateTimeImmutable;
 
 final readonly class Mix
 {
@@ -10,9 +10,9 @@ final readonly class Mix
         public string $guid,
         public string $name,
         public ?string $description,
-        public DateTime $created,
-        public DateTime $modified,
-        public ?DateTime $performed,
+        public DateTimeImmutable $created,
+        public DateTimeImmutable $modified,
+        public ?DateTimeImmutable $performed,
         public ?string $comment,
         /** @var Attempt[] */
         public array $attempts,
@@ -23,9 +23,9 @@ final readonly class Mix
         string $guid,
         string $name,
         ?string $description = null,
-        DateTime $created = new DateTime(),
-        DateTime $modified = new DateTime(),
-        ?DateTime $performed = null,
+        DateTimeImmutable $created = new DateTimeImmutable(),
+        DateTimeImmutable $modified = new DateTimeImmutable(),
+        ?DateTimeImmutable $performed = null,
         ?string $comment = null,
         array $attempts = [],
     ): self {

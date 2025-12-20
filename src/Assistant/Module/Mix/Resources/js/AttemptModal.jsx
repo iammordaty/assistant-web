@@ -1,7 +1,9 @@
 import { useRef } from 'react';
-import Modal from './Modal';
 
-const AttemptModal = ({ comment = '', date = '', onSave, onClose, isOpen }) => {
+import Modal from './Modal';
+import { formatDateTimeForInput } from './utils/dateUtils';
+
+const AttemptModal = ({ attempt, onSave, onClose, isOpen }) => {
     const dateInputRef = useRef();
     const formRef = useRef();
 
@@ -20,6 +22,15 @@ const AttemptModal = ({ comment = '', date = '', onSave, onClose, isOpen }) => {
         });
     };
 
+    const handleKeyDown = (event) => {
+        console.log('handleKeyDown', event.key);
+        
+        if (event.key === 'Enter') {
+            event.preventDefault();
+            handleSave();
+        }
+    };
+
     return (
         <Modal
             isOpen={isOpen}
@@ -36,7 +47,8 @@ const AttemptModal = ({ comment = '', date = '', onSave, onClose, isOpen }) => {
                             name="date"
                             type="datetime-local"
                             className="form-control"
-                            defaultValue={date}
+                            defaultValue={formatDateTimeForInput(attempt?.created)}
+                            onKeyDown={handleKeyDown}
                         />
                     </div>
                     <div className="mb-2">
@@ -46,7 +58,7 @@ const AttemptModal = ({ comment = '', date = '', onSave, onClose, isOpen }) => {
                             className="form-control"
                             rows="4"
                             placeholder="Dodaj komentarz do próby..."
-                            defaultValue={comment}
+                            defaultValue={attempt?.comment || ''}
                         />
                     </div>
                 </div>

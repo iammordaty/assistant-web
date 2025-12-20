@@ -1,18 +1,21 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState, useTransition } from 'react';
 
 import Attempt from './Attempt';
 import AttemptModal from './AttemptModal';
 import AppBuildInfo from './AppBuildInfo';
+import KeyboardShortcutsHelpModal from './KeyboardShortcutsHelpModal';
 import MixModal from './MixModal';
 import TrackEntryModal from './TrackEntryModal';
 import toRomanNumeral from './utils/toRomanNumerals';
 import { useMixApi } from './hooks/useMixApi';
-import { formatDateTimeForInput } from './utils/dateUtils';
+import { useMixShortcuts } from './hooks/useMixShortcuts';
+import { useTrackHighlight } from './hooks/useTrackHighlight';
 
 import { IconPlus } from '@tabler/icons-react';
 
 const MixApp = ({ initialMix, autocompleteUrl }) => {
     const [mix, setMix] = useState(initialMix);
+    const [, startTransition] = useTransition();
 
     const attemptsWithNumbers = useMemo(() => {
         return mix.attempts.map((attempt, index) => ({
@@ -34,33 +37,38 @@ const MixApp = ({ initialMix, autocompleteUrl }) => {
         }
     }, [attemptsWithNumbers.length, selectedAttemptNumber]);
 
+    const trackListLength = selectedAttempt?.trackList?.length ?? 0;
+
+    const {
+        highlightedIndex: highlightedTrackIndex,
+        setHighlightedIndex: setHighlightedTrackIndex,
+        highlightNext: highlightNextTrack,
+        highlightPrev: highlightPrevTrack,
+    } = useTrackHighlight(trackListLength, [selectedAttemptNumber]);
+
     const [trackEntryModal, setTrackEntryModal] = useState({
         isOpen: false,
+        trackEntry: null,
         editingTrackEntryIndex: null,
     });
 
-    const [attemptModal, setAttemptModal] = useState({
-        isOpen: false,
-        comment: '',
-        date: '',
-    });
-
-    const [mixModal, setMixModal] = useState({
-        isOpen: false,
-    });
+    const [attemptModalOpen, setAttemptModalOpen] = useState(false);
+    const [mixModalOpen, setMixModalOpen] = useState(false);
 
     const { saveMix, saveAttempt } = useMixApi(mix, setMix);
 
     useEffect(() => {
         if (!mix.guid) {
-            openMixModal();
+            setMixModalOpen(true);
         }
     }, []);
 
     const handleAttemptChange = (event) => {
         const selectedNumber = parseInt(event.target.value, 10);
 
-        setSelectedAttemptNumber(selectedNumber);
+        startTransition(() => {
+            setSelectedAttemptNumber(selectedNumber);
+        });
     };
 
     const handleNewAttempt = async () => {
@@ -85,8 +93,7 @@ const MixApp = ({ initialMix, autocompleteUrl }) => {
     const openTrackEntryModal = (track = null, comments = [], trackEntryIndex = null) => {
         setTrackEntryModal({
             isOpen: true,
-            track,
-            comments,
+            trackEntry: track ? { track, comments } : null,
             editingTrackEntryIndex: trackEntryIndex,
         });
     };
@@ -94,6 +101,7 @@ const MixApp = ({ initialMix, autocompleteUrl }) => {
     const closeTrackEntryModal = () => {
         setTrackEntryModal({
             isOpen: false,
+            trackEntry: null,
             editingTrackEntryIndex: null,
         });
     };
@@ -139,21 +147,18 @@ const MixApp = ({ initialMix, autocompleteUrl }) => {
         await saveAttempt(updatedAttempt);
     };
 
-    const openAttemptModal = () => {
-        setAttemptModal({
-            isOpen: true,
-            comment: selectedAttempt.comment || '',
-            date: formatDateTimeForInput(selectedAttempt.created),
-        });
+    const reorderTracks = async (attempt, fromIndex, toIndex) => {
+        const trackList = [...attempt.trackList];
+        const [movedTrack] = trackList.splice(fromIndex, 1);
+        trackList.splice(toIndex, 0, movedTrack);
+
+        const updatedAttempt = { ...attempt, trackList };
+
+        await saveAttempt(updatedAttempt);
     };
 
-    const closeAttemptModal = () => {
-        setAttemptModal({
-            isOpen: false,
-            comment: '',
-            date: '',
-        });
-    };
+    const openAttemptModal = () => setAttemptModalOpen(true);
+    const closeAttemptModal = () => setAttemptModalOpen(false);
 
     const saveAttemptModal = async (data) => {
         const { comment, date } = data;
@@ -173,19 +178,8 @@ const MixApp = ({ initialMix, autocompleteUrl }) => {
         closeAttemptModal();
     };
 
-    const openMixModal = () => {
-        setMixModal({
-            isOpen: true,
-            name: mix.name || '',
-            description: mix.description || '',
-            comment: mix.comment || '',
-            created: formatDateTimeForInput(mix.created),
-            modified: formatDateTimeForInput(mix.modified),
-            performed: formatDateTimeForInput(mix.performed),
-        });
-    };
-
-    const closeMixModal = () => setMixModal({ isOpen: false });
+    const openMixModal = () => setMixModalOpen(true);
+    const closeMixModal = () => setMixModalOpen(false);
 
     const saveMixModal = async (mixData) => {
         await saveMix(mixData);
@@ -196,6 +190,28 @@ const MixApp = ({ initialMix, autocompleteUrl }) => {
     const buildInfo = window?.assistant?.mix?.buildInfo;
 
     const isMixSaved = !!mix.guid;
+
+    const switchToAttempt = (number) => {
+        if (number >= 1 && number <= attemptsWithNumbers.length) {
+            startTransition(() => {
+                setSelectedAttemptNumber(number);
+            });
+        }
+    };
+
+    const { helpModalOpen, closeHelpModal } = useMixShortcuts({
+        selectedAttempt,
+        highlightedTrackIndex,
+        highlightNextTrack,
+        highlightPrevTrack,
+        attemptsCount: attemptsWithNumbers.length,
+        openTrackEntryModal,
+        openAttemptModal,
+        openMixModal,
+        handleNewAttempt,
+        deleteTrack,
+        switchToAttempt,
+    });
 
     return (
         <>
@@ -218,7 +234,7 @@ const MixApp = ({ initialMix, autocompleteUrl }) => {
 
                         <div className="col-auto ms-auto">
                             <div className="btn-list">
-                                <div className="d-flex align-items-center gap-3">
+                                <div className="d-flex align-items-center gap-1">
                                     <select
                                         name="attempt-number"
                                         className="form-select w-auto"
@@ -249,10 +265,13 @@ const MixApp = ({ initialMix, autocompleteUrl }) => {
                     <div className="col-12">
                         <Attempt
                             attempt={selectedAttempt}
+                            highlightedTrackIndex={highlightedTrackIndex}
+                            onHighlightTrack={setHighlightedTrackIndex}
                             onEditTrack={openTrackEntryModal}
                             onAddTrack={openTrackEntryModal}
                             onDeleteTrack={deleteTrack}
                             onEditAttempt={openAttemptModal}
+                            onReorderTracks={reorderTracks}
                         />
                     </div>
                 </div>
@@ -261,8 +280,7 @@ const MixApp = ({ initialMix, autocompleteUrl }) => {
             <TrackEntryModal
                 key={`track-${selectedAttemptNumber}-${trackEntryModal.editingTrackEntryIndex}`}
                 isOpen={trackEntryModal.isOpen}
-                track={trackEntryModal.track}
-                comments={trackEntryModal.comments || []}
+                trackEntry={trackEntryModal.trackEntry}
                 autocompleteUrl={autocompleteUrl}
                 onSave={saveTrackEntry}
                 onClose={closeTrackEntryModal}
@@ -270,23 +288,22 @@ const MixApp = ({ initialMix, autocompleteUrl }) => {
 
             <AttemptModal
                 key={`attempt-${selectedAttemptNumber}`}
-                isOpen={attemptModal.isOpen}
-                comment={attemptModal.comment}
-                date={attemptModal.date}
+                isOpen={attemptModalOpen}
+                attempt={selectedAttempt}
                 onSave={saveAttemptModal}
                 onClose={closeAttemptModal}
             />
 
             <MixModal
-                isOpen={mixModal.isOpen}
-                name={mixModal.name}
-                description={mixModal.description}
-                comment={mixModal.comment}
-                created={mixModal.created}
-                modified={mixModal.modified}
-                performed={mixModal.performed}
+                isOpen={mixModalOpen}
+                mix={mix}
                 onSave={saveMixModal}
                 onClose={isMixSaved ? closeMixModal : undefined}
+            />
+
+            <KeyboardShortcutsHelpModal
+                isOpen={helpModalOpen}
+                onClose={closeHelpModal}
             />
         </>
     );

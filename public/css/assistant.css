@@ -186,15 +186,15 @@ table .ast-track-name span {
 
 .track-avatar-hoverable .avatar-drag-icon {
     opacity: 0;
-    cursor: pointer;
+    cursor: grab;
 }
 
-.track-avatar-hoverable:hover .avatar-initials {
+.track-avatar-hoverable .avatar-drag-icon:active {
+    cursor: grabbing;
+}
+
+.ast-track-item:hover .track-avatar-hoverable .avatar-initials {
     opacity: 0;
-}
-
-.track-avatar-hoverable:hover .avatar-drag-icon {
-    opacity: 1;
 }
 
 .ast-track-item:hover .track-avatar-hoverable .avatar-drag-icon {
@@ -211,15 +211,70 @@ table .ast-track-name span {
 }
 
 .ast-track-item {
-    transition: background-color 0.2s;
+    position: relative;
+    transition: background-color 0.2s, opacity 0.2s, transform 0.15s ease-out;
 }
 
-.ast-track-item:hover {
+.ast-track-item:hover,
+.ast-track-item[data-highlighted] {
     background-color: rgba(var(--tblr-primary-rgb), 0.16);
 }
 
-.ast-track-item:hover .track-avatar-hoverable .avatar-initials {
+.card-body:has([data-highlighted]) .ast-track-item:not([data-highlighted]):hover {
+    background-color: transparent;
+}
+
+.ast-track-item[data-highlighted] .track-actions,
+.ast-track-item:hover .track-actions {
+    opacity: 1;
+}
+
+.card-body:has([data-highlighted]) .ast-track-item:not([data-highlighted]):hover .track-actions {
     opacity: 0;
+}
+
+.ast-track-item[data-dragging] {
+    opacity: 0.4;
+}
+
+.ast-track-item[data-dragging] .track-actions {
+    display: none;
+}
+
+.ast-track-item[data-cancel] .track-avatar-hoverable .avatar-drag-icon {
+    opacity: 1;
+}
+
+.ast-track-item[data-cancel] .track-avatar-hoverable .avatar-initials {
+    opacity: 0;
+}
+
+.ast-track-item[data-shift="up"] {
+    transform: translateY(-6px);
+}
+
+.ast-track-item[data-shift="down"] {
+    transform: translateY(6px);
+}
+
+.ast-track-item[data-indicator="before"]::before,
+.ast-track-item[data-indicator="after"]::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: var(--tblr-primary);
+    border-radius: 1px;
+    pointer-events: none;
+}
+
+.ast-track-item[data-indicator="before"]::before {
+    top: -7px;
+}
+
+.ast-track-item[data-indicator="after"]::after {
+    bottom: -7px;
 }
 
 .track-actions {

@@ -14,7 +14,6 @@ use Assistant\Module\Search\Extension\TrackSearchService;
 use Assistant\Module\Track\Extension\Similarity\SimilarityBuilder;
 use Assistant\Module\Track\Model\Track;
 use Cocur\Slugify\Slugify;
-use DateTime;
 
 final class MixService
 {
@@ -110,7 +109,7 @@ final class MixService
             name: $mix->name,
             description: $mix->description,
             created: $mix->created,
-            modified: new DateTime('now', new \DateTimeZone('UTC')),
+            modified: $mix->modified,
             performed: $mix->performed,
             comment: $mix->comment,
             attempts: $attempts

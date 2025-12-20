@@ -2,16 +2,16 @@
 
 namespace Assistant\Module\Mix\Extension\Mix;
 
-use DateTime;
+use DateTimeImmutable;
 use Slim\Http\ServerRequest;
 
 final class AttemptSaveRequest
 {
     private function __construct(
         public ?string $id,
-        public DateTime $created,
+        public ?DateTimeImmutable $created,
         public ?string $comment,
-        public array $trackList,
+        public ?array $trackList,
     ) {
     }
 
@@ -21,21 +21,10 @@ final class AttemptSaveRequest
 
         $id = $body['id'] ?? null;
 
-        $created = $body['created'] ?? new DateTime();
+        $created = $body['created'] ?? new DateTimeImmutable();
 
         if (is_string($created)) {
-            $created = new DateTime($created);
-
-            /* Docelowo:
-            $created = DateTime::createFromFormat(DateTime::ATOM, $created);
-
-            if (!$created) {
-                throw new InvalidArgumentException(
-                    'Parameter "created" has an invalid value (must be a valid date in ISO8601 format)',
-                    StatusCodeInterface::STATUS_BAD_REQUEST
-                );
-            }
-            */
+            $created = new DateTimeImmutable($created);
         }
 
         $comment = $body['comment'] ?? null;

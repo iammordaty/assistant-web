@@ -4,6 +4,7 @@ namespace Assistant\Module\Mix\Model;
 
 use Assistant\Module\Mix\Extension\Mix\AttemptSaveRequest;
 use DateTime;
+use DateTimeImmutable;
 use MongoDB\BSON\UTCDateTime;
 use MongoDB\Model\BSONArray;
 use MongoDB\Model\BSONDocument;
@@ -12,7 +13,7 @@ final class AttemptDto
 {
     private function __construct(
         public ?string $id,
-        public DateTime $created,
+        public DateTimeImmutable $created,
         public ?string $comment,
         /** @var TrackEntryDto[] */
         public array $trackList,
@@ -34,7 +35,7 @@ final class AttemptDto
 
         return new self(
             $attempt['id'],
-            $created->toDateTime(),
+            $created->toDateTimeImmutable(),
             $attempt['comment'],
             $trackList,
         );

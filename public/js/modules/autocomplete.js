@@ -59,8 +59,10 @@ export default function ($input, onSelect) {
                 .val(item.name)
                 .attr('data-track', JSON.stringify(item));
 
-            // $input.typeahead('close'); nie działa, stąd poniższy hak
-            $input.trigger('blur').focus();
+            // Ukrycie menu typeahead i przywrócenie focusu z opóźnieniem,
+            // aby uniknąć wyścigu czasowego (race condition) przy szybkim wyborze klawiszem Enter
+            this.hide();
+            setTimeout(() => $input.focus(), 0);
 
             if (onSelect && typeof onSelect === 'function') {
                 console.log('onSelect', item);
