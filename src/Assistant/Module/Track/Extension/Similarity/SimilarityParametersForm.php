@@ -13,7 +13,7 @@ use Psr\Http\Message\ServerRequestInterface;
 final class SimilarityParametersForm
 {
     /** Used in the template */
-    public const NAME_PROVIDERS = 'providers';
+    public const string NAME_PROVIDERS = 'providers';
 
     public function __construct(
         /** @var SimilarityParameter[] */

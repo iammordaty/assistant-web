@@ -15,10 +15,10 @@ use Assistant\Module\Track\Model\Track;
 final class SimilarityBuilder
 {
     private array $providers = Similarity::PROVIDERS;
-    private ?Track $track = null;
     private Similarity $similarityService;
 
-    private ?SimilarityParametersForm $similarityParametersForm;
+    private ?Track $track = null;
+    private ?SimilarityParametersForm $similarityParametersForm = null;
 
     public function __construct(
         private TrackSearchService $trackSearchService,

@@ -74,16 +74,20 @@ final class Similarity
             iterator_to_array($similarTracks)
         );
 
-        // odrzuć wartości poniżej progu i ogranicz do zadanej wartości
+        // posortuj wg. podoieństwa
+
+        $similarTracks = $this->sort($similarTracks);
+
+        // i odrzuć wartości poniżej progu i ogranicz do zadanej wartości
 
         $similarTracks = array_filter(
             $similarTracks,
-            fn (SimilarTracks $similarTrack) => $similarTrack->getSimilarityValue() > $this->minSimilarityValue
+            fn (SimilarTracks $similarTrack) => $similarTrack->getSimilarityValue() >= $this->minSimilarityValue
         );
 
         $similarTracks = array_slice($similarTracks, 0, $this->maxTracks);
 
-        return $this->sort($similarTracks);
+        return $similarTracks;
     }
 
     /** Oblicza podobieństwo pomiędzy utworami */
@@ -124,6 +128,12 @@ final class Similarity
             }
 
             $providerNames[] = $providerName;
+
+            if (!isset($this->providersWeights[$providerName])) {
+                $message = sprintf('Weight not defined for provider "%s"', $providerName);
+
+                throw new \RuntimeException($message);
+            }
 
             unset($providerName, $provider);
         }
@@ -183,7 +193,7 @@ final class Similarity
 
             // guid rosnąco
 
-            $result = $first->getSecondTrack()->getYear() <=> $second->getSecondTrack()->getYear();
+            $result = $first->getSecondTrack()->getGuid() <=> $second->getSecondTrack()->getGuid();
 
             if ($result !== 0) {
                 return $result;

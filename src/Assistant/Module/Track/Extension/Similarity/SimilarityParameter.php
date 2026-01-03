@@ -2,17 +2,17 @@
 
 namespace Assistant\Module\Track\Extension\Similarity;
 
-final class SimilarityParameter
+final readonly class SimilarityParameter
 {
     public function __construct(
-        public readonly string $name,
-        public readonly string $displayName,
-        public readonly ?string $inputType = null,
-        public readonly string|int|null $inputValue = null,
-        public readonly string|int|null $placeholder = null,
-        public readonly ?int $inputMinValue = null,
-        public readonly ?int $inputMaxValue = null,
-        public readonly ?int $inputStep = null,
+        public string $name,
+        public string $displayName,
+        public ?string $inputType = null,
+        public string|int|float|null $inputValue = null,
+        public string|int|float|null $placeholder = null,
+        public ?float $inputMinValue = null,
+        public ?float $inputMaxValue = null,
+        public ?float $inputStep = null,
     ) {
     }
 

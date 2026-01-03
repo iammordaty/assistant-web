@@ -91,7 +91,7 @@ return static function (string $baseDir): array {
         Similarity::class => [
             'providers_parameters' => [
                 Bpm::NAME => [ 'tolerance' => 5 ],
-                Year::NAME => [ 'tolerance' => 3 ],
+                Year::NAME => [ 'tolerance' => 5 ],
             ],
             'providers_weights' => [
                 Bpm::NAME => 0.70,

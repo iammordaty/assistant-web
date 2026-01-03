@@ -7,6 +7,13 @@ use Assistant\Module\Common\Extension\SimilarTracksCollection\SimilarTracksColle
 use Assistant\Module\Common\Extension\SimilarTracksCollection\SimilarTracksResultList;
 use Assistant\Module\Track\Model\Track;
 
+/**
+ * Provider podobieństwa oparty na bibliotece Musly.
+ *
+ * Instancja tej klasy cache'uje wyniki dla pierwszego baseTrack, dla którego zostanie wywołana
+ * metoda getSimilarityValue(). Należy tworzyć nową instancję dla każdego nowego utworu bazowego.
+ * Nie należy współdzielić instancji między różnymi wywołaniami getSimilarTracks().
+ */
 final class Musly extends AbstractProvider
 {
     public const NAME = 'Musly';
@@ -27,7 +34,7 @@ final class Musly extends AbstractProvider
                 // @idea: usunąć try-catch i łapać wyżej?
 
                 // @fixme: błąd powinien być komunikowany na froncie w normalny sposób
-                var_dump($e->getMessage());
+                d($e->getMessage());
 
                 $this->similarTracks = SimilarTracksResultList::factory($baseTrack->getFile(), []);
 
