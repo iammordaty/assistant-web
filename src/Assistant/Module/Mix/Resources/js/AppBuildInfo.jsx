@@ -55,6 +55,7 @@ export default function ({ buildInfo }) {
     const [isHovered, setIsHovered] = useState(false);
 
     const breadcrumbItems = !!buildInfo ? [
+        buildInfo.buildMode,
         formatBuildDate(buildInfo.buildDate),
         formatBuildTime(buildInfo.buildTimeMs),
         formatBuildSize(buildInfo.buildSizeKb),
