@@ -3,22 +3,27 @@ const chokidar = require('chokidar');
 const fs = require('fs');
 const path = require('path');
 
+const BUILD_COOLDOWN_MS = 15 * 60 * 1000;
 const IS_WATCH = process.argv.includes('--watch');
 const IS_PRODUCTION = process.argv.includes('--production');
 
-const BUILD_COOLDOWN_SECONDS = 15 * 60;
-
-let lastDevBuildAt = 0;
-let lastChangeAt = 0;
-
-const nowSeconds = () => Math.floor(Date.now() / 1000);
-
-const getCurrentDate = () => {
-    const now = new Date();
-    const nowTz = new Date(now.toLocaleString('en-US', { timeZone: 'Europe/Warsaw' }));
-
-    return nowTz.toISOString();
+const BuildMode = {
+    PROD: 'prod',
+    DEV: 'dev'
 };
+
+const LogType = {
+    AUTO_BUILD: '⏱️',
+    BUILD: '🏗️',
+    CHANGE: '🔧',
+    COMPLETE: '📦',
+    ERROR: '❌',
+    INFO: 'ℹ️',
+    SUCCESS: '✅',
+    WATCH: '👀',
+};
+
+const getCurrentDate = () => new Date().toISOString();
 
 const getFileSize = filePath => {
     try {
@@ -29,130 +34,186 @@ const getFileSize = filePath => {
     }
 };
 
-const publicAliasPlugin = {
+const createPublicAliasPlugin = () => ({
     name: 'public-alias',
     setup(build) {
         build.onResolve({ filter: /^@public\// }, args => ({
             path: path.resolve(__dirname, 'public', args.path.replace(/^@public\//, ''))
         }));
     }
-};
-
-const buildConfig = ({ buildTime = 0, fileSize = 0, mode = 'dev' }) => ({
-    entryPoints: ['src/Assistant/Module/Mix/Resources/js/index.jsx'],
-    outfile: 'public/js/mix.dist.js',
-    bundle: true,
-    jsx: 'automatic',
-    platform: 'browser',
-    minify: mode === 'prod',
-    sourcemap: mode !== 'prod',
-    plugins: [publicAliasPlugin],
-    banner: {
-        js: `
-          window.assistant = {
-            mix: {
-              buildInfo: {
-                buildDate: "${getCurrentDate()}",
-                buildTimeMs: ${buildTime},
-                buildSizeKb: ${fileSize},
-                buildMode: "${mode}"
-              }
-            }
-          };
-        `
-    }
 });
 
-const build = async mode => {
-    const start = Date.now();
+const createBuildConfig = ({ buildTime = 0, fileSize = 0, mode = BuildMode.DEV }) => {
+    const isProduction = mode === BuildMode.PROD;
 
-    await esbuild.build(buildConfig({ mode }));
+    const js = `
+        window.assistant = {
+          mix: {
+            buildInfo: {
+              buildDate: "${getCurrentDate()}",
+              buildTimeMs: ${buildTime},
+              buildSizeKb: ${fileSize},
+              buildMode: "${mode}"
+            }
+          }
+        };
+    `;
 
-    const buildTime = Date.now() - start;
+    return {
+        banner: { js },
+        bundle: true,
+        entryPoints: [ 'src/Assistant/Module/Mix/Resources/js/index.jsx' ],
+        jsx: 'automatic',
+        minify: isProduction,
+        outfile: 'public/js/mix.dist.js',
+        platform: 'browser',
+        plugins: [ createPublicAliasPlugin() ],
+        sourcemap: !isProduction,
+    };
+};
+
+const scheduleProductionBuild = (state, buildFn) => {
+    if (state.prodTimer) {
+        clearTimeout(state.prodTimer);
+    }
+
+    state.prodTimer = setTimeout(async () => {
+        try {
+            log(LogType.AUTO_BUILD, 'Running prod build...');
+
+            const result = await buildFn(BuildMode.PROD);
+
+            log(LogType.COMPLETE, `Auto prod build complete (${result.buildTime}ms, ${result.fileSize}KB)`);
+        } catch (error) {
+            log(LogType.ERROR, 'Auto prod build error', error);
+        }
+    }, BUILD_COOLDOWN_MS);
+};
+
+const executeBuild = async (mode) => {
+    const startTime = Date.now();
+
+    await esbuild.build(createBuildConfig({ mode }));
+
+    const buildTime = Date.now() - startTime;
     const fileSize = getFileSize('public/js/mix.dist.js');
 
-    await esbuild.build(buildConfig({ buildTime, fileSize, mode }));
+    await esbuild.build(createBuildConfig({ buildTime, fileSize, mode }));
 
     return { buildTime, fileSize };
 };
 
-const resolveWatchMode = () => {
-    const now = nowSeconds();
+const runBuild = async (mode, state) => {
+    log(LogType.BUILD, `Building [${mode}]...`);
 
-    const eligible =
-        lastDevBuildAt > 0 &&
-        now - lastDevBuildAt >= BUILD_COOLDOWN_SECONDS &&
-        now - lastChangeAt >= BUILD_COOLDOWN_SECONDS;
+    const result = await executeBuild(mode);
 
-    return eligible ? 'prod' : 'dev';
+    if (mode === BuildMode.DEV && state) {
+        state.lastDevBuildAt = Date.now();
+    }
+
+    log(LogType.COMPLETE, `Build complete [${mode}] (${result.buildTime}ms, ${result.fileSize}KB)`);
+
+    return result;
 };
 
-const startWatch = async () => {
-    console.log('👀 Watch mode enabled');
+const handleFileChange = async (changedPath, state) => {
+    state.lastChangeAt = Date.now();
 
-    const initialMode = 'dev';
-    const initial = await build(initialMode);
-    lastDevBuildAt = nowSeconds();
+    log(LogType.CHANGE, changedPath);
 
-    console.log(`✅ Initial build [${initialMode}] (${initial.buildTime}ms, ${initial.buildSizeKb}KB)`);
+    try {
+        const result = await runBuild(BuildMode.DEV, state);
+
+        log(LogType.SUCCESS, `Build [dev] (${result.buildTime}ms, ${result.fileSize}KB)`);
+
+        scheduleProductionBuild(state, executeBuild);
+    } catch (error) {
+        log(LogType.ERROR, 'Build error', error);
+    }
+};
+
+const startWatchMode = async (state) => {
+    log(LogType.WATCH, 'Watch mode enabled');
+
+    const initialResult = await runBuild(BuildMode.DEV, state);
+    state.lastChangeAt = Date.now();
+
+    log(LogType.SUCCESS, `Initial build [dev] (${initialResult.buildTime}ms, ${initialResult.fileSize}KB)`);
+
+    scheduleProductionBuild(state, executeBuild);
 
     const watchPaths = [
         'src/Assistant/Module/Mix/Resources/js',
         'public/js/modules'
     ];
 
+    const ignoredPaths = [
+        'public/js/mix.dist.js',
+        '**/@eaDir',
+        '**/@eaDir/**',
+        '**/*@SynoEAStream'
+    ];
+
     const watcher = chokidar.watch(watchPaths, {
-        ignored: [
-            'public/js/mix.dist.js',
-            '**/@eaDir',
-            '**/@eaDir/**',
-            '**/*@SynoEAStream'
-        ],
+        ignored: ignoredPaths,
         ignoreInitial: true,
         persistent: true
     });
 
-    watcher.on('ready', () => console.log('📁 Watching for changes…'));
+    watcher.on('ready', () => log(LogType.INFO, 'Watching for changes...'));
 
-    watcher.on('change', async changedPath => {
-        lastChangeAt = nowSeconds();
+    watcher.on('change', (changedPath) => handleFileChange(changedPath, state));
+};
 
-        console.log(`🔧 Changed: ${changedPath}`);
+const runSingleBuild = async () => {
+    const mode = IS_PRODUCTION ? BuildMode.PROD : BuildMode.DEV;
 
-        try {
-            const mode = resolveWatchMode();
-            const result = await build(mode);
+    await runBuild(mode);
+};
 
-            if (mode === 'dev') {
-                lastDevBuildAt = nowSeconds();
-            }
+const formatTimestamp = () => {
+    const format = '2-digit';
 
-            console.log(`✅ Build [${mode}] (${result.buildTime}ms, ${result.fileSize}KB)`);
-        } catch (err) {
-            console.error('❌ Build error', err);
-        }
-    });
+    return new Intl.DateTimeFormat('pl-PL', {
+        day: format,
+        month: format,
+        hour: format,
+        minute: format,
+        second: format,
+        fractionalSecondDigits: 3,
+    })
+    .format(new Date())
+    .replace(',', '.');
+};
+
+const log = (type, message, data = undefined) => {
+    const prefix = `[${formatTimestamp()}] ${type}`;
+    const payload = data === undefined ? message : `${message} | Details:`;
+
+    console.log(prefix, payload, ...(data === undefined ? [] : [ data ]));
 };
 
 const main = async () => {
+    const state = ({
+        lastChangeAt: 0,
+        lastDevBuildAt: 0,
+        prodTimer: null
+    });
+
     try {
         if (IS_WATCH) {
-            await startWatch();
+            await startWatchMode(state);
 
             return;
         }
 
-        const mode = IS_PRODUCTION ? 'prod' : 'dev';
+        await runSingleBuild();
+    } catch (error) {
+        log(LogType.ERROR, 'Fatal build error', error);
 
-        console.log(`🏗 Building [${mode}]...`);
-
-        const result = await build(mode);
-
-        console.log(`🎉 Build complete [${mode}] (${result.buildTime}ms, ${result.fileSize}KB)`);
-    } catch (err) {
-        console.error('🔥 Fatal build error', err);
         process.exit(1);
     }
 };
 
-main();
+main().then(_ => true);
