@@ -1,6 +1,10 @@
 /* global $ */
 
 export default function ($input, onSelect) {
+    if ($input instanceof HTMLElement) {
+        $input = $($input);
+    }
+
     const followOnSelect = $input.data('follow-on-select');
 
     $input.attr('autocomplete', 'off');

@@ -51,25 +51,6 @@
     }
 }
 
-#wave {
-    z-index: 10;
-}
-
-#wave-progress {
-    height: 200px;
-    position: absolute;
-    left: 0;
-    right: 0;
-    margin-left: auto;
-    margin-right: auto;
-}
-
-@media only screen and (max-width: 768px) {
-    #wave-progress {
-        height: 100px
-    }
-}
-
 #wave-time-current-time, #wave-time-track-duration {
     position: absolute;
     z-index: 100;
@@ -85,11 +66,6 @@
 
 #wave-time-track-duration {
     right: 4px;
-}
-
-.ass-track-info dd {
-    /* fix na puste wartości powodujące zmniejszenie wysokości */
-    min-height: 1.25rem;
 }
 
 @media only screen and (max-width: 768px) {
@@ -164,6 +140,19 @@ table .ast-track-name span {
     padding-right: 0;
 }
 
+.ast-musical-key-info .form-help {
+    opacity: 0.5;
+    background: var(--tblr-gray-100);
+    transition: opacity .2s ease-in !important;
+    color: var(--tblr-muted);
+}
+
+.ast-musical-key-info .form-help:hover {
+    opacity: 1;
+    color: var(--tblr-muted);
+    background: var(--tblr-gray-200);
+}
+
 .track-avatar-hoverable {
     position: relative;
     display: inline-flex;
@@ -201,13 +190,30 @@ table .ast-track-name span {
     opacity: 1;
 }
 
-.ast-track-meta .breadcrumb-item + .breadcrumb-item::before,
-.ast-attempt-header .breadcrumb-item + .breadcrumb-item::before {
+.ast-breadcrumb-dotted .breadcrumb-item + .breadcrumb-item::before {
     content: '•';
 }
 
-.ast-breadcrumb-dotted .breadcrumb-item + .breadcrumb-item::before {
-    content: '•';
+.ast-breadcrumb-scrollable {
+    flex-wrap: nowrap;
+    max-width: 100%;
+    overflow-x: auto;
+    scrollbar-color: transparent transparent;
+    scrollbar-width: none;
+    white-space: nowrap;
+}
+
+.ast-breadcrumb-scrollable[data-has-overflow="true"] {
+    mask-image: linear-gradient(to right, black 0%, black calc(100% - 2.5rem), transparent 100%);
+    -webkit-mask-image: linear-gradient(to right, black 0%, black calc(100% - 2.5rem), transparent 100%);
+}
+
+.ast-breadcrumb-scrollable::-webkit-scrollbar {
+    display: none;
+}
+
+.ast-breadcrumb-scrollable .breadcrumb-item + .breadcrumb-item::before {
+    float: none!important;
 }
 
 .ast-track-item {
@@ -296,7 +302,6 @@ table .ast-track-name span {
 .ast-track-action-edit-entry:hover,
 .ast-track-action-delete:hover {
     opacity: 1;
-    background: var(--tblr-bg-secondary, #f6f8fa);
 }
 
 .ast-new-comment-row {

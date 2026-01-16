@@ -68,12 +68,12 @@ $(function () {
 			$(this).remove();
 		});
 
-		$('#wave').html('<p class="lead text-center text-muted">Wystąpił błąd podczas ładowania fali dźwiękowej</p>');
+		$('#wave').html('<p class="fs-3 py-4 text-center text-muted">Wystąpił błąd podczas ładowania fali dźwiękowej</p>');
 		$('#wave-container').css('visibility', 'visible').hide().fadeIn('slow');
 
 		setTimeout(function () {
 			$('#wave-container').slideUp('fast', function () {
-				$(this).remove();
+				$(this).parent('div').remove();
 			});
 
 			$trackPlayPause.animate({ opacity: 0.2 }, 350);
@@ -96,13 +96,13 @@ $(function () {
 			return;
 		}
 
-		if (e.which === 32) { // spacja
+		if (e.code === ' ') {
 			e.preventDefault();
 
 			wavesurfer.playPause();
 		}
 
-		if (e.which === 69) { // "e"
+		if (e.key === 'e') {
 			const editUrl = $('[data-role="track:container"]').data('track-edit-url');
 
 			window.location.href = editUrl;
@@ -143,6 +143,20 @@ $(function () {
 		if (document.visibilityState === 'hidden' && (nowPlayingTrack && nowPlayingTrack !== currentTrack)) {
 			wavesurfer.pause()
 		}
+	});
+
+	// --
+
+	$('[data-role="similar-keys:set-key"]').on('click', function () {
+		const $keyInput = $form.find('[data-role="similar-tracks:parameter-input"][name="MusicalKey"]');
+
+		if ($keyInput.length === 0) {
+			return;
+		}
+
+		$keyInput.val(this.dataset.value).trigger('change');
+
+		$('[data-role="similar-tracks:parameters-container"]').removeClass('d-none');
 	});
 
 	// --
@@ -211,11 +225,25 @@ $(function () {
 		$container.find('[data-role="similar-tracks:footer"]').addClass('d-none');
 	});
 
+	$(document).on('keydown', e => {
+		const activeElementTagName = document.activeElement.tagName.toLowerCase();
+
+		if (activeElementTagName === 'textarea' || activeElementTagName === 'input') {
+			return;
+		}
+
+		if (e.key === 'k' && (e.ctrlKey || e.metaKey)) {
+			e.preventDefault();
+
+			$container.find('[data-role="similar-tracks:filter"]')[0].focus();
+		}
+	});
+
 	$container.find('[data-role="similar-tracks:filter"]').on('click keyup change', function (e) {
 		e.stopPropagation();
 		e.preventDefault();
 
-		if (e.which === 27) {
+		if (e.key === 'Escape') {
 			$(this).val('')
 		}
 

@@ -1,11 +1,33 @@
-// Funkcja do pobierania średniej wartości z okna próbek
-const getAverageValue = (channels, centerIndex, windowSize = 5) => {
-    const halfWindow = Math.floor(windowSize / 2)
+'use strict';
 
+const CONFIG = {
+    upperWaveColor: '#666',
+    lowerWaveColor: '#999',
+
+    barStep: 9,                    // szerokość pojedynczego słupka
+    baselineDivisor: 1.3,          // dzielnik wysokości dla linii bazowej
+    canvasMargin: 5,               // margines od krawędzi canvas
+    lowerWaveOffset: 8,            // odstęp dolnej fali od linii bazowej
+    lowerWaveScale: 0.35,          // skala wysokości dolnej fali względem górnej
+
+    averagingWindowSize: 8,        // liczba próbek do uśrednienia
+    smoothingFactor: 0.15,         // współczynnik wygładzania (0-1)
+    amplitudeScaleFactor: 0.9,     // mnożnik amplitudy
+
+    maxAmplification: 2.2,         // maksymalne wzmocnienie
+    amplificationBase: 0.8,        // bazowy offset wzmocnienia
+
+    compressionStrength: 2.5,      // siła kompresji w formule eksponencjalnej
+}
+
+// Funkcja do pobierania średniej wartości z okna próbek (retrospektywne, aby uniknąć opóźnienia wizualnego)
+const getAverageValue = (channels, centerIndex, windowSize) => {
     let sum = 0
     let count = 0
 
-    for (let j = centerIndex - halfWindow; j <= centerIndex + halfWindow; j++) {
+    // Używamy próbek od (centerIndex - windowSize + 1) do centerIndex (włącznie)
+    // To eliminuje "zaglądanie w przyszłość" i synchronizuje piki z atakami dźwięku
+    for (let j = centerIndex - windowSize + 1; j <= centerIndex; j++) {
         if (j >= 0 && j < channels[0].length) {
             sum += Math.abs(channels[0][j])
             count++
@@ -15,18 +37,16 @@ const getAverageValue = (channels, centerIndex, windowSize = 5) => {
     return count > 0 ? sum / count : 0
 }
 
-// Funkcja do wygładzania między sąsiednimi słupkami
-const smoothValues = (values, smoothingFactor = 0.3) => {
+// Funkcja do wygładzania między sąsiednimi słupkami (retrospektywne, aby uniknąć opóźnienia)
+const smoothValues = (values, smoothingFactor) => {
     const smoothed = [...values]
 
-    for (let i = 1; i < values.length - 1; i++) {
+    for (let i = 1; i < values.length; i++) {
         const prev = values[i - 1]
         const current = values[i]
-        const next = values[i + 1]
 
-        // Średnia ważona: aktualna wartość ma większą wagę, ale sąsiedzi również wpływają
-        smoothed[i] = current * (1 - smoothingFactor) +
-            (prev + next) * smoothingFactor / 2
+        // Wygładzanie tylko z poprzednim słupkiem - eliminuje opóźnienie wizualne
+        smoothed[i] = current * (1 - smoothingFactor) + prev * smoothingFactor
     }
 
     return smoothed
@@ -34,45 +54,43 @@ const smoothValues = (values, smoothingFactor = 0.3) => {
 
 // Funkcja do miękkiego skalowania wartości y - zachowuje różnice między wysokimi słupkami
 const softScaleY = (baseline, height, y, isUpperWave) => {
-    const margin = 5 // margines od krawędzi canvas
+    const { canvasMargin, compressionStrength } = CONFIG
 
     if (isUpperWave) {
-        const maxY = margin
-        const minY = baseline - margin
+        const topBoundary = canvasMargin
+        const bottomBoundary = baseline - canvasMargin
 
-        if (y >= minY) {
+        if (y >= bottomBoundary) {
             return y // normalne wartości pozostają bez zmian
         }
 
         // Dla wartości przekraczających granice stosujemy miękkie skalowanie
-        const excess = minY - y
-        const availableSpace = minY - maxY
+        const excess = bottomBoundary - y
+        const availableSpace = bottomBoundary - topBoundary
 
         // Logarytmiczne "ściskanie" - zachowuje różnice ale mieści w granicach
-        const scaledExcess = availableSpace * (1 - Math.exp(-excess / availableSpace * 2))
-        return minY - scaledExcess
+        const scaledExcess = availableSpace * (1 - Math.exp(-excess / availableSpace * compressionStrength))
 
+        return bottomBoundary - scaledExcess
     } else {
-        const minY = baseline + margin
-        const maxY = height - margin
+        const topBoundary = baseline + canvasMargin
+        const bottomBoundary = height - canvasMargin
 
-        if (y <= maxY) {
+        if (y <= bottomBoundary) {
             return y // normalne wartości pozostają bez zmian
         }
 
         // Dla wartości przekraczających granice stosujemy miękkie skalowanie  
-        const excess = y - maxY
-        const availableSpace = maxY - minY
+        const excess = y - bottomBoundary
+        const availableSpace = bottomBoundary - topBoundary
 
         // Logarytmiczne "ściskanie" - zachowuje różnice ale mieści w granicach
-        const scalingFactor = 1 - Math.exp(-excess / availableSpace * 2)
+        const scalingFactor = 1 - Math.exp(-excess / availableSpace * compressionStrength)
         const scaledExcess = availableSpace * scalingFactor
-        return minY + scaledExcess // ściśnięte wartości w dostępnej przestrzeni
+        
+        return topBoundary + scaledExcess // ściśnięte wartości w dostępnej przestrzeni
     }
 }
-
-const upperWaveColor = '#666'
-const lowerWaveColor = '#999'
 
 /**
  * Render a waveform as a squiggly line with smoothing and better dynamics
@@ -80,75 +98,82 @@ const lowerWaveColor = '#999'
  */
 export default function (channels, ctx) {
     const { width, height } = ctx.canvas
-    const scale = channels[0].length / width
-    const step = 9
-    const baseline = height / 1.3
-    const scaleFactor = 0.9
+    const {
+        barStep,
+        baselineDivisor,
+        upperWaveColor,
+        lowerWaveColor,
+        lowerWaveOffset,
+        lowerWaveScale,
+        averagingWindowSize,
+        smoothingFactor,
+        amplitudeScaleFactor,
+        maxAmplification,
+        amplificationBase,
+    } = CONFIG
 
-    // Zbieramy wszystkie wartości dla obu fal
+    const scale = channels[0].length / width
+    const baseline = height / baselineDivisor
+    const lowerWaveStart = baseline + lowerWaveOffset
+
     const rawValues = []
     const positions = []
 
-    for (let i = 0; i < width; i += step * 2) {
+    for (let i = 0; i < width; i += barStep * 2) {
         const index = Math.floor(i * scale)
-        const value = getAverageValue(channels, index, 8) // używamy średniej z 8 próbek
+        const value = getAverageValue(channels, index, averagingWindowSize)
         rawValues.push(value)
         positions.push(i)
     }
 
     // Wygładzamy wartości między sąsiednimi słupkami
-    const smoothedValues = smoothValues(rawValues, 0.25)
+    const smoothedValues = smoothValues(rawValues, smoothingFactor)
 
     // Normalizacja: zwiększamy dynamikę ale zachowujemy proporcje
     const maxValue = Math.max(...smoothedValues)
-    const amplification = maxValue > 0 ? Math.min(2.2, 1.0 / maxValue + 0.8) : 1.0
+    const amplification = maxValue > 0 ? Math.min(maxAmplification, 1.0 / maxValue + amplificationBase) : 1.0
 
     ctx.clearRect(0, 0, width, height)
 
-    //
-    // 1. GÓRNA FALA (normalna)
-    //
+    // Rysowanie górnej fali
+
     ctx.strokeStyle = upperWaveColor
     ctx.beginPath()
 
     for (let i = 0; i < smoothedValues.length; i++) {
         const value = smoothedValues[i] * amplification
         const x = positions[i]
-        let y = baseline - value * height * scaleFactor
-        y = softScaleY(baseline, height, y, true) // miękkie skalowanie zachowujące różnice
+        let y = baseline - value * height * amplitudeScaleFactor
+        y = softScaleY(baseline, height, y, true)
 
         ctx.moveTo(x, baseline)
         ctx.lineTo(x, y)
-        ctx.arc(x + step / 2, y, step / 2, Math.PI, 0, false)
-        ctx.lineTo(x + step, baseline)
+        ctx.arc(x + barStep / 2, y, barStep / 2, Math.PI, 0, false)
+        ctx.lineTo(x + barStep, baseline)
 
-        ctx.lineTo(x + step * 2, baseline)
+        ctx.lineTo(x + barStep * 2, baseline)
     }
 
     ctx.stroke()
     ctx.closePath()
 
-    //
-    // 2. DOLNA FALA (jaśniejsza)
-    //
+    // Rysowanie dolnej fali
+    
     ctx.strokeStyle = lowerWaveColor
     ctx.beginPath()
 
-    const offset = 8
-    const scaleDown = 0.35
-
     for (let i = 0; i < smoothedValues.length; i++) {
-        const value = smoothedValues[i] * amplification * scaleDown
+        const value = smoothedValues[i] * amplification * lowerWaveScale
         const x = positions[i]
-        let y = baseline + offset + value * height * scaleFactor
-        y = softScaleY(baseline, height, y, false) // miękkie skalowanie dla dolnej fali
+        let y = lowerWaveStart + value * height * amplitudeScaleFactor
+        y = softScaleY(baseline, height, y, false)
 
-        ctx.moveTo(x, baseline + offset)
+        ctx.moveTo(x, lowerWaveStart)
         ctx.lineTo(x, y)
-        ctx.arc(x + step / 2, y, step / 2, Math.PI, 0, true)
-        ctx.lineTo(x + step, baseline + offset)
+        ctx.arc(x + barStep / 2, y, barStep / 2, Math.PI, 0, true)
+        ctx.lineTo(x + barStep, lowerWaveStart)
 
-        ctx.lineTo(x + step * 2, baseline + offset)
+        ctx.lineTo(x + barStep * 2, lowerWaveStart)
     }
 
     ctx.stroke()

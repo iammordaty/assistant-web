@@ -3,12 +3,12 @@
 {% block title track.name %}
 
 {% block page_header %}
-    {% include '@track/common/header.twig' with { track: track } only %}
+    {% include '@track/common/header.twig' with { track } only %}
 {% endblock %}
 
 {% block content %}
     <div class="row row-deck row-cards" data-role="track:container" data-track-edit-url="{{ url_for('track.edit.edit', { pathname: track.pathname }) }}">
-        {% include '@track/common/wave.twig' with { track: track } only %}
+        {% include '@track/common/wave.twig' with { track } only %}
 
         <div class="col-12 mt-1">
             {% include '@track/track/toolbar.twig' with { track } only %}
@@ -32,10 +32,7 @@
                     </div>
                 </a>
                 <div class="card-body">
-                    {% include '@track/track/trackInfo.twig' with {
-                        track: track,
-                        breadcrumbs: breadcrumbs,
-                    } only %}
+                    {% include '@track/track/trackInfo.twig' with { track, breadcrumbs } only %}
                 </div>
             </div>
         </div>
@@ -51,14 +48,45 @@
                         Podobne utwory
                     </h3>
                     <div class="card-actions">
-                        <input
-                            placeholder="Filtruj utwory (np. {{ track.genre|lower }}, {{ track.year }})"
-                            data-role="similar-tracks:filter"
-                            type="text"
-                            class="form-control form-control-sm"
-                            value=""
+                        <div
+                            class="input-group input-group-flat w-auto ast-filter-similar-tracks position-relative"
+                            data-bs-toggle="tooltip"
+                            title="Filtruj utwory"
                         >
+                            <span class="input-group-text cursor-default">
+                                <svg
+                                    xmlns="http://www.w3.org/2000/svg"
+                                    width="24"
+                                    height="24"
+                                    viewBox="0 0 24 24"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    stroke-width="1.5"
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                    class="icon icon-tabler icons-tabler-outline icon-tabler-filter-2"
+                                >
+                                    <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                                    <path d="M4 6h16" />
+                                    <path d="M6 12h12" /><path d="M9 18h6" />
+                                </svg>
+                            </span>
+                            <input
+                                data-role="similar-tracks:filter"
+                                placeholder="{{ track.genre|lower }}, {{ track.year }}, {{ track.publisher|lower }}..."
+                                type="text"
+                                class="form-control"
+                                value=""
+                            >
+                            <span class="input-group-text user-select-none ast-filter-similar-tracks-shortcut">
+                                <kbd data-key="ctrlCmd">ctrl</kbd>&nbsp;+&nbsp;<kbd>k</kbd>
+                            </span>
+                        </div>
                     </div>
+                    <script>
+                        
+                    </script>
+
                 </div>
                 <div class="card-body d-none" data-role="similar-tracks:parameters-container">
                     {% include '@track/similarTracks/form.twig' with {

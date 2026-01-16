@@ -83,7 +83,13 @@
         <div class="flex-row d-none d-sm-flex">
             <div class="col-auto ms-auto me-1">
                 <form method="GET" action="{{ url_for('search.simple.index') }}">
-                    <div class="input-icon ps-1">
+                    <div class="input-group input-group-flat w-auto">
+                        <span class="input-group-text">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="icon icon-1">
+                                <path d="M10 10m-7 0a7 7 0 1 0 14 0a7 7 0 1 0 -14 0"></path>
+                                <path d="M21 21l-6 -6"></path>
+                            </svg>
+                        </span>
                         <input
                             data-role="autocompleter"
                             data-url="{{ url_for('track.track.autocomplete') }}"
@@ -92,13 +98,9 @@
                             name="query"
                             value="{{ form.query|default }}"
                             class="form-control dropdown-menu-right"
-                        >
-                        <span class="input-icon-addon">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-search" width="24" height="24" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
-                               <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
-                               <circle cx="10" cy="10" r="7"></circle>
-                               <line x1="21" y1="21" x2="15" y2="15"></line>
-                            </svg>
+                        />
+                        <span class="input-group-text">
+                            <kbd>/</kbd>
                         </span>
                     </div>
                 </form>

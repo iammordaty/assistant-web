@@ -101,7 +101,7 @@ const TrackEntry = ({
                         </a>
                     </div>
                     <div className="ast-track-meta text-muted small">
-                        <ol className="breadcrumb">
+                        <ol className="breadcrumb ast-breadcrumb-dotted">
                             <li className="breadcrumb-item">
                                 <a
                                     className="text-reset"

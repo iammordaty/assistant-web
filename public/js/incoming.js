@@ -1,4 +1,4 @@
-/*global $*/
+/*global $, bootstrap*/
 
 const initElementsActions = $container => {
     $container.find('input[type=checkbox]').prop('checked', false);
@@ -8,11 +8,17 @@ const initElementsActions = $container => {
     const $selectedCountLabel = $actions.find('[data-role="incoming-tracks:elements:selected-count"]');
 
     // zaznacz wszystko
-    $container.find('[data-role="incoming-tracks:elements:select-all"]').on('change', function () {
-        const isChecked = $(this).is(':checked');
+    // (zapinamy onClick na cały nagłówek, bo tablesorter inicując się, podmienia poszczególne th,
+    // przez co zapięcie się bezpośrednio na onChange checkboxa nie działa)
+    $container.find('thead').on('click', function (e) {
+        const target = e.originalEvent.target;
+
+        if (target.dataset.role !== 'incoming-tracks:elements:select-all') {
+            return;
+        }
 
         $selects
-            .prop('checked', isChecked)
+            .prop('checked', target.checked)
             .trigger('change');
     });
 

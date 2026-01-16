@@ -34,7 +34,7 @@ final class MusicalKeyInfo
         $join = static fn($lines) => implode(' ', $lines);
 
         return [
-            'key' => $musialKey,
+            'musicalKey' => $musialKey,
             'title' => sprintf(
                 "%s (%s)",
                 $musialKey,

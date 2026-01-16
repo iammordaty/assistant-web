@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, useCallback, useMemo } from 'react';
+import { useEffect, useRef, useState, useCallback } from 'react';
 import TrackEntryComments from './TrackEntryComments';
 import Modal from './Modal';
 import initAutocompleter from '@public/js/modules/autocomplete.js';

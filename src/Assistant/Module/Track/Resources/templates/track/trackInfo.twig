@@ -1,54 +1,74 @@
-<dl class="ass-track-info row">
-    <dt class="col-4 col-sm-2">Gatunek</dt>
-    <dd class="col-8 col-sm-10">
-        <a class="text-reset" href="{{ url_for('search.advanced.index', query_params = { genre: track.genre }) }}">
-            {{ track.genre }}
-        </a>
-    </dd>
+<div class="ass-track-info">
+    <div class="container-fluid px-0">
+        <div class="row pb-2">
+            <div class="col-4 col-sm-2 fw-bold">Gatunek</div>
+            <div class="col-8 col-sm-10">
+                <a class="text-reset" href="{{ url_for('search.advanced.index', query_params = { genre: track.genre }) }}">
+                    {{ track.genre }}
+                </a>
+            </div>
+        </div>
 
-    <dt class="col-4 col-sm-2">Album</dt>
-    <dd class="col-8 col-sm-10">{{ track.album }}</dd>
+        <div class="row pb-2">
+            <div class="col-4 col-sm-2 fw-bold">Album</div>
+            <div class="col-8 col-sm-10">{{ track.album }}</div>
+        </div>
 
-    <dt class="col-4 col-sm-2">Wydawca</dt>
-    <dd class="col-8 col-sm-10">
-        {% if track.publisher %}
-            <a class="text-reset" href="{{ url_for('search.advanced.index', query_params = { publisher: track.publisher }) }}">
-                {{ track.publisher }}
-            </a>
-        {% endif %}
-    </dd>
+        <div class="row pb-2">
+            <div class="col-4 col-sm-2 fw-bold">Wydawca</div>
+            <div class="col-8 col-sm-10">
+                {% if track.publisher %}
+                    <a class="text-reset" href="{{ url_for('search.advanced.index', query_params = { publisher: track.publisher }) }}">
+                        {{ track.publisher }}
+                    </a>
+                {% endif %}
+            </div>
+        </div>
 
-    <dt class="col-4 col-sm-2">Rok</dt>
-    <dd class="col-8 col-sm-10">
-        {% if track.year %}
-            <a class="text-reset" href="{{ url_for('search.advanced.index', query_params = { year: track.year }) }}">
-                {{ track.year }}
-            </a>
-        {% endif %}
-    </dd>
+        <div class="row pb-2">
+            <div class="col-4 col-sm-2 fw-bold">Rok</div>
+            <div class="col-8 col-sm-10">
+                {% if track.year %}
+                    <a class="text-reset" href="{{ url_for('search.advanced.index', query_params = { year: track.year }) }}">
+                        {{ track.year }}
+                    </a>
+                {% endif %}
+            </div>
+        </div>
 
-    <dt class="col-4 col-sm-2">Ścieżka</dt>
-    <dd class="col-8 col-sm-10">{{ track.trackNumber }}</dd>
+        <div class="row pb-2">
+            <div class="col-4 col-sm-2 fw-bold">Ścieżka</div>
+            <div class="col-8 col-sm-10">{{ track.trackNumber }}</div>
+        </div>
 
-    <dt class="col-4 col-sm-2">Czas trwania</dt>
-    <dd class="col-8 col-sm-10">{{ track.length|format_duration }}</dd>
+        <div class="row pb-2">
+            <div class="col-4 col-sm-2 fw-bold">Czas trwania</div>
+            <div class="col-8 col-sm-10">{{ track.length|format_duration }}</div>
+        </div>
 
-    <dt class="col-4 col-sm-2">Tonacja</dt>
-    <dd class="col-8 col-sm-10">
-        <a class="text-reset" href="{{ url_for('search.advanced.index', query_params = { initial_key: track.initialKey }) }}">
-            {{ track.initialKey }}
-        </a>
-    </dd>
+        <div class="row pb-2">
+            <div class="col-4 col-sm-2 fw-bold">Tonacja</div>
+            <div class="col-8 col-sm-10">
+                <a class="text-reset" href="{{ url_for('search.advanced.index', query_params = { initial_key: track.initialKey }) }}">
+                    {{ track.initialKey }}
+                </a>
+            </div>
+        </div>
 
-    <dt class="col-4 col-sm-2">BPM</dt>
-    <dd class="col-8 col-sm-10">
-        <a class="text-reset" href="{{ url_for('search.advanced.index', query_params = { bpm: track.bpm }) }}">
-            {{ track.bpm }}
-        </a>
-    </dd>
+        <div class="row pb-2">
+            <div class="col-4 col-sm-2 fw-bold">BPM</div>
+            <div class="col-8 col-sm-10">
+                <a class="text-reset" href="{{ url_for('search.advanced.index', query_params = { bpm: track.bpm }) }}">
+                    {{ track.bpm }}
+                </a>
+            </div>
+        </div>
 
-    <dt class="col-4 col-sm-2">Położenie</dt>
-    <dd class="col-8 col-sm-10">
-        {% include '@common/breadcrumbs.twig' with { breadcrumbs, style: 'flex-wrap: nowrap' } only %}
-    </dd>
-</dl>
+        <div class="row">
+            <div class="col-4 col-sm-2 fw-bold">Położenie</div>
+            <div class="col-8 col-sm-10">
+                {% include '@common/breadcrumbs.twig' with { breadcrumbs } only %}
+            </div>
+        </div>
+    </div>
+</div>

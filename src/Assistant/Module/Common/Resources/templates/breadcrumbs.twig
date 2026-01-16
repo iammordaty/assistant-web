@@ -1,4 +1,4 @@
-<ol class="breadcrumb text-truncate" {% if style|default %}style="{{ style }}"{% endif %}>
+<ol class="breadcrumb ast-breadcrumb-scrollable" data-scroll-mask data-element="scrollable-breadcrumb">
     {% set breadcrumb = breadcrumbs|first %}
     {% set route = breadcrumb.route %}
 
@@ -16,6 +16,6 @@
     {% for breadcrumb in breadcrumbs[1:] %}
         {% set route = breadcrumb.route %}
 
-        <li class="breadcrumb-item {% if loop.last %}text-truncate{% endif %}"><a href="{{ url_for(route.name, route.params, route.query) }}" class="text-reset">{{ breadcrumb.name }}</a></li>
+        <li class="breadcrumb-item"><a href="{{ url_for(route.name, route.params, route.query) }}" class="text-reset">{{ breadcrumb.name }}</a></li>
     {% endfor %}
 </ol>

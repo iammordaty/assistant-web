@@ -4,6 +4,7 @@ const fs = require('fs');
 const path = require('path');
 
 const BUILD_COOLDOWN_MS = 15 * 60 * 1000;
+
 const IS_WATCH = process.argv.includes('--watch');
 const IS_PRODUCTION = process.argv.includes('--production');
 
@@ -23,11 +24,10 @@ const LogType = {
     WATCH: '👀',
 };
 
-const getCurrentDate = () => new Date().toISOString();
-
 const getFileSize = filePath => {
     try {
         const { size } = fs.statSync(filePath);
+
         return Math.round((size / 1024) * 100) / 100;
     } catch {
         return 0;
@@ -45,12 +45,13 @@ const createPublicAliasPlugin = () => ({
 
 const createBuildConfig = ({ buildTime = 0, fileSize = 0, mode = BuildMode.DEV }) => {
     const isProduction = mode === BuildMode.PROD;
+    const buildDate = `${(new Date().toISOString())}`;
 
     const js = `
         window.assistant = {
           mix: {
             buildInfo: {
-              buildDate: "${getCurrentDate()}",
+              buildDate: "${buildDate}",
               buildTimeMs: ${buildTime},
               buildSizeKb: ${fileSize},
               buildMode: "${mode}"
@@ -104,7 +105,7 @@ const executeBuild = async (mode) => {
 };
 
 const runBuild = async (mode, state) => {
-    log(LogType.BUILD, `Building [${mode}]...`);
+    log(LogType.BUILD, `Building (${mode})...`);
 
     const result = await executeBuild(mode);
 
@@ -112,7 +113,7 @@ const runBuild = async (mode, state) => {
         state.lastDevBuildAt = Date.now();
     }
 
-    log(LogType.COMPLETE, `Build complete [${mode}] (${result.buildTime}ms, ${result.fileSize}KB)`);
+    log(LogType.COMPLETE, `Build complete (${mode}) (${result.buildTime}ms, ${result.fileSize}KB)`);
 
     return result;
 };
@@ -139,7 +140,7 @@ const startWatchMode = async (state) => {
     const initialResult = await runBuild(BuildMode.DEV, state);
     state.lastChangeAt = Date.now();
 
-    log(LogType.SUCCESS, `Initial build [dev] (${initialResult.buildTime}ms, ${initialResult.fileSize}KB)`);
+    log(LogType.SUCCESS, `Initial build (${BuildMode.DEV}) (${initialResult.buildTime}ms, ${initialResult.fileSize}KB)`);
 
     scheduleProductionBuild(state, executeBuild);
 
@@ -166,29 +167,18 @@ const startWatchMode = async (state) => {
     watcher.on('change', (changedPath) => handleFileChange(changedPath, state));
 };
 
-const runSingleBuild = async () => {
-    const mode = IS_PRODUCTION ? BuildMode.PROD : BuildMode.DEV;
-
-    await runBuild(mode);
-};
-
-const formatTimestamp = () => {
-    const format = '2-digit';
-
-    return new Intl.DateTimeFormat('pl-PL', {
-        day: format,
-        month: format,
-        hour: format,
-        minute: format,
-        second: format,
+const log = (type, message, data = undefined) => {
+    const timestamp = new Intl.DateTimeFormat('pl-PL', {
+        day: '2-digit',
+        month: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
         fractionalSecondDigits: 3,
     })
-    .format(new Date())
-    .replace(',', '.');
-};
+    .format(new Date());
 
-const log = (type, message, data = undefined) => {
-    const prefix = `[${formatTimestamp()}] ${type}`;
+    const prefix = `[${timestamp}] ${type}`;
     const payload = data === undefined ? message : `${message} | Details:`;
 
     console.log(prefix, payload, ...(data === undefined ? [] : [ data ]));
@@ -208,7 +198,9 @@ const main = async () => {
             return;
         }
 
-        await runSingleBuild();
+        const mode = IS_PRODUCTION ? BuildMode.PROD : BuildMode.DEV;
+
+        await runBuild(mode);
     } catch (error) {
         log(LogType.ERROR, 'Fatal build error', error);
 
