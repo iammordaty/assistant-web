@@ -15,7 +15,7 @@ final class Track implements CollectionItemInterface
 
     /**
      * @fixme: nulle dla bpm i klucza dozwolone tylko tymczasowo, ze względu na to że niektóre kawałki ich nie mają
-     *        c(np. Laidback Luke - 05 - Break Down The House [Acapella]). To powinno być ograne w jakoś inaczej,
+     *         (np. Laidback Luke - 05 - Break Down The House [Acapella]). To powinno być ograne w jakoś inaczej,
      *         ale bez zezwolenia na pustą wartość, np. poprzez wcześniejszą walidację w IndexerTask.
      */
     public function __construct(
