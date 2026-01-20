@@ -17,7 +17,11 @@ export const useDragReorder = (listLength, onReorder) => {
         },
 
         onDragEnd: () => {
-            setState(EMPTY_STATE);
+            requestAnimationFrame(() => {
+                requestAnimationFrame(() => {
+                    setState(EMPTY_STATE);
+                });
+            });
         },
 
         onDrop: () => {
@@ -32,7 +36,7 @@ export const useDragReorder = (listLength, onReorder) => {
                     }
                 }
 
-                return EMPTY_STATE;
+                return prev;
             });
         }
     }), [onReorder]);
@@ -66,9 +70,9 @@ export const useDragReorder = (listLength, onReorder) => {
 
         let shift = null;
         if (dropPosition === 0 && index === 0) {
-            shift = 'down';
+            shift = 'down-edge';
         } else if (dropPosition === listLength && index === listLength - 1) {
-            shift = 'up';
+            shift = 'up-edge';
         } else if (index === dropPosition - 1) {
             shift = 'up';
         } else if (index === dropPosition) {
@@ -78,5 +82,7 @@ export const useDragReorder = (listLength, onReorder) => {
         return { indicator, shift };
     }, [dragIndex, dropPosition, listLength]);
 
-    return { handlers, getItemState };
+    const isDragging = dragIndex !== null;
+
+    return { handlers, getItemState, isDragging };
 };

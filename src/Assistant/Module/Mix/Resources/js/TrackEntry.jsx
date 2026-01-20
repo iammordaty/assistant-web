@@ -61,6 +61,7 @@ const TrackEntry = ({
         <div 
             ref={rowRef}
             className="row ast-track-item py-2 align-items-center rounded-3"
+            style={{ viewTransitionName: `track-${track.guid}` }}
             data-highlighted={isHighlighted || undefined}
             data-dragging={dragState?.dragging || undefined}
             data-cancel={isCancel || undefined}

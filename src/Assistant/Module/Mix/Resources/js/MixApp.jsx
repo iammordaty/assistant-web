@@ -154,7 +154,11 @@ const MixApp = ({ initialMix, autocompleteUrl }) => {
 
         const updatedAttempt = { ...attempt, trackList };
 
-        await saveAttempt(updatedAttempt);
+        if (document.startViewTransition) {
+            document.startViewTransition(() => saveAttempt(updatedAttempt));
+        } else {
+            await saveAttempt(updatedAttempt);
+        }
     };
 
     const openAttemptModal = () => setAttemptModalOpen(true);

@@ -39,13 +39,28 @@ const AttemptHeader = ({ attempt, onEdit }) => {
 const Attempt = ({ attempt, highlightedTrackIndex, onHighlightTrack, onEditTrack, onAddTrack, onDeleteTrack, onEditAttempt, onReorderTracks }) => {
     const trackListLength = attempt.trackList.length;
     
-    const { handlers, getItemState } = useDragReorder(
+    const { handlers, getItemState, isDragging } = useDragReorder(
         trackListLength,
         (fromIndex, toIndex) => onReorderTracks(attempt, fromIndex, toIndex)
     );
 
+    const handleCardDragOver = (e) => {
+        if (!isDragging) return;
+        e.preventDefault();
+    };
+
+    const handleCardDrop = (e) => {
+        if (!isDragging) return;
+        e.preventDefault();
+        handlers.onDrop();
+    };
+
     return (
-        <div className="card mb-5">
+        <div 
+            className="card mb-5"
+            onDragOver={handleCardDragOver}
+            onDrop={handleCardDrop}
+        >
             <AttemptHeader
                 attempt={attempt}
                 onEdit={onEditAttempt}

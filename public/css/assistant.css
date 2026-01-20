@@ -263,6 +263,14 @@ table .ast-track-name span {
     transform: translateY(6px);
 }
 
+.ast-track-item[data-shift="up-edge"] {
+    transform: translateY(-12px);
+}
+
+.ast-track-item[data-shift="down-edge"] {
+    transform: translateY(12px);
+}
+
 .ast-track-item[data-indicator="before"]::before,
 .ast-track-item[data-indicator="after"]::after {
     content: '';
@@ -311,4 +319,16 @@ table .ast-track-name span {
 
 .ast-new-comment-row:focus-within {
     opacity: 1;
+}
+
+/* View Transitions for track reordering */
+::view-transition-old(track-*),
+::view-transition-new(track-*) {
+    animation-duration: 250ms;
+    animation-timing-function: ease-out;
+}
+
+::view-transition-group(track-*) {
+    animation-duration: 250ms;
+    animation-timing-function: ease-out;
 }
