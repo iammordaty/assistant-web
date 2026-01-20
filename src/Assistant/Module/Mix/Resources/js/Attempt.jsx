@@ -66,7 +66,7 @@ const Attempt = ({ attempt, highlightedTrackIndex, onHighlightTrack, onEditTrack
                 onEdit={onEditAttempt}
             />
 
-            <div className="card-body">
+            <div className="card-body" onMouseLeave={() => onHighlightTrack(null)}>
                 {trackListLength === 0 ? (
                     <div className="empty p-3 opacity-75">
                         <p className="empty-title">Ta próba nie ma jeszcze utworów</p>
