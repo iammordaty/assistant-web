@@ -6,12 +6,14 @@ use SplFileInfo;
 
 final class SimilarTracksResultList
 {
+    private const string MAX_DISTANCE = '-nan';
+
     private SplFileInfo $baseTrack;
 
     /** @var SimilarTracksResult[] */
     private array $similarTracks;
 
-    public function __construct(SplFileInfo $baseTrack, SimilarTracksResult ...$similarTracks)
+    private function __construct(SplFileInfo $baseTrack, SimilarTracksResult ...$similarTracks)
     {
         $this->baseTrack = $baseTrack;
         $this->similarTracks = array_reduce(
@@ -31,11 +33,17 @@ final class SimilarTracksResultList
             $baseTrack = new SplFileInfo($baseTrack);
         }
 
-        $similarTracks = array_map(fn ($similarTrack): SimilarTracksResult => SimilarTracksResult::factory(
-            $baseTrack,
-            $similarTrack['track-origin'],
-            $similarTrack['track-distance']
-        ), $similarTracks);
+        // sytuacja, w której jako dystans zwracany jest "-nan" powinna być obsłużona po stronie musly (cpp)
+        $similarTracks = array_filter(
+            $similarTracks,
+            fn (array $similarTrack): bool => $similarTrack['track-distance'] !== self::MAX_DISTANCE
+        );
+
+        $similarTracks = array_map(
+            fn (array $similarTrack): SimilarTracksResult =>
+            SimilarTracksResult::factory($baseTrack, $similarTrack['track-origin'], $similarTrack['track-distance']),
+            $similarTracks
+        );
 
         return new self($baseTrack, ...$similarTracks);
     }
@@ -45,14 +53,15 @@ final class SimilarTracksResultList
         return $this->baseTrack;
     }
 
-    public function getSimilarityResult(SplFileInfo $track): ?SimilarTracksResult
-    {
-        return $this->similarTracks[$track->getPathname()] ?? null;
-    }
-
     public function getSimilarityValue(SplFileInfo $track): float
     {
-        return $this->getSimilarityResult($track)?->getSimilarityValue() ?? 0;
+        $similarTracksResult = $this->similarTracks[$track->getPathname()] ?? null;
+
+        if (!$similarTracksResult) {
+            return 0;
+        }
+
+        return $similarTracksResult->getSimilarityValue();
     }
 
     /** @return SimilarTracksResult[] */

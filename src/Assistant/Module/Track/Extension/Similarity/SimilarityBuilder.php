@@ -3,18 +3,19 @@
 namespace Assistant\Module\Track\Extension\Similarity;
 
 use Assistant\Module\Common\Extension\SimilarTracksCollection\SimilarTracksCollectionService;
-use Assistant\Module\Search\Extension\TrackSearchService;
 use Assistant\Module\Track\Extension\Similarity\Provider\Bpm;
 use Assistant\Module\Track\Extension\Similarity\Provider\Genre;
 use Assistant\Module\Track\Extension\Similarity\Provider\MusicalKey;
 use Assistant\Module\Track\Extension\Similarity\Provider\Musly;
 use Assistant\Module\Track\Extension\Similarity\Provider\ProviderInterface;
 use Assistant\Module\Track\Extension\Similarity\Provider\Year;
+use Assistant\Module\Search\Extension\Service\TrackSearchService;
 use Assistant\Module\Track\Model\Track;
 
 final class SimilarityBuilder
 {
     private array $providers = Similarity::PROVIDERS;
+
     private Similarity $similarityService;
 
     private ?Track $track = null;

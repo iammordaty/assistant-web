@@ -1,8 +1,8 @@
 <?php
 
-namespace Assistant\Module\Common\Storage;
+namespace Assistant\Module\Search\Extension\Storage;
 
-use Assistant\Module\Search\Extension\MinMaxInfo;
+use Assistant\Module\Search\Extension\Criteria\MinMaxInfo;
 use MongoDB\BSON\UTCDateTime;
 use DateTimeInterface;
 

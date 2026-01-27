@@ -1,6 +1,8 @@
 <?php
 
-namespace Assistant\Module\Search\Extension;
+namespace Assistant\Module\Search\Extension\Request\ExpressionParser;
+
+use Assistant\Module\Search\Extension\Criteria\MinMaxInfo;
 
 final class YearMinMaxExpressionParser extends NumberMinMaxExpressionParser
 {

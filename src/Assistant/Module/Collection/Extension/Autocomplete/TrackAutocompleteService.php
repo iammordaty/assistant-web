@@ -5,10 +5,11 @@ namespace Assistant\Module\Collection\Extension\Autocomplete;
 use Assistant\Module\Common\Extension\Route;
 use Assistant\Module\Common\Extension\RouteResolver;
 use Assistant\Module\Common\Extension\SlugifyService;
-use Assistant\Module\Common\Storage\Regex;
-use Assistant\Module\Search\Extension\SearchCriteriaFacade;
-use Assistant\Module\Search\Extension\SearchSort;
-use Assistant\Module\Search\Extension\TrackSearchService;
+use Assistant\Module\Search\Extension\Criteria\Regex;
+use Assistant\Module\Search\Extension\Criteria\SearchCriteriaFacade;
+use Assistant\Module\Search\Extension\Criteria\SearchSort;
+use Assistant\Module\Search\Extension\Result\TrackSearchResult;
+use Assistant\Module\Search\Extension\Service\TrackSearchService;
 use Assistant\Module\Track\Model\Track;
 
 final class TrackAutocompleteService
@@ -29,21 +30,18 @@ final class TrackAutocompleteService
 
         // krok 1: jeśli zwraca coś searchService to zwróć tylko to
 
-        [ 'count' => $count, 'tracks' => $tracks ] = $this->searchService->findByName(
-            $query,
-            sort: SearchSort::TEXT_SCORE,
-            page: 1
-        );
+        $criteria = SearchCriteriaFacade::createFromName($query);
+        $result = $this->searchService->search($criteria, SearchSort::byTextScore(), limit: 20);
 
-        if ($count > 0) {
-            return $this->toArray($tracks);
+        if ($result->hasTracks()) {
+            return $this->toJson($result);
         }
 
         // wrzucone sytuacyjnie, przemyśleć:
         // krok 2 (powyżej 2/3 znaków i jeśli powyższe nic nie zwróci): regex::startsWith
         // krok 3 (powyżej 4 znaków i jeśli powyższe nic nie zwróci): regex:contains
 
-        // update 29.06.2021: póki co zostaje szukanie po indeksie tekstowym i guidzie. jeśli rezultaty nie będą ok,
+        // update 29.06.2021: na razie zostaje szukanie po indeksie tekstowym i guidzie. jeśli rezultaty nie będą ok,
         // trzeba zastanowić się nad wprowadzeniem powyższych kroków. należałoby wówczas zastanowić się
         // po jakim polu szukać powinny ww. regex-y: tylko guid? $or artystę i tytuł (w szczególności dla startsWith)?
 
@@ -54,13 +52,17 @@ final class TrackAutocompleteService
         }
 
         $criteria = SearchCriteriaFacade::createFromGuid(Regex::contains($slug));
-        $tracks = $this->searchService->findBy($criteria);
+        $result = $this->searchService->search($criteria, SearchSort::byName());
 
-        return $this->toArray($tracks);
+        if (!$result->hasTracks()) {
+            return [];
+        }
+
+        return $this->toJson($result);
     }
 
     /** @return TrackAutocompleteEntry[] */
-    private function toArray(iterable $tracks): array
+    private function toJson(TrackSearchResult $trackSearchResult): array
     {
         $createEntry = function (Track $track): TrackAutocompleteEntry {
             $route = Route::create('track.track.index', [ 'guid' => $track->getGuid() ]);
@@ -81,7 +83,7 @@ final class TrackAutocompleteService
 
         $entries = array_map(
             fn (Track $track) => $createEntry($track),
-            iterator_to_array($tracks)
+            iterator_to_array($trackSearchResult->tracks)
         );
 
         return $entries;

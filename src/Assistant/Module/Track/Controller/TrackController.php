@@ -19,7 +19,7 @@ use Slim\Views\Twig;
 
 final class TrackController
 {
-    private const SIMILAR_TRACKS_SOFT_LIMIT = 50;
+    private const int SIMILAR_TRACKS_SOFT_LIMIT = 50;
 
     public function __construct(
         private BreadcrumbsBuilder $breadcrumbsBuilder,

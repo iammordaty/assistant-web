@@ -1,10 +1,10 @@
 <?php
 
-namespace Assistant\Module\Common\Storage;
+namespace Assistant\Module\Search\Extension\Criteria;
 
-final class Regex
+final class Regex implements SearchCriteriaField
 {
-    public const REGEX_CASE_INSENSITIVE = 'i';
+    public const string REGEX_CASE_INSENSITIVE = 'i';
 
     public function __construct(private string $pattern, private ?string $flags = null)
     {
@@ -12,35 +12,35 @@ final class Regex
 
     public static function exact(string $pattern, ?array $flags = [ self::REGEX_CASE_INSENSITIVE ]): self
     {
-        $regex = Regex::create('^' . $pattern . '$', $flags);
+        $regex = self::create('^' . $pattern . '$', $flags);
 
         return $regex;
     }
 
     public static function contains(string $pattern, ?array $flags = [ self::REGEX_CASE_INSENSITIVE ]): self
     {
-        $regex = Regex::create($pattern, $flags);
+        $regex = self::create($pattern, $flags);
 
         return $regex;
     }
 
     public static function startsWith(string $pattern, ?array $flags = [ self::REGEX_CASE_INSENSITIVE ]): self
     {
-        $regex = Regex::create('^' . $pattern, $flags);
+        $regex = self::create('^' . $pattern, $flags);
 
         return $regex;
     }
 
     public static function endsWith(string $pattern, ?array $flags = [ self::REGEX_CASE_INSENSITIVE ]): self
     {
-        $regex = Regex::create($pattern . '$', $flags);
+        $regex = self::create($pattern . '$', $flags);
 
         return $regex;
     }
 
     public static function containsWordPart(string $pattern, ?array $flags = [ self::REGEX_CASE_INSENSITIVE ]): self
     {
-        $regex = Regex::create('\b' . $pattern, $flags);
+        $regex = self::create('\b' . $pattern, $flags);
 
         return $regex;
     }

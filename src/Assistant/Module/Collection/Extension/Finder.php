@@ -5,11 +5,11 @@ namespace Assistant\Module\Collection\Extension;
 use BadMethodCallException;
 use Closure;
 use Countable;
+use Iterator;
 use IteratorAggregate;
 use SplFileInfo;
 use Symfony\Component\Finder\Finder as Service;
 use Symfony\Component\Finder\Iterator\FileTypeFilterIterator;
-use Traversable;
 
 final class Finder implements IteratorAggregate, Countable
 {
@@ -123,12 +123,8 @@ final class Finder implements IteratorAggregate, Countable
         $this->service->append($iterator);
     }
 
-    /**
-     * @return Traversable|SplFileInfo[]
-     *
-     * @noinspection PhpDocSignatureInspection
-     */
-    public function getIterator(): Traversable
+    /** @return Iterator<string, SplFileInfo> */
+    public function getIterator(): Iterator
     {
         return $this->service->getIterator();
     }

@@ -4,7 +4,7 @@ namespace Assistant\Module\Directory\Controller;
 
 use Assistant\Module\Common\Extension\Breadcrumbs\Breadcrumb;
 use Assistant\Module\Common\Extension\Route;
-use Assistant\Module\Track\Extension\TrackService;
+use Assistant\Module\Search\Extension\Service\TrackSearchService;
 use Assistant\Module\Track\Model\Track;
 use IntlDateFormatter;
 use Psr\Http\Message\ResponseInterface;
@@ -16,7 +16,7 @@ final readonly class RecentTracksController
     private IntlDateFormatter $dateFormatter;
 
     public function __construct(
-        private TrackService $trackService,
+        private TrackSearchService $searchService,
         private Twig $view,
     ) {
         $this->dateFormatter = new IntlDateFormatter(
@@ -30,7 +30,7 @@ final readonly class RecentTracksController
     {
         $recent = [];
 
-        foreach ($this->trackService->getRecent() as $track) {
+        foreach ($this->searchService->findRecent() as $track) {
             [ 'name' => $groupName, 'breadcrumbs' => $breadcrumbs ] = $this->getGroup($track);
 
             if (!isset($recent[$groupName])) {

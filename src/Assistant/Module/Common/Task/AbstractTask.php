@@ -11,9 +11,6 @@ abstract class AbstractTask extends Command
 {
     private const IGNORED_PARAMETERS = [ 'ansi', 'help', 'no-ansi', 'no-interaction', 'quiet', 'verbose', 'version' ];
 
-    protected InputInterface $input;
-    protected OutputInterface $output;
-
     public function __construct(protected Logger $logger)
     {
         parent::__construct();
@@ -21,9 +18,6 @@ abstract class AbstractTask extends Command
 
     protected function initialize(InputInterface $input, OutputInterface $output): void
     {
-        $this->input = $input;
-        $this->output = $output;
-
         $this->logger->pushProcessor(function ($record) {
             $taskName = static::getDefaultName();
 

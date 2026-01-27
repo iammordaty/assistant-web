@@ -5,13 +5,14 @@ namespace Assistant\Module\Mix\Repository;
 use Assistant\Module\Common\Storage\Storage;
 use Assistant\Module\Mix\Model\Mix;
 use Assistant\Module\Mix\Model\MixDto;
+use Generator;
 use MongoDB\Database;
 use MongoDB\Model\BSONDocument;
 
 /** Repozytorium Mixów */
 final class MixRepository
 {
-    public const COLLECTION_NAME = 'mixes';
+    public const string COLLECTION_NAME = 'mixes';
 
     public function __construct(private Storage $storage)
     {
@@ -40,19 +41,13 @@ final class MixRepository
         return $mix;
     }
 
-    /**
-     * @param array|null $query
-     * @param array|null $sort
-     * @param int|null $limit
-     * @param int|null $skip
-     * @return Mix[]|iterable
-     */
+    /** @return Generator<int, Mix> */
     public function findBy(
         ?array $query = [],
         ?array $sort = null,
         ?int $limit = null,
         ?int $skip = null
-    ): iterable {
+    ): Generator {
         $documents = $this->storage->findBy($query, options: [
             'sort' => $sort,
             'limit' => $limit,

@@ -4,9 +4,9 @@ namespace Assistant\Module\Search\Controller;
 
 use Assistant\Module\Common\Extension\Pagerfanta\PagerfantaFactory;
 use Assistant\Module\Common\Extension\SimilarTracksCollection\SimilarTracksCollectionService;
-use Assistant\Module\Search\Extension\SearchCriteriaFacade;
-use Assistant\Module\Search\Extension\SearchSort;
-use Assistant\Module\Search\Extension\TrackSearchService;
+use Assistant\Module\Search\Extension\Criteria\SearchSort;
+use Assistant\Module\Search\Extension\Request\SearchRequest;
+use Assistant\Module\Search\Extension\Service\TrackSearchService;
 use Psr\Http\Message\ResponseInterface;
 use Slim\Http\Response;
 use Slim\Http\ServerRequest;
@@ -24,25 +24,18 @@ final readonly class AdvancedSearchController
     ) {
     }
 
-    /**
-     * Renderuje stronę wyszukiwania
-     *
-     * Ograniczanie listy znalezionych utworów poprzez similarTracksCollectionService wrzucone na szybko.
-     * Na moduł wyszukiwania należałoby spojrzeć nieco szerzej:
-     * @see SearchCriteriaFacade::createFromFields()
-     * @see TrackSearchService::search()
-     * @see SearchSort::create()
-     */
+    /** Renderuje stronę wyszukiwania */
     public function index(ServerRequest $request, Response $response): ResponseInterface
     {
-        $form = array_merge(SearchCriteriaFacade::DEFAULTS, $request->getQueryParams());
+        $queryParams = $request->getQueryParams();
+        $form = array_merge(SearchRequest::DEFAULTS, $queryParams);
         $isFormSubmitted = $this->isFormSubmitted($form);
 
         if ($isFormSubmitted) {
             $trackName = $form['track'] ?? '';
 
             if ($trackName) {
-                $track = $this->searchService->findOneByName($trackName);
+                $track = $this->searchService->findByName($trackName);
                 $similarTracksResult = $this->similarTracksCollectionService->getSimilarTracks($track->getFile());
 
                 $tracksPathname = array_map(
@@ -50,20 +43,19 @@ final readonly class AdvancedSearchController
                     $similarTracksResult->getSimilarTracks()
                 );
 
-                $form['pathname'] = array_values($tracksPathname);
+                $queryParams['pathname'] = array_values($tracksPathname);
             }
 
             $page = max(1, (int) ($form['page'] ?? 1));
-            $sort = $form['sort'] ?? null;
+            $sort = SearchSort::fromQueryString($form['sort'] ?? null, SearchSort::byName());
 
-            [ 'count' => $count, 'tracks' => $tracks ] = $this->searchService->findByFields($form, $sort, $page);
-
-            unset($form['pathname']);
+            $searchRequest = SearchRequest::fromQueryParams($queryParams);
+            $result = $this->searchService->search($searchRequest->toSearchCriteria(), $sort, limit: 100, page: $page);
 
             $paginator = PagerfantaFactory::createWithNullAdapter(
-                $count,
-                $page,
-                TrackSearchService::MAX_TRACKS_PER_PAGE
+                $result->total,
+                $result->page,
+                $result->limit,
             );
 
             if ($request->isXhr()) {
@@ -71,7 +63,7 @@ final readonly class AdvancedSearchController
                     'routeQuery' => $form,
                     'paginator' => $paginator,
                     'routeName' => 'search.advanced.index',
-                    'tracks' => $tracks,
+                    'tracks' => $result->tracks,
                     'sort' => $sort,
                     'withTextScoreSort' => true,
                 ]);
@@ -84,7 +76,7 @@ final readonly class AdvancedSearchController
             'isFormSubmitted' => $isFormSubmitted,
             'paginator' => $paginator ?? null,
             'routeName' => 'search.advanced.index',
-            'tracks' => $tracks ?? [],
+            'tracks' => isset($result) ? $result->tracks : [],
         ]);
     }
 

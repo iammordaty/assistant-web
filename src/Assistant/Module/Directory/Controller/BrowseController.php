@@ -9,7 +9,7 @@ use Assistant\Module\Common\Extension\Route;
 use Assistant\Module\Common\Extension\RouteResolver;
 use Assistant\Module\Common\Extension\SlugifyService;
 use Assistant\Module\Directory\Extension\DirectoryService;
-use Assistant\Module\Track\Extension\TrackService;
+use Assistant\Module\Search\Extension\Service\TrackSearchService;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Slim\Http\Response;
@@ -23,7 +23,7 @@ final class BrowseController
         private DirectoryService $directoryService,
         private RouteResolver $routeResolver,
         private SlugifyService $slugify,
-        private TrackService $trackService,
+        private TrackSearchService $searchService,
         private Twig $view,
     ) {
     }
@@ -58,7 +58,7 @@ final class BrowseController
             ->createBreadcrumbs();
 
         $directories = iterator_to_array($this->directoryService->getByDirectory($directory));
-        $tracks = iterator_to_array($this->trackService->getByDirectory($directory));
+        $tracks = iterator_to_array($this->searchService->findByDirectory($directory));
 
         return $this->view->render($response, '@directory/index.twig', [
             'menu' => 'browse',

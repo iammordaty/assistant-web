@@ -5,8 +5,9 @@ namespace Assistant\Module\Search\Controller;
 use Assistant\Module\Common\Extension\Pagerfanta\PagerfantaFactory;
 use Assistant\Module\Common\Extension\Route;
 use Assistant\Module\Common\Extension\RouteResolver;
-use Assistant\Module\Search\Extension\TrackSearchService;
-use Assistant\Module\Track\Model\Track;
+use Assistant\Module\Search\Extension\Criteria\SearchCriteriaFacade;
+use Assistant\Module\Search\Extension\Criteria\SearchSort;
+use Assistant\Module\Search\Extension\Service\TrackSearchService;
 use Psr\Http\Message\ResponseInterface;
 use Slim\Http\Response;
 use Slim\Http\ServerRequest;
@@ -24,9 +25,7 @@ final readonly class SimpleSearchController
     ) {
     }
 
-    /**
-     * Renderuje stronę wyszukiwania
-     */
+    /** Renderuje stronę wyszukiwania */
     public function index(ServerRequest $request, Response $response): ResponseInterface
     {
         $form = $request->getQueryParams();
@@ -34,31 +33,29 @@ final readonly class SimpleSearchController
 
         if ($isFormSubmitted) {
             $name = $form['query'];
+            $criteria = SearchCriteriaFacade::createFromName($name);
+
             $page = max(1, (int) ($form['page'] ?? 1));
-            $sort = $form['sort'] ?? null;
+            $sort = SearchSort::fromQueryString($form['sort'] ?? null, SearchSort::byTextScore());
 
-            [ 'count' => $count, 'tracks' => $tracks ] = $this->searchService->findByName($name, $sort, $page);
-
-            $paginator = PagerfantaFactory::createWithNullAdapter(
-                $count,
-                $page,
-                TrackSearchService::MAX_TRACKS_PER_PAGE
-            );
+            $result = $this->searchService->search($criteria, $sort, limit: 100, page: $page);
+            $paginator = PagerfantaFactory::createWithNullAdapter($result->total, $result->page, $result->limit);
 
             if ($request->isXhr()) {
                 return $this->view->render($response, '@search/common/list.twig', [
                     'routeQuery' => $form,
                     'paginator' => $paginator,
                     'routeName' => 'search.simple.index',
-                    'tracks' => $tracks,
-                    'sort' => $form['sort'],
+                    'tracks' => $result->tracks,
+                    'sort' => $sort,
                     'withTextScoreSort' => true,
                 ]);
             }
 
-            if ($paginator->count() === 1) {
-                /** @var Track $track */
-                $track = $tracks->current();
+            if ($result->total === 1) {
+                $track = is_array($result->tracks)
+                    ? $result->tracks[0]
+                    : iterator_to_array($result->tracks)[0];
 
                 $route = Route::create('track.track.index', [ 'guid' => $track->getGuid() ]);
                 $redirectUrl = $this->routeResolver->resolve($route);
@@ -73,7 +70,7 @@ final readonly class SimpleSearchController
             'isFormSubmitted' => $isFormSubmitted,
             'paginator' => $paginator ?? null,
             'routeName' => 'search.simple.index',
-            'tracks' => $tracks ?? [],
+            'tracks' => $result?->tracks ?? [],
         ]);
     }
 

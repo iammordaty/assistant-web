@@ -1,16 +1,15 @@
 <?php
 
-namespace Assistant\Module\Search\Extension;
+namespace Assistant\Module\Search\Extension\Criteria;
 
-final class MinMaxInfo
+final class MinMaxInfo implements SearchCriteriaField
 {
-    // @idea Może BackedEnum zamiast const-ów?
-    public const GREATER_THAN = 'gt';
-    public const GREATER_THAN_OR_EQUAL = 'gte';
-    public const LESS_THAN = 'lt';
-    public const LESS_THAN_OR_EQUAL = 'lte';
+    public const string GREATER_THAN = 'gt';
+    public const string GREATER_THAN_OR_EQUAL = 'gte';
+    public const string LESS_THAN = 'lt';
+    public const string LESS_THAN_OR_EQUAL = 'lte';
 
-    private const VALID_OPERATORS = [
+    private const array VALID_OPERATORS = [
         self::GREATER_THAN,
         self::GREATER_THAN_OR_EQUAL,
         self::LESS_THAN,

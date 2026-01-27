@@ -169,11 +169,11 @@ final class TrackMetadataValidator
         $errors = [];
 
         if (!$track->getAlbum() && $track->getTrackNumber()) {
-            $errors[] = 'Brak numeru ścieżki w albumie.';
+            $errors[] = 'Utwór zawiera numer ścieżki bez albumu.';
         }
 
         if (!$track->getTrackNumber() && $track->getAlbum()) {
-            $errors[] = 'Utwór zawiera numer ścieżki bez albumu.';
+            $errors[] = 'Brak numeru ścieżki w albumie.';
         }
 
         return $errors;

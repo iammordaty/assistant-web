@@ -1,31 +1,29 @@
 <?php
 
-namespace Assistant\Module\Search\Extension;
-
-use Assistant\Module\Common\Storage\Regex;
+namespace Assistant\Module\Search\Extension\Criteria;
 
 final class SearchCriteria
 {
     /**
      * @param string|null $name
-     * @param Regex|string|null $guid
-     * @param Regex|string|null $artist
-     * @param Regex|string|null $title
-     * @param Regex[]|string[]|null $genres
-     * @param Regex[]|string[]|null $publishers
+     * @param SearchCriteriaField|array|string|null $guid
+     * @param SearchCriteriaField|string|null $artist
+     * @param SearchCriteriaField|string|null $title
+     * @param SearchCriteriaField[]|string[]|null $genres
+     * @param SearchCriteriaField[]|string[]|null $publishers
      * @param MinMaxInfo|int[]|null $years
      * @param string[]|null $initialKeys
      * @param MinMaxInfo|float[]|null $bpm
      * @param true|null $isFavorite
      * @param MinMaxInfo|\DateTimeInterface[]|null $indexedDates
-     * @param Regex|string|null $parent
-     * @param Regex[]|string[]|null $pathname
+     * @param SearchCriteriaField|string|null $parent
+     * @param SearchCriteriaField[]|string[]|null $pathname
      */
     public function __construct(
         private ?string $name = null,
-        private Regex|string|null $guid = null,
-        private Regex|string|null $artist = null,
-        private Regex|string|null $title = null,
+        private SearchCriteriaField|array|string|null $guid = null,
+        private SearchCriteriaField|string|null $artist = null,
+        private SearchCriteriaField|string|null $title = null,
         private ?array $genres = null,
         private ?array $publishers = null,
         private MinMaxInfo|array|null $years = null,
@@ -33,7 +31,7 @@ final class SearchCriteria
         private MinMaxInfo|array|null $bpm = null,
         private true|null $isFavorite = null,
         private MinMaxInfo|array|null $indexedDates = null,
-        private Regex|string|null $parent = null,
+        private SearchCriteriaField|string|null $parent = null,
         private ?array $pathname = null,
     ) {
     }
@@ -43,28 +41,29 @@ final class SearchCriteria
         return $this->name;
     }
 
-    public function getGuid(): Regex|string|null
+    /** @return SearchCriteriaField|array|string|null */
+    public function getGuid(): SearchCriteriaField|array|string|null
     {
         return $this->guid;
     }
 
-    public function getArtist(): Regex|string|null
+    public function getArtist(): SearchCriteriaField|string|null
     {
         return $this->artist;
     }
 
-    public function getTitle(): Regex|string|null
+    public function getTitle(): SearchCriteriaField|string|null
     {
         return $this->title;
     }
 
-    /** @return Regex[]|string[]|null */
+    /** @return SearchCriteriaField[]|string[]|null */
     public function getGenres(): ?array
     {
         return $this->genres;
     }
 
-    /** @return Regex[]|string[]|null */
+    /** @return SearchCriteriaField[]|string[]|null */
     public function getPublishers(): ?array
     {
         return $this->publishers;
@@ -99,11 +98,12 @@ final class SearchCriteria
         return $this->indexedDates;
     }
 
-    public function getParent(): Regex|string|null
+    public function getParent(): SearchCriteriaField|string|null
     {
         return $this->parent;
     }
 
+    /** @return SearchCriteriaField[]|string[]|null */
     public function getPathname(): ?array
     {
         return $this->pathname;

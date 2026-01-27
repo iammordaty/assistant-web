@@ -2,21 +2,22 @@
 
 namespace Assistant\Module\Track\Repository;
 
-use Assistant\Module\Common\Storage\Query;
 use Assistant\Module\Common\Storage\Storage;
-use Assistant\Module\Search\Extension\SearchCriteria;
+use Assistant\Module\Search\Extension\Criteria\SearchCriteria;
+use Assistant\Module\Search\Extension\Criteria\SearchSort;
+use Assistant\Module\Search\Extension\Storage\Query;
 use Assistant\Module\Track\Model\Track;
 use Assistant\Module\Track\Model\TrackDto;
+use Generator;
 use MongoDB\Database;
 use MongoDB\Model\BSONDocument;
-use Traversable;
 
 /** Repozytorium obiektów Track */
 final class TrackRepository
 {
-    private const COLLECTION_NAME = 'tracks';
+    private const string COLLECTION_NAME = 'tracks';
 
-    public function __construct(private Storage $storage)
+    private function __construct(private Storage $storage)
     {
     }
 
@@ -30,12 +31,12 @@ final class TrackRepository
         return $repository;
     }
 
-    public function getOneBy(SearchCriteria $searchCriteria, ?array $sort = null): ?Track
+    public function getOneBy(SearchCriteria $searchCriteria, ?SearchSort $searchSort = null): ?Track
     {
         $query = Query::fromSearchCriteria($searchCriteria);
 
         $document = $this->storage->findOneBy($query->toStorage(), options: [
-            'sort' => $sort,
+            'sort' => $searchSort?->toStorage(),
         ]);
 
         if (!$document) {
@@ -47,23 +48,17 @@ final class TrackRepository
         return $track;
     }
 
-    /**
-     * @param SearchCriteria $searchCriteria
-     * @param array|null $sort
-     * @param int|null $limit
-     * @param int|null $skip
-     * @return Track[]|Traversable
-     */
+    /** @return Generator<int, Track> */
     public function findBy(
         SearchCriteria $searchCriteria,
-        ?array $sort = null,
+        ?SearchSort $searchSort = null,
         ?int $limit = null,
-        ?int $skip = null
-    ): array|Traversable {
+        ?int $skip = null,
+    ): Generator {
         $query = Query::fromSearchCriteria($searchCriteria);
 
         $documents = $this->storage->findBy($query->toStorage(), options: [
-            'sort' => $sort,
+            'sort' => $searchSort?->toStorage(),
             'limit' => $limit,
             'skip' => $skip,
         ]);
@@ -109,7 +104,8 @@ final class TrackRepository
         return $count;
     }
 
-    public function aggregate(array $pipeline): Traversable
+    /** @return Generator<int, Track> */
+    public function aggregate(array $pipeline): Generator
     {
         $documents = $this->storage->aggregate($pipeline);
 

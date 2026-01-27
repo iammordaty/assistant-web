@@ -2,7 +2,7 @@
 
 namespace Assistant\Module\Track\Extension\Similarity\Provider;
 
-use Assistant\Module\Search\Extension\MinMaxInfo;
+use Assistant\Module\Search\Extension\Criteria\MinMaxInfo;
 use Assistant\Module\Track\Model\Track;
 
 final class Year extends AbstractProvider

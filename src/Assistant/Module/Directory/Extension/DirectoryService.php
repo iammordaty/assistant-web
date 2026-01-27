@@ -1,17 +1,14 @@
 <?php
 
-// Wrzucone na szybko, być może powinno leżeć bliżej modelu
 namespace Assistant\Module\Directory\Extension;
 
-use Assistant\Module\Common\Storage\Storage;
 use Assistant\Module\Directory\Model\Directory;
 use Assistant\Module\Directory\Repository\DirectoryRepository;
-use Assistant\Module\Search\Extension\DirectorySearchService;
-use Assistant\Module\Search\Extension\SearchCriteriaFacade;
-use Traversable;
+use Assistant\Module\Search\Extension\Criteria\SearchCriteriaFacade;
+use Assistant\Module\Search\Extension\Criteria\SearchSort;
+use Assistant\Module\Search\Extension\Service\DirectorySearchService;
+use Generator;
 
-// @idea: Być może należałoby rozdzielić klasę DirectoryService zajmującą się pojedynczymi utworami od
-//        klasy zajmującej się listą (vide getByDirectory, getRecent)
 final class DirectoryService
 {
     public function __construct(
@@ -22,41 +19,33 @@ final class DirectoryService
 
     public function getByGuid(string $guid): ?Directory
     {
-        return $this->searchService->findOneByGuid($guid);
+        $criteria = SearchCriteriaFacade::createFromGuid($guid);
+
+        return $this->searchService->findOne($criteria);
     }
 
     public function getByPathname(string $pathname): ?Directory
     {
-        return $this->searchService->findOneByPathname($pathname);
+        $criteria = SearchCriteriaFacade::createFromPathname($pathname);
+
+        return $this->searchService->findOne($criteria);
     }
 
-    public function save(Directory $track): bool
+    public function save(Directory $directory): bool
     {
-        $result = $this->repository->save($track);
-
-        return $result;
+        return $this->repository->save($directory);
     }
 
     public function remove(Directory $directory): bool
     {
-        $result = $this->repository->delete($directory);
-
-        return $result;
+        return $this->repository->delete($directory);
     }
 
-    /**
-     * @param Directory $directory
-     * @return Directory[]|Traversable
-     */
-    public function getByDirectory(Directory $directory): array|Traversable
+    /** @return Generator<int, Directory> */
+    public function getByDirectory(Directory $directory): Generator
     {
-        $searchCriteria = SearchCriteriaFacade::createFromParent($directory->getGuid());
+        $criteria = SearchCriteriaFacade::createFromParent($directory->getGuid());
 
-        $tracks = $this->searchService->findBy(
-            $searchCriteria,
-            [ 'guid' => Storage::SORT_ASC ]
-        );
-
-        return $tracks;
+        return $this->searchService->search($criteria, SearchSort::byName());
     }
 }
