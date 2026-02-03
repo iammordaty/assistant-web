@@ -22,15 +22,15 @@ final class TrackAutocompleteService
     }
 
     /** @return TrackAutocompleteEntry[] */
-    public function __invoke(string $query): array
+    public function __invoke(string $name): array
     {
-        if ($query === '') {
+        if ($name === '' || str_contains($name, ': ')) {
             return [];
         }
 
         // krok 1: jeśli zwraca coś searchService to zwróć tylko to
 
-        $criteria = SearchCriteriaFacade::createFromName($query);
+        $criteria = SearchCriteriaFacade::createFromName($name);
         $result = $this->searchService->search($criteria, SearchSort::byTextScore(), limit: 20);
 
         if ($result->hasTracks()) {
@@ -45,7 +45,7 @@ final class TrackAutocompleteService
         // trzeba zastanowić się nad wprowadzeniem powyższych kroków. należałoby wówczas zastanowić się
         // po jakim polu szukać powinny ww. regex-y: tylko guid? $or artystę i tytuł (w szczególności dla startsWith)?
 
-        $slug = $this->slugifyService->slugify($query);
+        $slug = $this->slugifyService->slugify($name);
 
         if (strlen($slug) <= 2) {
             return [];

@@ -32,7 +32,15 @@ final readonly class SimpleSearchController
         $isFormSubmitted = $this->isFormSubmitted($form);
 
         if ($isFormSubmitted) {
-            $name = $form['query'];
+            $name = $form['name'];
+
+            if (str_contains($name, ': ')) {
+                $route = Route::create('search.advanced.index')->withQuery([ 'name' => $name ]);
+                $redirectUrl = $this->routeResolver->resolve($route);
+
+                return $response->withRedirect($redirectUrl);
+            }
+            
             $criteria = SearchCriteriaFacade::createFromName($name);
 
             $page = max(1, (int) ($form['page'] ?? 1));
@@ -76,6 +84,6 @@ final readonly class SimpleSearchController
 
     private function isFormSubmitted(array $form): bool
     {
-        return !empty($form['query']);
+        return !empty($form['name']);
     }
 }

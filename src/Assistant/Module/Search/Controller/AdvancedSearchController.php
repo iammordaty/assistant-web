@@ -3,6 +3,8 @@
 namespace Assistant\Module\Search\Controller;
 
 use Assistant\Module\Common\Extension\Pagerfanta\PagerfantaFactory;
+use Assistant\Module\Common\Extension\Route;
+use Assistant\Module\Common\Extension\RouteResolver;
 use Assistant\Module\Common\Extension\SimilarTracksCollection\SimilarTracksCollectionService;
 use Assistant\Module\Search\Extension\Criteria\SearchSort;
 use Assistant\Module\Search\Extension\Request\SearchRequest;
@@ -18,6 +20,7 @@ use Slim\Views\Twig;
 final readonly class AdvancedSearchController
 {
     public function __construct(
+        private RouteResolver $routeResolver,
         private SimilarTracksCollectionService $similarTracksCollectionService,
         private TrackSearchService $searchService,
         private Twig $view,
@@ -28,6 +31,13 @@ final readonly class AdvancedSearchController
     public function index(ServerRequest $request, Response $response): ResponseInterface
     {
         $queryParams = $request->getQueryParams();
+
+        [ $shouldRedirect, $redirectUrl ] = $this->shouldRedirectFromArtistTitleQuery($queryParams);
+
+        if ($shouldRedirect) {
+            return $response->withRedirect($redirectUrl);
+        }
+
         $form = array_merge(SearchRequest::DEFAULTS, $queryParams);
         $isFormSubmitted = $this->isFormSubmitted($form);
 
@@ -85,5 +95,36 @@ final readonly class AdvancedSearchController
         $hasAtLeastOneValue = count(array_filter(array_values($criteria))) >= 1;
 
         return $hasAtLeastOneValue;
+    }
+
+    private function shouldRedirectFromArtistTitleQuery(array $queryParams): array
+    {
+        $artist = trim((string) ($queryParams['artist'] ?? ''));
+        $title = trim((string) ($queryParams['title'] ?? ''));
+
+        if ($artist === '' && $title === '') {
+            return [ false, null ];
+        }
+
+        if (empty($queryParams['name'])) {
+            $parts = [];
+
+            if ($artist !== '') {
+                $parts[] = 'artist: ' . $artist;
+            }
+
+            if ($title !== '') {
+                $parts[] = 'title: ' . $title;
+            }
+
+            $queryParams['name'] = trim(implode(' ', $parts));
+        }
+
+        unset($queryParams['artist'], $queryParams['title']);
+
+        $route = Route::create('search.advanced.index')->withQuery($queryParams);
+        $redirectUrl = $this->routeResolver->resolve($route);
+
+        return [ true, $redirectUrl ];
     }
 }

@@ -12,7 +12,7 @@ use Assistant\Module\Search\Extension\Request\ExpressionParser\YearMinMaxExpress
 
 final class SearchRequest
 {
-    public const array DEFAULTS = [
+    public const DEFAULTS = [
         'artist' => '',
         'bpm' => '',
         'genre' => '',
@@ -64,11 +64,39 @@ final class SearchRequest
 
     public function toSearchCriteria(): SearchCriteria
     {
+        $name = $this->name;
+        $artist = null;
+        $title = null;
+
+        if ($this->name) {
+            [ $name, $modifiers ] = self::parseNameWithModifiers($this->name);
+
+            if ($modifiers !== []) {
+                if (isset($modifiers['artist'])) {
+                    $artist = Regex::contains($modifiers['artist']);
+                }
+
+                $titleTerm = $modifiers['title'] ?? null;
+                $remixTerm = $modifiers['remix'] ?? null;
+
+                if ($titleTerm && $remixTerm) {
+                    $title = self::titleAndRemixRegex($titleTerm, $remixTerm);
+                } elseif ($titleTerm) {
+                    $title = self::titleOnlyRegex($titleTerm);
+                } elseif ($remixTerm) {
+                    $title = self::remixRegex($remixTerm);
+                }
+            }
+        } else {
+            $artist = $this->artist ? Regex::contains($this->artist) : null;
+            $title = $this->title ? Regex::contains($this->title) : null;
+        }
+
         return new SearchCriteria(
-            name: $this->name,
+            name: $name,
             guid: $this->guid ? Regex::exact($this->guid) : null,
-            artist: $this->artist ? Regex::contains($this->artist) : null,
-            title: $this->title ? Regex::contains($this->title) : null,
+            artist: $artist,
+            title: $title,
             genres: $this->genres ? array_map(fn ($g) => Regex::exact($g), $this->genres) : null,
             publishers: $this->publishers ? array_map(fn ($p) => Regex::containsWordPart($p), $this->publishers) : null,
             years: $this->years,
@@ -137,5 +165,85 @@ final class SearchRequest
         }
 
         return array_map($castFn, $items);
+    }
+
+    /**
+     * @return array{0:?string,1:array<string,string>}
+     */
+    private static function parseNameWithModifiers(string $input): array
+    {
+        $input = trim($input);
+
+        if ($input === '') {
+            return [ null, [] ];
+        }
+
+        $pattern = '/(?:(^|\s))(a|artist|t|title|r|remix)\s*:\s*/i';
+        $matches = [];
+
+        $matchCount = preg_match_all($pattern, $input, $matches, PREG_OFFSET_CAPTURE);
+
+        if ($matchCount < 1) {
+            return [ $input, [] ];
+        }
+
+        $modifiers = [];
+        $freeText = trim(substr($input, 0, $matches[0][0][1]));
+        $count = count($matches[0]);
+
+        for ($index = 0; $index < $count; $index++) {
+            $keyRaw = strtolower($matches[2][$index][0]);
+            $key = self::normalizeModifier($keyRaw);
+
+            if ($key === null || isset($modifiers[$key])) {
+                continue;
+            }
+
+            $valueStart = $matches[0][$index][1] + strlen($matches[0][$index][0]);
+            $valueEnd = $index + 1 < $count ? $matches[0][$index + 1][1] : strlen($input);
+            $value = trim(substr($input, $valueStart, $valueEnd - $valueStart));
+
+            if ($value !== '') {
+                $modifiers[$key] = $value;
+            }
+        }
+
+        return [ $freeText !== '' ? $freeText : null, $modifiers ];
+    }
+
+    private static function normalizeModifier(string $key): ?string
+    {
+        return match ($key) {
+            'a', 'artist' => 'artist',
+            't', 'title' => 'title',
+            'r', 'remix' => 'remix',
+
+            default => null,
+        };
+    }
+
+    private static function titleOnlyRegex(string $value): Regex
+    {
+        $escaped = preg_quote($value, '/');
+        $pattern = '^[^\\[]*' . $escaped;
+
+        return Regex::create($pattern, [ Regex::REGEX_CASE_INSENSITIVE ]);
+    }
+
+    private static function remixRegex(string $value): Regex
+    {
+        $escaped = preg_quote($value, '/');
+        $pattern = '\\[[^\\]]*' . $escaped . '[^\\]]*\\]';
+
+        return Regex::create($pattern, [ Regex::REGEX_CASE_INSENSITIVE ]);
+    }
+
+    private static function titleAndRemixRegex(string $title, string $remix): Regex
+    {
+        $titleEscaped = preg_quote($title, '/');
+        $remixEscaped = preg_quote($remix, '/');
+        $pattern = '^(?=[^\\[]*' . $titleEscaped . ')(?=.*\\[[^\\]]*' . $remixEscaped . '[^\\]]*\\]).*';
+
+        return Regex::create($pattern, [ Regex::REGEX_CASE_INSENSITIVE ]);
     }
 }

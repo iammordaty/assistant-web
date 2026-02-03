@@ -89,7 +89,7 @@ final class Query
         }
 
         if ($this->artist) {
-            $criteria['artist'] = self::fieldToStorage($this->artist);
+            $criteria['artists'] = self::fieldToStorage($this->artist);
         }
 
         if ($this->title) {

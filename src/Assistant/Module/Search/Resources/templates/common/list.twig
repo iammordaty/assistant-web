@@ -9,7 +9,7 @@
                     <div class="card-actions">
                         <select class="form-select" data-role="track-search:list-sort">
                             {# @fixme: To powinno przychodzić z PHP-a #}
-                            {# @see \Assistant\Module\Search\Extension\SearchSort #}
+                            {# @see \Assistant\Module\Search\Extension\Criteria\SearchSort #}
                             {% if withTextScoreSort %}
                                 <option value="t" {% if sort == 't' or not sort %}selected{% endif %}>Najlepsze dopasowanie</option>
                             {% endif %}
