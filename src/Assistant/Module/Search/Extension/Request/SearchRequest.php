@@ -7,12 +7,18 @@ use Assistant\Module\Search\Extension\Criteria\Regex;
 use Assistant\Module\Search\Extension\Criteria\SearchCriteria;
 use Assistant\Module\Search\Extension\Request\ExpressionParser\DateTimeMinMaxExpressionParser;
 use Assistant\Module\Search\Extension\Request\ExpressionParser\ExpressionParser;
+use Assistant\Module\Search\Extension\Request\ExpressionParser\NameParser;
 use Assistant\Module\Search\Extension\Request\ExpressionParser\NumberMinMaxExpressionParser;
 use Assistant\Module\Search\Extension\Request\ExpressionParser\YearMinMaxExpressionParser;
+use Slim\Http\ServerRequest;
 
-final class SearchRequest
+// przed usunięciem 'artist' i 'title' trzeba pozmieniać wywołania routingu
+// - src/Assistant/Module/Track/Resources/templates/common/header.twig
+// - src/Assistant/Module/Dashboard/Resources/templates/index.twig
+final readonly class SearchRequest
 {
-    public const DEFAULTS = [
+    // pomyśleć o wyciągnięciu tego do klasy Form i zamiana array $form na SearchForm $form, ale bez spiny
+    public const array DEFAULTS = [
         'artist' => '',
         'bpm' => '',
         'genre' => '',
@@ -26,39 +32,49 @@ final class SearchRequest
         'year' => '',
     ];
 
-    public function __construct(
-        private readonly ?string $name = null,
-        private readonly ?string $guid = null,
-        private readonly ?string $artist = null,
-        private readonly ?string $title = null,
-        private readonly ?array $genres = null,
-        private readonly ?array $publishers = null,
-        private readonly MinMaxInfo|array|null $years = null,
-        private readonly ?array $initialKeys = null,
-        private readonly MinMaxInfo|array|null $bpm = null,
-        private readonly ?bool $isFavorite = null,
-        private readonly MinMaxInfo|array|null $indexedDates = null,
-        private readonly ?array $pathname = null,
+    private function __construct(
+        private ?string $name = null,
+        private ?string $guid = null,
+        private ?string $artist = null,
+        private ?string $title = null,
+        private ?array $genres = null,
+        private ?array $publishers = null,
+        private MinMaxInfo|array|null $years = null,
+        private ?array $initialKeys = null,
+        private MinMaxInfo|array|null $bpm = null,
+        private ?bool $isFavorite = null,
+        private MinMaxInfo|array|null $indexedDates = null,
+        private ?array $pathname = null,
+        private array $form = [],
+        private bool $isFormSubmitted,
+        private bool $hasNameModifiers,
     ) {
     }
 
-    public static function fromQueryParams(array $params): self
+    public static function fromServerRequest(ServerRequest $request): self
     {
-        $params = array_merge(self::DEFAULTS, $params);
+        [ $form, $hasNameModifiers ] = self::normalizeForm($request->getQueryParams());
 
         return new self(
-            name: self::parseString($params['name']),
-            guid: self::parseString($params['guid']),
-            artist: self::parseString($params['artist']),
-            title: self::parseString($params['title']),
-            genres: self::parseCommaSeparated($params['genre']),
-            publishers: self::parseCommaSeparated($params['publisher']),
-            years: self::parseMinMaxOrList($params['year'], YearMinMaxExpressionParser::class, 'intval'),
-            initialKeys: self::parseInitialKeys($params['initial_key']),
-            bpm: self::parseMinMaxOrList($params['bpm'], NumberMinMaxExpressionParser::class, 'floatval'),
-            isFavorite: self::parseBoolean($params['is_favorite']),
-            indexedDates: self::parseMinMaxOrList($params['indexed_date'], DateTimeMinMaxExpressionParser::class, 'intval'),
-            pathname: $params['pathname'] ?? null,
+            name: $form['name'] ?: null,
+            guid: $form['guid'] ?: null,
+            artist: $form['artist'] ?: null,
+            title: $form['title'] ?: null,
+            genres: self::parseCommaSeparated($form['genre']),
+            publishers: self::parseCommaSeparated($form['publisher']),
+            years: self::parseMinMaxOrList($form['year'], YearMinMaxExpressionParser::class, 'intval'),
+            initialKeys: self::parseInitialKeys($form['initial_key']),
+            bpm: self::parseMinMaxOrList($form['bpm'], NumberMinMaxExpressionParser::class, 'floatval'),
+            isFavorite: filter_var($form['is_favorite'], FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE),
+            indexedDates: self::parseMinMaxOrList(
+                $form['indexed_date'],
+                DateTimeMinMaxExpressionParser::class,
+                'intval'
+            ),
+            pathname: $form['pathname'] ?? null,
+            form: $form,
+            isFormSubmitted: self::isSubmitted($form),
+            hasNameModifiers: $hasNameModifiers,
         );
     }
 
@@ -69,7 +85,9 @@ final class SearchRequest
         $title = null;
 
         if ($this->name) {
-            [ $name, $modifiers ] = self::parseNameWithModifiers($this->name);
+            $parsedName = NameParser::parse($this->name);
+            $modifiers = $parsedName?->getModifiers() ?? [];
+            $name = $parsedName?->getFreeText();
 
             if ($modifiers !== []) {
                 if (isset($modifiers['artist'])) {
@@ -80,11 +98,11 @@ final class SearchRequest
                 $remixTerm = $modifiers['remix'] ?? null;
 
                 if ($titleTerm && $remixTerm) {
-                    $title = self::titleAndRemixRegex($titleTerm, $remixTerm);
+                    $title = NameParser::titleAndRemixRegex($titleTerm, $remixTerm);
                 } elseif ($titleTerm) {
-                    $title = self::titleOnlyRegex($titleTerm);
+                    $title = NameParser::titleOnlyRegex($titleTerm);
                 } elseif ($remixTerm) {
-                    $title = self::remixRegex($remixTerm);
+                    $title = NameParser::remixRegex($remixTerm);
                 }
             }
         } else {
@@ -106,18 +124,6 @@ final class SearchRequest
             indexedDates: $this->indexedDates,
             pathname: $this->pathname,
         );
-    }
-
-    private static function parseString(?string $value): ?string
-    {
-        $trimmed = trim($value ?? '');
-
-        return $trimmed !== '' ? $trimmed : null;
-    }
-
-    private static function parseBoolean(mixed $value): ?bool
-    {
-        return filter_var($value, FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE);
     }
 
     private static function parseCommaSeparated(?string $value): ?array
@@ -154,7 +160,7 @@ final class SearchRequest
         /** @var ExpressionParser $parser */
         $parsed = $parser::parse($value);
 
-        if ($parsed) {
+        if ($parsed instanceof MinMaxInfo) {
             return $parsed;
         }
 
@@ -167,83 +173,69 @@ final class SearchRequest
         return array_map($castFn, $items);
     }
 
-    /**
-     * @return array{0:?string,1:array<string,string>}
-     */
-    private static function parseNameWithModifiers(string $input): array
+    public function getForm(): array
     {
-        $input = trim($input);
+        return $this->form;
+    }
 
-        if ($input === '') {
-            return [ null, [] ];
+    public function isFormSubmitted(): bool
+    {
+        return $this->isFormSubmitted;
+    }
+
+    public function hasNameModifiers(): bool
+    {
+        return $this->hasNameModifiers;
+    }
+
+    public function withForm(array $form): self
+    {
+        $request = clone($this, [
+            'form' => [ ...$this->form, ...$form ],
+        ]);
+
+        return $request;
+    }
+
+    private static function normalizeForm(array $params): array
+    {
+        $normalizedForm = [ ...self::DEFAULTS, ...$params ];
+
+        $hasNameModifiers = false;
+
+        if ($normalizedForm['name']) {
+            $hasNameModifiers = (bool) preg_match('/(a|artist|t|title|r|remix):/i', $normalizedForm['name']);
         }
 
-        $pattern = '/(?:(^|\s))(a|artist|t|title|r|remix)\s*:\s*/i';
-        $matches = [];
+        $artist = trim((string) ($normalizedForm['artist'] ?? ''));
 
-        $matchCount = preg_match_all($pattern, $input, $matches, PREG_OFFSET_CAPTURE);
+        if ($artist) {
+            $normalizedForm['name'] .= ' artist: ' . $artist;
 
-        if ($matchCount < 1) {
-            return [ $input, [] ];
+            unset($normalizedForm['artist']);
         }
 
-        $modifiers = [];
-        $freeText = trim(substr($input, 0, $matches[0][0][1]));
-        $count = count($matches[0]);
+        $title = trim((string) ($normalizedForm['title'] ?? ''));
 
-        for ($index = 0; $index < $count; $index++) {
-            $keyRaw = strtolower($matches[2][$index][0]);
-            $key = self::normalizeModifier($keyRaw);
+        if ($title) {
+            $normalizedForm['name'] .= ' title: ' . $title;
 
-            if ($key === null || isset($modifiers[$key])) {
-                continue;
-            }
-
-            $valueStart = $matches[0][$index][1] + strlen($matches[0][$index][0]);
-            $valueEnd = $index + 1 < $count ? $matches[0][$index + 1][1] : strlen($input);
-            $value = trim(substr($input, $valueStart, $valueEnd - $valueStart));
-
-            if ($value !== '') {
-                $modifiers[$key] = $value;
-            }
+            unset($normalizedForm['title']);
         }
 
-        return [ $freeText !== '' ? $freeText : null, $modifiers ];
+        $normalizedForm['name'] = trim($normalizedForm['name']);
+
+        return [ $normalizedForm, $hasNameModifiers ];
     }
 
-    private static function normalizeModifier(string $key): ?string
+    private static function isSubmitted(array $params): bool
     {
-        return match ($key) {
-            'a', 'artist' => 'artist',
-            't', 'title' => 'title',
-            'r', 'remix' => 'remix',
+        if (!empty($params['name'])) {
+            return true;
+        }
 
-            default => null,
-        };
-    }
+        $hasAtLeastOneValue = count(array_filter(array_values($params))) >= 1;
 
-    private static function titleOnlyRegex(string $value): Regex
-    {
-        $escaped = preg_quote($value, '/');
-        $pattern = '^[^\\[]*' . $escaped;
-
-        return Regex::create($pattern, [ Regex::REGEX_CASE_INSENSITIVE ]);
-    }
-
-    private static function remixRegex(string $value): Regex
-    {
-        $escaped = preg_quote($value, '/');
-        $pattern = '\\[[^\\]]*' . $escaped . '[^\\]]*\\]';
-
-        return Regex::create($pattern, [ Regex::REGEX_CASE_INSENSITIVE ]);
-    }
-
-    private static function titleAndRemixRegex(string $title, string $remix): Regex
-    {
-        $titleEscaped = preg_quote($title, '/');
-        $remixEscaped = preg_quote($remix, '/');
-        $pattern = '^(?=[^\\[]*' . $titleEscaped . ')(?=.*\\[[^\\]]*' . $remixEscaped . '[^\\]]*\\]).*';
-
-        return Regex::create($pattern, [ Regex::REGEX_CASE_INSENSITIVE ]);
+        return $hasAtLeastOneValue;
     }
 }

@@ -35,11 +35,7 @@
                         }) }}
                     </p>
                     <div class="ms-auto">
-                        {% include '@common/paginator.twig' with {
-                            paginator: paginator,
-                            routeName: routeName,
-                            routeQuery: routeQuery,
-                        } only %}
+                        {% include '@common/paginator.twig' with { paginator, routeName, routeQuery, } only %}
                     </div>
                 </div>
             </div>

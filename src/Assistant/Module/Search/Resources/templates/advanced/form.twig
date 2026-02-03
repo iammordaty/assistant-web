@@ -11,14 +11,9 @@
                 <input
                     type="text"
                     name="name"
-                    value="{{ form.name|default }}"
+                    value="{{ form.name }}"
                     class="form-control"
-                    {#
-                        @idea: najfajniej byloby gdyby wartość poniższego placeholdera
-                               losowała się z bazy. Cel? Dynamika, przypomnienie różnych kakwałków.
-                    #}
-                    placeholder="np.: andjack set me free, a: gorgon city, t: transmission, r: voorn"
-                    autocomplete="off"
+                    placeholder="np.: andjack set me free, a: gorgon city, t: mitsubishi, r: voorn"
                 >
                 <small class="form-hint">
                     Użyj modyfikatorów, aby zawęzić wyszukiwanie:

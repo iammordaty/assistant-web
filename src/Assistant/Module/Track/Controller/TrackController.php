@@ -36,7 +36,7 @@ final class TrackController
         $track = $this->trackService->getByGuid($guid);
 
         if (!$track) {
-            $route = Route::create('search.simple.index')->withQuery([ 'query' => str_replace('-', ' ', $guid) ]);
+            $route = Route::create('search.simple.index')->withQuery([ 'name' => str_replace('-', ' ', $guid) ]);
             $redirectUrl = $this->routeResolver->resolve($route);
 
             return $response->withRedirect($redirectUrl);

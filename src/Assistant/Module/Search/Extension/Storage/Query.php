@@ -85,7 +85,7 @@ final class Query
         }
 
         if ($this->guid) {
-            $criteria['guid'] = self::toStorageValue($this->guid);
+            $criteria['guid'] = self::fieldToStorageQuery($this->guid);
         }
 
         if ($this->artist) {
@@ -97,23 +97,23 @@ final class Query
         }
 
         if ($this->genres) {
-            $criteria['genre'] = self::toStorageValue($this->genres, transform: true);
+            $criteria['genre'] = self::fieldToStorageQuery($this->genres, transform: true);
         }
 
         if ($this->publishers) {
-            $criteria['publisher'] = self::toStorageValue($this->publishers, transform: true);
+            $criteria['publisher'] = self::fieldToStorageQuery($this->publishers, transform: true);
         }
 
         if ($this->years) {
-            $criteria['year'] = self::toStorageValue($this->years);
+            $criteria['year'] = self::fieldToStorageQuery($this->years);
         }
 
         if ($this->initialKeys) {
-            $criteria['initial_key'] = self::toStorageValue($this->initialKeys);
+            $criteria['initial_key'] = self::fieldToStorageQuery($this->initialKeys);
         }
 
         if ($this->bpm) {
-            $criteria['bpm'] = self::toStorageValue($this->bpm);
+            $criteria['bpm'] = self::fieldToStorageQuery($this->bpm);
         }
 
         if ($this->isFavorite) {
@@ -121,7 +121,7 @@ final class Query
         }
 
         if ($this->indexedDates) {
-            $criteria['indexed_date'] = self::toStorageValue($this->indexedDates);
+            $criteria['indexed_date'] = self::fieldToStorageQuery($this->indexedDates);
         }
 
         if ($this->parent) {
@@ -129,25 +129,21 @@ final class Query
         }
 
         if ($this->pathname) {
-            $criteria['pathname'] = self::toStorageValue($this->pathname, transform: true);
+            $criteria['pathname'] = self::fieldToStorageQuery($this->pathname, transform: true);
         }
 
         return $criteria;
     }
 
-    private static function toStorageValue(mixed $field, bool $transform = false): mixed
+    private static function fieldToStorageQuery(mixed $field, bool $transform = false): mixed
     {
         if (!is_array($field)) {
             return self::fieldToStorage($field);
         }
 
-        $values = $transform
-            ? array_map(self::fieldToStorage(...), $field)
-            : $field;
+        $values = $transform ? array_map(self::fieldToStorage(...), $field) : $field;
 
-        return count($values) === 1
-            ? $values[0]
-            : [ '$in' => $values ];
+        return count($values) === 1 ? $values[0] : [ '$in' => $values ];
     }
 
     private static function fieldToStorage(mixed $field): mixed
