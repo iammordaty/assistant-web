@@ -60,11 +60,13 @@ return static function (string $baseDir): array {
                 'exceptions' => [
                     'Block & Crown',
                     'Cause & Affect',
+                    'Eli & Fur',
                     'Ernesto vs. Bastian',
                     'Gabriel & Castellon',
                     'Gabriel & Dresden',
                     'Hercules & Love Affair',
                     'Jordan & Baker',
+                    'Jos & Eli',
                     'Leftwing & Kody',
                     'Mr. Belt & Wezol',
                     'Norwood & Hills',
