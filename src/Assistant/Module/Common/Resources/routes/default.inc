@@ -28,6 +28,10 @@ return static function (App $app): void {
             ->setName('common.task.remove');
 
         $group
+            ->post('/task/run-collection-analysis', [ TaskController::class, 'runCollectionAnalysis' ])
+            ->setName('common.task.run-collection-analysis');
+
+        $group
             ->post(
                 '/task/reindex-similar-tracks-collection',
                 [ TaskController::class, 'reindexSimilarTracksCollection' ]

@@ -1,0 +1,90 @@
+{% if metadata|length == 0 %}
+    <div class="col-12">
+        <div class="card">
+            <div class="card-body">
+                <p class="text-muted mb-0">Brak problemów w tej kategorii.</p>
+            </div>
+        </div>
+    </div>
+{% else %}
+    {% for section in metadata %}
+        <div class="col-4">
+            <div class="card">
+                <div class="card-header card-header-light">
+                    <h3 class="card-title">
+                        {{ section.label }}
+                        <span class="text-muted fs-5 ms-1">({{ section.issues|length }})</span>
+                    </h3>
+                </div>
+                <div class="card-body card-body-scrollable card-body-scrollable-shadow" style="max-height: 28rem">
+                    <div class="divide-y">
+                        {% for issue in section.issues %}
+                            <div class="row py-2 {{ issue.ignored ? 'text-muted' : '' }}">
+                                <div class="col">
+                                    {% if section.type == 'empty_metadata' %}
+                                        <a class="text-reset" href="{{ url_for('track.track.index', { guid: issue.details.guid }) }}">
+                                            {{ issue.details.track_name }}
+                                        </a>
+                                        <span class="text-muted ms-1">{{ issue.details.field }}</span>
+
+                                    {% elseif section.type == 'suspicious_year' %}
+                                        <a class="text-reset" href="{{ url_for('track.track.index', { guid: issue.details.guid }) }}">
+                                            {{ issue.details.track_name }}
+                                        </a>
+                                        <span class="text-muted ms-1">{{ issue.details.value }}</span>
+
+                                    {% elseif section.type == 'similar_artist' %}
+                                        <a class="text-reset" href="{{ url_for('search.advanced.index', query_params = { name: 'a:' ~ issue.details.value_a }) }}">
+                                            {{ issue.details.value_a }}
+                                        </a>
+                                        <span class="text-muted">({{ issue.details.count_a }})</span>
+                                        <span class="text-muted mx-1">vs</span>
+                                        <a class="text-reset" href="{{ url_for('search.advanced.index', query_params = { name: 'a:' ~ issue.details.value_b }) }}">
+                                            {{ issue.details.value_b }}
+                                        </a>
+                                        <span class="text-muted">({{ issue.details.count_b }})</span>
+
+                                    {% elseif section.type == 'similar_publisher' %}
+                                        <a class="text-reset" href="{{ url_for('search.advanced.index', query_params = { publisher: issue.details.value_a }) }}">
+                                            {{ issue.details.value_a }}
+                                        </a>
+                                        <span class="text-muted">({{ issue.details.count_a }})</span>
+                                        <span class="text-muted mx-1">vs</span>
+                                        <a class="text-reset" href="{{ url_for('search.advanced.index', query_params = { publisher: issue.details.value_b }) }}">
+                                            {{ issue.details.value_b }}
+                                        </a>
+                                        <span class="text-muted">({{ issue.details.count_b }})</span>
+
+                                    {% elseif section.type == 'similar_genre' %}
+                                        <a class="text-reset" href="{{ url_for('search.advanced.index', query_params = { genre: issue.details.value_a }) }}">
+                                            {{ issue.details.value_a }}
+                                        </a>
+                                        <span class="text-muted">({{ issue.details.count_a }})</span>
+                                        <span class="text-muted mx-1">vs</span>
+                                        <a class="text-reset" href="{{ url_for('search.advanced.index', query_params = { genre: issue.details.value_b }) }}">
+                                            {{ issue.details.value_b }}
+                                        </a>
+                                        <span class="text-muted">({{ issue.details.count_b }})</span>
+
+                                    {% elseif section.type in ['rare_genre', 'rare_key'] %}
+                                        {% if section.type == 'rare_genre' %}
+                                            <a class="text-reset" href="{{ url_for('search.advanced.index', query_params = { genre: issue.details.value }) }}">
+                                                <strong>{{ issue.details.value }}</strong>
+                                            </a>
+                                        {% else %}
+                                            <strong>{{ issue.details.value }}</strong>
+                                        {% endif %}
+                                        <span class="text-muted ms-1">{{ issue.details.count }} {{ issue.details.count == 1 ? 'wystąpienie' : 'wystąpienia' }}</span>
+                                    {% endif %}
+                                </div>
+                                <div class="col-auto">
+                                    {% include '@collection/status/_ignore_button.twig' with { issue: issue } only %}
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    {% endfor %}
+{% endif %}

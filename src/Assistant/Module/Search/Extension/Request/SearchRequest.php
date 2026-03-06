@@ -212,7 +212,7 @@ final readonly class SearchRequest
         if ($artist) {
             $normalizedForm['name'] .= ' artist: ' . $artist;
 
-            unset($normalizedForm['artist']);
+            // unset($normalizedForm['artist']);
         }
 
         $title = trim((string) ($normalizedForm['title'] ?? ''));
@@ -220,7 +220,7 @@ final readonly class SearchRequest
         if ($title) {
             $normalizedForm['name'] .= ' title: ' . $title;
 
-            unset($normalizedForm['title']);
+            // unset($normalizedForm['title']);
         }
 
         $normalizedForm['name'] = trim($normalizedForm['name']);

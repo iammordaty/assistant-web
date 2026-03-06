@@ -1,0 +1,125 @@
+{% if collection.crossReference|length > 0 %}
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header card-header-light">
+                <h3 class="card-title">
+                    Systemy
+                    <span class="text-muted fs-5 ms-1">({{ collection.crossReference|length }})</span>
+                </h3>
+            </div>
+            <div class="card-table table-responsive">
+                <table class="table table-vcenter">
+                    <thead>
+                        <tr>
+                            <th>Plik</th>
+                            <th class="w-1 text-center">Dysk</th>
+                            <th class="w-1 text-center">Musly</th>
+                            <th class="w-1 text-center">Baza</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in collection.crossReference %}
+                            <tr>
+                                <td>
+                                    {% if item.track %}
+                                    <span class="ellipsis ast-track-name">
+                                        <a href="{{ url_for('track.track.index', { guid: track.track.guid }) }}" title="{{ track.track.name }}">
+                                            {{ item.track.name }}
+                                        </a>
+                                    </span>
+                                {% else %}
+                                    <span
+                                        class="text-wrap"
+                                        data-bs-toggle="tooltip"
+                                        data-bs-placement="top"
+                                        title="{{ item.pathname }}"
+                                    >{{ item.file }}</span>
+                                {% endif %}
+                                </td>
+                                <td class="w-1 text-center">
+                                    {% if item.inFilesystem %}
+                                        <span class="text-success">
+                                            <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M5 12l5 5l10 -10" /></svg>
+                                        </span>
+                                    {% else %}
+                                        <span class="text-danger">
+                                            <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M18 6l-12 12" /><path d="M6 6l12 12" /></svg>
+                                        </span>
+                                    {% endif %}
+                                </td>
+                                <td class="w-1 text-center">
+                                    {% if item.inSimilarity %}
+                                        <span class="text-success">
+                                            <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M5 12l5 5l10 -10" /></svg>
+                                        </span>
+                                    {% else %}
+                                        <span class="text-danger">
+                                            <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M18 6l-12 12" /><path d="M6 6l12 12" /></svg>
+                                        </span>
+                                    {% endif %}
+                                </td>
+                                <td class="w-1 text-center">
+                                    {% if item.inDatabase %}
+                                        <span class="text-success">
+                                            <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M5 12l5 5l10 -10" /></svg>
+                                        </span>
+                                    {% else %}
+                                        <span class="text-danger">
+                                            <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M18 6l-12 12" /><path d="M6 6l12 12" /></svg>
+                                        </span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+{% endif %}
+
+{% if collection.filenameMismatch|length > 0 %}
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header card-header-light">
+                <h3 class="card-title">
+                    Nazwa pliku niezgodna z metadanymi
+                    <span class="text-muted fs-5 ms-1">({{ collection.filenameMismatch|length }})</span>
+                </h3>
+            </div>
+            <div class="card-table table-responsive">
+                <table class="table table-vcenter">
+                    <tbody>
+                        {% for issue in collection.filenameMismatch %}
+                            <tr class="{{ issue.ignored ? 'text-muted' : '' }}">
+                                <td>
+                                    <a class="text-reset" href="{{ url_for('track.track.index', { guid: issue.details.guid }) }}">
+                                        {{ issue.details.track_name }}
+                                    </a>
+                                    <div class="text-muted small mt-1">
+                                        Plik: <code>{{ issue.details.filename }}</code>
+                                        <br>
+                                        Oczekiwano: <code>{{ issue.details.expected }}</code>
+                                    </div>
+                                </td>
+                                <td class="w-1">
+                                    {% include '@collection/status/_ignore_button.twig' with { issue: issue } only %}
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+{% endif %}
+
+{% if collection.crossReference|length == 0 and collection.filenameMismatch|length == 0 %}
+    <div class="col-12">
+        <div class="card">
+            <div class="card-body">
+                <p class="text-muted mb-0">Brak problemów w tej kategorii.</p>
+            </div>
+        </div>
+    </div>
+{% endif %}

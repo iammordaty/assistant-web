@@ -2,6 +2,8 @@
 
 use Assistant\Module\Collection\Extension\Autocomplete\TrackAutocompleteService;
 use Assistant\Module\Collection\Extension\Reader\DirectoryReader;
+use Assistant\Module\Collection\Extension\Analysis\CollectionAnalysisService;
+use Assistant\Module\Collection\Repository\CollectionAnalysisRepository;
 use Assistant\Module\Collection\Extension\Reader\FileReader;
 use Assistant\Module\Collection\Extension\Reader\FileReaderFacade;
 use Assistant\Module\Collection\Extension\Reader\IncomingFileReader;
@@ -51,6 +53,17 @@ use function DI\autowire;
 use function DI\create;
 
 return static fn (string $baseDir, array $config): array => [
+    CollectionAnalysisRepository::class => function (Container $container): CollectionAnalysisRepository {
+        $storage = $container->get(Config::class)->get('storage');
+
+        $client = new MongoDBClient($storage['connection_uri']);
+        $database = $client->selectDatabase($storage['database']);
+
+        return CollectionAnalysisRepository::factory($database);
+    },
+
+    CollectionAnalysisService::class => autowire(),
+
     Config::class => create()->constructor($config),
 
     DirectoryReader::class => autowire(),
@@ -222,6 +235,7 @@ return static fn (string $baseDir, array $config): array => [
 
     Twig::class => function (Container $container) use ($baseDir): Twig {
         $paths = [
+            'collection' => $baseDir . '/src/Assistant/Module/Collection/Resources/templates/',
             'common' => $baseDir . '/src/Assistant/Module/Common/Resources/templates/',
             'dashboard' => $baseDir . '/src/Assistant/Module/Dashboard/Resources/templates/',
             'directory' => $baseDir . '/src/Assistant/Module/Directory/Resources/templates/',
