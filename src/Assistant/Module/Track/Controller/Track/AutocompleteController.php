@@ -14,8 +14,8 @@ final readonly class AutocompleteController
 
     public function __invoke(ServerRequest $request, Response $response): Response
     {
-        $query = trim($request->getQueryParam('query'));
-        $results = ($this->trackAutocompleteService)($query);
+        $name = trim($request->getQueryParam('name'));
+        $results = ($this->trackAutocompleteService)($name);
 
         return $response->withJson($results);
     }

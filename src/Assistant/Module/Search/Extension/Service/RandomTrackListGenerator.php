@@ -1,9 +1,10 @@
 <?php
 
-namespace Assistant\Module\Search\Extension;
+namespace Assistant\Module\Search\Extension\Service;
 
 use Assistant\Module\Common\Extension\Config;
-use Assistant\Module\Common\Storage\Storage;
+use Assistant\Module\Search\Extension\Criteria\SearchCriteria;
+use Assistant\Module\Search\Extension\Criteria\SearchSort;
 use Assistant\Module\Track\Model\Track;
 use Assistant\Module\Track\Repository\TrackRepository;
 use Cache\Adapter\Filesystem\FilesystemCachePool;
@@ -15,8 +16,8 @@ use Random\Randomizer;
 
 final class RandomTrackListGenerator
 {
-    private const CACHE_DIR = '/var';
-    private const CACHE_KEY = 'random_tracks';
+    private const string CACHE_DIR = '/var';
+    private const string CACHE_KEY = 'random_tracks';
 
     private array $debugInfo = [
         'from' => null,
@@ -58,7 +59,7 @@ final class RandomTrackListGenerator
     /** @return Track[] */
     public function getRandomTracks(int $limit): array
     {
-        $oldestDate = $this->getOldestIndexedDate();
+        $oldestDate = $this->getLeastRecentlyIndexedDate();
 
         if (!$oldestDate) {
             return [];
@@ -80,7 +81,7 @@ final class RandomTrackListGenerator
         foreach ($queries as $query) {
             $tracks = $this->trackRepository->aggregate($query);
 
-            $result = array_merge($result, iterator_to_array($tracks));
+            $result = [ ...$result, ...iterator_to_array($tracks) ];
         }
 
         $result = (new Randomizer())->shuffleArray($result);
@@ -169,11 +170,11 @@ final class RandomTrackListGenerator
         return $limits;
     }
 
-    private function getOldestIndexedDate(): ?DateTime
+    private function getLeastRecentlyIndexedDate(): ?DateTime
     {
         $track = $this->trackRepository->getOneBy(
             new SearchCriteria(),
-            [ 'indexed_date' => Storage::SORT_ASC ],
+            SearchSort::byLeastRecentlyIndexed(),
         );
 
         $oldestDate = $track?->getIndexedDate();

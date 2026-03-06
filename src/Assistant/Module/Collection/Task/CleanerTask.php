@@ -3,14 +3,13 @@
 namespace Assistant\Module\Collection\Task;
 
 use Assistant\Module\Common\Extension\Config;
-use Assistant\Module\Common\Storage\Regex;
 use Assistant\Module\Common\Task\AbstractTask;
 use Assistant\Module\Directory\Extension\DirectoryService;
-use Assistant\Module\Directory\Model\Directory;
-use Assistant\Module\Search\Extension\DirectorySearchService;
-use Assistant\Module\Search\Extension\SearchCriteria;
-use Assistant\Module\Search\Extension\SearchCriteriaFacade;
-use Assistant\Module\Search\Extension\TrackSearchService;
+use Assistant\Module\Search\Extension\Criteria\Regex;
+use Assistant\Module\Search\Extension\Criteria\SearchCriteria;
+use Assistant\Module\Search\Extension\Criteria\SearchCriteriaFacade;
+use Assistant\Module\Search\Extension\Service\DirectorySearchService;
+use Assistant\Module\Search\Extension\Service\TrackSearchService;
 use Assistant\Module\Track\Extension\TrackService;
 use Monolog\Logger;
 use Psr\Container\ContainerInterface;
@@ -28,11 +27,11 @@ final class CleanerTask extends AbstractTask
 
     public function __construct(
         Logger $logger,
+        private Config $config,
         private DirectorySearchService $directorySearchService,
         private DirectoryService $directoryService,
         private TrackSearchService $trackSearchService,
         private TrackService $trackService,
-        private array $parameters,
     ) {
         parent::__construct($logger);
 
@@ -45,17 +44,17 @@ final class CleanerTask extends AbstractTask
     {
         return new self(
             $container->get(Logger::class),
+            $container->get(Config::class),
             $container->get(DirectorySearchService::class),
             $container->get(DirectoryService::class),
             $container->get(TrackSearchService::class),
             $container->get(TrackService::class),
-            $container->get(Config::class)->get('collection'),
         );
     }
 
     protected function configure(): void
     {
-        $collectionRootDir = $this->parameters['root_dir'];
+        $collectionRootDir = $this->config->get('collection.root_dir');
 
         $this
             ->setName('collection:clean')
@@ -92,7 +91,9 @@ final class CleanerTask extends AbstractTask
     {
         $removed = 0;
 
-        foreach ($this->trackSearchService->findBy($searchCriteria) as $track) {
+        $trackSearchResult = $this->trackSearchService->search($searchCriteria);
+
+        foreach ($trackSearchResult->tracks as $track) {
             if ($force || !$track->getFile()->isReadable()) {
                 $this->trackService->remove($track);
 
@@ -108,9 +109,7 @@ final class CleanerTask extends AbstractTask
     {
         $removed = 0;
 
-        /** @var Directory $directory */
-        foreach ($this->directorySearchService->findBy($searchCriteria) as $directory) {
-            /** @uses Directory::getPathname() */
+        foreach ($this->directorySearchService->search($searchCriteria) as $directory) {
             if ($force || !$directory->getFile()->isReadable()) {
                 $this->directoryService->remove($directory);
 

@@ -2,24 +2,22 @@
 
 namespace Assistant\Module\Directory\Repository;
 
-use Assistant\Module\Common\Storage\Query;
 use Assistant\Module\Common\Storage\Storage;
 use Assistant\Module\Directory\Model\Directory;
 use Assistant\Module\Directory\Model\DirectoryDto;
-use Assistant\Module\Search\Extension\SearchCriteria;
+use Assistant\Module\Search\Extension\Criteria\SearchCriteria;
+use Assistant\Module\Search\Extension\Criteria\SearchSort;
+use Assistant\Module\Search\Extension\Storage\Query;
+use Generator;
 use MongoDB\Database;
-use Traversable;
 
 /** Repozytorium obiektów Directory */
 final class DirectoryRepository
 {
-    private const COLLECTION_NAME = 'directories';
+    private const string COLLECTION_NAME = 'directories';
 
-    private Storage $storage;
-
-    public function __construct(Storage $storage)
+    public function __construct(private Storage $storage)
     {
-        $this->storage = $storage;
     }
 
     public static function factory(Database $database): self
@@ -32,38 +30,32 @@ final class DirectoryRepository
         return $repository;
     }
 
-    public function getOneBy(SearchCriteria $searchCriteria): ?Directory
+    public function getOneBy(SearchCriteria $searchCriteria, ?SearchSort $searchSort = null): ?Directory
     {
         $query = Query::fromSearchCriteria($searchCriteria);
-        $directory = $this->findOneBy($query->toStorage());
 
-        return $directory;
+        $document = $this->storage->findOneBy($query->toStorage(), options: [
+            'sort' => $searchSort?->toStorage(),
+        ]);
+
+        if (!$document) {
+            return null;
+        }
+
+        return self::createModel($document);
     }
 
-    public function getByPathname(Directory $directory): ?Directory
-    {
-        $directory = $this->findOneBy([ 'pathname' => $directory->getPathname() ]);
-
-        return $directory;
-    }
-
-    /**
-     * @param SearchCriteria $searchCriteria
-     * @param array|null $sort
-     * @param int|null $limit
-     * @param int|null $skip
-     * @return Directory[]|Traversable
-     */
+    /** @return Generator<int, Directory> */
     public function getBy(
         SearchCriteria $searchCriteria,
-        ?array $sort = null,
+        ?SearchSort $searchSort = null,
         ?int $limit = null,
         ?int $skip = null
-    ): array|Traversable {
+    ): Generator {
         $query = Query::fromSearchCriteria($searchCriteria);
 
         $documents = $this->storage->findBy($query->toStorage(), options: [
-            'sort' => $sort,
+            'sort' => $searchSort?->toStorage(),
             'limit' => $limit,
             'skip' => $skip,
         ]);

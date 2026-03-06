@@ -5,7 +5,8 @@ namespace Assistant\Module\Collection\Task;
 use Assistant\Module\Common\Extension\Config;
 use Assistant\Module\Common\Extension\SimilarTracksCollection\SimilarTracksCollectionService;
 use Assistant\Module\Common\Task\AbstractTask;
-use Assistant\Module\Track\Extension\TrackService;
+use Assistant\Module\Search\Extension\Criteria\SearchCriteria;
+use Assistant\Module\Search\Extension\Service\TrackSearchService;
 use DateTime;
 use Monolog\Logger;
 use Psr\Container\ContainerInterface;
@@ -21,7 +22,7 @@ final class SimilarTracksCollectionReIndexerTask extends AbstractTask
         Logger $logger,
         private Config $config,
         private SimilarTracksCollectionService $similarTracksCollectionService,
-        private TrackService $trackService,
+        private TrackSearchService $searchService,
     ) {
         parent::__construct($logger);
     }
@@ -32,7 +33,7 @@ final class SimilarTracksCollectionReIndexerTask extends AbstractTask
             $container->get(Logger::class),
             $container->get(Config::class),
             $container->get(SimilarTracksCollectionService::class),
-            $container->get(TrackService::class),
+            $container->get(TrackSearchService::class),
         );
     }
 
@@ -71,7 +72,7 @@ final class SimilarTracksCollectionReIndexerTask extends AbstractTask
         $this->logger->debug('Generating jukebox file...',);
 
         // wygeneruj nowy plik jukebox dla utworzonej kolekcji
-        $track = array_reverse(iterator_to_array($this->trackService->getRecent(limit: 50)))[0];
+        $track = $this->searchService->findOne(new SearchCriteria());
         $this->similarTracksCollectionService->getSimilarTracks($track->getFile());
 
         $this->logger->debug('Task finished');

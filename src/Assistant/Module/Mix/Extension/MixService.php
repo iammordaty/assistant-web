@@ -10,7 +10,8 @@ use Assistant\Module\Mix\Model\Attempt;
 use Assistant\Module\Mix\Model\AttemptDto;
 use Assistant\Module\Mix\Model\Mix;
 use Assistant\Module\Mix\Repository\MixRepository;
-use Assistant\Module\Search\Extension\TrackSearchService;
+use Assistant\Module\Search\Extension\Criteria\SearchCriteria;
+use Assistant\Module\Search\Extension\Service\TrackSearchService;
 use Assistant\Module\Track\Extension\Similarity\SimilarityBuilder;
 use Assistant\Module\Track\Model\Track;
 use Cocur\Slugify\Slugify;
@@ -117,11 +118,7 @@ final class MixService
 
         $this->repository->save($mix, $updatedMix);
 
-        foreach ($updatedMix->attempts as $attempt) {
-            foreach ($attempt->trackList as $trackEntry) {
-                $trackEntry->track = $this->searchService->findOneByGuid($trackEntry->trackGuid);
-            }
-        }
+        $this->hydrate($updatedMix);
 
         return $updatedMix;
     }
@@ -194,14 +191,14 @@ final class MixService
                 continue;
             }
 
-            $track = $this->searchService->findOneByName($trackName);
+            $track = $this->searchService->findByName($trackName);
 
             if (!$track) {
                 // @todo: brak wyszukanego utworu powinien być komunikowany na froncie
                 continue;
             }
 
-            $tracks[] =  $track;
+            $tracks[] = $track;
 
             unset($track, $trackName);
         }
@@ -209,15 +206,33 @@ final class MixService
         return $tracks;
     }
 
-    /**
-     * @idea: Tu przydałoby się zebrać wszystkie guid-y i wykonać jedno zapytanie do bazy,
-     *        ale obecnie nie ma takiej możliwości w SearchCriteria. Do dorobienia.
-     */
     private function hydrate(Mix $mix): void
     {
+        $guids = [];
+
         foreach ($mix->attempts as $attempt) {
             foreach ($attempt->trackList as $trackEntry) {
-                $trackEntry->track = $this->searchService->findOneByGuid($trackEntry->trackGuid);
+                $guids[] = $trackEntry->trackGuid;
+            }
+        }
+
+        $guids = array_unique($guids);
+
+        if (empty($guids)) {
+            return;
+        }
+
+        $result = $this->searchService->search(new SearchCriteria(guid: $guids));
+
+        $tracks = [];
+        
+        foreach ($result->tracks as $track) {
+            $tracks[$track->getGuid()] = $track;
+        }
+
+        foreach ($mix->attempts as $attempt) {
+            foreach ($attempt->trackList as $trackEntry) {
+                $trackEntry->track = $tracks[$trackEntry->trackGuid] ?? null;
             }
         }
     }

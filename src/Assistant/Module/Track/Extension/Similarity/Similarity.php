@@ -2,9 +2,10 @@
 
 namespace Assistant\Module\Track\Extension\Similarity;
 
-use Assistant\Module\Common\Storage\Regex;
-use Assistant\Module\Search\Extension\SearchCriteria;
-use Assistant\Module\Search\Extension\TrackSearchService;
+use Assistant\Module\Search\Extension\Criteria\Not;
+use Assistant\Module\Search\Extension\Criteria\SearchCriteria;
+use Assistant\Module\Search\Extension\Criteria\SearchSort;
+use Assistant\Module\Search\Extension\Service\TrackSearchService;
 use Assistant\Module\Track\Extension\Similarity\Provider\Bpm;
 use Assistant\Module\Track\Extension\Similarity\Provider\Genre;
 use Assistant\Module\Track\Extension\Similarity\Provider\MusicalKey;
@@ -22,7 +23,7 @@ use Assistant\Module\Track\Model\Track;
 final class Similarity
 {
     /** Lista dostępnych dostawców podobieństwa */
-    public const PROVIDERS = [
+    public const array PROVIDERS = [
         Bpm::NAME,
         Genre::NAME,
         MusicalKey::NAME,
@@ -37,14 +38,14 @@ final class Similarity
     private int $maxSimilarityValue;
 
     /**
-     * @param TrackSearchService $searchService
+     * @param TrackSearchService $trackSearchService
      * @param ProviderInterface[] $providers
      * @param array $providersWeights
      * @param int $minSimilarityValue
      * @param int $maxTracks
      */
     public function __construct(
-        private TrackSearchService $searchService,
+        private TrackSearchService $trackSearchService,
         private array $providers,
         private array $providersWeights,
         private int $minSimilarityValue,
@@ -63,7 +64,7 @@ final class Similarity
     public function getSimilarTracks(Track $baseTrack): array
     {
         $criteria = $this->getSimilarityCriteria($baseTrack);
-        $similarTracks = $this->searchService->findBy($criteria);
+        $result = $this->trackSearchService->search($criteria, SearchSort::byName(), limit: null);
 
         $similarTracks = array_map(
             fn (Track $similarTrack) => new SimilarTracks(
@@ -71,10 +72,10 @@ final class Similarity
                 $similarTrack,
                 $this->getSimilarityValue($baseTrack, $similarTrack)
             ),
-            iterator_to_array($similarTracks)
+            iterator_to_array($result->tracks)
         );
 
-        // posortuj wg. podoieństwa
+        // posortuj wg podoieństwa
 
         $similarTracks = $this->sort($similarTracks);
 
@@ -153,22 +154,17 @@ final class Similarity
     {
         $providerCriteria = [];
 
-        // To jest krok pośredni, aby zejść z wykorzystywanej metody w repozytorium i przełączyć się na SearchCriteria.
-        // @idea: Najlepiej byłoby, aby provider w getCriteria zwracały SearchCriteria lub null,
-        //        a SearchCriteriaFacade łączyłby je w jeden.
         foreach ($this->providers as $provider) {
             $providerCriteria[$provider::NAME] = $provider->getCriteria($baseTrack);
         }
 
-        $searchCriteria = new SearchCriteria(
-            guid: Regex::create(sprintf('^(?!%s$)', $baseTrack->getGuid())), // zwykły $ne byłby lepszy
+        return new SearchCriteria(
+            guid: Not::equal($baseTrack->getGuid()),
             bpm: $providerCriteria[Bpm::NAME] ?? null,
             genres: $providerCriteria[Genre::NAME] ?? null,
             initialKeys: $providerCriteria[MusicalKey::NAME] ?? null,
             years: $providerCriteria[Year::NAME] ?? null,
         );
-
-        return $searchCriteria;
     }
 
     /** Sortuje listę podobnych utworów */

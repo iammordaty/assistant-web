@@ -6,9 +6,8 @@ use Assistant\Module\Collection\Extension\Finder;
 use Assistant\Module\Collection\Extension\Reader\ReaderFacade;
 use Assistant\Module\Collection\Model\CollectionItemInterface;
 use Assistant\Module\Common\Extension\Config;
-use Assistant\Module\Search\Extension\SearchCriteria;
-use Assistant\Module\Search\Extension\TrackSearchService;
-use Assistant\Module\Track\Extension\TrackService;
+use Assistant\Module\Search\Extension\Criteria\SearchCriteria;
+use Assistant\Module\Search\Extension\Service\TrackSearchService;
 use Assistant\Module\Track\Model\IncomingTrack;
 use Assistant\Module\Track\Repository\TrackStatsRepository;
 use Psr\Http\Message\ResponseInterface;
@@ -17,15 +16,14 @@ use Slim\Views\Twig;
 
 final readonly class DashboardController
 {
-    private const MAX_ARTISTS = 10;
-    private const MAX_GENRES = 10;
-    private const MAX_RANDOM_TRACKS = 30;
-    private const MAX_RECENT_TRACKS = 15;
+    private const int MAX_ARTISTS = 10;
+    private const int MAX_GENRES = 10;
+    private const int MAX_RANDOM_TRACKS = 30;
+    private const int MAX_RECENT_TRACKS = 15;
 
     public function __construct(
         private Config $config,
         private ReaderFacade $reader,
-        private TrackService $trackService,
         private TrackSearchService $searchService,
         private TrackStatsRepository $statsRepository,
         private Twig $view,
@@ -48,8 +46,8 @@ final readonly class DashboardController
             'trackCountByArtist' => $this->statsRepository->getTrackCountByArtist(self::MAX_ARTISTS),
             'trackCount' => $trackCount,
             'incomingTracks' => $this->getIncomingTracks(),
-            'randomTracks' => $this->trackService->getRandom(self::MAX_RANDOM_TRACKS),
-            'recentlyAddedTracks' => $this->trackService->getRecent(limit: self::MAX_RECENT_TRACKS),
+            'randomTracks' => $this->searchService->getRandom(limit: self::MAX_RANDOM_TRACKS),
+            'recentlyAddedTracks' => $this->searchService->findRecent(limit: self::MAX_RECENT_TRACKS),
         ]);
     }
 

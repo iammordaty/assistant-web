@@ -6,14 +6,21 @@
     </div>
     <div class="card-body">
         <div class="row">
-            <div class="col-12 col-sm-6 mb-3">
-                <label class="form-label">Wykonawca</label>
-                <input type="text" name="artist" value="{{ form.artist }}" class="form-control">
-            </div>
-
-            <div class="col-12 col-sm-6 mb-3">
-                <label class="form-label">Tytuł</label>
-                <input type="text" name="title" value="{{ form.title }}" class="form-control">
+            <div class="col-12 mb-3">
+                <label class="form-label">Utwór</label>
+                <input
+                    type="text"
+                    name="name"
+                    value="{{ form.name }}"
+                    class="form-control"
+                    placeholder="np.: andjack set me free, a: gorgon city, t: mitsubishi, r: voorn"
+                >
+                <small class="form-hint">
+                    Użyj modyfikatorów, aby zawęzić wyszukiwanie:
+                    <code>a(rtist):</code>,
+                    <code>t(itle):</code>,
+                    <code>r(emix):</code>
+                </small>
             </div>
 
             <div class="col-6 col-sm-4 mb-3">

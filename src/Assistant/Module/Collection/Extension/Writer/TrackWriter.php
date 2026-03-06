@@ -7,9 +7,9 @@ use Assistant\Module\Common\Extension\Config;
 use Assistant\Module\Common\Extension\MusicClassifier\MusicClassifierResult;
 use Assistant\Module\Common\Extension\MusicClassifier\MusicClassifierService;
 use Assistant\Module\Common\Extension\SimilarTracksCollection\SimilarTracksCollectionService;
-use Assistant\Module\Common\Storage\Regex;
-use Assistant\Module\Search\Extension\SearchCriteriaFacade as SearchCriteria;
-use Assistant\Module\Search\Extension\TrackSearchService;
+use Assistant\Module\Search\Extension\Criteria\Regex;
+use Assistant\Module\Search\Extension\Criteria\SearchCriteriaFacade as SearchCriteria;
+use Assistant\Module\Search\Extension\Service\TrackSearchService;
 use Assistant\Module\Track\Extension\TrackService;
 use Assistant\Module\Track\Model\Track;
 

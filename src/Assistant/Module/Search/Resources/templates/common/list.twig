@@ -9,6 +9,7 @@
                     <div class="card-actions">
                         <select class="form-select" data-role="track-search:list-sort">
                             {# @fixme: To powinno przychodzić z PHP-a #}
+                            {# @see \Assistant\Module\Search\Extension\Criteria\SearchSort #}
                             {% if withTextScoreSort %}
                                 <option value="t" {% if sort == 't' or not sort %}selected{% endif %}>Najlepsze dopasowanie</option>
                             {% endif %}
@@ -34,11 +35,7 @@
                         }) }}
                     </p>
                     <div class="ms-auto">
-                        {% include '@common/paginator.twig' with {
-                            paginator: paginator,
-                            routeName: routeName,
-                            routeQuery: routeQuery,
-                        } only %}
+                        {% include '@common/paginator.twig' with { paginator, routeName, routeQuery, } only %}
                     </div>
                 </div>
             </div>

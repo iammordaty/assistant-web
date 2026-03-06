@@ -5,15 +5,15 @@ namespace Assistant\Module\Common\Repository;
 use Assistant\Module\Common\Model\LogEntry;
 use Assistant\Module\Common\Model\LogEntryDto;
 use Assistant\Module\Common\Storage\Storage;
+use Generator;
 use MongoDB\Database;
 use MongoDB\Model\BSONArray;
 use MongoDB\Model\BSONDocument;
-use Traversable;
 
 /** Repozytorium Logów */
 final class LogRepository
 {
-    public const COLLECTION_NAME = 'logs';
+    public const string COLLECTION_NAME = 'logs';
 
     public function __construct(private Storage $storage)
     {
@@ -29,19 +29,13 @@ final class LogRepository
         return $repository;
     }
 
-    /**
-     * @param array|null $query
-     * @param array|null $sort
-     * @param int|null $limit
-     * @param int|null $skip
-     * @return LogEntry[]|Traversable
-     */
+    /** @return Generator<int, LogEntry> */
     public function findBy(
         ?array $query = [],
         ?array $sort = null,
         ?int $limit = null,
         ?int $skip = null
-    ): array|Traversable {
+    ): Generator {
         $documents = $this->storage->findBy($query, options: [
             'sort' => $sort,
             'limit' => $limit,

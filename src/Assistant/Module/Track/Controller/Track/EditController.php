@@ -216,7 +216,7 @@ final class EditController
 
     private function getNotFoundRedirect(Response $response, string $pathname): ResponseInterface
     {
-        $route = Route::create('search.simple.index')->withQuery([ 'query' => str_replace('-', ' ', $pathname) ]);
+        $route = Route::create('search.simple.index')->withQuery([ 'name' => str_replace('-', ' ', $pathname) ]);
         $redirectUrl = $this->routeResolver->resolve($route);
 
         return $response->withRedirect($redirectUrl);

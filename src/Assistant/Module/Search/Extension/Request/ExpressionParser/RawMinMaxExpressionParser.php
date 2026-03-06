@@ -1,8 +1,10 @@
 <?php
 
-namespace Assistant\Module\Search\Extension;
+namespace Assistant\Module\Search\Extension\Request\ExpressionParser;
 
-class RawMinMaxExpressionParser
+use Assistant\Module\Search\Extension\Criteria\MinMaxInfo;
+
+class RawMinMaxExpressionParser implements ExpressionParser
 {
     public static function parse(string $expression): ?MinMaxInfo
     {

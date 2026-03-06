@@ -7,7 +7,7 @@
 {% block content %}
     <div data-role="track-search:container" class="row row-deck row-cards">
         <div class="col-12">
-            {% include '@search/advanced/form.twig' with { form: form } only %}
+            {% include '@search/advanced/form.twig' with { form } only %}
         </div>
 
         {# @fixme: Domyślne sortowanie powinno przychodzić z PHP-a, podobnie jak możliwości sortowania w list.twig #}

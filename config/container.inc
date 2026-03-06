@@ -23,8 +23,9 @@ use Assistant\Module\Directory\Extension\DirectoryService;
 use Assistant\Module\Directory\Repository\DirectoryRepository;
 use Assistant\Module\Mix\Extension\MixService;
 use Assistant\Module\Mix\Repository\MixRepository;
-use Assistant\Module\Search\Extension\DirectorySearchService;
-use Assistant\Module\Search\Extension\TrackSearchService;
+use Assistant\Module\Search\Extension\Service\DirectorySearchService;
+use Assistant\Module\Search\Extension\Service\RandomTrackListGenerator;
+use Assistant\Module\Search\Extension\Service\TrackSearchService;
 use Assistant\Module\Track\Extension\BeatportTrackMetadataSuggestionsService;
 use Assistant\Module\Track\Extension\Similarity\Similarity;
 use Assistant\Module\Track\Extension\Similarity\SimilarityBuilder;
@@ -201,6 +202,8 @@ return static fn (string $baseDir, array $config): array => [
 
         return $repository;
     },
+
+    RandomTrackListGenerator::class => autowire(),
 
     TrackSearchService::class => autowire(),
 

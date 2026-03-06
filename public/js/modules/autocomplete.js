@@ -37,10 +37,16 @@ export default function ($input, onSelect) {
                 headerDivider: '<div class="dropdown-divider"></div>'
             },
         },
-        source: (query, process) => $.ajax({
-            dataType: 'json',
-            url: $input.data('url') + '?query=' + query,
-        }).done(response => process(response)),
+        source: (name, process) => {
+            if (name.includes(': ')) {
+                return process([]);
+            }
+
+            return $.ajax({
+                dataType: 'json',
+                url: $input.data('url') + '?name=' + name,
+            }).done(response => process(response));
+        },
         matcher: () => true,
         highlighter: function (item) {
             const regex = new RegExp('(' + this.query + ')', 'gi');

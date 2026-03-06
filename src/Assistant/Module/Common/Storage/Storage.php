@@ -10,15 +10,12 @@ use MongoDB\Model\BSONDocument;
 // Persistence?
 final class Storage
 {
-    public const SORT_ASC = 1;
-    public const SORT_DESC = -1;
-    public const SORT_TEXT_SCORE_DESC = [ 'sort' => [ '$meta' => 'textScore' ] ];
+    public const int SORT_ASC = 1;
+    public const int SORT_DESC = -1;
+    public const array SORT_TEXT_SCORE_DESC = [ 'sort' => [ '$meta' => 'textScore' ] ];
 
-    private Collection $collection;
-
-    public function __construct(Collection $collection)
+    public function __construct(private Collection $collection)
     {
-        $this->collection = $collection;
     }
 
     /** Zwraca dokument na podstawie podanych kryteriów */
@@ -33,15 +30,6 @@ final class Storage
         return $document;
     }
 
-    /** Zwraca dokument na podstawie jego identyfikatora */
-    public function findOneById(ObjectId|string $id, array $options = []): ?BSONDocument
-    {
-        return $this->findOneBy(
-            [ '_id' => $this->idToObjectId($id) ],
-            $options
-        );
-    }
-
     /**
      * Zwraca dokumenty na podstawie podanych kryteriów
      *
@@ -52,15 +40,6 @@ final class Storage
         return $this->collection->find(
             $conditions,
             $options
-        );
-    }
-
-    /** Zwraca dokumenty na podstawie listy identyfikatorów */
-    public function findById(array $ids, array $fields = []): Cursor
-    {
-        return $this->findBy(
-            [ '_id' => [ '$in' => $this->idsToObjectIds($ids) ] ],
-            $fields
         );
     }
 
@@ -142,23 +121,6 @@ final class Storage
     public function createIndex(array $key, array $options = []): string
     {
         return $this->collection->createIndex($key, $options);
-    }
-
-    /**
-     * Konwertuje tablicę łańcuchów zawierający identyfikator Mongo do dokumentu ObjectId
-     *
-     * @param ObjectId[]|string[] $rawIds
-     * @return ObjectId[]
-     */
-    private function idsToObjectIds(array $rawIds): array
-    {
-        $objectIds = [];
-
-        foreach ($rawIds as $id) {
-            $objectIds[] = $this->idToObjectId($id);
-        }
-
-        return $objectIds;
     }
 
     /** Konwertuje łańcuch zawierający identyfikator Mongo do dokumentu ObjectId */
