@@ -27,7 +27,7 @@ final class Track implements CollectionItemInterface
         private ?string $album,
         string|int|null $trackNumber,
         private ?int $year,
-        public string $genre,
+        public ?string $genre,
         private ?string $publisher,
         public ?float $bpm,
         public ?string $initialKey,
