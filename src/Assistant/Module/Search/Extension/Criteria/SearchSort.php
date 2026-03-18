@@ -14,7 +14,8 @@ final readonly class SearchSort
     private const string YEAR_ASC = 'y';
     private const string YEAR_DESC = 'yd';
 
-    private function __construct(private array $query, private string $string) {
+    private function __construct(private array $query, private string $string)
+    {
     }
 
     public static function byName(): self
