@@ -5,6 +5,8 @@ namespace Assistant\Module\Search\Controller;
 use Assistant\Module\Common\Extension\Pagerfanta\PagerfantaFactory;
 use Assistant\Module\Common\Extension\Route;
 use Assistant\Module\Common\Extension\RouteResolver;
+use Assistant\Module\Common\Extension\SlugifyService;
+use Assistant\Module\Search\Extension\Criteria\Regex;
 use Assistant\Module\Search\Extension\Criteria\SearchCriteriaFacade;
 use Assistant\Module\Search\Extension\Criteria\SearchSort;
 use Assistant\Module\Search\Extension\Request\SearchRequest;
@@ -29,6 +31,7 @@ final readonly class SimpleSearchController
 
     public function __construct(
         private RouteResolver $routeResolver,
+        private SlugifyService $slugifyService,
         private TrackSearchService $searchService,
         private Twig $view,
     ) {
@@ -56,15 +59,27 @@ final readonly class SimpleSearchController
         }
 
         $criteria = SearchCriteriaFacade::createFromName($form['name']);
-
-        $page = max(1, (int) ($form['page'] ?? 1));
         $sort = SearchSort::fromQueryString($form['sort'] ?? null, SearchSort::byTextScore());
+        $page = max(1, (int) ($form['page'] ?? 1));
 
         $result = $this->searchService->search($criteria, $sort, limit: self::LIMIT, page: $page);
+
+        if (!$result->hasTracks()) {
+            $slug = $this->slugifyService->slugify($form['name']);
+
+            $criteria = SearchCriteriaFacade::createFromGuid(Regex::contains($slug));
+
+            if ((string) $sort === (string) SearchSort::byTextScore()) {
+                $form['sort'] = $sort = SearchSort::byName();
+            }
+
+            $result = $this->searchService->search($criteria, $sort, limit: self::LIMIT, page: $page);
+        }
+
         $paginator = PagerfantaFactory::createWithTrackSearchResult($result);
 
         if ($request->isXhr()) {
-            return $this->view->render($response, '@search/simple.twig', [ ...self::TEMPLATE_VARS, ...[
+            return $this->view->render($response, '@search/common/list.twig', [ ...self::TEMPLATE_VARS, ...[
                 'routeQuery' => $form,
                 'paginator' => $paginator,
                 'tracks' => $result->tracks,
@@ -82,7 +97,7 @@ final readonly class SimpleSearchController
             return $response->withRedirect($redirectUrl);
         }
 
-        return $this->view->render($response, '@search/advanced.twig', [ ...self::TEMPLATE_VARS, ...[
+        return $this->view->render($response, '@search/simple.twig', [ ...self::TEMPLATE_VARS, ...[
             'form' => $form,
             'isFormSubmitted' => true,
             'paginator' => $paginator,
