@@ -1,12 +1,12 @@
 {% if collection.crossReference|length > 0 %}
     <div class="col-12">
         <div class="card">
-            <div class="card-header card-header-light">
-                <h3 class="card-title">
-                    Systemy
-                    <span class="text-muted fs-5 ms-1">({{ collection.crossReference|length }})</span>
-                </h3>
-            </div>
+{#            <div class="card-header card-header-light">#}
+{#                <h3 class="card-title">#}
+{#                    Systemy#}
+{#                    <span class="text-muted fs-5 ms-1">({{ collection.crossReference|length }})</span>#}
+{#                </h3>#}
+{#            </div>#}
             <div class="card-table table-responsive">
                 <table class="table table-vcenter">
                     <thead>
@@ -81,12 +81,12 @@
 {% if collection.filenameMismatch|length > 0 %}
     <div class="col-12">
         <div class="card">
-            <div class="card-header card-header-light">
-                <h3 class="card-title">
-                    Nazwa pliku niezgodna z metadanymi
-                    <span class="text-muted fs-5 ms-1">({{ collection.filenameMismatch|length }})</span>
-                </h3>
-            </div>
+{#            <div class="card-header card-header-light">#}
+{#                <h3 class="card-title">#}
+{#                    Nazwa pliku niezgodna z metadanymi#}
+{#                    <span class="text-muted fs-5 ms-1">({{ collection.filenameMismatch|length }})</span>#}
+{#                </h3>#}
+{#            </div>#}
             <div class="card-table table-responsive">
                 <table class="table table-vcenter">
                     <tbody>
@@ -102,8 +102,9 @@
                                         Oczekiwano: <code>{{ issue.details.expected }}</code>
                                     </div>
                                 </td>
-                                <td class="w-1">
-                                    {% include '@collection/status/_ignore_button.twig' with { issue: issue } only %}
+                                <td class="w-1 text-nowrap">
+                                    {% include '@collection/status/infobutton.twig' with { issue: issue } only %}
+                                    {% include '@collection/status/ignorebutton.twig' with { issue: issue } only %}
                                 </td>
                             </tr>
                         {% endfor %}

@@ -1,0 +1,59 @@
+{% if duplicates|length == 0 %}
+    <div class="card">
+        <div class="card-body">
+            <p class="text-muted mb-0">Nie znaleziono potencjalnych duplikatów.</p>
+        </div>
+    </div>
+{% else %}
+    <div class="card">
+        <div class="card-header card-header-light">
+            <h3 class="card-title">
+                Potencjalne duplikaty utworów
+                <span class="text-muted fs-5 ms-1">({{ duplicates|length }})</span>
+            </h3>
+        </div>
+        <div class="card-body">
+            <div class="divide-y">
+                {% for issue in duplicates %}
+                    <div class="py-3 {{ issue.ignored ? 'text-muted' : '' }}">
+                        <div class="row align-items-start">
+                            <div class="col-5">
+                                {% if issue.details.track_a is defined %}
+                                    {% include '@collection/status/trackinfo.twig' with {
+                                        track: issue.details.track_a,
+                                        file: issue.details.file_a|default({})
+                                    } only %}
+                                {% else %}
+                                    <a class="text-reset" href="{{ url_for('track.track.index', { guid: issue.details.guid_a }) }}">
+                                        {{ issue.details.name_a|default(issue.details.guid_a) }}
+                                    </a>
+                                {% endif %}
+                            </div>
+                            <div class="col-2 text-center align-self-center">
+                                <span class="text-muted fs-3">vs</span>
+                            </div>
+                            <div class="col-5">
+                                {% if issue.details.track_b is defined %}
+                                    {% include '@collection/status/trackinfo.twig' with {
+                                        track: issue.details.track_b,
+                                        file: issue.details.file_b|default({})
+                                    } only %}
+                                {% else %}
+                                    <a class="text-reset" href="{{ url_for('track.track.index', { guid: issue.details.guid_b }) }}">
+                                        {{ issue.details.name_b|default(issue.details.guid_b) }}
+                                    </a>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="row mt-1">
+                            <div class="col text-end">
+                                {% include '@collection/status/infobutton.twig' with { issue: issue } only %}
+                                {% include '@collection/status/ignorebutton.twig' with { issue: issue } only %}
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+{% endif %}

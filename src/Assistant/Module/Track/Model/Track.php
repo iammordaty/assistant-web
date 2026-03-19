@@ -3,6 +3,7 @@
 namespace Assistant\Module\Track\Model;
 
 use Assistant\Module\Collection\Model\CollectionItemInterface;
+use Assistant\Module\Common\Extension\AudioFile;
 use DateTime;
 use SplFileInfo;
 
@@ -288,10 +289,10 @@ final class Track implements CollectionItemInterface
         return $clone;
     }
 
-    public function getFile(): SplFileInfo
+    public function getFile(): AudioFile
     {
-        if (!$this->file) {
-            $this->file = new SplFileInfo($this->pathname);
+        if (!$this->file instanceof AudioFile) {
+            $this->file = new AudioFile($this->pathname);
         }
 
         return $this->file;

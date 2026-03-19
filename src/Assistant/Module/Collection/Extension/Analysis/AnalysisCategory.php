@@ -11,8 +11,8 @@ enum AnalysisCategory: string
     public function label(): string
     {
         return match ($this) {
-            self::COLLECTION => 'Kolekcja',
-            self::METADATA => 'Metadane',
+            self::COLLECTION => 'Niezgodności',
+            self::METADATA => 'Problemy z metadanymi',
             self::POTENTIAL_DUPLICATE => 'Potencjalne duplikaty',
         };
     }

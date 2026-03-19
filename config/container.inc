@@ -19,6 +19,7 @@ use Assistant\Module\Common\Extension\RouteResolver;
 use Assistant\Module\Common\Extension\SimilarTracksCollection\SimilarTracksCollectionService;
 use Assistant\Module\Common\Extension\SlugifyService;
 use Assistant\Module\Common\Extension\Twig\DurationTwigExtension;
+use Assistant\Module\Common\Extension\Twig\FileSizeTwigExtension;
 use Assistant\Module\Common\Extension\Twig\IntlMessageFormatterTwigExtension;
 use Assistant\Module\Common\Repository\LogRepository;
 use Assistant\Module\Directory\Extension\DirectoryService;
@@ -252,6 +253,7 @@ return static fn (string $baseDir, array $config): array => [
         $view = Twig::create($paths, $settings);
 
         $view->addExtension(DurationTwigExtension::factory());
+        $view->addExtension(new FileSizeTwigExtension());
         $view->addExtension(new IntlMessageFormatterTwigExtension());
         $view->addExtension(new PagerfantaExtension());
         $view->addExtension(new StringExtension()); // do |u.truncate()

@@ -8,7 +8,8 @@ use Assistant\Module\Track\Extension\TrackService;
 final readonly class CollectionAnalysisService
 {
     private const array TYPE_LABELS = [
-        'empty_metadata' => 'Brakujące metadane',
+        'empty_metadata' => 'Niekompletne dane',
+        'low_bitrate' => 'Niski bitrate',
         'similar_artist' => 'Podobne nazwy wykonawców',
         'similar_publisher' => 'Podobne nazwy wydawców',
         'similar_genre' => 'Podobne nazwy gatunków',
@@ -19,6 +20,7 @@ final readonly class CollectionAnalysisService
 
     private const array METADATA_SECTION_ORDER = [
         'empty_metadata',
+        'low_bitrate',
         'similar_artist',
         'similar_publisher',
         'similar_genre',
@@ -119,6 +121,19 @@ final readonly class CollectionAnalysisService
             $grouped[$issue->type][] = $issue;
         }
 
+        $similarityTypes = ['similar_artist', 'similar_publisher', 'similar_genre'];
+
+        foreach ($similarityTypes as $type) {
+            if (!isset($grouped[$type])) {
+                continue;
+            }
+
+            $grouped[$type] = array_map(
+                fn (AnalysisIssue $issue) => $this->ensureOutlierFirst($issue),
+                $grouped[$type]
+            );
+        }
+
         $sections = [];
 
         foreach (self::METADATA_SECTION_ORDER as $type) {
@@ -134,6 +149,30 @@ final readonly class CollectionAnalysisService
         }
 
         return $sections;
+    }
+
+    private function ensureOutlierFirst(AnalysisIssue $issue): AnalysisIssue
+    {
+        $countA = $issue->details['count_a'] ?? 0;
+        $countB = $issue->details['count_b'] ?? 0;
+
+        if ($countA <= $countB) {
+            return $issue;
+        }
+
+        $details = $issue->details;
+        $details['value_a'] = $issue->details['value_b'];
+        $details['count_a'] = $issue->details['count_b'];
+        $details['value_b'] = $issue->details['value_a'];
+        $details['count_b'] = $issue->details['count_a'];
+
+        if (isset($details['tracks_a']) || isset($details['tracks_b'])) {
+            $tracksA = $details['tracks_a'] ?? null;
+            $details['tracks_a'] = $details['tracks_b'] ?? null;
+            $details['tracks_b'] = $tracksA;
+        }
+
+        return new AnalysisIssue($issue->category, $issue->type, $details, $issue->ignored, $issue->mongoId);
     }
 
     /** @return array<string, int> */
