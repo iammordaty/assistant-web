@@ -7,7 +7,9 @@
             </svg>
         </span>
         <input
-            data-role="autocompleter"
+            {% if withAutocompleter|default %}
+                data-role="autocompleter"
+            {% endif %}
             data-url="{{ url_for('track.track.autocomplete') }}"
             data-follow-on-select="true"
             type="text"
