@@ -1,4 +1,4 @@
-{% if duplicates|length == 0 %}
+{% if issues|length == 0 %}
     <div class="card">
         <div class="card-body">
             <p class="text-muted mb-0">Nie znaleziono potencjalnych duplikatów.</p>
@@ -6,15 +6,9 @@
     </div>
 {% else %}
     <div class="card">
-        <div class="card-header card-header-light">
-            <h3 class="card-title">
-                Potencjalne duplikaty utworów
-                <span class="text-muted fs-5 ms-1">({{ duplicates|length }})</span>
-            </h3>
-        </div>
         <div class="card-body">
             <div class="divide-y">
-                {% for issue in duplicates %}
+                {% for issue in issues %}
                     <div class="py-3 {{ issue.ignored ? 'text-muted' : '' }}">
                         <div class="row align-items-start">
                             <div class="col-5">

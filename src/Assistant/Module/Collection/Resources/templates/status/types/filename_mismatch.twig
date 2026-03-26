@@ -1,0 +1,41 @@
+{% if issues|length == 0 %}
+    <div class="card">
+        <div class="card-body">
+            <p class="text-muted mb-0">Brak problemów w tej kategorii.</p>
+        </div>
+    </div>
+{% else %}
+    <div class="card">
+        <div class="card-table table-responsive">
+            <table class="table table-vcenter">
+                <tbody>
+                    {% for issue in issues %}
+                        <tr class="{{ issue.ignored ? 'text-muted' : '' }}">
+                            <td>
+                                {% if issue.details.track is defined %}
+                                    {% include '@collection/status/trackinfo.twig' with {
+                                        track: issue.details.track,
+                                        file: issue.details.file|default({})
+                                    } only %}
+                                {% else %}
+                                    <a class="text-reset" href="{{ url_for('track.track.index', { guid: issue.details.guid }) }}">
+                                        {{ issue.details.track_name }}
+                                    </a>
+                                {% endif %}
+                                <div class="text-muted small mt-1">
+                                    Plik: <code>{{ issue.details.filename }}</code>
+                                    <br>
+                                    Oczekiwano: <code>{{ issue.details.expected }}</code>
+                                </div>
+                            </td>
+                            <td class="w-1 text-nowrap">
+                                {% include '@collection/status/infobutton.twig' with { issue: issue } only %}
+                                {% include '@collection/status/ignorebutton.twig' with { issue: issue } only %}
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+{% endif %}

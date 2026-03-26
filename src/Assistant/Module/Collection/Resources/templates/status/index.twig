@@ -44,21 +44,6 @@
             </div>
         </div>
     {% else %}
-        {% set totalUnignored = 0 %}
-        {% for category in categories %}
-            {% set totalUnignored = totalUnignored + unignoredCounts[category.value] %}
-        {% endfor %}
-
-{#        {% if totalUnignored == 0 %}#}
-{#            <div class="alert alert-success mb-3">#}
-{#                Kolekcja wygląda dobrze#}
-{#            </div>#}
-{#        {% else %}#}
-{#            <div class="alert alert-warning mb-3">#}
-{#                Znaleziono <strong>{{ totalUnignored }}</strong> {{ totalUnignored == 1 ? 'problem' : (totalUnignored < 5 ? 'problemy' : 'problemów') }} wymagających uwagi.#}
-{#            </div>#}
-{#        {% endif %}#}
-
         <div class="row row-deck row-cards mb-3">
             <div class="col-sm-6 col-lg-3">
                 <div class="card card-sm">
@@ -132,110 +117,35 @@
 
         <div class="card">
             <div class="card-header">
-                <ul class="nav nav-tabs card-header-tabs" role="tablist">
-                    {% for category in categories %}
-                        {% set unignoredCount = unignoredCounts[category.value] %}
-                        <li class="nav-item" role="presentation">
-                            <a
-                                class="nav-link {{ loop.first ? 'active' : '' }}"
-                                id="tab-{{ category.value }}"
-                                data-bs-toggle="tab"
-                                href="#tab-content-{{ category.value }}"
-                                role="tab"
-                            >
-                                {{ category.label }}
-                                {% if unignoredCount > 0 %}
-                                    <span class="badge bg-warning ms-1">{{ unignoredCount }}</span>
-                                {% endif %}
-                            </a>
-                        </li>
-                    {% endfor %}
-                </ul>
+                <h3 class="card-title">Wykryte problemy</h3>
             </div>
-
-            <div class="tab-content">
-                <div class="tab-pane active show" id="tab-content-collection" role="tabpanel">
-                    <div class="card-body">
-                        <div class="row row-deck row-cards">
-                            {% include '@collection/status/collection.twig' with { collection: collection } only %}
-                        </div>
-                    </div>
-                </div>
-
-                <div class="tab-pane" id="tab-content-metadata" role="tabpanel">
-                    <div class="card-body">
-                        <div class="row row-deck row-cards">
-                            {% include '@collection/status/metadata.twig' with { metadata: metadata } only %}
-                        </div>
-                    </div>
-                </div>
-
-                <div class="tab-pane" id="tab-content-potential_duplicate" role="tabpanel">
-                    <div class="card-body">
-                        {% include '@collection/status/duplicates.twig' with { duplicates: duplicates } only %}
-                    </div>
-                </div>
+            <div class="table-responsive">
+                <table class="table table-vcenter card-table">
+                    <tbody>
+                        {% for row in rows %}
+                            <tr class="{{ row.unignored == 0 ? 'opacity-25' : '' }}">
+                                <td>
+                                    <a href="{{ url_for('collection.status.detail', { type: row.viewType.value }) }}">
+                                        {{ row.viewType.label }}
+                                    </a>
+                                </td>
+                                <td class="text-end w-1">
+                                    <span class="badge {{ row.unignored > 0 ? 'bg-warning' : 'bg-muted' }}">
+                                        {{ row.unignored }}
+                                    </span>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
             </div>
         </div>
     {% endif %}
 
-    <div class="modal modal-blur fade" id="rawDataModal" tabindex="-1">
-        <div class="modal-dialog modal-lg">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title">Dane z bazy</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Zamknij"></button>
-                </div>
-                <div class="modal-body">
-                    <pre id="rawDataContent" class="mb-0" style="white-space: pre-wrap; word-break: break-all;"></pre>
-                </div>
-            </div>
-        </div>
-    </div>
-
     <script>
         $(function () {
-            var svgAccept = '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-circle-check"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M3 12a9 9 0 1 0 18 0a9 9 0 1 0 -18 0" /><path d="M9 12l2 2l4 -4" /></svg>';
-            var svgRestore = '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-arrow-back-up"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M9 14l-4 -4l4 -4" /><path d="M5 10h11a4 4 0 1 1 0 8h-1" /></svg>';
-
-            $(document).on('click', '[data-role="toggle-ignore"]', function () {
-                var $btn = $(this);
-                var hash = $btn.data('hash');
-
-                $.post('{{ url_for('collection.status.toggle-ignore') }}', { hash: hash }, function (data) {
-                    var $row = $btn.closest('tr, .row, .py-3');
-
-                    if (data.ignored) {
-                        $row.addClass('text-muted');
-                        $btn.attr('title', 'Przywróć').html(svgRestore);
-                    } else {
-                        $row.removeClass('text-muted');
-                        $btn.attr('title', 'Akceptuj').html(svgAccept);
-                    }
-                });
-            });
-
-            $(document).on('click', '[data-role="show-raw-data"]', function () {
-                var raw = $(this).data('raw');
-                $('#rawDataContent').text(JSON.stringify(raw, null, 2));
-                new bootstrap.Modal('#rawDataModal').show();
-            });
-
-            $('a[data-bs-toggle="tab"]').on('shown.bs.tab', function (e) {
-                history.replaceState(null, null, e.target.getAttribute('href'));
-            });
-
-            var hash = window.location.hash;
-            if (hash) {
-                var tab = $('a[href="' + hash + '"]');
-                if (tab.length) {
-                    new bootstrap.Tab(tab[0]).show();
-                }
-            }
-
             $('[data-role="run-collection-analysis"]').on('click', function () {
                 var $btn = $(this);
-
                 $btn.prop('disabled', true).text('Analizowanie...');
             });
         });

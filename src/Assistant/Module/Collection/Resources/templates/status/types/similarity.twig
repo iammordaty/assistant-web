@@ -1,0 +1,58 @@
+{% if issues|length == 0 %}
+    <div class="card">
+        <div class="card-body">
+            <p class="text-muted mb-0">Brak problemów w tej kategorii.</p>
+        </div>
+    </div>
+{% else %}
+    {% set searchField = viewType.value == 'similar-artist' ? 'name' : (viewType.value == 'similar-publisher' ? 'publisher' : 'genre') %}
+    {% set searchPrefix = viewType.value == 'similar-artist' ? 'a:' : '' %}
+
+    <div class="card">
+        <div class="card-body">
+            <div class="divide-y">
+                {% for issue in issues %}
+                    <div class="row py-2 align-items-start {{ issue.ignored ? 'text-muted' : '' }}">
+                        <div class="col">
+                            {% if issue.details.tracks_a is defined and issue.details.tracks_a %}
+                                {% for entry in issue.details.tracks_a %}
+                                    {% include '@collection/status/trackinfo.twig' with {
+                                        track: entry.track,
+                                        file: entry.file|default({})
+                                    } only %}
+                                {% endfor %}
+                            {% else %}
+                                <a class="text-reset" href="{{ url_for('search.advanced.index', query_params = { (searchField): searchPrefix ~ issue.details.value_a }) }}">
+                                    {{ issue.details.value_a }}
+                                </a>
+                                <span class="text-muted">({{ issue.details.count_a }})</span>
+                            {% endif %}
+
+                            <div class="text-muted my-1">
+                                <small>podobne do</small>
+
+                                {% if issue.details.tracks_b is defined and issue.details.tracks_b %}
+                                    {% for entry in issue.details.tracks_b %}
+                                        {% include '@collection/status/trackinfo.twig' with {
+                                            track: entry.track,
+                                            file: entry.file|default({})
+                                        } only %}
+                                    {% endfor %}
+                                {% else %}
+                                    <a class="text-reset" href="{{ url_for('search.advanced.index', query_params = { (searchField): searchPrefix ~ issue.details.value_b }) }}">
+                                        {{ issue.details.value_b }}
+                                    </a>
+                                    <span class="text-muted">({{ issue.details.count_b }})</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            {% include '@collection/status/infobutton.twig' with { issue: issue } only %}
+                            {% include '@collection/status/ignorebutton.twig' with { issue: issue } only %}
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+{% endif %}

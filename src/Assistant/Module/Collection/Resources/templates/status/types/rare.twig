@@ -1,0 +1,34 @@
+{% if issues|length == 0 %}
+    <div class="card">
+        <div class="card-body">
+            <p class="text-muted mb-0">Brak problemów w tej kategorii.</p>
+        </div>
+    </div>
+{% else %}
+    <div class="card">
+        <div class="card-body">
+            <div class="divide-y">
+                {% for issue in issues %}
+                    <div class="row py-2 align-items-start {{ issue.ignored ? 'text-muted' : '' }}">
+                        <div class="col">
+                            {% if viewType.value == 'rare-genre' %}
+                                <a class="text-reset" href="{{ url_for('search.advanced.index', query_params = { genre: issue.details.value }) }}">
+                                    <strong>{{ issue.details.value }}</strong>
+                                </a>
+                            {% else %}
+                                <strong>{{ issue.details.value }}</strong>
+                            {% endif %}
+                            <span class="text-muted ms-1">
+                                {{ issue.details.count }} {{ issue.details.count == 1 ? 'wystąpienie' : 'wystąpienia' }}
+                            </span>
+                        </div>
+                        <div class="col-auto">
+                            {% include '@collection/status/infobutton.twig' with { issue: issue } only %}
+                            {% include '@collection/status/ignorebutton.twig' with { issue: issue } only %}
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+{% endif %}

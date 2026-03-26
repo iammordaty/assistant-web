@@ -55,6 +55,26 @@ final class CollectionAnalysisRepository
         return $issues;
     }
 
+    /**
+     * @param string[] $types
+     * @return AnalysisIssue[]
+     */
+    public function getIssuesByTypes(array $types): array
+    {
+        $documents = $this->storage->findBy([
+            'record_type' => 'issue',
+            'type' => ['$in' => $types],
+        ]);
+
+        $issues = [];
+
+        foreach ($documents as $document) {
+            $issues[] = $this->documentToIssue($document);
+        }
+
+        return $issues;
+    }
+
     /** @param AnalysisIssue[] $issues */
     public function saveAnalysis(array $summary, array $issues): void
     {

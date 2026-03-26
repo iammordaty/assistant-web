@@ -13,5 +13,9 @@ return static function (App $app): void {
         $group
             ->post('/status/toggle-ignore', [CollectionStatusController::class, 'toggleIgnore'])
             ->setName('collection.status.toggle-ignore');
+
+        $group
+            ->get('/status/{type}', [CollectionStatusController::class, 'detail'])
+            ->setName('collection.status.detail');
     });
 };
