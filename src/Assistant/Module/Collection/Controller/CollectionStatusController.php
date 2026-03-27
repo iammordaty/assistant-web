@@ -74,7 +74,7 @@ final readonly class CollectionStatusController
             AnalysisViewType::CROSS_REFERENCE => '@collection/status/types/cross_reference.twig',
             AnalysisViewType::FILENAME_MISMATCH => '@collection/status/types/filename_mismatch.twig',
             AnalysisViewType::EMPTY_METADATA,
-            AnalysisViewType::LOW_BITRATE,
+            AnalysisViewType::LOW_AUDIO_QUALITY,
             AnalysisViewType::SUSPICIOUS_YEAR => '@collection/status/types/single_track.twig',
             AnalysisViewType::SIMILAR_ARTIST,
             AnalysisViewType::SIMILAR_PUBLISHER,

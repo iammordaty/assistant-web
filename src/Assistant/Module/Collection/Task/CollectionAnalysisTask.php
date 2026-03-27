@@ -6,7 +6,7 @@ use Assistant\Module\Collection\Extension\Analysis\AnalysisIssue;
 use Assistant\Module\Collection\Extension\Analysis\CheckerInterface;
 use Assistant\Module\Collection\Extension\Analysis\IncompleteDataChecker;
 use Assistant\Module\Collection\Extension\Analysis\IntegrityChecker;
-use Assistant\Module\Collection\Extension\Analysis\LowBitrateChecker;
+use Assistant\Module\Collection\Extension\Analysis\LowAudioQualityChecker;
 use Assistant\Module\Collection\Extension\Analysis\PotentialDuplicateChecker;
 use Assistant\Module\Collection\Extension\Analysis\SimilarArtistChecker;
 use Assistant\Module\Collection\Extension\Analysis\SimilarGenreChecker;
@@ -54,7 +54,7 @@ final class CollectionAnalysisTask extends AbstractTask
         $checkers = [
             new IntegrityChecker($trackRepository, $similarTracksCollectionService, $config),
             new IncompleteDataChecker($trackRepository, $statsRepository),
-            new LowBitrateChecker($trackRepository),
+            new LowAudioQualityChecker($trackRepository),
             new SimilarArtistChecker($statsRepository, $slugifyService, $config),
             new SimilarGenreChecker($statsRepository, $slugifyService),
             new SimilarPublisherChecker($trackRepository, $slugifyService),
@@ -267,6 +267,7 @@ final class CollectionAnalysisTask extends AbstractTask
         return [
             'size' => $file->getSize(),
             'bitrate' => $file->getBitrate(),
+            'bitrate_mode' => $file->getBitrateMode(),
             'sample_rate' => $file->getSampleRate(),
             'channel_mode' => $file->getChannelMode(),
         ];

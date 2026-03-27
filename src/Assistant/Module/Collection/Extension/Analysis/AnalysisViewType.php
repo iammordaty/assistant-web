@@ -7,7 +7,7 @@ enum AnalysisViewType: string
     case CROSS_REFERENCE = 'cross-reference';
     case FILENAME_MISMATCH = 'filename-mismatch';
     case EMPTY_METADATA = 'empty-metadata';
-    case LOW_BITRATE = 'low-bitrate';
+    case LOW_AUDIO_QUALITY = 'low-audio-quality';
     case SIMILAR_ARTIST = 'similar-artist';
     case SIMILAR_PUBLISHER = 'similar-publisher';
     case SIMILAR_GENRE = 'similar-genre';
@@ -22,7 +22,7 @@ enum AnalysisViewType: string
             self::CROSS_REFERENCE => 'Spójność systemów',
             self::FILENAME_MISMATCH => 'Nazwa pliku niezgodna z metadanymi',
             self::EMPTY_METADATA => 'Niekompletne dane',
-            self::LOW_BITRATE => 'Niski bitrate',
+            self::LOW_AUDIO_QUALITY => 'Niska jakość audio',
             self::SIMILAR_ARTIST => 'Podobne nazwy wykonawców',
             self::SIMILAR_PUBLISHER => 'Podobne nazwy wydawców',
             self::SIMILAR_GENRE => 'Podobne nazwy gatunków',
@@ -39,7 +39,7 @@ enum AnalysisViewType: string
             self::CROSS_REFERENCE,
             self::FILENAME_MISMATCH => AnalysisCategory::COLLECTION,
             self::EMPTY_METADATA,
-            self::LOW_BITRATE,
+            self::LOW_AUDIO_QUALITY,
             self::SIMILAR_ARTIST,
             self::SIMILAR_PUBLISHER,
             self::SIMILAR_GENRE,
@@ -57,7 +57,7 @@ enum AnalysisViewType: string
             self::CROSS_REFERENCE => ['missing_on_disk', 'not_in_db', 'not_in_musly', 'not_in_db_but_in_musly'],
             self::FILENAME_MISMATCH => ['filename_metadata_mismatch'],
             self::EMPTY_METADATA => ['empty_metadata'],
-            self::LOW_BITRATE => ['low_bitrate'],
+            self::LOW_AUDIO_QUALITY => ['low_audio_quality'],
             self::SIMILAR_ARTIST => ['similar_artist'],
             self::SIMILAR_PUBLISHER => ['similar_publisher'],
             self::SIMILAR_GENRE => ['similar_genre'],

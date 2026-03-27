@@ -1,3 +1,5 @@
+{% set fields = highlight_fields is defined ? highlight_fields : (highlight_field is defined and highlight_field ? [highlight_field] : []) %}
+
 <div>
     <div class="ast-track-name">
         <a class="text-reset" href="{{ url_for('track.track.index', { guid: track.guid }) }}" title="{{ track.name }}">
@@ -7,7 +9,7 @@
     <div class="ast-track-meta text-muted small">
         <ol class="breadcrumb ast-breadcrumb-dotted mb-0">
             {% if track.genre %}
-                <li class="breadcrumb-item {{ highlight_field is defined and highlight_field == 'genre' ? 'text-danger' : '' }}">
+                <li class="breadcrumb-item {{ 'genre' in fields ? 'text-danger' : '' }}">
                     <a class="text-reset" href="{{ url_for('search.advanced.index', query_params = { genre: track.genre }) }}">{{ track.genre }}</a>
                 </li>
             {% else %}
@@ -19,17 +21,17 @@
             {% endif %}
 
             {% if track.publisher %}
-                <li class="breadcrumb-item {{ highlight_field is defined and highlight_field == 'publisher' ? 'text-danger' : '' }}">
+                <li class="breadcrumb-item {{ 'publisher' in fields ? 'text-danger' : '' }}">
                     <a class="text-reset" href="{{ url_for('search.advanced.index', query_params = { publisher: track.publisher }) }}">{{ track.publisher }}</a>
                 </li>
             {% else %}
-                {% if highlight_field is defined and highlight_field == 'publisher' %}
+                {% if 'publisher' in fields %}
                     <li class="breadcrumb-item text-danger">(brak wydawcy)</li>
                 {% endif %}
             {% endif %}
 
             {% if track.year %}
-                <li class="breadcrumb-item {{ highlight_field is defined and highlight_field == 'year' ? 'text-danger' : '' }}">
+                <li class="breadcrumb-item {{ 'year' in fields ? 'text-danger' : '' }}">
                     <a class="text-reset" href="{{ url_for('search.advanced.index', query_params = { year: track.year }) }}">{{ track.year }}</a>
                 </li>
             {% else %}
@@ -37,7 +39,7 @@
             {% endif %}
 
             {% if track.bpm %}
-                <li class="breadcrumb-item {{ highlight_field is defined and highlight_field == 'bpm' ? 'text-danger' : '' }}">
+                <li class="breadcrumb-item {{ 'bpm' in fields ? 'text-danger' : '' }}">
                     <a class="text-reset" href="{{ url_for('search.advanced.index', query_params = { bpm: track.bpm }) }}">{{ track.bpm }} BPM</a>
                 </li>
             {% else %}
@@ -45,7 +47,7 @@
             {% endif %}
 
             {% if track.initial_key %}
-                <li class="breadcrumb-item {{ highlight_field is defined and highlight_field == 'initial_key' ? 'text-danger' : '' }}">
+                <li class="breadcrumb-item {{ 'initial_key' in fields ? 'text-danger' : '' }}">
                     <a class="text-reset" href="{{ url_for('search.advanced.index', query_params = { key: track.initial_key }) }}">{{ track.initial_key }}</a>
                 </li>
             {% else %}
@@ -64,13 +66,20 @@
                     <li class="breadcrumb-item">{{ file.size|format_filesize }}</li>
                 {% endif %}
                 {% if file.bitrate is defined and file.bitrate %}
-                    <li class="breadcrumb-item">{{ file.bitrate }} kbps</li>
+                    <li class="breadcrumb-item {{ 'bitrate' in fields ? 'text-danger' : '' }}">
+                        {{ file.bitrate }} kbps
+                        {% if file.bitrate_mode is defined and file.bitrate_mode %}
+                            ({{ file.bitrate_mode|upper }})
+                        {% endif %}
+                    </li>
                 {% endif %}
                 {% if file.sample_rate is defined and file.sample_rate %}
                     <li class="breadcrumb-item">{{ (file.sample_rate / 1000)|number_format(1) }} kHz</li>
                 {% endif %}
                 {% if file.channel_mode is defined and file.channel_mode %}
-                    <li class="breadcrumb-item">{{ file.channel_mode|capitalize }}</li>
+                    <li class="breadcrumb-item {{ 'channel_mode' in fields ? 'text-danger' : '' }}">
+                        {{ file.channel_mode|capitalize }}
+                    </li>
                 {% endif %}
                 {% if track.pathname is defined and track.pathname %}
                     <li class="breadcrumb-item">{{ track.pathname|replace({'/collection/': ''}) | split('/') | slice(0, -1) | join('/') }}</li>

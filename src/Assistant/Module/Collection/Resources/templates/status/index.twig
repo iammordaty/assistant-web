@@ -142,12 +142,5 @@
         </div>
     {% endif %}
 
-    <script>
-        $(function () {
-            $('[data-role="run-collection-analysis"]').on('click', function () {
-                var $btn = $(this);
-                $btn.prop('disabled', true).text('Analizowanie...');
-            });
-        });
-    </script>
+    <script src="/js/status.js"></script>
 {% endblock %}

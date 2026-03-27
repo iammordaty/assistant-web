@@ -12,30 +12,38 @@
                     <div class="row py-2 align-items-start {{ issue.ignored ? 'text-muted' : '' }}">
                         <div class="col">
                             {% if issue.details.track is defined %}
-                                {% set highlightField = null %}
+                                {% set highlightFields = [] %}
                                 {% if viewType.value == 'empty-metadata' %}
-                                    {% set highlightField = issue.details.field %}
+                                    {% set highlightFields = [issue.details.field] %}
                                 {% elseif viewType.value == 'suspicious-year' %}
-                                    {% set highlightField = 'year' %}
+                                    {% set highlightFields = ['year'] %}
+                                {% elseif viewType.value == 'low-audio-quality' %}
+                                    {% set highlightFields = [] %}
+                                    {% if issue.details.is_low_bitrate is defined and issue.details.is_low_bitrate %}
+                                        {% set highlightFields = highlightFields|merge(['bitrate']) %}
+                                    {% endif %}
+                                    {% if issue.details.is_mono is defined and issue.details.is_mono %}
+                                        {% set highlightFields = highlightFields|merge(['channel_mode']) %}
+                                    {% endif %}
                                 {% endif %}
 
                                 {% include '@collection/status/trackinfo.twig' with {
                                     track: issue.details.track,
                                     file: issue.details.file|default({}),
-                                    highlight_field: highlightField
+                                    highlight_fields: highlightFields
                                 } only %}
                             {% else %}
                                 <a class="text-reset" href="{{ url_for('track.track.index', { guid: issue.details.guid }) }}">
                                     {{ issue.details.track_name }}
                                 </a>
-                            {% endif %}
 
-                            {% if viewType.value == 'low-bitrate' %}
-                                <span class="text-danger small ms-1">{{ issue.details.bitrate }} kbps</span>
-                            {% elseif viewType.value == 'empty-metadata' and issue.details.track is not defined %}
-                                <span class="text-danger ms-1">{{ issue.details.field }}</span>
-                            {% elseif viewType.value == 'suspicious-year' and issue.details.track is not defined %}
-                                <span class="text-danger ms-1">{{ issue.details.value }}</span>
+                                {% if viewType.value == 'low-audio-quality' and issue.details.reason is defined %}
+                                    <span class="text-danger ms-1">{{ issue.details.reason }}</span>
+                                {% elseif viewType.value == 'empty-metadata' %}
+                                    <span class="text-danger ms-1">{{ issue.details.field }}</span>
+                                {% elseif viewType.value == 'suspicious-year' %}
+                                    <span class="text-danger ms-1">{{ issue.details.value }}</span>
+                                {% endif %}
                             {% endif %}
                         </div>
                         <div class="col-auto">

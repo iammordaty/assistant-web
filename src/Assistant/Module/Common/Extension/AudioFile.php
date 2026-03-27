@@ -30,6 +30,13 @@ final class AudioFile extends SplFileInfo
         return $this->audioInfo['channel_mode'];
     }
 
+    public function getBitrateMode(): ?string
+    {
+        $this->ensureAnalyzed();
+
+        return $this->audioInfo['bitrate_mode'];
+    }
+
     private function ensureAnalyzed(): void
     {
         if ($this->audioInfo !== null) {
@@ -46,6 +53,7 @@ final class AudioFile extends SplFileInfo
             'bitrate' => isset($raw['bitrate']) ? (int) round($raw['bitrate'] / 1000) : null,
             'sample_rate' => $raw['audio']['sample_rate'] ?? null,
             'channel_mode' => $raw['audio']['channelmode'] ?? null,
+            'bitrate_mode' => $raw['audio']['bitrate_mode'] ?? null,
         ];
     }
 }
