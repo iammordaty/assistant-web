@@ -72,7 +72,10 @@ const TrackEntry = ({
             onDragOver={handleDragOver}
             onDrop={handleDrop}
         >
-            <div className="col d-flex align-items-center">
+            <div 
+                className="col d-flex align-items-center"
+                style={{ opacity: track.found ? 1 : 0.5 }}
+            >
                 <div 
                     ref={avatarRef}
                     className="avatar track-avatar-hoverable me-3"
@@ -93,49 +96,60 @@ const TrackEntry = ({
                 </div>
                 <div>
                     <div className="ast-track-name">
-                        <a
-                            className="text-reset"
-                            href={urlFor('track.track.index', { guid: track.guid })}
-                            title={track.name}
-                        >
-                            {track.name}
-                        </a>
+                        {track.found ? (
+                            <a
+                                className="text-reset"
+                                href={urlFor('track.track.index', { guid: track.guid })}
+                                title={track.name}
+                            >
+                                {track.name}
+                            </a>
+                        ) : (
+                            <span className="text-reset font-monospace small">
+                                {track.guid}
+                            </span>
+                        )}
                     </div>
-                    <div className="ast-track-meta text-muted small">
-                        <ol className="breadcrumb ast-breadcrumb-dotted">
-                            <li className="breadcrumb-item">
-                                <a
-                                    className="text-reset"
-                                    href={urlFor('search.advanced.index', { genre: track.genre })}
-                                >
-                                    {track.genre}
-                                </a>
-                            </li>
-                            <li className="breadcrumb-item">
-                                {formatSeconds(track.length)}
-                            </li>
-                            <li className="breadcrumb-item">
-                                <a
-                                    className="text-reset"
-                                    href={urlFor('search.advanced.index', { bpm: track.bpm })}
-                                >
-                                    {track.bpm} BPM
-                                </a>
-                            </li>
-                            <li className="breadcrumb-item">
-                                <a
-                                    className="text-reset"
-                                    href={urlFor('search.advanced.index', { key: track.initialKey })}
-                                >
-                                    {track.initialKey}
-                                </a>
-                            </li>
-                        </ol>
-                    </div>
+                    {track.found && (
+                        <div className="ast-track-meta text-muted small">
+                            <ol className="breadcrumb ast-breadcrumb-dotted">
+                                <li className="breadcrumb-item">
+                                    <a
+                                        className="text-reset"
+                                        href={urlFor('search.advanced.index', { genre: track.genre })}
+                                    >
+                                        {track.genre}
+                                    </a>
+                                </li>
+                                <li className="breadcrumb-item">
+                                    {formatSeconds(track.length)}
+                                </li>
+                                <li className="breadcrumb-item">
+                                    <a
+                                        className="text-reset"
+                                        href={urlFor('search.advanced.index', { bpm: track.bpm })}
+                                    >
+                                        {track.bpm} BPM
+                                    </a>
+                                </li>
+                                <li className="breadcrumb-item">
+                                    <a
+                                        className="text-reset"
+                                        href={urlFor('search.advanced.index', { key: track.initialKey })}
+                                    >
+                                        {track.initialKey}
+                                    </a>
+                                </li>
+                            </ol>
+                        </div>
+                    )}
                 </div>
             </div>
 
-            <div className="col-4">
+            <div 
+                className="col-4"
+                style={{ opacity: track.found ? 1 : 0.5 }}
+            >
                 {comments.map((comment, idx) => (
                     <div key={idx} className="row comment d-flex align-items-center small mb-1">
                         <div className="col-2 text-end p-0">

@@ -7,7 +7,7 @@ const calculateTrackListDuration = (trackList) => {
         return 0;
     }
 
-    return trackList.reduce((total, trackEntry) => total + trackEntry.track.length, 0);
+    return trackList.reduce((total, trackEntry) => total + (trackEntry.track.length || 0), 0);
 };
 
 const AttemptHeader = ({ attempt, onEdit }) => {
@@ -45,12 +45,18 @@ const Attempt = ({ attempt, highlightedTrackIndex, onHighlightTrack, onEditTrack
     );
 
     const handleCardDragOver = (e) => {
-        if (!isDragging) return;
+        if (!isDragging) {
+            return;
+        }
+
         e.preventDefault();
     };
 
     const handleCardDrop = (e) => {
-        if (!isDragging) return;
+        if (!isDragging) {
+            return;
+        }
+
         e.preventDefault();
         handlers.onDrop();
     };
@@ -83,7 +89,7 @@ const Attempt = ({ attempt, highlightedTrackIndex, onHighlightTrack, onEditTrack
                             isHighlighted={highlightedTrackIndex === idx}
                             dragState={getItemState(idx, idx === trackListLength - 1)}
                             dragHandlers={handlers}
-                            onEdit={() => onEditTrack(trackEntry.track, trackEntry.comments || [], idx)}
+                            onEdit={() => onEditTrack(trackEntry, idx)}
                             onDelete={() => onDeleteTrack(attempt, trackEntry)}
                             onHighlight={() => onHighlightTrack(idx)}
                         />

@@ -10,7 +10,7 @@ use Assistant\Module\Mix\Model\Attempt;
 use Assistant\Module\Mix\Model\AttemptDto;
 use Assistant\Module\Mix\Model\Mix;
 use Assistant\Module\Mix\Repository\MixRepository;
-use Assistant\Module\Search\Extension\Criteria\SearchCriteria;
+use Assistant\Module\Search\Extension\Criteria\SearchCriteriaFacade;
 use Assistant\Module\Search\Extension\Service\TrackSearchService;
 use Assistant\Module\Track\Extension\Similarity\SimilarityBuilder;
 use Assistant\Module\Track\Model\Track;
@@ -206,6 +206,7 @@ final class MixService
         return $tracks;
     }
 
+    /** @idea Lepiej byłoby zwracać nowy obiekt Mix niż modyfikować przekazany w parametrze */
     private function hydrate(Mix $mix): void
     {
         $guids = [];
@@ -216,13 +217,13 @@ final class MixService
             }
         }
 
-        $guids = array_unique($guids);
+        $guids = array_values(array_unique($guids));
 
-        if (empty($guids)) {
+        if (!$guids) {
             return;
         }
 
-        $result = $this->searchService->search(new SearchCriteria(guid: $guids));
+        $result = $this->searchService->search(SearchCriteriaFacade::createFromGuid($guids));
 
         $tracks = [];
         

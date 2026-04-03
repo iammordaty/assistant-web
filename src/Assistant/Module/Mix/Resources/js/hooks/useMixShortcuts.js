@@ -22,7 +22,7 @@ export const useMixShortcuts = ({
 
         const trackEntry = selectedAttempt.trackList[highlightedTrackIndex];
 
-        openTrackEntryModal(trackEntry.track, trackEntry.comments || [], highlightedTrackIndex);
+        openTrackEntryModal(trackEntry, highlightedTrackIndex);
     };
 
     const editTrackOrAttempt = () => {

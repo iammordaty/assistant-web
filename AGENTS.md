@@ -8,8 +8,8 @@ This file provides guidance to AI agents when working with code in this reposito
 
 ## Tech Stack
 
-- **Backend:** PHP 8.5, Slim Framework 4 (PSR-15), Twig 3, PHP-DI (autowiring)
-- **Frontend:** jQuery/Bootstrap 5/Tabler, React 19 (Mix module), esbuild
+- **Backend:** PHP 8.5, Slim Framework 4 (PSR-15), PHP-DI (autowiring)
+- **Frontend:** Twig 3, jQuery/Bootstrap 5/Tabler (in general), React 19 (front in Mix module only), esbuild
 - **Database:** MongoDB (via native PHP extension)
 - **CLI:** Symfony Console 5.3
 - **Infrastructure:** Docker (PHP-FPM, Nginx, MongoDB, music-classifier, music-similarity services)
@@ -19,15 +19,15 @@ This file provides guidance to AI agents when working with code in this reposito
 ### Build frontend
 
 ```bash
-yarn build          # production build → public/js/mix.dist.js
-yarn watch          # dev watch mode with source maps
+yarn build # production build → public/js/mix.dist.js
+yarn watch # dev watch mode with source maps
 ```
 
 ### Run tests
 
 ```bash
-./vendor/bin/phpunit                    # all tests
-./vendor/bin/phpunit tests/path/To/TestFile.php   # single test file
+./vendor/bin/phpunit # all tests
+./vendor/bin/phpunit tests/path/To/TestFile.php # single test file
 ```
 
 ### Run CLI tasks
@@ -41,14 +41,14 @@ php bin/console.php <command>
 ### Docker
 
 ```bash
-docker-compose up   # full stack: PHP-FPM, Nginx, MongoDB, Node builder, music services
+docker-compose up # full stack: PHP-FPM, Nginx, MongoDB, Node builder, music services
 ```
 
 ### Dependencies
 
 ```bash
-composer install    # PHP
-yarn install        # Node/frontend
+composer install # PHP
+yarn install # Node/frontend
 ```
 
 ## Architecture
@@ -84,7 +84,7 @@ All source lives under `src/Assistant/` with PSR-0 autoloading. The app is split
 
 **Audio Data** (`Module/Track/Extension/TrackAudioData/`): Wraps Essentia music extractor for BPM detection, key analysis, and audio feature extraction.
 
-**Mix Module Frontend** (`public/js/src/`): React 19 app with custom hooks (`useMixApi`, `useKeyboardShortcuts`, `useDragReorder`), modal-based UI, drag-and-drop track reordering. Built with esbuild (`build.js`).
+**Mix Module Frontend** (`src/Assistant/Module/Mix/Resources/js/`): React 19 app with custom hooks (`useMixApi`, `useKeyboardShortcuts`, `useDragReorder`), modal-based UI, drag-and-drop track reordering. Built with esbuild (`build.js`) to `public/js/mix.dist.js`.
 
 ### Data Flow
 
@@ -99,6 +99,13 @@ Controllers receive PSR-7 requests → delegate to Services → Services use Rep
 - DI: PHP-DI auto-wiring for controllers. Services/repos registered in `config/container.inc`.
 - Console tasks use manual `factory(ContainerInterface)` pattern.
 - PER Coding Style 3.0. No comments narrating what code does.
+
+### API Contracts (Backend → Frontend)
+
+- When the backend hydrates stored references with related data (e.g. looking up a Track by GUID), the API must never return `null` for the enriched object. Return a stub with the identifying field(s), a display-ready name, and an explicit status flag (`found: true/false`). This keeps frontend code simple — no null-checking cascades.
+- Don't duplicate identifiers across API response levels. If a nested object always contains `guid`, don't also send a sibling field with the same value — redundant fields create ambiguity ("can these differ?").
+- DTO `toJson()` methods are the right place to shape API response structure — add status flags, computed fields, and display-ready fallback values there, not in domain models or frontend transformations.
+- When a frontend crash is caused by nullable data from the API, first consider fixing the API contract rather than scattering defensive null-checks across components. Push the complexity to the single serialization point.
 
 ### Slim Framework
 

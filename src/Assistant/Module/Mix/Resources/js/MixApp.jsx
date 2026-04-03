@@ -90,11 +90,11 @@ const MixApp = ({ initialMix, autocompleteUrl }) => {
         await saveAttempt(newAttempt);
     };
 
-    const openTrackEntryModal = (track = null, comments = [], trackEntryIndex = null) => {
+    const openTrackEntryModal = (trackEntry = null, editingTrackEntryIndex = null) => {
         setTrackEntryModal({
             isOpen: true,
-            trackEntry: track ? { track, comments } : null,
-            editingTrackEntryIndex: trackEntryIndex,
+            trackEntry,
+            editingTrackEntryIndex,
         });
     };
 
@@ -110,11 +110,11 @@ const MixApp = ({ initialMix, autocompleteUrl }) => {
         const { track, comments } = trackData;
         const { editingTrackEntryIndex } = trackEntryModal;
 
-        if (!selectedAttempt) {
+        if (!selectedAttempt || !track.guid) {
             return;
         }
 
-        const newTrackEntry = { track, trackGuid: track.guid, comments };
+        const newTrackEntry = { track, comments };
         let updatedAttempt;
 
         if (editingTrackEntryIndex !== null) {
@@ -272,7 +272,7 @@ const MixApp = ({ initialMix, autocompleteUrl }) => {
                             highlightedTrackIndex={highlightedTrackIndex}
                             onHighlightTrack={setHighlightedTrackIndex}
                             onEditTrack={openTrackEntryModal}
-                            onAddTrack={openTrackEntryModal}
+                            onAddTrack={() => openTrackEntryModal()}
                             onDeleteTrack={deleteTrack}
                             onEditAttempt={openAttemptModal}
                             onReorderTracks={reorderTracks}

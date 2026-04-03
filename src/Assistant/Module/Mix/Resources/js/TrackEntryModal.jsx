@@ -45,8 +45,8 @@ const TrackEntryModal = ({ trackEntry, autocompleteUrl, onSave, onClose, isOpen 
         }
 
         inputRef.current.value = initialTrack?.name ?? '';
-        
-        if (!initialTrack) {
+
+        if (!initialTrack?.found) {
             inputRef.current.removeAttribute('data-track');
         }
 
@@ -124,14 +124,14 @@ const TrackEntryModal = ({ trackEntry, autocompleteUrl, onSave, onClose, isOpen 
 
     const handleSave = () => {
         const trackToSave = resolveTrackForSave();
-        
-        if (!trackToSave) {
+
+        if (!trackToSave?.guid) {
             inputRef.current?.focus();
             return;
         }
 
         const preparedComments = collectCommentsFromForm();
-        
+
         onSave({ track: trackToSave, comments: preparedComments });
     };
 
