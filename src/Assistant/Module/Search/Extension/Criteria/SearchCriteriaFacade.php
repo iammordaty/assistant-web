@@ -11,7 +11,7 @@ final class SearchCriteriaFacade
         return new SearchCriteria(name: $name);
     }
 
-    public static function createFromGuid(Regex|string $guid): SearchCriteria
+    public static function createFromGuid(array|Regex|string $guid): SearchCriteria
     {
         return new SearchCriteria(guid: $guid);
     }

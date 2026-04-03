@@ -1,6 +1,6 @@
 import React, { useMemo } from 'react';
 
-const getTrackAvatar = track => {
+const getAvatarClass = track => {
     let intensity = 0;
     let baseColor = 'blue';
 
@@ -56,15 +56,31 @@ const getTrackInitials = track => {
     return ((leftWords[0]?.[0] ?? '') + (rightWords[0]?.[0] ?? '')).toUpperCase();
 };
 
+// fixme: to jest słabe i źle działa, ale getTrackInitials także
+const getGuidInitials = (guid) => {
+    const compact = guid.replace(/-/g, '');
+
+    return compact.length >= 2
+        ? compact.slice(0, 2).toUpperCase()
+        : '?';
+};
+
 const TrackAvatar = React.memo(({ track }) => {
     const className = useMemo(() => {
-        const avatarClass = getTrackAvatar(track);
-        return `avatar-initials rounded-2 ${avatarClass}`;
-    }, [track.bpm, track.genre, track.initialKey]);
+        if (!track.found) {
+            return 'avatar-initials rounded-2 bg-secondary-lt text-secondary opacity-50';
+        }
+
+        return `avatar-initials rounded-2 ${getAvatarClass(track)}`;
+    }, [track.found, track.bpm, track.genre, track.initialKey]);
 
     const initials = useMemo(() => {
+        if (!track.found) {
+            return getGuidInitials(track.guid);
+        }
+
         return getTrackInitials(track);
-    }, [track.artists, track.title]);
+    }, [track.found, track.guid, track.artists, track.title]);
 
     return <span className={className}>{initials}</span>;
 });
