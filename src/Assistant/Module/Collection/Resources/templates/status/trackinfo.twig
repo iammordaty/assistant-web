@@ -6,8 +6,8 @@
             {{ track.name }}
         </a>
     </div>
-    <div class="ast-track-meta text-muted small">
-        <ol class="breadcrumb ast-breadcrumb-dotted ast-breadcrumb-scrollable mb-0" data-element="scrollable-breadcrumb" data-scroll-mask>
+    <div class="text-muted small py-1">
+        <ol class="breadcrumb ast-breadcrumb-dotted ast-breadcrumb-scrollable" data-element="scrollable-breadcrumb">
             {% if track.genre %}
                 <li class="breadcrumb-item {{ 'genre' in fields ? 'text-danger' : '' }}">
                     <a class="text-reset" href="{{ url_for('search.advanced.index', query_params = { genre: track.genre }) }}">{{ track.genre }}</a>
@@ -61,7 +61,7 @@
     </div>
     {% if file is defined and file|length > 0 %}
         <div class="text-muted small">
-            <ol class="breadcrumb ast-breadcrumb-dotted ast-breadcrumb-scrollable mb-0" data-element="scrollable-breadcrumb" data-scroll-mask>
+            <ol class="breadcrumb ast-breadcrumb-dotted ast-breadcrumb-scrollable mb-0" data-element="scrollable-breadcrumb">
                 {% if file.size is defined and file.size %}
                     <li class="breadcrumb-item">{{ file.size|format_filesize }}</li>
                 {% endif %}

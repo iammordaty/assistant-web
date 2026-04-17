@@ -6,37 +6,81 @@
     </div>
 {% else %}
     {% for issue in issues %}
-        <div class="ast-fmatch-card {{ issue.ignored ? 'ast-status-ignored' : '' }}">
+        <div class="ast-fmatch-card {{ issue.ignored ? 'ast-status-ignored' : '' }}" data-element="analysis-issue">
             <div class="ast-fmatch-top">
                 <div class="ast-fmatch-track-info">
                     {% if issue.details.track is defined %}
                         {% include '@collection/status/trackinfo.twig' with {
                             track: issue.details.track,
-                            file: issue.details.file|default({})
+                            file: issue.details.file
                         } only %}
                     {% else %}
-                        <a class="text-reset fw-bold" href="{{ url_for('track.track.index', { guid: issue.details.guid }) }}">
+                        <a
+                            class="text-reset fw-bold"
+                            href="{{ url_for('track.track.index', { guid: issue.details.guid }) }}"
+                        >
                             {{ issue.details.track_name }}
                         </a>
                     {% endif %}
                 </div>
                 <div class="ast-fmatch-actions">
-                    {% include '@collection/status/infobutton.twig' with { issue: issue } only %}
-                    {% include '@collection/status/ignorebutton.twig' with { issue: issue } only %}
+                    {% include '@collection/status/infobutton.twig' with { issue } only %}
+                    {% include '@collection/status/ignorebutton.twig' with { issue } only %}
                 </div>
             </div>
-            <div class="ast-fmatch-diff">
-                <div class="ast-fmatch-line ast-fmatch-line-expected">
-                    <span class="ast-fmatch-line-label">
-                        Oczekiwana
+            <div class="py-2 px-3 font-monospace">
+                <div class="py-1">
+                    <span class="text-success">
+                        <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            width="24"
+                            height="24"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            stroke-width="1.5"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            class="icon icon-tabler icons-tabler-outline icon-tabler-file-check"
+                        >
+                            <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                            <path d="M14 3v4a1 1 0 0 0 1 1h4" />
+                            <path d="M17 21h-10a2 2 0 0 1 -2 -2v-14a2 2 0 0 1 2 -2h7l5 5v11a2 2 0 0 1 -2 2" />
+                            <path d="M9 15l2 2l4 -4" />
+                        </svg>
                     </span>
-                    <span class="ast-fmatch-line-value" data-diff-expected="{{ issue.details.expected }}">{{ issue.details.expected }}</span>
+                    <span
+                        class="ast-fmatch-line-value"
+                        data-diff-a="{{ issue.details.expected }}"
+                        data-diff-class="ast-diff-ins"
+                    >{{ issue.details.expected }}</span>
                 </div>
-                <div class="ast-fmatch-line ast-fmatch-line-actual">
-                    <span class="ast-fmatch-line-label">
-                        Aktualna
+                <div class="py-1">
+                    <span class="text-danger">
+                        <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            width="24"
+                            height="24"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            stroke-width="2"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            class="icon icon-tabler icons-tabler-outline icon-tabler-file-excel"
+                        >
+                            <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                            <path d="M14 3v4a1 1 0 0 0 1 1h4" />
+                            <path d="M17 21h-10a2 2 0 0 1 -2 -2v-14a2 2 0 0 1 2 -2h7l5 5v11a2 2 0 0 1 -2 2" />
+                            <path d="M10 12l4 5" />
+                            <path d="M10 17l4 -5" />
+                        </svg>
                     </span>
-                    <span class="ast-fmatch-line-value" data-diff-actual="{{ issue.details.filename }}">{{ issue.details.filename }}</span>
+                    <span
+                        class="ast-fmatch-line-value"
+                        data-diff-b="{{ issue.details.filename }}"
+                        data-diff-class="ast-diff-del"
+                    >{{ issue.details.filename }}</span>
                 </div>
             </div>
         </div>

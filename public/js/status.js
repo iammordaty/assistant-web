@@ -1,38 +1,56 @@
-$(function () {
+$(() => {
     $('[data-role="run-collection-analysis"]').on('click', function () {
-        var $btn = $(this);
+        const $btn = $(this);
+        const url = $btn.data('url');
 
         $btn.prop('disabled', true).text('Analizowanie...');
 
-        $.post('/common/task/run-collection-analysis', function () {
+        $.post(url, () => {
             $btn.text('Analiza uruchomiona');
         });
     });
 
-    highlightFilenameDiffs();
-    highlightSimilarityDiffs();
+    $(document).on('click', '[data-role="toggle-ignore"]', function () {
+        const $btn = $(this);
+        const url = $btn.data('url');
+        const hash = $btn.data('hash');
+
+        $.post(url, { hash: hash }, function (data) {
+            const $container = $btn.closest('[data-element="analysis-issue"]');
+            const $iconAccept = $btn.find('[data-element="icon-accept"]');
+            const $iconRestore = $btn.find('[data-element="icon-restore"]');
+
+            $container.toggleClass('text-muted ast-status-ignored', data.ignored);
+            $btn.attr('title', data.ignored ? 'Przywróć' : 'Akceptuj');
+            $iconAccept.toggleClass('d-none', data.ignored);
+            $iconRestore.toggleClass('d-none', !data.ignored);
+        });
+    });
+
+    $(document).on('click', '[data-role="show-raw-data"]', function () {
+        var raw = $(this).data('raw');
+        $('#rawDataContent').text(JSON.stringify(raw, null, 2));
+        new bootstrap.Modal('#rawDataModal').show();
+    });
+
+    highlightDiffs();
 });
 
 function lcs(a, b) {
-    var m = a.length;
-    var n = b.length;
-    var dp = [];
+    const m = a.length;
+    const n = b.length;
+    const dp = Array.from({ length: m + 1 }, () => new Array(n + 1).fill(0));
 
-    for (var i = 0; i <= m; i++) {
-        dp[i] = [];
-        for (var j = 0; j <= n; j++) {
-            if (i === 0 || j === 0) {
-                dp[i][j] = 0;
-            } else if (a[i - 1] === b[j - 1]) {
-                dp[i][j] = dp[i - 1][j - 1] + 1;
-            } else {
-                dp[i][j] = Math.max(dp[i - 1][j], dp[i][j - 1]);
-            }
+    for (let i = 1; i <= m; i++) {
+        for (let j = 1; j <= n; j++) {
+            dp[i][j] = a[i - 1] === b[j - 1]
+                ? dp[i - 1][j - 1] + 1
+                : Math.max(dp[i - 1][j], dp[i][j - 1]);
         }
     }
 
-    var result = [];
-    var i = m, j = n;
+    const result = [];
+    let i = m, j = n;
 
     while (i > 0 && j > 0) {
         if (a[i - 1] === b[j - 1]) {
@@ -49,31 +67,26 @@ function lcs(a, b) {
     return result;
 }
 
-function buildDiffHtml(str, common, indexKey, delClass, sameClass) {
-    var matched = {};
+function buildDiffHtml(str, common, indexKey, diffClass, sameClass) {
+    const matched = new Set(common.map(entry => entry[indexKey]));
 
-    for (var k = 0; k < common.length; k++) {
-        matched[common[k][indexKey]] = true;
-    }
+    const escape = ch => ch
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;');
 
-    var html = '';
-    var runSame = null;
-    var runText = '';
+    let html = '';
+    let runSame = null;
+    let runText = '';
 
-    function escape(ch) {
-        return ch.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-    }
-
-    function flush() {
-        if (runText === '') {
-            return;
-        }
-        html += '<span class="' + (runSame ? sameClass : delClass) + '">' + runText + '</span>';
+    const flush = () => {
+        if (!runText) return;
+        html += `<span class="${runSame ? sameClass : diffClass}">${runText}</span>`;
         runText = '';
-    }
+    };
 
-    for (var i = 0; i < str.length; i++) {
-        var isSame = !!matched[i];
+    for (let i = 0; i < str.length; i++) {
+        const isSame = matched.has(i);
 
         if (runSame === null || isSame !== runSame) {
             flush();
@@ -86,38 +99,21 @@ function buildDiffHtml(str, common, indexKey, delClass, sameClass) {
     return html;
 }
 
-function highlightFilenameDiffs() {
-    $('[data-diff-actual]').each(function () {
-        var $actual = $(this);
-        var $expected = $actual.closest('.ast-fmatch-diff').find('[data-diff-expected]');
+function highlightDiffs() {
+    const $aElements = $('[data-diff-a]');
+    const $bElements = $('[data-diff-b]');
+    const n = Math.min($aElements.length, $bElements.length);
 
-        if (!$expected.length) {
-            return;
-        }
+    for (let i = 0; i < n; i++) {
+        const $a = $aElements.eq(i);
+        const $b = $bElements.eq(i);
+        const aText = `${$a.attr('data-diff-a')}`;
+        const bText = `${$b.attr('data-diff-b')}`;
+        const common = lcs(aText, bText);
+        const classA = $a.attr('data-diff-class') || 'ast-diff-diff';
+        const classB = $b.attr('data-diff-class') || 'ast-diff-diff';
 
-        var a = $actual.data('diff-actual') + '';
-        var b = $expected.data('diff-expected') + '';
-        var common = lcs(a, b);
-
-        $actual.html(buildDiffHtml(a, common, 'ai', 'ast-diff-ch-del', 'ast-diff-ch-same'));
-        $expected.html(buildDiffHtml(b, common, 'bi', 'ast-diff-ch-ins', 'ast-diff-ch-same'));
-    });
-}
-
-function highlightSimilarityDiffs() {
-    $('[data-sim-value-a]').each(function () {
-        var $a = $(this);
-        var $b = $a.closest('.ast-sim-header').find('[data-sim-value-b]');
-
-        if (!$b.length) {
-            return;
-        }
-
-        var a = $a.data('sim-value-a') + '';
-        var b = $b.data('sim-value-b') + '';
-        var common = lcs(a, b);
-
-        $a.html(buildDiffHtml(a, common, 'ai', 'ast-diff-seg-diff', 'ast-diff-seg-same'));
-        $b.html(buildDiffHtml(b, common, 'bi', 'ast-diff-seg-diff', 'ast-diff-seg-same'));
-    });
+        $a.html(buildDiffHtml(aText, common, 'ai', classA, 'ast-diff-same'));
+        $b.html(buildDiffHtml(bText, common, 'bi', classB, 'ast-diff-same'));
+    }
 }

@@ -9,7 +9,7 @@
         <div class="card-body">
             <div class="divide-y">
                 {% for issue in issues %}
-                    <div class="row py-2 align-items-start {{ issue.ignored ? 'text-muted' : '' }}">
+                    <div class="row py-2 align-items-start {{ issue.ignored ? 'text-muted' : '' }}" data-element="analysis-issue">
                         <div class="col">
                             {% if issue.details.track is defined %}
                                 {% set highlightFields = [] %}
@@ -47,8 +47,8 @@
                             {% endif %}
                         </div>
                         <div class="col-auto">
-                            {% include '@collection/status/infobutton.twig' with { issue: issue } only %}
-                            {% include '@collection/status/ignorebutton.twig' with { issue: issue } only %}
+                            {% include '@collection/status/infobutton.twig' with { issue } only %}
+                            {% include '@collection/status/ignorebutton.twig' with { issue } only %}
                         </div>
                     </div>
                 {% endfor %}

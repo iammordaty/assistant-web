@@ -19,16 +19,20 @@
         {% set name_b = b ? b.name : (issue.details.name_b|default(issue.details.guid_b)) %}
         {% set path_a = a.pathname|replace({'/collection/': ''})|split('/')|slice(0, -1)|join('/') %}
         {% set path_b = b.pathname|replace({'/collection/': ''})|split('/')|slice(0, -1)|join('/') %}
+        {% set size_a = fa.size|format_filesize %}
+        {% set size_b = fb.size|format_filesize %}
+        {% set audio_a = fa.bitrate ~ ' kbps' ~ (fa.bitrate_mode|upper == 'VBR' ? ' (VBR)' : '') ~ ', ' ~ ((fa.sample_rate / 1000)|number_format(1)) ~ ' kHz, ' ~ (fa.channel_mode|capitalize) %}
+        {% set audio_b = fb.bitrate ~ ' kbps' ~ (fb.bitrate_mode|upper == 'VBR' ? ' (VBR)' : '') ~ ', ' ~ ((fb.sample_rate / 1000)|number_format(1)) ~ ' kHz, ' ~ (fb.channel_mode|capitalize) %}
 
-        <div class="card ast-sim-card mb-3 {{ issue.ignored ? 'ast-status-ignored' : '' }}">
-            <div class="row g-0 ast-sim-header">
-                <div class="col-6 ast-sim-side ast-sim-side-outlier">
+        <div class="card mb-3 {{ issue.ignored ? 'ast-status-ignored' : '' }}" data-element="analysis-issue">
+            <div class="row g-0 ast-sim-header position-relative">
+                <div class="col-6 ast-sim-side ast-sim-side-outlier justify-content-end" style="padding-right: 3rem;">
                     <a class="ast-sim-value text-reset text-truncate" href="{{ url_for('track.track.index', { guid: guid_a }) }}" title="{{ name_a }}">
                         {{ name_a }}
                     </a>
                 </div>
-                <div class="col-6 ast-sim-side ast-sim-side-popular">
-                    <a class="ast-sim-value text-reset text-truncate" href="{{ url_for('track.track.index', { guid: guid_b }) }}" title="{{ name_b }}">
+                <div class="col-6 ast-sim-side ast-sim-side-popular justify-content-start" style="padding-left: 3rem;">
+                    <a class="ast-sim-value text-reset text-truncate text-end" href="{{ url_for('track.track.index', { guid: guid_b }) }}" title="{{ name_b }}">
                         {{ name_b }}
                     </a>
                 </div>
@@ -39,70 +43,44 @@
                 </div>
             </div>
 
+            {% set fields = [
+                { label: 'Gatunek', a: a.genre, b: b.genre },
+                { label: 'Album', a: a.album, b: b.album },
+                { label: 'Wydawca', a: a.publisher, b: b.publisher },
+                { label: 'Rok', a: a.year, b: b.year },
+                { label: 'BPM', a: a.bpm, b: b.bpm },
+                { label: 'Tonacja', a: a.initial_key, b: b.initial_key },
+                { label: 'Czas', a: a.length|format_duration, b: b.length|format_duration },
+                { label: 'Audio', a: audio_a, b: audio_b },
+                { label: 'Rozmiar', a: size_a, b: size_b },
+            ] %}
+            
             <div class="ast-sim-body ast-dup-body">
                 <dl class="ast-dup-grid">
-                    {% set is_artist_match = a.artist == b.artist %}
-                    {% set is_title_match = a.title == b.title %}
-
                     <div class="ast-dup-cell ast-dup-cell-a">
-                        <span class="{{ is_artist_match ? 'ast-dup-match' : 'ast-dup-diff' }}">{{ a.artist }}</span> -
-                        <span class="{{ is_title_match ? 'ast-dup-match' : 'ast-dup-diff' }}">{{ a.title }}</span>
+                        <div class="ast-dup-cell-scroll" data-element="scrollable-breadcrumb" data-diff-a="{{ a.artist }} - {{ a.title }}">
+                            {{ a.artist }} - {{ a.title }}
+                        </div>
                     </div>
-                    <div class="ast-dup-cell ast-dup-cell-label">Utwór</div>
-                    <div class="ast-dup-cell ast-dup-cell-b">
-                        <span class="{{ is_artist_match ? 'ast-dup-match' : 'ast-dup-diff' }}">{{ b.artist }}</span> -
-                        <span class="{{ is_title_match ? 'ast-dup-match' : 'ast-dup-diff' }}">{{ b.title }}</span>
-                    </div>
+                    <dt class="ast-dup-cell ast-dup-cell-label"><span class="small">Utwór</span></dt>
+                    <dd class="ast-dup-cell ast-dup-cell-b">
+                        <div class="ast-dup-cell-scroll" data-element="scrollable-breadcrumb" data-diff-b="{{ b.artist }} - {{ b.title }}">
+                            {{ b.artist }} - {{ b.title }}
+                        </div>
+                    </dd>
 
-                    {% for field in [
-                        { label: 'Gatunek', a: a.genre, b: b.genre },
-                        { label: 'Album', a: a.album, b: b.album },
-                        { label: 'Wydawca', a: a.publisher, b: b.publisher },
-                        { label: 'Rok', a: a.year, b: b.year },
-                        { label: 'BPM', a: a.bpm, b: b.bpm },
-                        { label: 'Tonacja', a: a.initial_key, b: b.initial_key },
-                        { label: 'Czas', a: a.length|format_duration, b: b.length|format_duration },
-                    ] %}
-                        {% set is_match = field.a == field.b %}
-                        <div class="ast-dup-cell ast-dup-cell-a {{ is_match ? 'ast-dup-match' : 'ast-dup-diff' }}">{{ field.a }}</div>
-                        <div class="ast-dup-cell ast-dup-cell-label">{{ field.label }}</div>
-                        <div class="ast-dup-cell ast-dup-cell-b {{ is_match ? 'ast-dup-match' : 'ast-dup-diff' }}">{{ field.b }}</div>
+                    {% for field in fields %}
+                        <div class="ast-dup-cell ast-dup-cell-a" data-diff-a="{{ field.a }}">{{ field.a }}</div>
+                        <div class="ast-dup-cell ast-dup-cell-label"><span class="small">{{ field.label }}</span></div>
+                        <div class="ast-dup-cell ast-dup-cell-b" data-diff-b="{{ field.b }}">{{ field.b }}</div>
                     {% endfor %}
 
-                    {% set is_bitrate_match = fa.bitrate == fb.bitrate and fa.bitrate_mode == fb.bitrate_mode %}
-                    {% set is_sample_rate_match = fa.sample_rate == fb.sample_rate %}
-                    {% set is_channel_mode_match = fa.channel_mode == fb.channel_mode %}
-
                     <div class="ast-dup-cell ast-dup-cell-a">
-                        <span class="{{ is_bitrate_match ? 'ast-dup-match' : 'ast-dup-diff' }}">{{ fa.bitrate }} kbps{{ fa.bitrate_mode|upper == 'VBR' ? ' (VBR)' : '' }}</span>,
-                        <span class="{{ is_sample_rate_match ? 'ast-dup-match' : 'ast-dup-diff' }}">{{ (fa.sample_rate / 1000)|number_format(1) }} kHz</span>,
-                        <span class="{{ is_channel_mode_match ? 'ast-dup-match' : 'ast-dup-diff' }}">
-                            {{ fa.channel_mode|capitalize }}
-                        </span>
+                        <div class="ast-dup-cell-scroll" data-element="scrollable-breadcrumb" data-diff-a="{{ path_a }}">{{ path_a }}</div>
                     </div>
-                    <div class="ast-dup-cell ast-dup-cell-label">Audio</div>
+                    <div class="ast-dup-cell ast-dup-cell-label"><span class="small">Położenie</span></div>
                     <div class="ast-dup-cell ast-dup-cell-b">
-                        <span class="{{ is_bitrate_match ? 'ast-dup-match' : 'ast-dup-diff' }}">{{ fb.bitrate }} kbps{{ fb.bitrate_mode|upper == 'VBR' ? ' (VBR)' : '' }}</span>,
-                        <span class="{{ is_sample_rate_match ? 'ast-dup-match' : 'ast-dup-diff' }}">{{ (fb.sample_rate / 1000)|number_format(1) }} kHz</span>,
-                        <span class="{{ is_channel_mode_match ? 'ast-dup-match' : 'ast-dup-diff' }}">
-                            {{ fb.channel_mode|capitalize }}
-                        </span>
-                    </div>
-
-                    {% set size_a = fa.size|format_filesize %}
-                    {% set size_b = fb.size|format_filesize %}
-                    {% set is_match = size_a == size_b %}
-                    <div class="ast-dup-cell ast-dup-cell-a {{ is_match ? 'ast-dup-match' : 'ast-dup-diff' }}">{{ size_a }}</div>
-                    <dt class="ast-dup-cell ast-dup-cell-label">Rozmiar</dt>
-                    <dd class="ast-dup-cell ast-dup-cell-b {{ is_match ? 'ast-dup-match' : 'ast-dup-diff' }}">{{ size_b }}</dd>
-
-                    {% set is_match = (path_a == path_b) %}
-                    <div class="ast-dup-cell ast-dup-cell-a ast-dup-cell-path {{ is_match ? 'ast-dup-match' : 'ast-dup-diff' }}">
-                        <div class="ast-dup-cell-scroll" data-element="scrollable-breadcrumb" data-scroll-mask>{{ path_a }}</div>
-                    </div>
-                    <div class="ast-dup-cell ast-dup-cell-label">Położenie</div>
-                    <div class="ast-dup-cell ast-dup-cell-b ast-dup-cell-path {{ is_match ? 'ast-dup-match' : 'ast-dup-diff' }}">
-                        <div class="ast-dup-cell-scroll" data-element="scrollable-breadcrumb" data-scroll-mask>{{ path_b }}</div>
+                        <div class="ast-dup-cell-scroll" data-element="scrollable-breadcrumb" data-diff-b="{{ path_b }}">{{ path_b }}</div>
                     </div>
                 </dl>
             </div>
