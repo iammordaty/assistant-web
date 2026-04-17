@@ -10,6 +10,9 @@
     {% set trackNoun = viewType.value == 'similar-artist' ? 'wykonawcy' : (viewType.value == 'similar-publisher' ? 'wydawcy' : 'gatunku') %}
     {% set emphasizeField = viewType.value == 'similar-artist' ? null : (viewType.value == 'similar-publisher' ? 'publisher' : 'genre') %}
 
+    {# ignorowane na koniec listy #}
+    {% set issues = issues|sort((a, b) => a.ignored ? 1 : (b.ignored ? -1 : 0)) %}
+
     {% for issue in issues %}
         <div class="card mb-3 {{ issue.ignored ? 'ast-status-ignored' : '' }}" data-element="analysis-issue">
             <div class="row g-0 ast-sim-header position-relative">

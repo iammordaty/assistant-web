@@ -54,7 +54,7 @@
                 { label: 'Audio', a: audio_a, b: audio_b },
                 { label: 'Rozmiar', a: size_a, b: size_b },
             ] %}
-            
+
             <div class="ast-sim-body ast-dup-body">
                 <dl class="ast-dup-grid">
                     <div class="ast-dup-cell ast-dup-cell-a">
@@ -62,12 +62,12 @@
                             {{ a.artist }} - {{ a.title }}
                         </div>
                     </div>
-                    <dt class="ast-dup-cell ast-dup-cell-label"><span class="small">Utwór</span></dt>
-                    <dd class="ast-dup-cell ast-dup-cell-b">
+                    <div class="ast-dup-cell ast-dup-cell-label"><span class="small">Utwór</span></div>
+                    <div class="ast-dup-cell ast-dup-cell-b">
                         <div class="ast-dup-cell-scroll" data-element="scrollable-breadcrumb" data-diff-b="{{ b.artist }} - {{ b.title }}">
                             {{ b.artist }} - {{ b.title }}
                         </div>
-                    </dd>
+                    </div>
 
                     {% for field in fields %}
                         <div class="ast-dup-cell ast-dup-cell-a" data-diff-a="{{ field.a }}">{{ field.a }}</div>

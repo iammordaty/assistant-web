@@ -8,6 +8,9 @@
     <div class="card">
         <div class="card-body">
             <div class="divide-y">
+                {# ignorowane na koniec listy #}
+                {% set issues = issues|sort((a, b) => a.ignored ? 1 : (b.ignored ? -1 : 0)) %}
+
                 {% for issue in issues %}
                     <div class="row py-2 align-items-start {{ issue.ignored ? 'text-muted' : '' }}" data-element="analysis-issue">
                         <div class="col">
