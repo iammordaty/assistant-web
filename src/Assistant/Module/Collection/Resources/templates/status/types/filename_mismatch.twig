@@ -26,19 +26,17 @@
                 </div>
             </div>
             <div class="ast-fmatch-diff">
-                <div class="ast-fmatch-line ast-fmatch-line-actual">
-                    <span class="ast-fmatch-line-label">
-                        <svg class="ast-fmatch-icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M18 6l-12 12" /><path d="M6 6l12 12" /></svg>
-                        Aktualna
-                    </span>
-                    <span class="ast-fmatch-line-value" data-diff-actual="{{ issue.details.filename }}">{{ issue.details.filename }}</span>
-                </div>
                 <div class="ast-fmatch-line ast-fmatch-line-expected">
                     <span class="ast-fmatch-line-label">
-                        <svg class="ast-fmatch-icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M5 12l5 5l10 -10" /></svg>
                         Oczekiwana
                     </span>
                     <span class="ast-fmatch-line-value" data-diff-expected="{{ issue.details.expected }}">{{ issue.details.expected }}</span>
+                </div>
+                <div class="ast-fmatch-line ast-fmatch-line-actual">
+                    <span class="ast-fmatch-line-label">
+                        Aktualna
+                    </span>
+                    <span class="ast-fmatch-line-value" data-diff-actual="{{ issue.details.filename }}">{{ issue.details.filename }}</span>
                 </div>
             </div>
         </div>

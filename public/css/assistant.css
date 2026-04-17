@@ -406,14 +406,14 @@ table .ast-track-name span {
 
 .ast-sim-side-outlier {
     justify-content: flex-start;
-    background: linear-gradient(90deg, rgba(var(--tblr-warning-rgb), 0.07), transparent 85%);
-    border-right: 1px solid var(--tblr-border-color);
+    /*background: linear-gradient(90deg, rgba(var(--tblr-warning-rgb), 0.07), transparent 85%);*/
+    /*border-right: 1px solid var(--tblr-border-color);*/
     padding-right: 2rem;
 }
 
 .ast-sim-side-popular {
     justify-content: flex-end;
-    background: linear-gradient(-90deg, rgba(var(--tblr-success-rgb), 0.07), transparent 85%);
+    /*background: linear-gradient(-90deg, rgba(var(--tblr-success-rgb), 0.07), transparent 85%);*/
     padding-left: 2rem;
     padding-right: 6rem;
 }
@@ -641,9 +641,6 @@ table .ast-track-name span {
     color: var(--tblr-body-color);
 }
 
-/* ── Status page: potential duplicates ── */
-/* Card shell, header, connector and actions are shared with .ast-sim-card. */
-
 .ast-dup-body {
     padding: 0.5rem 0 0.625rem;
 }
@@ -689,19 +686,8 @@ table .ast-track-name span {
 }
 
 .ast-dup-diff {
-    color: var(--tblr-body-color);
-    font-weight: 600;
-    /* background: rgba(var(--tblr-warning-rgb), 0.12); */
-}
-
-.ast-dup-grid .ast-dup-cell-a.ast-dup-diff {
-    border-top-left-radius: 0.25rem;
-    border-bottom-left-radius: 0.25rem;
-}
-
-.ast-dup-grid .ast-dup-cell-b.ast-dup-diff {
-    border-top-right-radius: 0.25rem;
-    border-bottom-right-radius: 0.25rem;
+    color: rgba(var(--tblr-google-rgb), 1);
+    /*font-weight: 600;*/
 }
 
 .ast-dup-cell-scroll {
@@ -718,26 +704,4 @@ table .ast-track-name span {
 .ast-dup-cell-scroll[data-has-overflow="true"] {
     mask-image: linear-gradient(to right, black 0%, black calc(100% - 2.5rem), transparent 100%);
     -webkit-mask-image: linear-gradient(to right, black 0%, black calc(100% - 2.5rem), transparent 100%);
-}
-
-@media (max-width: 768px) {
-    .ast-dup-grid {
-        grid-template-columns: 1fr;
-        row-gap: 0.1rem;
-        padding: 0 1rem;
-    }
-    .ast-dup-cell-a,
-    .ast-dup-cell-b {
-        text-align: left;
-    }
-    .ast-dup-cell-label {
-        text-align: left;
-        padding: 0.45rem 0.9rem 0.05rem;
-        border: none;
-        border-top: 1px dashed var(--tblr-border-color);
-    }
-    .ast-dup-grid .ast-dup-cell-a.ast-dup-diff,
-    .ast-dup-grid .ast-dup-cell-b.ast-dup-diff {
-        border-radius: 0.25rem;
-    }
 }
