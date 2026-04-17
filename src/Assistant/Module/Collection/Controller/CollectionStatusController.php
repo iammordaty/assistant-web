@@ -57,7 +57,7 @@ final readonly class CollectionStatusController
 
     public function toggleIgnore(ServerRequest $request, Response $response): ResponseInterface
     {
-        $hash = $request->getParsedBodyParam('hash');
+        $hash = $request->getAttribute('hash');
 
         if (!$hash) {
             return $response->withStatus(400)->withJson(['error' => 'Missing hash parameter']);

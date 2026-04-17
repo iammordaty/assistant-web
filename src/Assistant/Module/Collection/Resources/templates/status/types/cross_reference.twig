@@ -1,77 +1,69 @@
-{% if crossReference|length == 0 %}
-    <div class="card">
-        <div class="card-body">
-            <p class="text-muted mb-0">Brak problemów w tej kategorii.</p>
-        </div>
-    </div>
-{% else %}
-    <div class="card">
-        <div class="card-table table-responsive">
-            <table class="table table-vcenter">
-                <thead>
+<div class="card">
+    <div class="card-table table-responsive">
+        <table class="table table-vcenter">
+            <thead>
+                <tr>
+                    <th>Plik</th>
+                    <th class="w-1 text-center">Dysk</th>
+                    <th class="w-1 text-center">Musly</th>
+                    <th class="w-1 text-center">Baza</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in crossReference %}
                     <tr>
-                        <th>Plik</th>
-                        <th class="w-1 text-center">Dysk</th>
-                        <th class="w-1 text-center">Musly</th>
-                        <th class="w-1 text-center">Baza</th>
+                        <td>
+                            {% if item.track %}
+                                <span class="ellipsis ast-track-name">
+                                    <a href="{{ url_for('track.track.index', { guid: item.track.guid }) }}" title="{{ item.track.name }}">
+                                        {{ item.track.name }}
+                                    </a>
+                                </span>
+                            {% else %}
+                                <span
+                                    class="text-wrap"
+                                    data-bs-toggle="tooltip"
+                                    data-bs-placement="top"
+                                    title="{{ item.pathname }}"
+                                >{{ item.file }}</span>
+                            {% endif %}
+                        </td>
+                        <td class="w-1 text-center">
+                            {% if item.inFilesystem %}
+                                <span class="text-success">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M5 12l5 5l10 -10" /></svg>
+                                </span>
+                            {% else %}
+                                <span class="text-danger">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M18 6l-12 12" /><path d="M6 6l12 12" /></svg>
+                                </span>
+                            {% endif %}
+                        </td>
+                        <td class="w-1 text-center">
+                            {% if item.inSimilarity %}
+                                <span class="text-success">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M5 12l5 5l10 -10" /></svg>
+                                </span>
+                            {% else %}
+                                <span class="text-danger">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M18 6l-12 12" /><path d="M6 6l12 12" /></svg>
+                                </span>
+                            {% endif %}
+                        </td>
+                        <td class="w-1 text-center">
+                            {% if item.inDatabase %}
+                                <span class="text-success">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M5 12l5 5l10 -10" /></svg>
+                                </span>
+                            {% else %}
+                                <span class="text-danger">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M18 6l-12 12" /><path d="M6 6l12 12" /></svg>
+                                </span>
+                            {% endif %}
+                        </td>
                     </tr>
-                </thead>
-                <tbody>
-                    {% for item in crossReference %}
-                        <tr>
-                            <td>
-                                {% if item.track %}
-                                    <span class="ellipsis ast-track-name">
-                                        <a href="{{ url_for('track.track.index', { guid: item.track.guid }) }}" title="{{ item.track.name }}">
-                                            {{ item.track.name }}
-                                        </a>
-                                    </span>
-                                {% else %}
-                                    <span
-                                        class="text-wrap"
-                                        data-bs-toggle="tooltip"
-                                        data-bs-placement="top"
-                                        title="{{ item.pathname }}"
-                                    >{{ item.file }}</span>
-                                {% endif %}
-                            </td>
-                            <td class="w-1 text-center">
-                                {% if item.inFilesystem %}
-                                    <span class="text-success">
-                                        <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M5 12l5 5l10 -10" /></svg>
-                                    </span>
-                                {% else %}
-                                    <span class="text-danger">
-                                        <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M18 6l-12 12" /><path d="M6 6l12 12" /></svg>
-                                    </span>
-                                {% endif %}
-                            </td>
-                            <td class="w-1 text-center">
-                                {% if item.inSimilarity %}
-                                    <span class="text-success">
-                                        <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M5 12l5 5l10 -10" /></svg>
-                                    </span>
-                                {% else %}
-                                    <span class="text-danger">
-                                        <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M18 6l-12 12" /><path d="M6 6l12 12" /></svg>
-                                    </span>
-                                {% endif %}
-                            </td>
-                            <td class="w-1 text-center">
-                                {% if item.inDatabase %}
-                                    <span class="text-success">
-                                        <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M5 12l5 5l10 -10" /></svg>
-                                    </span>
-                                {% else %}
-                                    <span class="text-danger">
-                                        <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M18 6l-12 12" /><path d="M6 6l12 12" /></svg>
-                                    </span>
-                                {% endif %}
-                            </td>
-                        </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
+                {% endfor %}
+            </tbody>
+        </table>
     </div>
-{% endif %}
+</div>

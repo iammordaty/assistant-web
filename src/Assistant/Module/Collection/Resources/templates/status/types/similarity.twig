@@ -1,83 +1,101 @@
-{% if issues|length == 0 %}
-    <div class="card">
-        <div class="card-body">
-            <p class="text-muted mb-0">Brak problemów w tej kategorii.</p>
+{% set searchField = viewType.value == 'similar-artist' ? 'name' : (viewType.value == 'similar-publisher' ? 'publisher' : 'genre') %}
+{% set searchPrefix = viewType.value == 'similar-artist' ? 'a:' : '' %}
+{% set trackNoun = viewType.value == 'similar-artist' ? 'wykonawcy' : (viewType.value == 'similar-publisher' ? 'wydawcy' : 'gatunku') %}
+{% set emphasizeField = viewType.value == 'similar-artist' ? null : (viewType.value == 'similar-publisher' ? 'publisher' : 'genre') %}
+
+{# ignorowane na koniec listy #}
+{% set issues = issues|sort((a, b) => a.ignored ? 1 : (b.ignored ? -1 : 0)) %}
+
+{% for issue in issues %}
+    <div
+        class="card mb-3{% if issue.ignored %} ast-status-ignored{% endif %}"
+        data-element="analysis-issue"
+        data-url="{{ url_for('collection.status.toggle-ignore', { hash: issue.hash }) }}"
+    >
+        <div class="row g-0 ast-sim-header position-relative">
+            <div class="col-6 ast-sim-side ast-sim-side-outlier">
+                <a class="ast-sim-value text-reset text-truncate" data-diff-a="{{ issue.details.value_a }}" href="{{ url_for('search.advanced.index', query_params = { (searchField): searchPrefix ~ issue.details.value_a }) }}" title="{{ issue.details.value_a }}">
+                    {{ issue.details.value_a }}
+                </a>
+            </div>
+            <div class="col-6 ast-sim-side ast-sim-side-popular">
+                <a class="ast-sim-value text-reset text-truncate text-end" data-diff-b="{{ issue.details.value_b }}" href="{{ url_for('search.advanced.index', query_params = { (searchField): searchPrefix ~ issue.details.value_b }) }}" title="{{ issue.details.value_b }}">
+                    {{ issue.details.value_b }}
+                </a>
+                <span class="badge bg-green-lt text-green ast-sim-badge">
+                    {{ issue.details.count_b|pluralize({ 'one': 'utwór', 'few': 'utwory', 'other': 'utworów' }) }}
+                </span>
+            </div>
+            <span class="ast-sim-connector" aria-hidden="true">≈</span>
+            <div class="card-actions btn-list ast-sim-actions">
+                <button class="btn btn-icon" data-role="show-raw-data" data-raw="{{ issue.toRawArray|json_encode }}" title="Pokaż dane">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-database-search">
+                        <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                        <path d="M4 6c0 1.657 3.582 3 8 3s8 -1.343 8 -3s-3.582 -3 -8 -3s-8 1.343 -8 3" />
+                        <path d="M4 6v6c0 1.657 3.582 3 8 3m8 -3.5v-5.5" />
+                        <path d="M4 12v6c0 1.657 3.582 3 8 3" />
+                        <path d="M15 18a3 3 0 1 0 6 0a3 3 0 1 0 -6 0" />
+                        <path d="M20.2 20.2l1.8 1.8" />
+                    </svg>
+                </button>
+                <button class="btn btn-icon{% if issue.ignored %} d-none{% endif %}" data-role="ignore-issue" title="Akceptuj">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-circle-check">
+                        <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+                        <path d="M3 12a9 9 0 1 0 18 0a9 9 0 1 0 -18 0" />
+                        <path d="M9 12l2 2l4 -4" />
+                    </svg>
+                </button>
+                <button class="btn btn-icon{% if not issue.ignored %} d-none{% endif %}" data-role="restore-issue" title="Przywróć">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-arrow-back-up">
+                        <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+                        <path d="M9 14l-4 -4l4 -4" />
+                        <path d="M5 10h11a4 4 0 1 1 0 8h-1" />
+                    </svg>
+                </button>
+            </div>
         </div>
-    </div>
-{% else %}
-    {% set searchField = viewType.value == 'similar-artist' ? 'name' : (viewType.value == 'similar-publisher' ? 'publisher' : 'genre') %}
-    {% set searchPrefix = viewType.value == 'similar-artist' ? 'a:' : '' %}
-    {% set trackNoun = viewType.value == 'similar-artist' ? 'wykonawcy' : (viewType.value == 'similar-publisher' ? 'wydawcy' : 'gatunku') %}
-    {% set emphasizeField = viewType.value == 'similar-artist' ? null : (viewType.value == 'similar-publisher' ? 'publisher' : 'genre') %}
 
-    {# ignorowane na koniec listy #}
-    {% set issues = issues|sort((a, b) => a.ignored ? 1 : (b.ignored ? -1 : 0)) %}
+        {% set tracksA = issue.details.tracks_a|default([]) %}
+        {% set tracksB = issue.details.tracks_b|default([]) %}
 
-    {% for issue in issues %}
-        <div class="card mb-3{% if issue.ignored %} ast-status-ignored{% endif %}" data-element="analysis-issue">
-            <div class="row g-0 ast-sim-header position-relative">
-                <div class="col-6 ast-sim-side ast-sim-side-outlier">
-                    <a class="ast-sim-value text-reset text-truncate" data-diff-a="{{ issue.details.value_a }}" href="{{ url_for('search.advanced.index', query_params = { (searchField): searchPrefix ~ issue.details.value_a }) }}" title="{{ issue.details.value_a }}">
-                        {{ issue.details.value_a }}
-                    </a>
+        {% if tracksA|length > 0 or tracksB|length > 0 %}
+            <div class="row g-0 ast-sim-body">
+                <div class="col-6 ast-sim-tracks-col ast-sim-tracks-col-outlier">
+                    {# Po lewej stronie (A) zawsze jest tylko jeden utwór #}
+                    {% set entry = tracksA[0] %}
+
+                    <div class="ast-sim-track-item">
+                        {% include '@collection/status/trackinfo.twig' with {
+                            track: entry.track,
+                            file: entry.file,
+                            highlight_fields: emphasizeField ? [emphasizeField] : []
+                        } only %}
+                    </div>
                 </div>
-                <div class="col-6 ast-sim-side ast-sim-side-popular">
-                    <a class="ast-sim-value text-reset text-truncate text-end" data-diff-b="{{ issue.details.value_b }}" href="{{ url_for('search.advanced.index', query_params = { (searchField): searchPrefix ~ issue.details.value_b }) }}" title="{{ issue.details.value_b }}">
-                        {{ issue.details.value_b }}
-                    </a>
-                    <span class="badge bg-green-lt text-green ast-sim-badge">
-                        {{ issue.details.count_b|pluralize({ 'one': 'utwór', 'few': 'utwory', 'other': 'utworów' }) }}
-                    </span>
-                </div>
-                <span class="ast-sim-connector" aria-hidden="true">≈</span>
-                <div class="card-actions btn-list ast-sim-actions">
-                    {% include '@collection/status/infobutton.twig' with { issue } only %}
-                    {% include '@collection/status/ignorebutton.twig' with { issue } only %}
+                <div class="col-6 ast-sim-tracks-col ast-sim-tracks-col-popular">
+                    {# @fixme: utwory w issue.details.tracks_b powinny być zawsze, a to front powinien decydować jak to wyświetlić / prezentować #}
+                    {# Obecnie poniższy warunek jest mylący #}
+                    {% if tracksB|length == 0 %}
+                        <a class="text-reset text-truncate" href="{{ url_for('search.advanced.index', query_params = { (searchField): searchPrefix ~ issue.details.value_b }) }}" title="{{ issue.details.value_b }}">
+                            {{ issue.details.count_b|pluralize({
+                                'one': 'utwór ' ~ trackNoun,
+                                'few': 'utwory ' ~ trackNoun,
+                                'other': 'utworów ' ~ trackNoun,
+                            }) }} <strong>{{ issue.details.value_b }}</strong>
+                        </a>
+                    {% else %}
+                        {% for entry in tracksB %}
+                            <div class="ast-sim-track-item">
+                                {% include '@collection/status/trackinfo.twig' with {
+                                    track: entry.track,
+                                    file: entry.file,
+                                    highlight_fields: emphasizeField ? [emphasizeField] : []
+                                } only %}
+                            </div>
+                        {% endfor %}
+                    {% endif %}
                 </div>
             </div>
-
-            {% set tracksA = issue.details.tracks_a|default([]) %}
-            {% set tracksB = issue.details.tracks_b|default([]) %}
-
-            {% if tracksA|length > 0 or tracksB|length > 0 %}
-                <div class="row g-0 ast-sim-body">
-                    <div class="col-6 ast-sim-tracks-col ast-sim-tracks-col-outlier">
-                        {# Po lewej stronie (A) zawsze jest tylko jeden utwór #}
-                        {% set entry = tracksA[0] %}
-
-                        <div class="ast-sim-track-item">
-                            {% include '@collection/status/trackinfo.twig' with {
-                                track: entry.track,
-                                file: entry.file,
-                                highlight_fields: emphasizeField ? [emphasizeField] : []
-                            } only %}
-                        </div>
-                    </div>
-                    <div class="col-6 ast-sim-tracks-col ast-sim-tracks-col-popular">
-                        {# @fixme: utwory w issue.details.tracks_b powinny być zawsze, a to front powinien decydować jak to wyświetlić / prezentować #}
-                        {# Obecnie poniższy warunek jest mylący #}
-                        {% if tracksB|length == 0 %}
-                            <a class="text-reset text-truncate" href="{{ url_for('search.advanced.index', query_params = { (searchField): searchPrefix ~ issue.details.value_b }) }}" title="{{ issue.details.value_b }}">
-                                {{ issue.details.count_b|pluralize({
-                                    'one': 'utwór ' ~ trackNoun,
-                                    'few': 'utwory ' ~ trackNoun,
-                                    'other': 'utworów ' ~ trackNoun,
-                                }) }} <strong>{{ issue.details.value_b }}</strong>
-                            </a>
-                        {% else %}
-                            {% for entry in tracksB %}
-                                <div class="ast-sim-track-item">
-                                    {% include '@collection/status/trackinfo.twig' with {
-                                        track: entry.track,
-                                        file: entry.file,
-                                        highlight_fields: emphasizeField ? [emphasizeField] : []
-                                    } only %}
-                                </div>
-                            {% endfor %}
-                        {% endif %}
-                    </div>
-                </div>
-            {% endif %}
-        </div>
-    {% endfor %}
-{% endif %}
+        {% endif %}
+    </div>
+{% endfor %}

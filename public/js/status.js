@@ -10,30 +10,39 @@ $(() => {
         });
     });
 
-    $(document).on('click', '[data-role="toggle-ignore"]', function () {
-        const $btn = $(this);
-        const url = $btn.data('url');
-        const hash = $btn.data('hash');
+    $(document).on('click', '[data-role="ignore-issue"], [data-role="restore-issue"]', function () {
+        const $container = $(this).parents('[data-element="analysis-issue"]');
 
-        $.post(url, { hash: hash }, function (data) {
-            const $container = $btn.closest('[data-element="analysis-issue"]');
-            const $iconAccept = $btn.find('[data-element="icon-accept"]');
-            const $iconRestore = $btn.find('[data-element="icon-restore"]');
-
-            $container.toggleClass('text-muted ast-status-ignored', data.ignored);
-            $btn.attr('title', data.ignored ? 'Przywróć' : 'Akceptuj');
-            $iconAccept.toggleClass('d-none', data.ignored);
-            $iconRestore.toggleClass('d-none', !data.ignored);
+        $.post($container.data('url'), ({ ignored }) => {
+            $container.toggleClass('text-muted ast-status-ignored', ignored);
+            $container.find('[data-role="ignore-issue"]').toggleClass('d-none', ignored);
+            $container.find('[data-role="restore-issue"]').toggleClass('d-none', !ignored);
         });
     });
 
     $(document).on('click', '[data-role="show-raw-data"]', function () {
-        var raw = $(this).data('raw');
+        const raw = $(this).data('raw');
+
         $('#rawDataContent').text(JSON.stringify(raw, null, 2));
         new bootstrap.Modal('#rawDataModal').show();
     });
 
-    highlightDiffs();
+    const $aElements = $('[data-diff-a]');
+    const $bElements = $('[data-diff-b]');
+    const n = Math.min($aElements.length, $bElements.length);
+
+    for (let i = 0; i < n; i++) {
+        const $a = $aElements.eq(i);
+        const $b = $bElements.eq(i);
+        const aText = `${$a.attr('data-diff-a')}`;
+        const bText = `${$b.attr('data-diff-b')}`;
+        const common = lcs(aText, bText);
+        const classA = $a.attr('data-diff-class') || 'ast-diff-diff';
+        const classB = $b.attr('data-diff-class') || 'ast-diff-diff';
+
+        $a.html(buildDiffHtml(aText, common, 'ai', classA, 'ast-diff-same'));
+        $b.html(buildDiffHtml(bText, common, 'bi', classB, 'ast-diff-same'));
+    }
 });
 
 function lcs(a, b) {
@@ -97,23 +106,4 @@ function buildDiffHtml(str, common, indexKey, diffClass, sameClass) {
     flush();
 
     return html;
-}
-
-function highlightDiffs() {
-    const $aElements = $('[data-diff-a]');
-    const $bElements = $('[data-diff-b]');
-    const n = Math.min($aElements.length, $bElements.length);
-
-    for (let i = 0; i < n; i++) {
-        const $a = $aElements.eq(i);
-        const $b = $bElements.eq(i);
-        const aText = `${$a.attr('data-diff-a')}`;
-        const bText = `${$b.attr('data-diff-b')}`;
-        const common = lcs(aText, bText);
-        const classA = $a.attr('data-diff-class') || 'ast-diff-diff';
-        const classB = $b.attr('data-diff-class') || 'ast-diff-diff';
-
-        $a.html(buildDiffHtml(aText, common, 'ai', classA, 'ast-diff-same'));
-        $b.html(buildDiffHtml(bText, common, 'bi', classB, 'ast-diff-same'));
-    }
 }
