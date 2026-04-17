@@ -12,7 +12,7 @@
                 {% set issues = issues|sort((a, b) => a.ignored ? 1 : (b.ignored ? -1 : 0)) %}
 
                 {% for issue in issues %}
-                    <div class="row py-2 align-items-start {{ issue.ignored ? 'text-muted' : '' }}" data-element="analysis-issue">
+                    <div class="row py-2 align-items-start{% if issue.ignored %} text-muted{% endif %}" data-element="analysis-issue">
                         <div class="col">
                             {% if viewType.value == 'rare-genre' %}
                                 <a class="text-reset" href="{{ url_for('search.advanced.index', query_params = { genre: issue.details.value }) }}">

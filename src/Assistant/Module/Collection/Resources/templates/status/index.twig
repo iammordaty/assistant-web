@@ -124,7 +124,7 @@
                 <table class="table table-vcenter card-table">
                     <tbody>
                         {% for row in rows %}
-                            <tr class="{{ row.unignored == 0 ? 'opacity-25' : '' }}">
+                            <tr class="{% if row.unignored == 0 %}opacity-25{% endif %}">
                                 <td>
                                     <a href="{{ url_for('collection.status.detail', { type: row.viewType.value }) }}">
                                         {{ row.viewType.label }}

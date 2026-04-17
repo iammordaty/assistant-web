@@ -9,7 +9,7 @@
     <div class="text-muted small py-1">
         <ol class="breadcrumb ast-breadcrumb-dotted ast-breadcrumb-scrollable" data-element="scrollable-breadcrumb">
             {% if track.genre %}
-                <li class="breadcrumb-item {{ 'genre' in fields ? 'text-danger' : '' }}">
+                <li class="breadcrumb-item{% if 'genre' in fields %} text-danger{% endif %}">
                     <a class="text-reset" href="{{ url_for('search.advanced.index', query_params = { genre: track.genre }) }}">{{ track.genre }}</a>
                 </li>
             {% else %}
@@ -21,7 +21,7 @@
             {% endif %}
 
             {% if track.publisher %}
-                <li class="breadcrumb-item {{ 'publisher' in fields ? 'text-danger' : '' }}">
+                <li class="breadcrumb-item{% if 'publisher' in fields %} text-danger{% endif %}">
                     <a class="text-reset" href="{{ url_for('search.advanced.index', query_params = { publisher: track.publisher }) }}">{{ track.publisher }}</a>
                 </li>
             {% else %}
@@ -31,7 +31,7 @@
             {% endif %}
 
             {% if track.year %}
-                <li class="breadcrumb-item {{ 'year' in fields ? 'text-danger' : '' }}">
+                <li class="breadcrumb-item{% if 'year' in fields %} text-danger{% endif %}">
                     <a class="text-reset" href="{{ url_for('search.advanced.index', query_params = { year: track.year }) }}">{{ track.year }}</a>
                 </li>
             {% else %}
@@ -39,7 +39,7 @@
             {% endif %}
 
             {% if track.bpm %}
-                <li class="breadcrumb-item {{ 'bpm' in fields ? 'text-danger' : '' }}">
+                <li class="breadcrumb-item{% if 'bpm' in fields %} text-danger{% endif %}">
                     <a class="text-reset" href="{{ url_for('search.advanced.index', query_params = { bpm: track.bpm }) }}">{{ track.bpm }} BPM</a>
                 </li>
             {% else %}
@@ -47,7 +47,7 @@
             {% endif %}
 
             {% if track.initial_key %}
-                <li class="breadcrumb-item {{ 'initial_key' in fields ? 'text-danger' : '' }}">
+                <li class="breadcrumb-item{% if 'initial_key' in fields %} text-danger{% endif %}">
                     <a class="text-reset" href="{{ url_for('search.advanced.index', query_params = { key: track.initial_key }) }}">{{ track.initial_key }}</a>
                 </li>
             {% else %}
@@ -66,7 +66,7 @@
                     <li class="breadcrumb-item">{{ file.size|format_filesize }}</li>
                 {% endif %}
                 {% if file.bitrate is defined and file.bitrate %}
-                    <li class="breadcrumb-item {{ 'bitrate' in fields ? 'text-danger' : '' }}">
+                    <li class="breadcrumb-item{% if 'bitrate' in fields %} text-danger{% endif %}">
                         {{ file.bitrate }} kbps
                         {% if file.bitrate_mode is defined and file.bitrate_mode %}
                             ({{ file.bitrate_mode|upper }})
@@ -77,7 +77,7 @@
                     <li class="breadcrumb-item">{{ (file.sample_rate / 1000)|number_format(1) }} kHz</li>
                 {% endif %}
                 {% if file.channel_mode is defined and file.channel_mode %}
-                    <li class="breadcrumb-item {{ 'channel_mode' in fields ? 'text-danger' : '' }}">
+                    <li class="breadcrumb-item{% if 'channel_mode' in fields %} text-danger{% endif %}">
                         {{ file.channel_mode|capitalize }}
                     </li>
                 {% endif %}

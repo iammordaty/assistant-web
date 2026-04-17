@@ -9,7 +9,7 @@
     {% set issues = issues|sort((a, b) => a.ignored ? 1 : (b.ignored ? -1 : 0)) %}
 
     {% for issue in issues %}
-        <div class="ast-fmatch-card {{ issue.ignored ? 'ast-status-ignored' : '' }}" data-element="analysis-issue">
+        <div class="ast-fmatch-card{% if issue.ignored %} ast-status-ignored{% endif %}" data-element="analysis-issue">
             <div class="ast-fmatch-top">
                 <div class="ast-fmatch-track-info">
                     {% if issue.details.track is defined %}

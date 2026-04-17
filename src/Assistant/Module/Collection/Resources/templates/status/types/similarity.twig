@@ -14,7 +14,7 @@
     {% set issues = issues|sort((a, b) => a.ignored ? 1 : (b.ignored ? -1 : 0)) %}
 
     {% for issue in issues %}
-        <div class="card mb-3 {{ issue.ignored ? 'ast-status-ignored' : '' }}" data-element="analysis-issue">
+        <div class="card mb-3{% if issue.ignored %} ast-status-ignored{% endif %}" data-element="analysis-issue">
             <div class="row g-0 ast-sim-header position-relative">
                 <div class="col-6 ast-sim-side ast-sim-side-outlier">
                     <a class="ast-sim-value text-reset text-truncate" data-diff-a="{{ issue.details.value_a }}" href="{{ url_for('search.advanced.index', query_params = { (searchField): searchPrefix ~ issue.details.value_a }) }}" title="{{ issue.details.value_a }}">
