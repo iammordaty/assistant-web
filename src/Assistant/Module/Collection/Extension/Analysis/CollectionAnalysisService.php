@@ -13,12 +13,7 @@ final readonly class CollectionAnalysisService
     ) {
     }
 
-    public function getSummary(): ?array
-    {
-        return $this->repository->getSummary();
-    }
-
-    public function getOverviewData(): ?array
+    public function getOverviewSummary(): ?array
     {
         $summary = $this->repository->getSummary();
 
@@ -26,6 +21,18 @@ final readonly class CollectionAnalysisService
             return null;
         }
 
+        $summary['rows'] = $this->getOverviewRows();
+
+        return $summary;
+    }
+
+    public function getSummary(): ?array
+    {
+        return $this->repository->getSummary();
+    }
+
+    private function getOverviewRows(): array
+    {
         $issues = $this->repository->getAllIssues();
         $typeCounts = $this->countIssuesByType($issues);
 
@@ -49,22 +56,62 @@ final readonly class CollectionAnalysisService
             }
         }
 
-        return ['summary' => $summary, 'rows' => $rows];
+        return $rows;
     }
 
-    public function getViewData(AnalysisViewType $viewType): array
+    public function getCrossReference(): array
     {
-        $issues = $this->repository->getIssuesByTypes($viewType->issueTypes());
+        return $this->buildCrossReference($this->getIssues(AnalysisViewType::CROSS_REFERENCE));
+    }
 
-        return match ($viewType) {
-            AnalysisViewType::CROSS_REFERENCE => $this->buildCrossReferenceData($issues),
-            AnalysisViewType::SIMILAR_ARTIST,
-            AnalysisViewType::SIMILAR_PUBLISHER,
-            AnalysisViewType::SIMILAR_GENRE => [
-                'issues' => array_map($this->ensureOutlierFirst(...), $issues),
-            ],
-            default => ['issues' => $issues],
-        };
+    public function getFilenameMismatchIssues(): array
+    {
+        return $this->getIssues(AnalysisViewType::FILENAME_MISMATCH);
+    }
+
+    public function getEmptyMetadataIssues(): array
+    {
+        return $this->getIssues(AnalysisViewType::EMPTY_METADATA);
+    }
+
+    public function getLowAudioQualityIssues(): array
+    {
+        return $this->getIssues(AnalysisViewType::LOW_AUDIO_QUALITY);
+    }
+
+    public function getSimilarArtistIssues(): array
+    {
+        return array_map($this->ensureOutlierFirst(...), $this->getIssues(AnalysisViewType::SIMILAR_ARTIST));
+    }
+
+    public function getSimilarPublisherIssues(): array
+    {
+        return array_map($this->ensureOutlierFirst(...), $this->getIssues(AnalysisViewType::SIMILAR_PUBLISHER));
+    }
+
+    public function getSimilarGenreIssues(): array
+    {
+        return array_map($this->ensureOutlierFirst(...), $this->getIssues(AnalysisViewType::SIMILAR_GENRE));
+    }
+
+    public function getSuspiciousYearIssues(): array
+    {
+        return $this->getIssues(AnalysisViewType::SUSPICIOUS_YEAR);
+    }
+
+    public function getRareGenreIssues(): array
+    {
+        return $this->getIssues(AnalysisViewType::RARE_GENRE);
+    }
+
+    public function getRareKeyIssues(): array
+    {
+        return $this->getIssues(AnalysisViewType::RARE_KEY);
+    }
+
+    public function getPotentialDuplicateIssues(): array
+    {
+        return $this->getIssues(AnalysisViewType::POTENTIAL_DUPLICATE);
     }
 
     public function toggleIgnore(string $hash): bool
@@ -89,7 +136,12 @@ final readonly class CollectionAnalysisService
         return $counts;
     }
 
-    private function buildCrossReferenceData(array $issues): array
+    private function getIssues(AnalysisViewType $viewType): array
+    {
+        return $this->repository->getIssuesByTypes($viewType->issueTypes());
+    }
+
+    private function buildCrossReference(array $issues): array
     {
         $crossReference = [];
 
@@ -114,7 +166,7 @@ final readonly class CollectionAnalysisService
             };
         }
 
-        return ['crossReference' => array_values($crossReference)];
+        return array_values($crossReference);
     }
 
     private function ensureOutlierFirst(AnalysisIssue $issue): AnalysisIssue

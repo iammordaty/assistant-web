@@ -4,8 +4,6 @@ namespace Assistant\Module\Collection\Controller;
 
 use Assistant\Module\Collection\Extension\Analysis\AnalysisViewType;
 use Assistant\Module\Collection\Extension\Analysis\CollectionAnalysisService;
-use Assistant\Module\Common\Extension\Route;
-use Assistant\Module\Common\Extension\RouteResolver;
 use Psr\Http\Message\ResponseInterface;
 use Slim\Http\Response;
 use Slim\Http\ServerRequest;
@@ -15,42 +13,125 @@ final readonly class CollectionStatusController
 {
     public function __construct(
         private CollectionAnalysisService $analysisService,
-        private RouteResolver $routeResolver,
         private Twig $view,
     ) {
     }
 
     public function index(ServerRequest $request, Response $response): ResponseInterface
     {
-        $data = $this->analysisService->getOverviewData();
-
         return $this->view->render($response, '@collection/status/index.twig', [
             'menu' => 'collection-status',
-            ...($data ?? ['summary' => null]),
+            'summary' => $this->analysisService->getOverviewSummary(),
         ]);
     }
 
-    public function detail(ServerRequest $request, Response $response): ResponseInterface
+    public function crossReference(ServerRequest $request, Response $response): ResponseInterface
     {
-        $viewType = AnalysisViewType::tryFrom($request->getAttribute('type'));
-
-        if (!$viewType) {
-            $redirectUrl = $this->routeResolver->resolve(
-                Route::create('collection.status.index'),
-            );
-
-            return $response->withRedirect($redirectUrl);
-        }
-
-        $summary = $this->analysisService->getSummary();
-        $viewData = $this->analysisService->getViewData($viewType);
-        $template = $this->resolveDetailTemplate($viewType);
-
-        return $this->view->render($response, $template, [
+        return $this->view->render($response, '@collection/status/types/cross_reference.twig', [
             'menu' => 'collection-status',
-            'summary' => $summary,
-            'viewType' => $viewType,
-            ...$viewData,
+            'summary' => $this->analysisService->getSummary(),
+            'viewType' => AnalysisViewType::CROSS_REFERENCE,
+            'crossReference' => $this->analysisService->getCrossReference(),
+        ]);
+    }
+
+    public function filenameMismatch(ServerRequest $request, Response $response): ResponseInterface
+    {
+        return $this->view->render($response, '@collection/status/types/filename_mismatch.twig', [
+            'menu' => 'collection-status',
+            'summary' => $this->analysisService->getSummary(),
+            'viewType' => AnalysisViewType::FILENAME_MISMATCH,
+            'issues' => $this->analysisService->getFilenameMismatchIssues(),
+        ]);
+    }
+
+    public function emptyMetadata(ServerRequest $request, Response $response): ResponseInterface
+    {
+        return $this->view->render($response, '@collection/status/types/single_track.twig', [
+            'menu' => 'collection-status',
+            'summary' => $this->analysisService->getSummary(),
+            'viewType' => AnalysisViewType::EMPTY_METADATA,
+            'issues' => $this->analysisService->getEmptyMetadataIssues(),
+        ]);
+    }
+
+    public function lowAudioQuality(ServerRequest $request, Response $response): ResponseInterface
+    {
+        return $this->view->render($response, '@collection/status/types/single_track.twig', [
+            'menu' => 'collection-status',
+            'summary' => $this->analysisService->getSummary(),
+            'viewType' => AnalysisViewType::LOW_AUDIO_QUALITY,
+            'issues' => $this->analysisService->getLowAudioQualityIssues(),
+        ]);
+    }
+
+    public function similarArtist(ServerRequest $request, Response $response): ResponseInterface
+    {
+        return $this->view->render($response, '@collection/status/types/similarity.twig', [
+            'menu' => 'collection-status',
+            'summary' => $this->analysisService->getSummary(),
+            'viewType' => AnalysisViewType::SIMILAR_ARTIST,
+            'issues' => $this->analysisService->getSimilarArtistIssues(),
+        ]);
+    }
+
+    public function similarPublisher(ServerRequest $request, Response $response): ResponseInterface
+    {
+        return $this->view->render($response, '@collection/status/types/similarity.twig', [
+            'menu' => 'collection-status',
+            'summary' => $this->analysisService->getSummary(),
+            'viewType' => AnalysisViewType::SIMILAR_PUBLISHER,
+            'issues' => $this->analysisService->getSimilarPublisherIssues(),
+        ]);
+    }
+
+    public function similarGenre(ServerRequest $request, Response $response): ResponseInterface
+    {
+        return $this->view->render($response, '@collection/status/types/similarity.twig', [
+            'menu' => 'collection-status',
+            'summary' => $this->analysisService->getSummary(),
+            'viewType' => AnalysisViewType::SIMILAR_GENRE,
+            'issues' => $this->analysisService->getSimilarGenreIssues(),
+        ]);
+    }
+
+    public function suspiciousYear(ServerRequest $request, Response $response): ResponseInterface
+    {
+        return $this->view->render($response, '@collection/status/types/single_track.twig', [
+            'menu' => 'collection-status',
+            'summary' => $this->analysisService->getSummary(),
+            'viewType' => AnalysisViewType::SUSPICIOUS_YEAR,
+            'issues' => $this->analysisService->getSuspiciousYearIssues(),
+        ]);
+    }
+
+    public function rareGenre(ServerRequest $request, Response $response): ResponseInterface
+    {
+        return $this->view->render($response, '@collection/status/types/rare.twig', [
+            'menu' => 'collection-status',
+            'summary' => $this->analysisService->getSummary(),
+            'viewType' => AnalysisViewType::RARE_GENRE,
+            'issues' => $this->analysisService->getRareGenreIssues(),
+        ]);
+    }
+
+    public function rareKey(ServerRequest $request, Response $response): ResponseInterface
+    {
+        return $this->view->render($response, '@collection/status/types/rare.twig', [
+            'menu' => 'collection-status',
+            'summary' => $this->analysisService->getSummary(),
+            'viewType' => AnalysisViewType::RARE_KEY,
+            'issues' => $this->analysisService->getRareKeyIssues(),
+        ]);
+    }
+
+    public function potentialDuplicate(ServerRequest $request, Response $response): ResponseInterface
+    {
+        return $this->view->render($response, '@collection/status/types/potential_duplicate.twig', [
+            'menu' => 'collection-status',
+            'summary' => $this->analysisService->getSummary(),
+            'viewType' => AnalysisViewType::POTENTIAL_DUPLICATE,
+            'issues' => $this->analysisService->getPotentialDuplicateIssues(),
         ]);
     }
 
@@ -65,22 +146,5 @@ final readonly class CollectionStatusController
         $isNowIgnored = $this->analysisService->toggleIgnore($hash);
 
         return $response->withJson(['ignored' => $isNowIgnored]);
-    }
-
-    private function resolveDetailTemplate(AnalysisViewType $viewType): string
-    {
-        return match ($viewType) {
-            AnalysisViewType::CROSS_REFERENCE => '@collection/status/types/cross_reference.twig',
-            AnalysisViewType::FILENAME_MISMATCH => '@collection/status/types/filename_mismatch.twig',
-            AnalysisViewType::EMPTY_METADATA,
-            AnalysisViewType::LOW_AUDIO_QUALITY,
-            AnalysisViewType::SUSPICIOUS_YEAR => '@collection/status/types/single_track.twig',
-            AnalysisViewType::SIMILAR_ARTIST,
-            AnalysisViewType::SIMILAR_PUBLISHER,
-            AnalysisViewType::SIMILAR_GENRE => '@collection/status/types/similarity.twig',
-            AnalysisViewType::RARE_GENRE,
-            AnalysisViewType::RARE_KEY => '@collection/status/types/rare.twig',
-            AnalysisViewType::POTENTIAL_DUPLICATE => '@collection/status/types/potential_duplicate.twig',
-        };
     }
 }

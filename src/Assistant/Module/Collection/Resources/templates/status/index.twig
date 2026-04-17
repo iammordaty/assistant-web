@@ -57,7 +57,7 @@
                             </div>
                             <div class="col">
                                 <div class="fw-bold fs-3">{{ summary.tracks_in_db }}</div>
-                                <div class="text-muted">Utworów w bazie</div>
+                                <div class="text-muted">Utworów</div>
                             </div>
                         </div>
                     </div>
@@ -120,13 +120,26 @@
             <div class="card-header">
                 <h3 class="card-title">Wykryte problemy</h3>
             </div>
+            {% set routeNames = {
+                'cross-reference': 'collection.status.cross-reference',
+                'filename-mismatch': 'collection.status.filename-mismatch',
+                'empty-metadata': 'collection.status.empty-metadata',
+                'low-audio-quality': 'collection.status.low-audio-quality',
+                'similar-artist': 'collection.status.similar-artist',
+                'similar-publisher': 'collection.status.similar-publisher',
+                'similar-genre': 'collection.status.similar-genre',
+                'suspicious-year': 'collection.status.suspicious-year',
+                'rare-genre': 'collection.status.rare-genre',
+                'rare-key': 'collection.status.rare-key',
+                'potential-duplicate': 'collection.status.potential-duplicate',
+            } %}
             <div class="table-responsive">
                 <table class="table table-vcenter card-table">
                     <tbody>
-                        {% for row in rows %}
+                        {% for row in summary.rows %}
                             <tr class="{% if row.unignored == 0 %}opacity-25{% endif %}">
                                 <td>
-                                    <a href="{{ url_for('collection.status.detail', { type: row.viewType.value }) }}">
+                                    <a href="{{ url_for(routeNames[row.viewType.value]) }}">
                                         {{ row.viewType.label }}
                                     </a>
                                 </td>

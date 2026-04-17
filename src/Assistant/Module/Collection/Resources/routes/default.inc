@@ -15,7 +15,47 @@ return static function (App $app): void {
             ->setName('collection.status.toggle-ignore');
 
         $group
-            ->get('/status/{type}', [ CollectionStatusController::class, 'detail' ])
-            ->setName('collection.status.detail');
+            ->get('/status/cross-reference', [ CollectionStatusController::class, 'crossReference' ])
+            ->setName('collection.status.cross-reference');
+
+        $group
+            ->get('/status/filename-mismatch', [ CollectionStatusController::class, 'filenameMismatch' ])
+            ->setName('collection.status.filename-mismatch');
+
+        $group
+            ->get('/status/empty-metadata', [ CollectionStatusController::class, 'emptyMetadata' ])
+            ->setName('collection.status.empty-metadata');
+
+        $group
+            ->get('/status/low-audio-quality', [ CollectionStatusController::class, 'lowAudioQuality' ])
+            ->setName('collection.status.low-audio-quality');
+
+        $group
+            ->get('/status/similar-artist', [ CollectionStatusController::class, 'similarArtist' ])
+            ->setName('collection.status.similar-artist');
+
+        $group
+            ->get('/status/similar-publisher', [ CollectionStatusController::class, 'similarPublisher' ])
+            ->setName('collection.status.similar-publisher');
+
+        $group
+            ->get('/status/similar-genre', [ CollectionStatusController::class, 'similarGenre' ])
+            ->setName('collection.status.similar-genre');
+
+        $group
+            ->get('/status/suspicious-year', [ CollectionStatusController::class, 'suspiciousYear' ])
+            ->setName('collection.status.suspicious-year');
+
+        $group
+            ->get('/status/rare-genre', [ CollectionStatusController::class, 'rareGenre' ])
+            ->setName('collection.status.rare-genre');
+
+        $group
+            ->get('/status/rare-key', [ CollectionStatusController::class, 'rareKey' ])
+            ->setName('collection.status.rare-key');
+
+        $group
+            ->get('/status/potential-duplicate', [ CollectionStatusController::class, 'potentialDuplicate' ])
+            ->setName('collection.status.potential-duplicate');
     });
 };
