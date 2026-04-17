@@ -39,10 +39,7 @@
 {% endblock %}
 
 {% block content %}
-    {# contentTemplate is set by the controller (resolveDetailContentTemplate) and varies per view type.
-       We intentionally omit `only` because the included template needs access to view-specific variables
-       (issues, crossReference, viewType, etc.) spread into the context dynamically by the controller. #}
-    {% include contentTemplate %}
+    {% block detail_content %}{% endblock %}
 
     <div class="modal modal-blur fade" id="rawDataModal" tabindex="-1">
         <div class="modal-dialog modal-lg">

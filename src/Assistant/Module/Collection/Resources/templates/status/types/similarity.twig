@@ -1,3 +1,6 @@
+{% extends '@collection/status/detail.twig' %}
+
+{% block detail_content %}
 {% set searchField = viewType.value == 'similar-artist' ? 'name' : (viewType.value == 'similar-publisher' ? 'publisher' : 'genre') %}
 {% set searchPrefix = viewType.value == 'similar-artist' ? 'a:' : '' %}
 {% set trackNoun = viewType.value == 'similar-artist' ? 'wykonawcy' : (viewType.value == 'similar-publisher' ? 'wydawcy' : 'gatunku') %}
@@ -99,3 +102,4 @@
         {% endif %}
     </div>
 {% endfor %}
+{% endblock %}

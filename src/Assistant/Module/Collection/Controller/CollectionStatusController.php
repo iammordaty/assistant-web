@@ -44,13 +44,12 @@ final readonly class CollectionStatusController
 
         $summary = $this->analysisService->getSummary();
         $viewData = $this->analysisService->getViewData($viewType);
-        $contentTemplate = $this->resolveDetailContentTemplate($viewType);
+        $template = $this->resolveDetailTemplate($viewType);
 
-        return $this->view->render($response, '@collection/status/detail.twig', [
+        return $this->view->render($response, $template, [
             'menu' => 'collection-status',
             'summary' => $summary,
             'viewType' => $viewType,
-            'contentTemplate' => $contentTemplate,
             ...$viewData,
         ]);
     }
@@ -68,7 +67,7 @@ final readonly class CollectionStatusController
         return $response->withJson(['ignored' => $isNowIgnored]);
     }
 
-    private function resolveDetailContentTemplate(AnalysisViewType $viewType): string
+    private function resolveDetailTemplate(AnalysisViewType $viewType): string
     {
         return match ($viewType) {
             AnalysisViewType::CROSS_REFERENCE => '@collection/status/types/cross_reference.twig',
