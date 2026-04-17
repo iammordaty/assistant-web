@@ -19,7 +19,11 @@
                                 <strong>{{ issue.details.value }}</strong>
                             {% endif %}
                             <span class="text-muted ms-1">
-                                {{ issue.details.count }} {{ issue.details.count == 1 ? 'wystąpienie' : 'wystąpienia' }}
+                                {{ issue.details.count|pluralize({
+                                    'one': 'wystąpienie',
+                                    'few': 'wystąpienia',
+                                    'other': 'wystąpień',
+                                }) }}
                             </span>
                         </div>
                         <div class="col-auto">

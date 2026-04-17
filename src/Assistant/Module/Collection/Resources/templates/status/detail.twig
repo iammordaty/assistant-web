@@ -68,13 +68,13 @@
                 var hash = $btn.data('hash');
 
                 $.post('{{ url_for('collection.status.toggle-ignore') }}', { hash: hash }, function (data) {
-                    var $row = $btn.closest('tr, .row, .py-3');
+                    var $container = $btn.closest('.ast-dup-card, .ast-fmatch-card, .ast-sim-card, .card, tr, .row, .py-3');
 
                     if (data.ignored) {
-                        $row.addClass('text-muted');
+                        $container.addClass('text-muted ast-status-ignored');
                         $btn.attr('title', 'Przywróć').html(svgRestore);
                     } else {
-                        $row.removeClass('text-muted');
+                        $container.removeClass('text-muted ast-status-ignored');
                         $btn.attr('title', 'Akceptuj').html(svgAccept);
                     }
                 });

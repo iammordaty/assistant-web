@@ -7,7 +7,7 @@
         </a>
     </div>
     <div class="ast-track-meta text-muted small">
-        <ol class="breadcrumb ast-breadcrumb-dotted mb-0">
+        <ol class="breadcrumb ast-breadcrumb-dotted ast-breadcrumb-scrollable mb-0" data-element="scrollable-breadcrumb" data-scroll-mask>
             {% if track.genre %}
                 <li class="breadcrumb-item {{ 'genre' in fields ? 'text-danger' : '' }}">
                     <a class="text-reset" href="{{ url_for('search.advanced.index', query_params = { genre: track.genre }) }}">{{ track.genre }}</a>
@@ -61,7 +61,7 @@
     </div>
     {% if file is defined and file|length > 0 %}
         <div class="text-muted small">
-            <ol class="breadcrumb ast-breadcrumb-dotted mb-0">
+            <ol class="breadcrumb ast-breadcrumb-dotted ast-breadcrumb-scrollable mb-0" data-element="scrollable-breadcrumb" data-scroll-mask>
                 {% if file.size is defined and file.size %}
                     <li class="breadcrumb-item">{{ file.size|format_filesize }}</li>
                 {% endif %}
@@ -82,7 +82,7 @@
                     </li>
                 {% endif %}
                 {% if track.pathname is defined and track.pathname %}
-                    <li class="breadcrumb-item">{{ track.pathname|replace({'/collection/': ''}) | split('/') | slice(0, -1) | join('/') }}</li>
+                    <li class="breadcrumb-item" title="{{ track.pathname }}">{{ track.pathname|replace({'/collection/': ''}) | split('/') | slice(0, -1) | join('/') }}</li>
                 {% endif %}
             </ol>
         </div>

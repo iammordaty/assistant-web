@@ -5,49 +5,89 @@
         </div>
     </div>
 {% else %}
-    <div class="card">
-        <div class="card-body">
-            <div class="divide-y">
-                {% for issue in issues %}
-                    <div class="py-3 {{ issue.ignored ? 'text-muted' : '' }}">
-                        <div class="row align-items-start">
-                            <div class="col-5">
-                                {% if issue.details.track_a is defined %}
-                                    {% include '@collection/status/trackinfo.twig' with {
-                                        track: issue.details.track_a,
-                                        file: issue.details.file_a|default({})
-                                    } only %}
-                                {% else %}
-                                    <a class="text-reset" href="{{ url_for('track.track.index', { guid: issue.details.guid_a }) }}">
-                                        {{ issue.details.name_a|default(issue.details.guid_a) }}
-                                    </a>
-                                {% endif %}
-                            </div>
-                            <div class="col-2 text-center align-self-center">
-                                <span class="text-muted fs-3">vs</span>
-                            </div>
-                            <div class="col-5">
-                                {% if issue.details.track_b is defined %}
-                                    {% include '@collection/status/trackinfo.twig' with {
-                                        track: issue.details.track_b,
-                                        file: issue.details.file_b|default({})
-                                    } only %}
-                                {% else %}
-                                    <a class="text-reset" href="{{ url_for('track.track.index', { guid: issue.details.guid_b }) }}">
-                                        {{ issue.details.name_b|default(issue.details.guid_b) }}
-                                    </a>
-                                {% endif %}
-                            </div>
-                        </div>
-                        <div class="row mt-1">
-                            <div class="col text-end">
-                                {% include '@collection/status/infobutton.twig' with { issue: issue } only %}
-                                {% include '@collection/status/ignorebutton.twig' with { issue: issue } only %}
-                            </div>
-                        </div>
-                    </div>
-                {% endfor %}
+    {# ignorowane na koniec listy #}
+    {% set issues = issues|sort((a, b) => a.ignored ? 1 : (b.ignored ? -1 : 0)) %}
+
+    {% for issue in issues %}
+        {% set a = issue.details.track_a|default(null) %}
+        {% set b = issue.details.track_b|default(null) %}
+        {% set fa = issue.details.file_a|default({}) %}
+        {% set fb = issue.details.file_b|default({}) %}
+        {% set guid_a = a ? a.guid : issue.details.guid_a %}
+        {% set guid_b = b ? b.guid : issue.details.guid_b %}
+        {% set name_a = a ? a.name : (issue.details.name_a|default(issue.details.guid_a)) %}
+        {% set name_b = b ? b.name : (issue.details.name_b|default(issue.details.guid_b)) %}
+
+        <div class="card ast-sim-card mb-2 {{ issue.ignored ? 'ast-status-ignored' : '' }}">
+            <div class="row g-0 ast-sim-header">
+                <div class="col-6 ast-sim-side ast-sim-side-outlier">
+                    <a class="ast-sim-value text-reset text-truncate" href="{{ url_for('track.track.index', { guid: guid_a }) }}" title="{{ name_a }}">
+                        {{ name_a }}
+                    </a>
+                </div>
+                <div class="col-6 ast-sim-side ast-sim-side-popular">
+                    <a class="ast-sim-value text-reset text-truncate" href="{{ url_for('track.track.index', { guid: guid_b }) }}" title="{{ name_b }}">
+                        {{ name_b }}
+                    </a>
+                </div>
+                <span class="ast-sim-connector" aria-hidden="true">≈</span>
+                <div class="card-actions btn-list ast-sim-actions">
+                    {% include '@collection/status/infobutton.twig' with { issue: issue } only %}
+                    {% include '@collection/status/ignorebutton.twig' with { issue: issue } only %}
+                </div>
             </div>
+
+            {% if a and b %}
+                {% set meta_fields = [
+                    { label: 'Gatunek',   a: a.genre,           b: b.genre },
+                    { label: 'Album',     a: a.album,           b: b.album },
+                    { label: 'Wydawca',   a: a.publisher,       b: b.publisher },
+                    { label: 'Rok',       a: a.year,            b: b.year },
+                    { label: 'BPM',       a: a.bpm,             b: b.bpm },
+                    { label: 'Tonacja',   a: a.initial_key,     b: b.initial_key },
+                    { label: 'Czas',      a: a.length ? a.length|format_duration : '', b: b.length ? b.length|format_duration : '' },
+                ] %}
+
+                {% set file_fields = [
+                    { label: 'Rozmiar',   a: fa.size is defined and fa.size ? fa.size|format_filesize : '',
+                                          b: fb.size is defined and fb.size ? fb.size|format_filesize : '' },
+                    { label: 'Bitrate',   a: fa.bitrate is defined and fa.bitrate ? (fa.bitrate ~ ' kbps' ~ (fa.bitrate_mode is defined and fa.bitrate_mode ? ' (' ~ fa.bitrate_mode|upper ~ ')' : '')) : '',
+                                          b: fb.bitrate is defined and fb.bitrate ? (fb.bitrate ~ ' kbps' ~ (fb.bitrate_mode is defined and fb.bitrate_mode ? ' (' ~ fb.bitrate_mode|upper ~ ')' : '')) : '' },
+                    { label: 'Próbkowanie', a: fa.sample_rate is defined and fa.sample_rate ? ((fa.sample_rate / 1000)|number_format(1) ~ ' kHz') : '',
+                                            b: fb.sample_rate is defined and fb.sample_rate ? ((fb.sample_rate / 1000)|number_format(1) ~ ' kHz') : '' },
+                    { label: 'Kanały',    a: fa.channel_mode is defined and fa.channel_mode ? fa.channel_mode|capitalize : '',
+                                          b: fb.channel_mode is defined and fb.channel_mode ? fb.channel_mode|capitalize : '' },
+                ] %}
+
+                {% set path_a = a.pathname ? a.pathname|replace({'/collection/': ''})|split('/')|slice(0, -1)|join('/') : '' %}
+                {% set path_b = b.pathname ? b.pathname|replace({'/collection/': ''})|split('/')|slice(0, -1)|join('/') : '' %}
+
+                {% set combined_fields = meta_fields|merge(file_fields) %}
+
+                <div class="ast-sim-body ast-dup-body">
+                    <dl class="ast-dup-grid">
+                        {% for f in combined_fields %}
+                            {% if f.a or f.b %}
+                                {% set is_match = (f.a|default('') == f.b|default('')) %}
+                                <div class="ast-dup-cell ast-dup-cell-a {{ is_match ? 'ast-dup-match' : 'ast-dup-diff' }}">{{ f.a|default('—') }}</div>
+                                <dt class="ast-dup-cell ast-dup-cell-label">{{ f.label }}</dt>
+                                <dd class="ast-dup-cell ast-dup-cell-b {{ is_match ? 'ast-dup-match' : 'ast-dup-diff' }}">{{ f.b|default('—') }}</dd>
+                            {% endif %}
+                        {% endfor %}
+
+                        {% if path_a or path_b %}
+                            {% set is_match = (path_a == path_b) %}
+                            <div class="ast-dup-cell ast-dup-cell-a ast-dup-cell-path {{ is_match ? 'ast-dup-match' : 'ast-dup-diff' }}">
+                                <div class="ast-dup-cell-scroll" data-element="scrollable-breadcrumb" data-scroll-mask>{{ path_a|default('—') }}</div>
+                            </div>
+                            <dt class="ast-dup-cell ast-dup-cell-label">Ścieżka</dt>
+                            <dd class="ast-dup-cell ast-dup-cell-b ast-dup-cell-path {{ is_match ? 'ast-dup-match' : 'ast-dup-diff' }}">
+                                <div class="ast-dup-cell-scroll" data-element="scrollable-breadcrumb" data-scroll-mask>{{ path_b|default('—') }}</div>
+                            </dd>
+                        {% endif %}
+                    </dl>
+                </div>
+            {% endif %}
         </div>
-    </div>
+    {% endfor %}
 {% endif %}

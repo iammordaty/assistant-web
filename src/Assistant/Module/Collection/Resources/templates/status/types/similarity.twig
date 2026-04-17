@@ -7,52 +7,78 @@
 {% else %}
     {% set searchField = viewType.value == 'similar-artist' ? 'name' : (viewType.value == 'similar-publisher' ? 'publisher' : 'genre') %}
     {% set searchPrefix = viewType.value == 'similar-artist' ? 'a:' : '' %}
+    {% set trackNoun = viewType.value == 'similar-artist' ? 'wykonawcy' : (viewType.value == 'similar-publisher' ? 'wydawcy' : 'gatunku') %}
+    {% set emphasizeField = viewType.value == 'similar-artist' ? null : (viewType.value == 'similar-publisher' ? 'publisher' : 'genre') %}
+    {% set trackPluralRules = { 'one': 'utwór', 'few': 'utwory', 'other': 'utworów' } %}
 
-    <div class="card">
-        <div class="card-body">
-            <div class="divide-y">
-                {% for issue in issues %}
-                    <div class="row py-2 align-items-start {{ issue.ignored ? 'text-muted' : '' }}">
-                        <div class="col">
-                            {% if issue.details.tracks_a is defined and issue.details.tracks_a %}
-                                {% for entry in issue.details.tracks_a %}
-                                    {% include '@collection/status/trackinfo.twig' with {
-                                        track: entry.track,
-                                        file: entry.file|default({})
-                                    } only %}
-                                {% endfor %}
-                            {% else %}
-                                <a class="text-reset" href="{{ url_for('search.advanced.index', query_params = { (searchField): searchPrefix ~ issue.details.value_a }) }}">
-                                    {{ issue.details.value_a }}
-                                </a>
-                                <span class="text-muted">({{ issue.details.count_a }})</span>
-                            {% endif %}
+    {% for issue in issues %}
+        {% set countA = issue.details.count_a %}
+        {% set countB = issue.details.count_b %}
 
-                            <div class="text-muted my-1">
-                                <small>podobne do</small>
+        <div class="card ast-sim-card mb-2 {{ issue.ignored ? 'ast-status-ignored' : '' }}">
+            <div class="row g-0 ast-sim-header">
+                <div class="col-6 ast-sim-side ast-sim-side-outlier">
+                    <a class="ast-sim-value text-reset text-truncate" data-sim-value-a="{{ issue.details.value_a }}" href="{{ url_for('search.advanced.index', query_params = { (searchField): searchPrefix ~ issue.details.value_a }) }}" title="{{ issue.details.value_a }}">
+                        {{ issue.details.value_a }}
+                    </a>
+                </div>
+                <div class="col-6 ast-sim-side ast-sim-side-popular">
+                    <a class="ast-sim-value text-reset text-truncate" data-sim-value-b="{{ issue.details.value_b }}" href="{{ url_for('search.advanced.index', query_params = { (searchField): searchPrefix ~ issue.details.value_b }) }}" title="{{ issue.details.value_b }}">
+                        {{ issue.details.value_b }}
+                    </a>
+                    <span class="badge bg-green-lt text-green ast-sim-badge">
+                        {{ countB|pluralize(trackPluralRules) }}
+                    </span>
+                </div>
+                <span class="ast-sim-connector" aria-hidden="true">≈</span>
+                <div class="card-actions btn-list ast-sim-actions">
+                    {% include '@collection/status/infobutton.twig' with { issue } only %}
+                    {% include '@collection/status/ignorebutton.twig' with { issue } only %}
+                </div>
+            </div>
 
-                                {% if issue.details.tracks_b is defined and issue.details.tracks_b %}
-                                    {% for entry in issue.details.tracks_b %}
-                                        {% include '@collection/status/trackinfo.twig' with {
-                                            track: entry.track,
-                                            file: entry.file|default({})
-                                        } only %}
-                                    {% endfor %}
-                                {% else %}
-                                    <a class="text-reset" href="{{ url_for('search.advanced.index', query_params = { (searchField): searchPrefix ~ issue.details.value_b }) }}">
-                                        {{ issue.details.value_b }}
-                                    </a>
-                                    <span class="text-muted">({{ issue.details.count_b }})</span>
-                                {% endif %}
-                            </div>
-                        </div>
-                        <div class="col-auto">
-                            {% include '@collection/status/infobutton.twig' with { issue: issue } only %}
-                            {% include '@collection/status/ignorebutton.twig' with { issue: issue } only %}
+            {% set tracksA = issue.details.tracks_a|default([]) %}
+            {% set tracksB = issue.details.tracks_b|default([]) %}
+
+            {% if tracksA|length > 0 or tracksB|length > 0 %}
+                <div class="row g-0 ast-sim-body">
+                    <div class="col-6 ast-sim-tracks-col ast-sim-tracks-col-outlier">
+                        {# Po lewej stronie (A) zawsze jest tylko jeden utwór #}
+                        {% set entry = tracksA[0] %}
+
+                        <div class="ast-sim-track-item">
+                            {% include '@collection/status/trackinfo.twig' with {
+                                track: entry.track,
+                                file: entry.file|default({}),
+                                highlight_fields: emphasizeField ? [emphasizeField] : []
+                            } only %}
                         </div>
                     </div>
-                {% endfor %}
-            </div>
+                    <div class="col-6 ast-sim-tracks-col ast-sim-tracks-col-popular">
+                        {# @fixme: utwory w issue.details.tracks_b powinny być zawsze, a to front powinien decydować jak to wyświetlić / prezentować #}
+                        {# Obecnie poniższy warunek jest mylący #}
+                        {% if tracksB|length == 0 %}
+                            <a class="text-reset text-truncate" href="{{ url_for('search.advanced.index', query_params = { (searchField): searchPrefix ~ issue.details.value_b }) }}" title="{{ issue.details.value_b }}">
+                                {{ countB|pluralize({
+                                    'one': 'utwór ' ~ trackNoun,
+                                    'few': 'utwory ' ~ trackNoun,
+                                    'other': 'utworów ' ~ trackNoun,
+                                }) }} <strong>{{ issue.details.value_b }}</strong>
+                            </a>
+                        {% else %}
+                            {% for entry in tracksB %}
+                                <div class="ast-sim-track-item">
+                                    {% include '@collection/status/trackinfo.twig' with {
+                                        track: entry.track,
+                                        file: entry.file|default({}),
+                                        highlight_fields: emphasizeField ? [emphasizeField] : []
+                                    } only %}
+                                </div>
+                            {% endfor %}
+                        {% endif %}
+                    </div>
+                </div>
+            {% endif %}
         </div>
-    </div>
+    {% endfor %}
 {% endif %}
