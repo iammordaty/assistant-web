@@ -6,8 +6,9 @@ use Assistant\Module\Common\Extension\Config;
 use Assistant\Module\Common\Extension\GetId3\Adapter as Id3Adapter;
 use Assistant\Module\Common\Extension\Route;
 use Assistant\Module\Common\Extension\RouteResolver;
-use Assistant\Module\Track\Extension\TrackRenameService;
 use Assistant\Module\Track\Extension\TrackService;
+use Assistant\Module\Track\Extension\TrackUpdateService;
+use Assistant\Module\Track\Extension\UpdateTrackCommand;
 use Cocur\BackgroundProcess\BackgroundProcess;
 use Psr\Http\Message\ResponseInterface;
 use Slim\Http\Response;
@@ -21,7 +22,7 @@ final class EditController
         private Id3Adapter $id3Adapter,
         private RouteResolver $routeResolver,
         private TrackService $trackService,
-        private TrackRenameService $trackRenameService,
+        private TrackUpdateService $trackUpdateService,
         private Twig $view,
     ) {
     }
@@ -59,44 +60,11 @@ final class EditController
             return $this->getNotFoundRedirect($response, $pathname);
         }
 
-        // słabe, ogarnąć klasą typu request, podobnie jak w logach
-        $postData = $request->getParsedBody();
+        $updateCommand = UpdateTrackCommand::fromRequest($request);
 
-        $this
-            ->id3Adapter
-            ->setFile($track->getFile());
-
-        $metadata = [
-            'artist' => $postData['artist'],
-            'title' => $postData['title'],
-            'album' => $postData['album'],
-            'track_number' => $postData['trackNumber'],
-            'publisher' => $postData['publisher'],
-            'genre' => $postData['genre'],
-            'year' => $postData['year'],
-            'initial_key' => $postData['initialKey'],
-            'bpm' => $postData['bpm'],
-        ];
-
-        // mało eleganckie, ogarnąć zwykłymi if-ami
-        foreach ($metadata as $name => $value) {
-            if (empty($value)) {
-                unset($metadata[$name]);
-            }
-        }
-
-        // zapobiega usunięciu danych w przypadku braku ich podania
-        if (empty($metadata['initial_key']) && $track->getInitialKey()) {
-            $metadata['initial_key'] = $track->getInitialKey();
-        }
-
-        if (empty($metadata['bpm']) && $track->getBpm()) {
-            $metadata['bpm'] = $track->getBpm();
-        }
-
-        // @todo: try...catch i wyświetlenie ew. wyjątku na froncie
+        // @todo: B8 - zamienić var_dump/exit na log + flash + PRG redirect
         try {
-            $this->id3Adapter->writeMetadata($metadata);
+            $result = $this->trackUpdateService->update($track, $updateCommand);
         } catch (\Exception $e) {
             var_dump($e->getMessage());
             var_dump($this->id3Adapter->getWriterErrors());
@@ -104,7 +72,10 @@ final class EditController
             exit;
         }
 
-        if (isset($postData['task:calculate-audio-data'])) {
+        $track = $result->track;
+        $trackPathname = $track->getPathname();
+
+        if ($updateCommand->calculateAudioData) {
             $command = sprintf(
                 'php /data/bin/console.php track:calculate-audio-data -w "%s"',
                 $track->getFile()->getPathname()
@@ -113,55 +84,23 @@ final class EditController
             (new BackgroundProcess($command))->run();
         }
 
-        if ($postData['guid'] !== $track->getGuid()) {
-            $track = $track->withGuid($postData['guid']);
+        foreach ($result->leftoverPaths as $leftoverPath) {
+            $command = sprintf(
+                'php %s/bin/console.php collection:clean "%s"',
+                $this->config->get('base_dir'),
+                $leftoverPath
+            );
 
-            $this->trackService->save($track);
+            shell_exec($command);
         }
 
-        $trackPathname = $track->getPathname();
+        foreach ($result->createdPaths as $createdPath) {
+            $command = sprintf(
+                'php /data/bin/console.php collection:index -i pathname "%s"',
+                $createdPath
+            );
 
-        if (
-            $postData['artist'] !== $track->getArtist()
-            || $postData['title'] !== $track->getTitle()
-            || $postData['album'] !== (string) $track->getAlbum()
-            || $postData['trackNumber'] !== (string) $track->getTrackNumber()
-        ) {
-            // Warunek do Arbitra
-            $isSingle = str_contains($track->getFile()->getPathname(), '/collection/Singles');
-
-            if ($isSingle) {
-                $format = '%artist%/%album%/%artist% - %track_number% - %title%';
-            } else {
-                $format = '%artist% - %title%';
-            }
-
-            $file = $this->trackRenameService->rename($track, $format, markAsReady: false);
-
-            $track = $track->withFile($file);
-
-            $this->trackService->save($track);
-
-            $trackPathname = $track->getPathname();
-
-            foreach ($this->trackRenameService->getLeftoverPaths() as $leftoverPath) {
-                $command = sprintf(
-                    'php %s/bin/console.php collection:clean "%s"',
-                    $this->config->get('base_dir'),
-                    $leftoverPath
-                );
-
-                shell_exec($command);
-            }
-
-            foreach ($this->trackRenameService->getCreatedPaths() as $createdPath) {
-                $command = sprintf(
-                    'php /data/bin/console.php collection:index -i pathname "%s"',
-                    $createdPath
-                );
-
-                shell_exec($command);
-            }
+            shell_exec($command);
         }
 
         $command = sprintf(

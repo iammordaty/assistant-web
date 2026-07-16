@@ -9,49 +9,75 @@ use SplFileInfo;
 
 final class TrackLocationArbiter
 {
-    private const LOCATION_IN_COLLECTION = 'in_collection';
-    private const LOCATION_IN_INCOMING = 'in_incoming';
-    private const LOCATION_UNSUPPORTED = null;
-
     public function __construct(private Config $config)
     {
     }
 
     public function isInCollection(mixed $file): bool
     {
-        $location = $this->getLocation($file);
-        $result = $location === self::LOCATION_IN_COLLECTION;
+        $kind = $this->getLocationKind($file);
 
-        return $result;
+        return $kind === LocationKind::SINGLES || $kind === LocationKind::OTHER;
     }
 
     public function isInIncoming(mixed $file): bool
     {
-        $location = $this->getLocation($file);
-        $result = $location === self::LOCATION_IN_INCOMING;
-
-        return $result;
+        return $this->getLocationKind($file) === LocationKind::INCOMING;
     }
 
-    private function getLocation(mixed $file): ?string
+    /**
+     * Rozpoznaje logiczny typ lokalizacji pliku na podstawie realnie indeksowanych katalogów
+     * (collection.indexed_dirs) oraz katalogu incoming - a nie samego root_dir (F14).
+     */
+    public function getLocationKind(mixed $file): LocationKind
     {
         $pathname = $this->getPathname($file);
 
-        // uwaga, kolejność warunków jest istotna, ponieważ _new zawiera się w /collection.
-        // kolejność sprawdzania warunków jest sporym uproszczeniem, ale chwilowo powinno wystarczyć.
-        // do ogarnięcia w wolnym czasie.
-
-        if (str_starts_with($pathname, $this->config->get('collection.incoming_dir'))) {
-            return self::LOCATION_IN_INCOMING;
-        }
-        if (str_starts_with($pathname, $this->config->get('collection.root_dir'))) {
-            // tutaj powinno się sprawdzić (dodatkowo albo tylko) collection.indexed_dirs, bo teraz
-            // źle zakłada, że V testy są w kolekcji
-            return self::LOCATION_IN_COLLECTION;
+        if ($pathname === null) {
+            return LocationKind::UNSUPPORTED;
         }
 
-        // może lepsze będzie rzucanie wyjątkiem nż zwracanie null-a?
-        return self::LOCATION_UNSUPPORTED;
+        // kolejność istotna: incoming_dir zawiera się w root_dir
+        if ($this->isWithin($pathname, $this->config->get('collection.incoming_dir'))) {
+            return LocationKind::INCOMING;
+        }
+
+        $indexedDir = $this->matchIndexedDir($pathname);
+
+        if ($indexedDir === null) {
+            return LocationKind::UNSUPPORTED;
+        }
+
+        // Singles ma zagnieżdżoną strukturę Artist/Album; pozostałe indeksowane katalogi są "płaskie"
+        return basename($indexedDir) === 'Singles' ? LocationKind::SINGLES : LocationKind::OTHER;
+    }
+
+    /**
+     * Zwraca indeksowany katalog zawierający plik (granica dla sprzątania pustych katalogów, B2),
+     * albo null gdy plik nie leży w żadnym z indeksowanych katalogów.
+     */
+    public function getIndexedDir(mixed $file): ?string
+    {
+        $pathname = $this->getPathname($file);
+
+        return $pathname !== null ? $this->matchIndexedDir($pathname) : null;
+    }
+
+    private function matchIndexedDir(string $pathname): ?string
+    {
+        foreach ((array) $this->config->get('collection.indexed_dirs') as $indexedDir) {
+            if ($this->isWithin($pathname, $indexedDir)) {
+                return $indexedDir;
+            }
+        }
+
+        return null;
+    }
+
+    /** Czy $pathname leży wewnątrz katalogu $dir (z granicą na separatorze, by uniknąć kolizji prefiksów) */
+    private function isWithin(string $pathname, string $dir): bool
+    {
+        return str_starts_with($pathname, rtrim($dir, '/') . '/');
     }
 
     private function getPathname(mixed $pathname): ?string

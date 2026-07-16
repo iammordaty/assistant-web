@@ -7,6 +7,7 @@ use Assistant\Module\Common\Extension\Route;
 use Assistant\Module\Common\Extension\RouteResolver;
 use Assistant\Module\Track\Extension\BeatportTrackMetadataSuggestionsService;
 use Assistant\Module\Track\Extension\TrackService;
+use Assistant\Module\Track\Extension\UpdateTrackCommand;
 use Cocur\BackgroundProcess\BackgroundProcess;
 use Psr\Http\Message\ResponseInterface;
 use Slim\Http\Response;
@@ -67,44 +68,15 @@ final class EditController
             return $this->getNotFoundRedirect($response, $pathname);
         }
 
-        // słabe, ogarnąć klasą typu request, podobnie jak w logach
-        $postData = $request->getParsedBody();
+        $updateCommand = UpdateTrackCommand::fromRequest($request);
 
         $this
             ->id3Adapter
             ->setFile($track->getFile());
 
-        $metadata = [
-            'artist' => $postData['artist'],
-            'title' => $postData['title'],
-            'album' => $postData['album'],
-            'track_number' => $postData['trackNumber'],
-            'publisher' => $postData['publisher'],
-            'genre' => $postData['genre'],
-            'year' => $postData['year'],
-            'initial_key' => $postData['initialKey'],
-            'bpm' => $postData['bpm'],
-        ];
-
-        // mało eleganckie, ogarnąć zwykłymi if-ami
-        foreach ($metadata as $name => $value) {
-            if (empty($value)) {
-                unset($metadata[$name]);
-            }
-        }
-
-        // zapobiega usunięciu danych w przypadku braku ich podania
-        if (empty($metadata['initial_key']) && $track->getInitialKey()) {
-            $metadata['initial_key'] = $track->getInitialKey();
-        }
-
-        if (empty($metadata['bpm']) && $track->getBpm()) {
-            $metadata['bpm'] = $track->getBpm();
-        }
-
         // @todo: try...catch i wyświetlenie ew. wyjątku na froncie
         try {
-            $this->id3Adapter->writeMetadata($metadata);
+            $this->id3Adapter->writeMetadata($updateCommand->toMetadata());
         } catch (\Exception $e) {
             var_dump($e->getMessage());
             var_dump($this->id3Adapter->getWriterErrors());
@@ -112,7 +84,7 @@ final class EditController
             exit;
         }
 
-        if (isset($postData['task:calculate-audio-data'])) {
+        if ($updateCommand->calculateAudioData) {
             $command = sprintf(
                 'php /data/bin/console.php track:calculate-audio-data -w "%s"',
                 $track->getFile()->getPathname()
