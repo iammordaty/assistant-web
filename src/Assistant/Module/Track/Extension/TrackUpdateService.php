@@ -2,13 +2,15 @@
 
 namespace Assistant\Module\Track\Extension;
 
+use Assistant\Module\Collection\Extension\CollectionMaintenanceService;
 use Assistant\Module\Track\Model\Track;
 use Monolog\Logger;
 use SplFileInfo;
 
 /**
- * Koordynuje aktualizację utworu z jednego miejsca i w ustalonej kolejności (F2):
- * zapis tagów ID3 -> (opcjonalny) rename pliku -> pojedynczy zapis do DB -> (opcjonalne) BPM/tonacja.
+ * Koordynuje całą aktualizację utworu z jednego miejsca i w ustalonej kolejności (F2):
+ * zapis tagów ID3 -> (opcjonalny) rename pliku -> pojedynczy zapis do DB -> (opcjonalne) BPM/tonacja
+ * -> reindeks/sprzątanie kolekcji, tak aby po powrocie DB odzwierciedlała stan na dysku.
  *
  * Docelowa ścieżka jest liczona zawczasu (dry-run), więc konflikt nazwy jest wykrywany zanim
  * cokolwiek zostanie zmodyfikowane (F3). Zapis do DB następuje dopiero po udanej operacji na
@@ -20,6 +22,7 @@ final readonly class TrackUpdateService
         private TrackMetadataWriter $trackMetadataWriter,
         private TrackRenameService $trackRenameService,
         private TrackService $trackService,
+        private CollectionMaintenanceService $collectionMaintenance,
         private Logger $logger,
     ) {
     }
@@ -104,7 +107,22 @@ final readonly class TrackUpdateService
             $this->trackMetadataWriter->calculateAudioData($updatedTrack->getFile()->getPathname());
         }
 
-        return new UpdateResult($updatedTrack, $createdPaths, $leftoverPaths, $warnings);
+        // reindeks/sprzątanie kolekcji, aby DB odzwierciedlała zmiany na dysku (in-process, sync)
+        foreach ($leftoverPaths as $leftoverPath) {
+            $this->collectionMaintenance->clean($leftoverPath);
+        }
+
+        foreach ($createdPaths as $createdPath) {
+            $this->collectionMaintenance->reindex($createdPath);
+        }
+
+        $this->collectionMaintenance->reindex($updatedTrack->getPathname());
+
+        // po (synchronicznym) reindeksie DB ma aktualny GUID (pochodną artist+title) - zwracamy świeży
+        // stan, by wołający nie musiał sam pobierać utworu ponownie
+        $refreshedTrack = $this->trackService->getByPathname($updatedTrack->getPathname()) ?? $updatedTrack;
+
+        return new UpdateResult($refreshedTrack, $createdPaths, $leftoverPaths, $warnings);
     }
 
     /**

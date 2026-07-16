@@ -2,7 +2,6 @@
 
 namespace Assistant\Module\Track\Controller\Track;
 
-use Assistant\Module\Collection\Extension\CollectionMaintenanceService;
 use Assistant\Module\Common\Extension\GetId3\Adapter as Id3Adapter;
 use Assistant\Module\Common\Extension\Route;
 use Assistant\Module\Common\Extension\RouteResolver;
@@ -21,7 +20,6 @@ final class EditController
         private RouteResolver $routeResolver,
         private TrackService $trackService,
         private TrackUpdateService $trackUpdateService,
-        private CollectionMaintenanceService $collectionMaintenance,
         private Twig $view,
     ) {
     }
@@ -71,27 +69,8 @@ final class EditController
             exit;
         }
 
-        $track = $result->track;
-        $trackPathname = $track->getPathname();
-
-        // sprzątanie DB po opuszczonych katalogach oraz reindeks nowych katalogów i samego utworu
-        // (in-process, synchronicznie - bez powłoki; F7/F8/B11)
-        foreach ($result->leftoverPaths as $leftoverPath) {
-            $this->collectionMaintenance->clean($leftoverPath);
-        }
-
-        foreach ($result->createdPaths as $createdPath) {
-            $this->collectionMaintenance->reindex($createdPath);
-        }
-
-        $this->collectionMaintenance->reindex($trackPathname);
-
-        // jeśli zmieniła się nazwa artysty lub tytuł utworu to zmienił się także guid
-        // dlatego pobieramy utwór raz jeszcze, na podstawie ścieżki aby móc przekierować na nowy guid
-        // (reindeks jest synchroniczny, więc w DB są już aktualne dane)
-        $track = $this->trackService->getByPathname($trackPathname);
-
-        $route = Route::create('track.track.index')->withParams([ 'guid' => $track->getGuid() ]);
+        // update() pozostawia DB w spójnym stanie i zwraca aktualny utwór (ze świeżym guid) do redirectu
+        $route = Route::create('track.track.index')->withParams([ 'guid' => $result->track->getGuid() ]);
         $redirectUrl = $this->routeResolver->resolve($route);
 
         return $response->withRedirect($redirectUrl);
