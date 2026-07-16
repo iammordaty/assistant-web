@@ -14,6 +14,7 @@ use Assistant\Module\Common\Extension\Breadcrumbs\BreadcrumbsBuilder;
 use Assistant\Module\Common\Extension\Config;
 use Assistant\Module\Common\Extension\GetId3\Adapter as Id3Adapter;
 use Assistant\Module\Common\Extension\LogView;
+use Assistant\Module\Common\Extension\Messages;
 use Assistant\Module\Common\Extension\Pagerfanta\PagerfantaTwigRuntimeLoaderFactory;
 use Assistant\Module\Common\Extension\RouteResolver;
 use Assistant\Module\Common\Extension\SimilarTracksCollection\SimilarTracksCollectionService;
@@ -99,6 +100,8 @@ return static fn (string $baseDir, array $config): array => [
     },
 
     Id3Adapter::class => create(),
+
+    Messages::class => create(),
 
     // taski konsolowe udostępnione też przez kontener, aby móc je uruchamiać w procesie
     // (CollectionMaintenanceService / TrackMetadataWriter), bez powłoki - patrz ConsoleCommandRunner

@@ -4,12 +4,7 @@ namespace Assistant\Module\Track\Extension;
 
 use SplFileInfo;
 
-/**
- * Wynik operacji przeniesienia/zmiany nazwy pliku utworu.
- *
- * Zastępuje stan trzymany wcześniej w polach TrackRenameService (leftoverPaths/createdPaths),
- * dzięki czemu serwis jest bezstanowy i bezpieczny przy wielokrotnych wywołaniach.
- */
+/** Wynik operacji przeniesienia/zmiany nazwy pliku utworu */
 final readonly class RenameResult
 {
     public function __construct(

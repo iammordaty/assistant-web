@@ -2,12 +2,13 @@
 
 namespace Assistant\Module\Track\Controller\Track;
 
-use Assistant\Module\Common\Extension\GetId3\Adapter as Id3Adapter;
+use Assistant\Module\Common\Extension\Messages;
 use Assistant\Module\Common\Extension\Route;
 use Assistant\Module\Common\Extension\RouteResolver;
 use Assistant\Module\Track\Extension\TrackService;
 use Assistant\Module\Track\Extension\TrackUpdateService;
 use Assistant\Module\Track\Extension\UpdateTrackCommand;
+use Monolog\Logger;
 use Psr\Http\Message\ResponseInterface;
 use Slim\Http\Response;
 use Slim\Http\ServerRequest;
@@ -16,10 +17,11 @@ use Slim\Views\Twig;
 final class EditController
 {
     public function __construct(
-        private Id3Adapter $id3Adapter,
         private RouteResolver $routeResolver,
         private TrackService $trackService,
         private TrackUpdateService $trackUpdateService,
+        private Messages $messages,
+        private Logger $logger,
         private Twig $view,
     ) {
     }
@@ -57,19 +59,26 @@ final class EditController
             return $this->getNotFoundRedirect($response, $pathname);
         }
 
-        $updateCommand = UpdateTrackCommand::fromRequest($request);
+        $editUrl = $this->routeResolver->resolve(
+            Route::create('track.edit.edit')->withParams([ 'pathname' => $pathname ])
+        );
 
-        // @todo: B8 - zamienić var_dump/exit na log + flash + PRG redirect
         try {
+            $updateCommand = UpdateTrackCommand::fromRequest($request);
             $result = $this->trackUpdateService->update($track, $updateCommand);
-        } catch (\Exception $e) {
-            var_dump($e->getMessage());
-            var_dump($this->id3Adapter->getWriterErrors());
-            var_dump($this->id3Adapter->getWriterWarnings());
-            exit;
+        } catch (\Throwable $e) {
+            $this->logger->error('Track update failed', [ 'pathname' => $pathname, 'error' => $e->getMessage() ]);
+            $this->messages->addError($e->getMessage());
+
+            return $response->withRedirect($editUrl);
         }
 
-        // update() pozostawia DB w spójnym stanie i zwraca aktualny utwór (ze świeżym guid) do redirectu
+        $this->messages->addSuccess('Zapisano zmiany w utworze.');
+
+        foreach ($result->warnings as $warning) {
+            $this->messages->addWarning($warning);
+        }
+
         $route = Route::create('track.track.index')->withParams([ 'guid' => $result->track->getGuid() ]);
         $redirectUrl = $this->routeResolver->resolve($route);
 

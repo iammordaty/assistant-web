@@ -54,6 +54,8 @@ Obecny `move()` robi `throw` na gołym `file_exists()` — więc **dziś** zmian
 
 ## F2. Brak atomowości / koordynacji całej operacji ✅ ZROBIONE (etap 4)
 
+> **Doprecyzowanie (po etapie 6):** wbrew szkicowi flow (który reindeks/clean stawiał w kontrolerze), **cała** orkiestracja — zapis tagów, rename, zapis DB, calc, a także reindeks/sprzątanie kolekcji — jest w `TrackUpdateService::update()`. `update()` zwraca też świeży stan utworu (po synchronicznym reindeksie), więc kontroler ogranicza się do: parsowanie requestu → `update()` → redirect. Reindeks/utrzymanie kolekcji to nie jest odpowiedzialność kontrolera.
+
 **Problem:** `save()` wykonuje sekwencyjnie skutki uboczne bez koordynacji i bez rollbacku:
 
 ```php
@@ -164,7 +166,9 @@ final readonly class RenameResult
 }
 ```
 
-## F6. Logika `isSingle`/format zduplikowana i w kontrolerze
+## F6. Logika `isSingle`/format zduplikowana i w kontrolerze ✅ ZROBIONE (etap 5)
+
+> **Zakres (etap 5):** wprowadzono enum `LocationKind` (format + katalog bazowy per typ lokalizacji, deklaratywnie). Decyzja o formacie przeniesiona z kontrolera do `TrackUpdateService` (przez arbitra) — kontroler nie zna już struktury katalogów. `TrackRenameService::resolveAbsoluteTarget` liczy `baseDir` przez `LocationKind`. **Nie przyjęto** kryterium „desired !== current" — zostało porównanie pól wpływających na nazwę (`isRenameNeeded`), funkcjonalnie wystarczające; pełny `DesiredFilename` to ewentualny follow-up.
 
 **Problem:** decyzja o formacie i o „single" jest w dwóch miejscach:
 - `Track\EditController` — dobór formatu nazwy,
@@ -184,7 +188,9 @@ Kontroler nie powinien znać struktury katalogów. Format zaszyty jako literał,
 - Format deklaratywny (konfig/DI per `LocationKind`), nie literał.
 - Kryterium „czy renamować": zbudować `DesiredFilename` (czysta funkcja `(Track, Command, LocationKind) → Path`) i porównać z bieżącą ścieżką. Rename tylko gdy `desired !== current`. To eliminuje zwidy „target already exists" i zbędne rename przy różnicach po `trim()`.
 
-## F7. Cleanup: podwójna odpowiedzialność `rmdir()` + `collection:clean`
+## F7. Cleanup: podwójna odpowiedzialność `rmdir()` + `collection:clean` ✅ ZROBIONE (etap 6)
+
+> **Zakres:** jasny podział — `move()` usuwa katalogi z **FS** (z kontrolą wyniku `rmdir`, przerywa kaskadę przy niepowodzeniu), a `collection:clean` (in-process) usuwa wpisy z **DB**. Katalog już nie istnieje, więc `clean` sprząta „duchy" (usuwa nieczytelne wpisy). **Drobna luka:** logowanie nieudanego `rmdir` nie jest podpięte (`removeEmptyDirectoriesUpTo` jest statyczne/testowalne — przerwanie kaskady jest bezpieczne, ale bez wpisu do logu).
 
 **Problem:** `move()` usuwa katalogi z FS:
 
@@ -216,7 +222,13 @@ if (!@rmdir($path)) {
 }
 ```
 
-## F8. `shell_exec` — synchroniczny, blokujący request, bez obsługi błędów i z ręcznym escapingiem
+## F8. `shell_exec` — synchroniczny, blokujący request, bez obsługi błędów i z ręcznym escapingiem ✅ ZROBIONE (etap 6)
+
+> **Decyzja (etap 6):** `ConsoleCommandRunner` z dwoma trybami:
+> - **`runSync()`** — komenda Symfony w tym samym procesie (`ArrayInput`/`NullOutput`, non-interactive, sprawdza kod wyjścia), **bez powłoki**. Używane do `reindex`/`clean` (`CollectionMaintenanceService`), bo muszą się wykonać przed redirectem.
+> - **`runAsync()`** — odłączony proces w tle (`BackgroundProcess`) dla `calculate-audio-data` (analiza audio bywa długa, nie czekamy). Każdy token escapowany `escapeshellarg()`, więc **brak command injection** mimo powłoki.
+>
+> **Redirect** działa przez refetch po **synchronicznym** reindeksie (DB ma już aktualne dane) — sprzężenie F8↔F10↔F2 rozwiązane bez asynchroniczności reindeksu.
 
 **Problem:** `collection:clean` i `collection:index` (i częściowo `calculate-audio-data`) idą przez `shell_exec` — synchronicznie blokują request HTTP, nie sprawdzają wyniku (`shell_exec` zwraca `null` przy błędzie), a argumenty są escapowane ręcznie (`sprintf('"%s"', $path)` — rozjazd przy `"` w ścieżce). `php /data/bin/console.php` bywa zahardcodowane, raz z `base_dir`, raz nie.
 
@@ -273,7 +285,7 @@ Dodatkowo niejasne, czy GUID jest pochodną artist+title (sugeruje to komentarz 
 - Zebrać wszystkie zmiany w `$track` i zapisać **raz**, po udanych operacjach FS.
 - Wyklarować semantykę GUID: albo pole w formularzu to podgląd (ignoruj POST, generuj po renamie), albo GUID jest niezależny (zapis po renamie, nie przed). Komentarz przy redirectcie („zmienił się artysta → zmienił się GUID") sugeruje, że GUID jest **pochodną** artist+title generowaną przez reindex — jeśli tak, to `withGuid($postData['guid'])` zapisuje wartość, którą reindex i tak nadpisze; wtedy pole GUID z formularza jest tylko podglądem i POST należy ignorować.
 
-## F11. Wspólny kod dla `Track` i `IncomingTrack`
+## F11. Wspólny kod dla `Track` i `IncomingTrack` ✅ ZROBIONE (etap 6)
 
 **Problem:** `Track\EditController::save()` i `IncomingTrack\EditController::save()` są w ~90% klonem (budowa `$metadata`, filtrowanie `empty()`, merge z istniejącymi `initial_key`/`bpm`, zapis ID3, `var_dump`+`exit`, `calculate-audio-data`). Wszystkie błędy B6/B8/F12 dotyczą **obu** kontrolerów.
 
@@ -307,7 +319,7 @@ final readonly class UpdateTrackCommand
 
 Eliminuje duplikację z `IncomingTrack/EditController::save()`.
 
-## F13. Sprzątanie katalogów sprawdza lokalizację źródła **po** jego przeniesieniu — cleanup jest martwy
+## F13. Sprzątanie katalogów sprawdza lokalizację źródła **po** jego przeniesieniu — cleanup jest martwy ✅ ZROBIONE (etap 5)
 
 **Problem:** w `move()` warunek uruchamiający wyliczenie i usunięcie pustych katalogów wykonywany jest **po** `rename()`:
 
@@ -328,7 +340,7 @@ if ($isSingle && $this->trackService->getLocationArbiter()->isInCollection($sour
 
 **Rozwiązanie:** lokalizację/typ tracka i **kandydatów na leftovery wyliczać ze źródła zanim go przeniesiemy** (spójne z F2/F3 — najpierw plan, potem efekty), a dopiero po udanym rename wykonać usunięcie. Po przejściu na `RenameResult` (F5) i `TrackUpdateService` (F2) i tak przechwytujemy stan źródła przed operacją FS, więc naprawa jest naturalną częścią tamtej zmiany.
 
-## F14. `TrackLocationArbiter` błędnie rozpoznaje „w kolekcji" — sprawdza `root_dir`, nie `indexed_dirs`
+## F14. `TrackLocationArbiter` błędnie rozpoznaje „w kolekcji" — sprawdza `root_dir`, nie `indexed_dirs` ✅ ZROBIONE (etap 5)
 
 **Problem (potwierdzony komentarzem w kodzie):** `getLocation()` uznaje plik za „w kolekcji", gdy jego ścieżka zaczyna się od `collection.root_dir` (`/collection`), zamiast od któregoś z faktycznie indeksowanych katalogów (`collection.indexed_dirs`: `/collection/Singles`, `/collection/Other`):
 
@@ -348,7 +360,7 @@ Skutki:
 
 # Część II — błędy logiczne i runtime
 
-## B1. `BackgroundProcess` na ścieżce sprzed rename
+## B1. `BackgroundProcess` na ścieżce sprzed rename ✅ ZROBIONE (etap 6)
 
 **Problem:** proces tła jest uruchamiany **przed** blokiem rename:
 
@@ -366,7 +378,9 @@ Jeśli użytkownik zaznaczył „Oblicz tonację i BPM" i jednocześnie zmienił
 
 **Rozwiązanie:** uruchamiać proces **po** ewentualnym rename, na finalnym `$trackPathname`.
 
-## B2. Niepełne sprzątanie katalogów — rodzic zostaje / hardcoded 2 poziomy
+## B2. Niepełne sprzątanie katalogów — rodzic zostaje / hardcoded 2 poziomy ✅ ZROBIONE (etap 5)
+
+> **Uwaga:** pseudokod z tego punktu (zbierz ścieżki, potem usuń) ma subtelny błąd — rodzic w momencie sprawdzania `isDirectoryEmpty` wciąż zawiera podkatalog dziecka, więc kaskada zatrzymuje się po pierwszym poziomie. W implementacji usuwamy **w locie** (`removeEmptyDirectoriesUpTo`): po skasowaniu podkatalogu rodzic staje się pusty i też zostaje usunięty. Granica = katalog indeksowany (z arbitra). Test jednostkowy pokrywa kaskadę i zatrzymanie na niepustym.
 
 **Problem:** `array_slice($breadcrumbs, -2, 2)` daje `[parent, child]`, a filtr `isPathEmpty` wykonywany jest **przed** `rmdir(child)`. Po usunięciu `Album/` rodzic `Artist/` bywa już pusty, ale nikt go nie usuwa (nie trafił na listę). Zakłada też sztywno strukturę `Artist/Album/file.mp3`.
 
@@ -410,7 +424,9 @@ Warunek `str_contains` wykryje problem, ale komunikat będzie pusty (`$matches[0
 
 **Rozwiązanie:** `/%[a-z_]+%/`.
 
-## B4. Litera katalogu (`/Singles/A/`) nie aktualizowana przy zmianie artysty
+## B4. Litera katalogu (`/Singles/A/`) nie aktualizowana przy zmianie artysty ❌ REZYGNACJA (decyzja użytkownika)
+
+> **Decyzja:** świadomie **pomijamy** B4. Katalog literowy w Singles pozostaje literą źródła (`dirname(..., 2)`), nawet po zmianie artysty — nie wyliczamy litery z nowego artysty. `LocationKind::baseDir()` zachowuje to zachowanie. Granica sprzątania (B2) = katalog indeksowany, więc pusty katalog literowy może zostać usunięty, ale nie jest przenoszony/aktualizowany.
 
 **Problem:** dla `/collection/Singles/A/Artist/Album/file.mp3` `dirname($source->getPath(), 2)` daje `/collection/Singles/A`. Po zmianie artysty z „Artist" na „Bart" plik trafi do `/collection/Singles/A/Bart/...` zamiast `/collection/Singles/B/Bart/...`.
 
@@ -425,7 +441,7 @@ $target = sprintf('%s/%s', $baseDir, $target);
 
 **Rozwiązanie:** jeśli katalog literowy ma odpowiadać pierwszej literze artysty — wyliczać literę z nowego artysty (część logiki `LocationKind`/`TrackLocationArbiter` z F6/F14). `dirname(..., 2)` do wyprowadzenia do testowalnej metody.
 
-## B5. `scandir()`/`isPathEmpty` — `TypeError` i „śmieciowe" pliki
+## B5. `scandir()`/`isPathEmpty` — `TypeError` i „śmieciowe" pliki ✅ ZROBIONE (etap 5)
 
 **Problem:**
 
@@ -486,7 +502,9 @@ public function getGenre(): string     // ale $genre jest ?string
 
 > **⚠️ Do decyzji (obserwacja z etapu 1):** poprawa dotknęła wyłącznie `Track.php`, ale `TrackDto` (`Model/TrackDto.php`) nadal deklaruje non-nullable `float $bpm`, `string $genre`, `string $initialKey`. Ścieżka zapisu `trackService->save()` → `TrackDto::fromModel()` może więc dla utworu bez BPM/tonacji/gatunku nadal rzucić `TypeError` — B7 na samym `Track.php` przenosi crash z gettera w kontrolerze do konstruktora DTO, nie eliminuje go na ścieżce zapisu. Do rozważenia rozszerzenie na `TrackDto` (poza pierwotnym zakresem B7).
 
-## B8. `var_dump` + `exit` zamiast obsługi błędów
+## B8. `var_dump` + `exit` zamiast obsługi błędów ✅ ZROBIONE (etap końcowy)
+
+> **Realizacja:** w obu kontrolerach `var_dump`+`exit` zastąpione przez **log (Monolog) + flash + PRG redirect**. Backend: `slim/flash` opakowany cienką fasadą `Common\Extension\Messages` (analogicznie do `Config`), rejestrowaną w DI; middleware wstawia komunikaty jako globalną zmienną Twig `flash`. Frontend: partial `layout/toasts.twig` renderuje toasty (Bootstrap 5.3 / Tabler) w prawym górnym rogu, `initToasts` pokazuje je (`bootstrap.Toast`). Błąd → toast błędu + powrót na formularz edycji; sukces → toast sukcesu + ewentualne ostrzeżenia zapisu tagów jako toasty warning. Walidacja z `UpdateTrackCommand` (rzucająca wyjątki) jest teraz objęta `try` → też trafia na flash. **Uwaga:** przy błędzie walidacji formularz nie zachowuje wpisanych wartości (renderuje dane z DB) — świadome uproszczenie.
 
 **Problem:** (w obu kontrolerach):
 
@@ -538,7 +556,9 @@ Brakuje: znaków sterujących (`\x00-\x1F`, `\x7F`), `\ < > |`, ucięcia wiodąc
 
 **Rozwiązanie:** `0775` (lub konfigurowalne).
 
-## B11. Command injection przez `shell_exec` na ścieżkach z metadanych ⭐ nowe
+## B11. Command injection przez `shell_exec` na ścieżkach z metadanych ⭐ nowe ✅ ZROBIONE (etap 6)
+
+> **Rozwiązane:** `reindex`/`clean` uruchamiane jako obiekty PHP (`Command::run` z `ArrayInput`) — brak powłoki w ogóle. `calculate-audio-data` (async, przez `BackgroundProcess`) używa powłoki, ale każdy token przechodzi przez `escapeshellarg()` (test jednostkowy potwierdza neutralizację `$(...)`), więc wektor injection jest zamknięty.
 
 **Problem (bezpieczeństwo):** kontroler składa polecenia powłoki, wstawiając w nie ścieżki wyprowadzone z metadanych podanych przez użytkownika (artist/title/album → nazwa pliku → `leftoverPath`/`createdPath`/`trackPathname`), otoczone jedynie ręcznym cudzysłowem:
 
@@ -575,9 +595,9 @@ Efekt: wyczyszczenie pola w formularzu i zapis → stary tag zostaje w pliku bez
 # Sugerowana kolejność wdrożenia
 
 1. ✅ **ZROBIONE** — **F1** (rename przez plik tymczasowy) + **F9** (rollback) + **B7** (nullable getters) — bezpieczne, punktowe, zdejmują największe ryzyko utraty danych.
-2. ✅ **ZROBIONE (bez B8)** — **F12** (`UpdateTrackCommand`) + **B6** (`empty`/`0`) + **B12** (semantyka pustego pola: **puste = usuń tag**). **B8** (koniec z `var_dump`/`exit`) celowo przesunięte na sam koniec refactoru (do zrobienia).
+2. ✅ **ZROBIONE** — **F12** (`UpdateTrackCommand`) + **B6** (`empty`/`0`) + **B12** (semantyka pustego pola: **puste = usuń tag**). **B8** (koniec z `var_dump`/`exit`) zrealizowane na końcu — patrz sekcja B8.
 3. ✅ **ZROBIONE** — **F5** (`RenameResult`) + **F4** (metadane z command) + **B9** (sanityzacja) + **B10** (uprawnienia).
 4. ✅ **ZROBIONE** — **F2** (`TrackUpdateService` koordynujący) + **F3** (dry-run + weryfikacja) + **F10** (jeden zapis DB). _Uwaga: kontroler nadal decyduje o formacie (przekazywany do `update()`) — przeniesienie do arbitra to etap 5 (F6). `calculate-audio-data` liczy się teraz na finalnej ścieżce (efekt uboczny sprzyjający B1)._
-5. **F6** + **F14** (`LocationKind`/Arbiter poprawnie po `indexed_dirs`, format deklaratywny) + **B4** (litera katalogu) + **B2** (dynamiczne sprzątanie, granica = indexed_dir) + **B5** (`isPathEmpty`) + **F13** (wyliczanie leftoverów ze źródła PRZED rename — inaczej cleanup pozostaje martwy).
-6. **F7** + **F8** + **B11** (jednolity, asynchroniczny cleanup/reindex bez command injection) + **B1** (`calculate-audio-data` po renamie) + **F11** (wspólny `TrackMetadataWriter`). **Uwaga:** F8 (async reindex) jest sprzężony z **F10** (GUID/URL liczone w procesie) i **F2** (`UpdateResult`) — reindexu nie da się zasynchronizować bez ich jednoczesnego wdrożenia, bo zepsuje redirect (patrz F8 ⚠️).
+5. ✅ **ZROBIONE (bez B4)** — **F6** + **F14** (`LocationKind`/Arbiter poprawnie po `indexed_dirs`, format deklaratywny) + **B2** (dynamiczne sprzątanie kaskadą, granica = indexed_dir) + **B5** (`isPathEmpty`) + **F13** (leftovery liczone ze źródła PRZED rename). **B4** — ❌ rezygnacja (decyzja użytkownika).
+6. ✅ **ZROBIONE** — **F7** + **F8** + **B11** + **B1** (`calculate-audio-data` **asynchronicznie** na finalnej ścieżce) + **F11** (wspólny `TrackMetadataWriter`). `ConsoleCommandRunner`: `runSync` (reindex/clean, in-process, bez powłoki) + `runAsync` (calc, `BackgroundProcess` + `escapeshellarg`). Redirect przez refetch po synchronicznym reindeksie — sprzężenie F8↔F10↔F2 rozwiązane.
 7. **Część III** — kosmetyka przy okazji dotykanych plików.

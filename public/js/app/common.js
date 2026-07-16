@@ -7,6 +7,7 @@ import {
     initPopovers,
     initSortableTables,
     initScrollableBreadcrumbs,
+    initToasts,
 } from './initializers.js';
 
 export function createCommon(container) {
@@ -20,6 +21,7 @@ export function createCommon(container) {
         initAutocompleteShortcuts(container);
         initScrollableBreadcrumbs(container);
         initSortableTables(container);
+        initToasts(container);
     }
 
     return Object.freeze({ init });

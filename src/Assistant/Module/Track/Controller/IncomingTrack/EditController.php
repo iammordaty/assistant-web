@@ -2,13 +2,14 @@
 
 namespace Assistant\Module\Track\Controller\IncomingTrack;
 
-use Assistant\Module\Common\Extension\GetId3\Adapter as Id3Adapter;
+use Assistant\Module\Common\Extension\Messages;
 use Assistant\Module\Common\Extension\Route;
 use Assistant\Module\Common\Extension\RouteResolver;
 use Assistant\Module\Track\Extension\BeatportTrackMetadataSuggestionsService;
 use Assistant\Module\Track\Extension\TrackMetadataWriter;
 use Assistant\Module\Track\Extension\TrackService;
 use Assistant\Module\Track\Extension\UpdateTrackCommand;
+use Monolog\Logger;
 use Psr\Http\Message\ResponseInterface;
 use Slim\Http\Response;
 use Slim\Http\ServerRequest;
@@ -17,11 +18,12 @@ use Slim\Views\Twig;
 final class EditController
 {
     public function __construct(
-        private Id3Adapter $id3Adapter,
         private RouteResolver $routeResolver,
         private TrackService $trackService,
         private BeatportTrackMetadataSuggestionsService $trackMetadataSuggestions,
         private TrackMetadataWriter $trackMetadataWriter,
+        private Messages $messages,
+        private Logger $logger,
         private Twig $view,
     ) {
     }
@@ -69,28 +71,31 @@ final class EditController
             return $this->getNotFoundRedirect($response, $pathname);
         }
 
-        $updateCommand = UpdateTrackCommand::fromRequest($request);
+        $editUrl = $this->routeResolver->resolve(
+            Route::create('incoming-track.edit.edit')->withParams([ 'pathname' => $track->getFile()->getPathname() ])
+        );
 
-        // @todo: B8 - zamienić var_dump/exit na log + flash + PRG redirect
         try {
-            $this->trackMetadataWriter->write($track->getFile(), $updateCommand->toMetadata());
+            $updateCommand = UpdateTrackCommand::fromRequest($request);
+            $warnings = $this->trackMetadataWriter->write($track->getFile(), $updateCommand->toMetadata());
 
             if ($updateCommand->calculateAudioData) {
                 $this->trackMetadataWriter->calculateAudioData($track->getFile()->getPathname());
             }
-        } catch (\Exception $e) {
-            var_dump($e->getMessage());
-            var_dump($this->id3Adapter->getWriterErrors());
-            var_dump($this->id3Adapter->getWriterWarnings());
-            exit;
+        } catch (\Throwable $e) {
+            $this->logger->error('Incoming track update failed', [ 'pathname' => $pathname, 'error' => $e->getMessage() ]);
+            $this->messages->addError($e->getMessage());
+
+            return $response->withRedirect($editUrl);
         }
 
-        $route = Route::create('incoming-track.edit.edit')
-            ->withParams([ 'pathname' => $track->getFile()->getPathname() ]);
+        $this->messages->addSuccess('Zapisano metadane utworu.');
 
-        $redirectUrl = $this->routeResolver->resolve($route);
+        foreach ($warnings as $warning) {
+            $this->messages->addWarning($warning);
+        }
 
-        return $response->withRedirect($redirectUrl);
+        return $response->withRedirect($editUrl);
     }
 
     /** @todo Przenieść do innej klasy */

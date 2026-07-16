@@ -8,11 +8,8 @@ use Slim\Http\ServerRequest;
 /**
  * Zwalidowane i znormalizowane dane wejściowe z formularza edycji utworu.
  *
- * Jedno miejsce, w którym surowe pola z POST są przycinane, rzutowane na typy i walidowane -
- * dzięki temu kontrolery i serwisy nie sięgają bezpośrednio do $postData[...] (unika m.in.
- * "Undefined array key" przy niekompletnym formularzu).
- *
- * Semantyka pustego pola: puste (po trim) oznacza "usuń tag" - patrz self::toMetadata().
+ * Puste (po trim) oznacza "usuń tag"
+ * @see self::toMetadata
  */
 final readonly class UpdateTrackCommand
 {
