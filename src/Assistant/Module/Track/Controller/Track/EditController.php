@@ -2,14 +2,13 @@
 
 namespace Assistant\Module\Track\Controller\Track;
 
-use Assistant\Module\Common\Extension\Config;
+use Assistant\Module\Collection\Extension\CollectionMaintenanceService;
 use Assistant\Module\Common\Extension\GetId3\Adapter as Id3Adapter;
 use Assistant\Module\Common\Extension\Route;
 use Assistant\Module\Common\Extension\RouteResolver;
 use Assistant\Module\Track\Extension\TrackService;
 use Assistant\Module\Track\Extension\TrackUpdateService;
 use Assistant\Module\Track\Extension\UpdateTrackCommand;
-use Cocur\BackgroundProcess\BackgroundProcess;
 use Psr\Http\Message\ResponseInterface;
 use Slim\Http\Response;
 use Slim\Http\ServerRequest;
@@ -18,11 +17,11 @@ use Slim\Views\Twig;
 final class EditController
 {
     public function __construct(
-        private Config $config,
         private Id3Adapter $id3Adapter,
         private RouteResolver $routeResolver,
         private TrackService $trackService,
         private TrackUpdateService $trackUpdateService,
+        private CollectionMaintenanceService $collectionMaintenance,
         private Twig $view,
     ) {
     }
@@ -75,43 +74,21 @@ final class EditController
         $track = $result->track;
         $trackPathname = $track->getPathname();
 
-        if ($updateCommand->calculateAudioData) {
-            $command = sprintf(
-                'php /data/bin/console.php track:calculate-audio-data -w "%s"',
-                $track->getFile()->getPathname()
-            );
-
-            (new BackgroundProcess($command))->run();
-        }
-
+        // sprzątanie DB po opuszczonych katalogach oraz reindeks nowych katalogów i samego utworu
+        // (in-process, synchronicznie - bez powłoki; F7/F8/B11)
         foreach ($result->leftoverPaths as $leftoverPath) {
-            $command = sprintf(
-                'php %s/bin/console.php collection:clean "%s"',
-                $this->config->get('base_dir'),
-                $leftoverPath
-            );
-
-            shell_exec($command);
+            $this->collectionMaintenance->clean($leftoverPath);
         }
 
         foreach ($result->createdPaths as $createdPath) {
-            $command = sprintf(
-                'php /data/bin/console.php collection:index -i pathname "%s"',
-                $createdPath
-            );
-
-            shell_exec($command);
+            $this->collectionMaintenance->reindex($createdPath);
         }
 
-        $command = sprintf(
-            'php /data/bin/console.php collection:index -i pathname "%s"',
-            $trackPathname
-        );
-
-        shell_exec($command);
+        $this->collectionMaintenance->reindex($trackPathname);
 
         // jeśli zmieniła się nazwa artysty lub tytuł utworu to zmienił się także guid
         // dlatego pobieramy utwór raz jeszcze, na podstawie ścieżki aby móc przekierować na nowy guid
+        // (reindeks jest synchroniczny, więc w DB są już aktualne dane)
         $track = $this->trackService->getByPathname($trackPathname);
 
         $route = Route::create('track.track.index')->withParams([ 'guid' => $track->getGuid() ]);

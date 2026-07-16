@@ -2,14 +2,13 @@
 
 namespace Assistant\Module\Track\Extension;
 
-use Assistant\Module\Common\Extension\GetId3\Adapter as Id3Adapter;
 use Assistant\Module\Track\Model\Track;
 use Monolog\Logger;
 use SplFileInfo;
 
 /**
  * Koordynuje aktualizację utworu z jednego miejsca i w ustalonej kolejności (F2):
- * zapis tagów ID3 -> (opcjonalny) rename pliku -> pojedynczy zapis do DB.
+ * zapis tagów ID3 -> (opcjonalny) rename pliku -> pojedynczy zapis do DB -> (opcjonalne) BPM/tonacja.
  *
  * Docelowa ścieżka jest liczona zawczasu (dry-run), więc konflikt nazwy jest wykrywany zanim
  * cokolwiek zostanie zmodyfikowane (F3). Zapis do DB następuje dopiero po udanej operacji na
@@ -18,7 +17,7 @@ use SplFileInfo;
 final readonly class TrackUpdateService
 {
     public function __construct(
-        private Id3Adapter $id3Adapter,
+        private TrackMetadataWriter $trackMetadataWriter,
         private TrackRenameService $trackRenameService,
         private TrackService $trackService,
         private Logger $logger,
@@ -45,18 +44,14 @@ final readonly class TrackUpdateService
         }
 
         // zapis tagów ID3 w pliku
-        $this->id3Adapter->setFile($track->getFile());
-
         try {
-            $this->id3Adapter->writeMetadata($metadata);
+            $warnings = $this->trackMetadataWriter->write($track->getFile(), $metadata);
         } catch (\Throwable $e) {
             throw new TrackUpdateException(
                 sprintf('Nie udało się zapisać metadanych: %s', $e->getMessage()),
                 previous: $e,
             );
         }
-
-        $warnings = $this->id3Adapter->getWriterWarnings();
 
         if ($warnings) {
             $this->logger->warning('Metadata written with warnings', [
@@ -65,42 +60,51 @@ final readonly class TrackUpdateService
             ]);
         }
 
-        if (!$renameNeeded) {
-            return new UpdateResult($track, [], [], $warnings);
+        $updatedTrack = $track;
+        $createdPaths = [];
+        $leftoverPaths = [];
+
+        if ($renameNeeded) {
+            // przeniesienie pliku; tagi są już zapisane, więc nazwę budujemy z tych samych metadanych
+            $sourceFile = $track->getFile();
+
+            try {
+                $result = $this->trackRenameService->rename($track, $format, $metadata, markAsReady: false);
+            } catch (\Throwable $e) {
+                throw new TrackUpdateException(
+                    sprintf('Nie udało się zmienić nazwy pliku: %s', $e->getMessage()),
+                    previous: $e,
+                );
+            }
+
+            // F3: weryfikacja, że plik faktycznie znajduje się w nowej lokalizacji
+            if (!file_exists($result->file->getPathname())) {
+                throw new TrackUpdateException('Zmiana nazwy zgłosiła sukces, ale plik docelowy nie istnieje');
+            }
+
+            $updatedTrack = $track->withFile($result->file);
+            $createdPaths = $result->createdPaths;
+            $leftoverPaths = $result->leftoverPaths;
+
+            // F10: pojedynczy zapis do DB po udanej operacji na FS; gdy padnie - kompensujemy rename
+            try {
+                $this->trackService->save($updatedTrack);
+            } catch (\Throwable $e) {
+                $this->restoreOriginalFile($result->file, $sourceFile);
+
+                throw new TrackUpdateException(
+                    sprintf('Nie udało się zapisać utworu w bazie: %s', $e->getMessage()),
+                    previous: $e,
+                );
+            }
         }
 
-        // przeniesienie pliku (rename); tagi są już zapisane, więc nazwę budujemy z tych samych metadanych
-        $sourceFile = $track->getFile();
-
-        try {
-            $result = $this->trackRenameService->rename($track, $format, $metadata, markAsReady: false);
-        } catch (\Throwable $e) {
-            throw new TrackUpdateException(
-                sprintf('Nie udało się zmienić nazwy pliku: %s', $e->getMessage()),
-                previous: $e,
-            );
+        // B1: obliczenie BPM/tonacji na FINALNEJ ścieżce (po ewentualnym rename)
+        if ($command->calculateAudioData) {
+            $this->trackMetadataWriter->calculateAudioData($updatedTrack->getFile()->getPathname());
         }
 
-        // F3: weryfikacja, że plik faktycznie znajduje się w nowej lokalizacji
-        if (!file_exists($result->file->getPathname())) {
-            throw new TrackUpdateException('Zmiana nazwy zgłosiła sukces, ale plik docelowy nie istnieje');
-        }
-
-        $updatedTrack = $track->withFile($result->file);
-
-        // F10: pojedynczy zapis do DB po udanej operacji na FS; gdy padnie - kompensujemy rename
-        try {
-            $this->trackService->save($updatedTrack);
-        } catch (\Throwable $e) {
-            $this->restoreOriginalFile($result->file, $sourceFile);
-
-            throw new TrackUpdateException(
-                sprintf('Nie udało się zapisać utworu w bazie: %s', $e->getMessage()),
-                previous: $e,
-            );
-        }
-
-        return new UpdateResult($updatedTrack, $result->createdPaths, $result->leftoverPaths, $warnings);
+        return new UpdateResult($updatedTrack, $createdPaths, $leftoverPaths, $warnings);
     }
 
     /**

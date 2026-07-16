@@ -6,9 +6,9 @@ use Assistant\Module\Common\Extension\GetId3\Adapter as Id3Adapter;
 use Assistant\Module\Common\Extension\Route;
 use Assistant\Module\Common\Extension\RouteResolver;
 use Assistant\Module\Track\Extension\BeatportTrackMetadataSuggestionsService;
+use Assistant\Module\Track\Extension\TrackMetadataWriter;
 use Assistant\Module\Track\Extension\TrackService;
 use Assistant\Module\Track\Extension\UpdateTrackCommand;
-use Cocur\BackgroundProcess\BackgroundProcess;
 use Psr\Http\Message\ResponseInterface;
 use Slim\Http\Response;
 use Slim\Http\ServerRequest;
@@ -21,6 +21,7 @@ final class EditController
         private RouteResolver $routeResolver,
         private TrackService $trackService,
         private BeatportTrackMetadataSuggestionsService $trackMetadataSuggestions,
+        private TrackMetadataWriter $trackMetadataWriter,
         private Twig $view,
     ) {
     }
@@ -70,27 +71,18 @@ final class EditController
 
         $updateCommand = UpdateTrackCommand::fromRequest($request);
 
-        $this
-            ->id3Adapter
-            ->setFile($track->getFile());
-
-        // @todo: try...catch i wyświetlenie ew. wyjątku na froncie
+        // @todo: B8 - zamienić var_dump/exit na log + flash + PRG redirect
         try {
-            $this->id3Adapter->writeMetadata($updateCommand->toMetadata());
+            $this->trackMetadataWriter->write($track->getFile(), $updateCommand->toMetadata());
+
+            if ($updateCommand->calculateAudioData) {
+                $this->trackMetadataWriter->calculateAudioData($track->getFile()->getPathname());
+            }
         } catch (\Exception $e) {
             var_dump($e->getMessage());
             var_dump($this->id3Adapter->getWriterErrors());
             var_dump($this->id3Adapter->getWriterWarnings());
             exit;
-        }
-
-        if ($updateCommand->calculateAudioData) {
-            $command = sprintf(
-                'php /data/bin/console.php track:calculate-audio-data -w "%s"',
-                $track->getFile()->getPathname()
-            );
-
-            (new BackgroundProcess($command))->run();
         }
 
         $route = Route::create('incoming-track.edit.edit')
