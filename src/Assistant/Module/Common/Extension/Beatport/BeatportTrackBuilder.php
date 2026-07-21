@@ -21,7 +21,7 @@ final readonly class BeatportTrackBuilder
             $rawTrack['charts'] = $rawCharts['results'];
 
             $rawReleases = $this->client->releases([ 'id' => $rawTrack['release']['id'] ]);
-            $rawTrack['release'] = $rawReleases['results'][0];
+            $rawTrack['release'] = $rawReleases['results'][0] ?? null;
         } catch (\Exception $e) {
             if ($e->getCode() !== StatusCodeInterface::STATUS_FORBIDDEN) { // 403: Territory Restriction
                 // yolo, przydałoby się to komunikować na froncie w bardziej przystępny sposób

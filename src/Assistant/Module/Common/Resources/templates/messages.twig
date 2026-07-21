@@ -1,0 +1,33 @@
+{% set alert = {
+    'error': 'alert-danger',
+    'success': 'alert-success',
+    'warning': 'alert-warning',
+} %}
+
+<div class="position-fixed bottom-0 start-50 translate-middle-x p-3 z-3">
+    {% for type, messages in flash %}
+        {% for message in messages %}
+            <div 
+                data-role="alert"
+                class="alert {{ alert[type]|default }} alert-dismissible"
+                role="alert"
+            >
+                <div class="d-flex">
+                    <div>
+                        {% if type == 'success' %}
+                            <svg xmlns="http://www.w3.org/2000/svg" class="icon alert-icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M5 12l5 5l10 -10" /></svg>
+                        {% elseif type == 'warning' %}
+                            <svg xmlns="http://www.w3.org/2000/svg" class="icon alert-icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M12 9v4" /><path d="M12 17h.01" /><path d="M12 3l8.5 14.5a.7 .7 0 0 1 -.6 1.5h-15.8a.7 .7 0 0 1 -.6 -1.5l8.5 -14.5" /></svg>
+                        {% elseif type == 'error' %}
+                            <svg xmlns="http://www.w3.org/2000/svg" class="icon alert-icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M3 12a9 9 0 1 0 18 0a9 9 0 0 0 -18 0" /><path d="M12 8v4" /><path d="M12 16h.01" /></svg>
+                        {% endif %}
+                    </div>
+                    <div>
+                        {{ message }}
+                    </div>
+                </div>
+                <a class="btn-close btn-close-white" data-bs-dismiss="alert" aria-label="close"></a>
+            </div>
+        {% endfor %}
+    {% endfor %}
+</div>

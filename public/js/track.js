@@ -1,8 +1,11 @@
 /* global $ */
 
 import formatSeconds from './modules/format-seconds.js';
+import initMusicClassifierMetadataModal from './modules/music-classifier-metadata-modal.js';
 import renderWaveform from './modules/render-waveform.js';
 import toggleFavorite from './modules/toggle-favorite.js';
+
+console.log('track.js loaded');
 
 $(function () {
 	const $wave = $('#wave-container');
@@ -18,9 +21,11 @@ $(function () {
 	const $trackPlayPause = $('[data-role="track:play-pause"]');
 
 	wavesurfer.on('ready', function () {
-		$('#wave-progress').fadeOut('fast', function () {
-			$(this).remove();
-		});
+		setTimeout(() => {
+			$('#wave-loader').fadeOut('fast', function () {
+				$(this).remove();
+			});
+		}, 500);
 
 		$trackPlayPause.fadeTo('fast', 1).addClass('cursor-pointer');
 
@@ -92,7 +97,7 @@ $(function () {
 	});
 
 	$(document).on('keydown', function (e) {
-		if (e.target !== document.body) {
+		if (e.target !== document.body || document.querySelector('.modal.show')) {
 			return;
 		}
 
@@ -284,4 +289,6 @@ $(function () {
 	// -- akcje
 
 	$('[data-action="track:toggle-favorite"]').on('click', e => toggleFavorite(e.currentTarget));
+
+	initMusicClassifierMetadataModal();
 });

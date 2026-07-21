@@ -14,6 +14,23 @@ final readonly class TrackMetadataFields
     public const TRACK_NUMBER = 'track_number';
     public const YEAR = 'year';
 
+    /** Nazwa pola widoczna dla użytkownika - używana w komunikatach o brakujących danych */
+    public static function label(string $field): string
+    {
+        return match ($field) {
+            self::ALBUM => 'Album',
+            self::ARTIST => 'Wykonawca',
+            self::BPM => 'BPM',
+            self::GENRE => 'Gatunek',
+            self::INITIAL_KEY => 'Tonacja',
+            self::PUBLISHER => 'Wydawca',
+            self::TITLE => 'Tytuł utworu',
+            self::TRACK_NUMBER => 'Nr ścieżki',
+            self::YEAR => 'Rok',
+            default => $field,
+        };
+    }
+
     public static function isSupportedMetadataField(string $field): bool
     {
         return in_array($field, self::supported());

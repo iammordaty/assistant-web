@@ -40,6 +40,8 @@ final class Artist implements MetadataFieldInterface
             str_replace($delimiters, $delimiters[0], $artist)
         );
 
-        return array_map('trim', $artists);
+        return array_map('trim', $artists)
+            |> array_filter(...)
+            |> array_values(...);
     }
 }

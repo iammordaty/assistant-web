@@ -1,6 +1,9 @@
 <?php
 
 use Assistant\Module\Collection\Extension\Autocomplete\TrackAutocompleteService;
+use Assistant\Module\Collection\Task\CleanerTask;
+use Assistant\Module\Track\Task\RenameTrackTask;
+use Assistant\Module\Collection\Task\IndexerTask;
 use Assistant\Module\Collection\Extension\Reader\DirectoryReader;
 use Assistant\Module\Collection\Extension\Reader\FileReader;
 use Assistant\Module\Collection\Extension\Reader\FileReaderFacade;
@@ -12,6 +15,7 @@ use Assistant\Module\Common\Extension\Breadcrumbs\BreadcrumbsBuilder;
 use Assistant\Module\Common\Extension\Config;
 use Assistant\Module\Common\Extension\GetId3\Adapter as Id3Adapter;
 use Assistant\Module\Common\Extension\LogView;
+use Assistant\Module\Common\Extension\Messages;
 use Assistant\Module\Common\Extension\Pagerfanta\PagerfantaTwigRuntimeLoaderFactory;
 use Assistant\Module\Common\Extension\RouteResolver;
 use Assistant\Module\Common\Extension\SimilarTracksCollection\SimilarTracksCollectionService;
@@ -32,6 +36,7 @@ use Assistant\Module\Track\Extension\Similarity\SimilarityBuilder;
 use Assistant\Module\Track\Extension\TrackFilenameSuggestion;
 use Assistant\Module\Track\Extension\TrackLocationArbiter;
 use Assistant\Module\Track\Extension\TrackService;
+use Assistant\Module\Track\Repository\MusicClassifierMetadataRepository;
 use Assistant\Module\Track\Repository\TrackRepository;
 use Assistant\Module\Track\Repository\TrackStatsRepository;
 use gfaugere\Monolog\Formatter\ColoredLineFormatter;
@@ -97,6 +102,14 @@ return static fn (string $baseDir, array $config): array => [
     },
 
     Id3Adapter::class => create(),
+
+    Messages::class => create(),
+
+    IndexerTask::class => fn (Container $container): IndexerTask => IndexerTask::factory($container),
+
+    CleanerTask::class => fn (Container $container): CleanerTask => CleanerTask::factory($container),
+
+    RenameTrackTask::class => fn (Container $container): RenameTrackTask => RenameTrackTask::factory($container),
 
     Logger::class => function (Container $container): LoggerInterface {
         $storage = $container->get(Config::class)->get('storage');
@@ -191,6 +204,19 @@ return static fn (string $baseDir, array $config): array => [
     TrackLocationArbiter::class => autowire(),
 
     BeatportTrackMetadataSuggestionsService::class => autowire(),
+
+    MusicClassifierMetadataRepository::class => function (
+        Container $container,
+    ): MusicClassifierMetadataRepository {
+        $storage = $container->get(Config::class)->get('storage');
+
+        $client = new MongoDBClient($storage['connection_uri']);
+        $database = $client->selectDatabase($storage['database']);
+
+        $repository = MusicClassifierMetadataRepository::factory($database);
+
+        return $repository;
+    },
 
     TrackRepository::class => function (Container $container): TrackRepository {
         $storage = $container->get(Config::class)->get('storage');

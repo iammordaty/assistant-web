@@ -12,6 +12,7 @@ use Assistant\Module\Common\Extension\Route;
 use Assistant\Module\Common\Extension\RouteResolver;
 use Assistant\Module\Common\Extension\SlugifyService;
 use Assistant\Module\Directory\Model\Directory;
+use Assistant\Module\Track\Extension\FilenameFormat;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Slim\Http\Response;
@@ -56,7 +57,17 @@ final readonly class IncomingTracksController
             'breadcrumbs' => $breadcrumbs,
             'directories' => $directories,
             'tracks' => $tracks,
+            'rename_formats' => self::getRenameFormats(),
         ]);
+    }
+
+    /** Wzorce nazw dla modala zbiorczej zmiany nazwy - jeden słownik z FilenameFormat */
+    private static function getRenameFormats(): array
+    {
+        return array_map(
+            static fn (FilenameFormat $format) => [ 'value' => $format->value, 'label' => $format->label() ],
+            FilenameFormat::forIncoming(),
+        );
     }
 
     private function getCollectionItems(mixed $pathname): array

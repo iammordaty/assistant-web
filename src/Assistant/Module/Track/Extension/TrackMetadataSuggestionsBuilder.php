@@ -36,11 +36,11 @@ final class TrackMetadataSuggestionsBuilder
             $beatportTrack->remixers,
         );
 
-        $album = $this->getAlbum($beatportTrack->release->name, $beatportTrack->remixers);
+        $album = $this->getAlbum($beatportTrack->release?->name, $beatportTrack->remixers);
         $trackNumber = $this->getTrackNumber($beatportTrack->trackNumber);
-        $year = $this->getYear($beatportTrack->release->date);
+        $year = $this->getYear($beatportTrack->release?->date);
         $genre = $this->getGenre($beatportTrack->genre, $beatportTrack->subGenre);
-        $publisher = $this->getPublisher($beatportTrack->release->label);
+        $publisher = $this->getPublisher($beatportTrack->release?->label);
         $bpm = $this->getBpm();
         $initialKey = $this->getInitialKey();
 
@@ -165,8 +165,12 @@ final class TrackMetadataSuggestionsBuilder
         return $suggestions;
     }
 
-    private function getAlbum(string $releaseName, ?array $remixers): array
+    private function getAlbum(?string $releaseName, ?array $remixers): array
     {
+        if ($releaseName === null) {
+            return [];
+        }
+
         $releaseName = str_replace(
             [ ' a ', ' an ', ' at ', ' of ', ' in ', ' the ' ],
             [ ' A ', ' An ', ' At ', ' Of ', ' In ', ' The ' ],
@@ -230,8 +234,12 @@ final class TrackMetadataSuggestionsBuilder
         return $suggestions;
     }
 
-    private function getYear(string $releaseDate): array
+    private function getYear(?string $releaseDate): array
     {
+        if ($releaseDate === null) {
+            return [];
+        }
+
         $suggestions = [ (int) (new \DateTime($releaseDate))->format('Y') ];
 
         return $suggestions;
@@ -291,8 +299,12 @@ final class TrackMetadataSuggestionsBuilder
         return $suggestions;
     }
 
-    private function getPublisher(string $label): array
+    private function getPublisher(?string $label): array
     {
+        if ($label === null) {
+            return [];
+        }
+
         $titleCase = S::toTitleCase($label);
 
         $suggestions = [ $label, $titleCase ];

@@ -96,3 +96,97 @@ $(document).ready(function() {
 
     $baseTrackSelector.trigger('change'); // yolo
 });
+
+// -- podgląd nazwy pliku
+
+$(function () {
+    const $rename = $('[data-role="track-edit:rename"]');
+
+    if ($rename.length === 0) {
+        return;
+    }
+
+    const $form = $rename.closest('form');
+    const $formats = $rename.find('[data-role="track-edit:rename-format"]');
+    const $target = $rename.find('[data-role="track-edit:rename-target"]');
+    const $preview = $rename.find('[data-role="track-edit:rename-preview"]');
+
+    const manualChoice = $rename.data('manual-choice');
+    const keepChoice = $rename.data('keep-choice');
+    const previewUrl = $rename.data('preview-url');
+
+    const choice = () => $formats.filter(':checked').val();
+    const isManual = () => choice() === manualChoice;
+
+    /** AI: duplikat wzorca debounce z public/js/track.js - świadomy, do scalenia przy refaktorze */
+    let debounceTimerId;
+
+    const debounce = (func, delay) => {
+        clearTimeout(debounceTimerId);
+
+        debounceTimerId = setTimeout(func, delay);
+    };
+
+    // podgląd liczy backend (ten sam kod, który wykona zapis), żeby podstawienie pól i sanityzacja
+    // nazwy nie musiały być powtórzone tutaj
+    const reloadPreview = () => {
+        $.ajax({
+            url: previewUrl,
+            method: 'POST',
+            data: $form.serializeArray(),
+            dataType: 'json',
+        }).done(response => {
+            if (response.error) {
+                $preview.text(response.error).addClass('text-danger');
+
+                return;
+            }
+
+            $preview.removeClass('text-danger');
+
+            if (choice() === keepChoice) {
+                $preview.text(response.target);
+
+                return;
+            }
+
+            // w trybie ręcznym zapisana zostanie wpisana nazwa, więc to ona jest podglądem;
+            // poza nim pole podąża za podglądem, żeby po przełączeniu było od czego zacząć
+            if (isManual()) {
+                $preview.text($target.val());
+
+                return;
+            }
+
+            $target.val(response.target);
+            $preview.text(response.target);
+        });
+    };
+
+    const syncManualState = () => {
+        $target.prop('disabled', !isManual());
+    };
+
+    $formats.on('change', function () {
+        syncManualState();
+
+        if (isManual()) {
+            $target.trigger('focus');
+
+            return;
+        }
+
+        reloadPreview();
+    });
+
+    $('[data-role="track-edit:field"]').on('input', () => debounce(reloadPreview, 250));
+
+    $target.on('input', function () {
+        if (isManual()) {
+            $preview.text(this.value).removeClass('text-danger');
+        }
+    });
+
+    syncManualState();
+    reloadPreview();
+});

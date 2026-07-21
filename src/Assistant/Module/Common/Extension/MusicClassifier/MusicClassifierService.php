@@ -8,9 +8,8 @@ use GuzzleHttp\ClientInterface;
 use GuzzleHttp\Exception\GuzzleException;
 use SplFileInfo;
 
-final class MusicClassifierService
+class MusicClassifierService
 {
-    /** Analizatory uruchamiane dla każdego utworu */
     private const array ANALYZERS = [ 'bpm', 'key', 'genre', 'mood', 'tags', 'instrument' ];
 
     private ClientInterface $client;

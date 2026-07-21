@@ -2,13 +2,17 @@
 
 namespace Assistant\Module\Track\Controller\Track;
 
-use Assistant\Module\Common\Extension\Config;
-use Assistant\Module\Common\Extension\GetId3\Adapter as Id3Adapter;
+use Assistant\Module\Common\Extension\Messages;
 use Assistant\Module\Common\Extension\Route;
 use Assistant\Module\Common\Extension\RouteResolver;
+use Assistant\Module\Track\Extension\FilenameFormat;
+use Assistant\Module\Track\Extension\FilenameFormatSuggester;
 use Assistant\Module\Track\Extension\TrackRenameService;
 use Assistant\Module\Track\Extension\TrackService;
-use Cocur\BackgroundProcess\BackgroundProcess;
+use Assistant\Module\Track\Extension\TrackUpdateService;
+use Assistant\Module\Track\Extension\UpdateTrackCommand;
+use Assistant\Module\Track\Model\Track;
+use Monolog\Logger;
 use Psr\Http\Message\ResponseInterface;
 use Slim\Http\Response;
 use Slim\Http\ServerRequest;
@@ -17,11 +21,13 @@ use Slim\Views\Twig;
 final class EditController
 {
     public function __construct(
-        private Config $config,
-        private Id3Adapter $id3Adapter,
         private RouteResolver $routeResolver,
         private TrackService $trackService,
+        private TrackUpdateService $trackUpdateService,
         private TrackRenameService $trackRenameService,
+        private FilenameFormatSuggester $filenameFormatSuggester,
+        private Messages $messages,
+        private Logger $logger,
         private Twig $view,
     ) {
     }
@@ -46,7 +52,44 @@ final class EditController
             ],
             'pathname' => $pathname,
             'track' => $track,
+            'rename' => $this->getRenameData($track),
             'return_url' => $returnUrl,
+        ]);
+    }
+
+    /**
+     * Podgląd nazwy pliku dla bieżącej zawartości formularza - liczony przez ten sam kod, który
+     * wykona zapis, żeby podstawienie pól, uzupełnienie numeru i sanityzacja nazwy nie musiały być
+     * duplikowane w JS (i nie mogły się z nim po cichu rozjechać).
+     */
+    public function namePreview(ServerRequest $request, Response $response): ResponseInterface
+    {
+        $pathname = $request->getAttribute('pathname');
+        $track = $this->trackService->getByPathname($pathname);
+
+        if (!$track) {
+            return $response->withJson([ 'target' => null, 'error' => 'Nie znaleziono utworu.' ], 404);
+        }
+
+        $fixedBaseDir = $this->trackRenameService->getFixedBaseDir($track);
+
+        try {
+            $command = UpdateTrackCommand::fromRequest($request);
+
+            // ta sama decyzja, którą podejmie zapis - inaczej podgląd pokazywałby co innego,
+            // niż faktycznie się wydarzy (w szczególności w trybie ręcznym)
+            $target = $this->trackUpdateService->resolveTargetFor($track, $command);
+        } catch (\Throwable $e) {
+            // niekompletne dane w formularzu są normalnym stanem w trakcie pisania - podgląd
+            // pokazuje wtedy powód, zamiast wywracać żądanie
+            return $response->withJson([ 'target' => null, 'error' => $e->getMessage() ]);
+        }
+
+        $pathname = $target?->getPathname() ?? $track->getFile()->getPathname();
+
+        return $response->withJson([
+            'target' => self::toFixedBaseRelative($fixedBaseDir, $pathname),
+            'error' => null,
         ]);
     }
 
@@ -59,126 +102,68 @@ final class EditController
             return $this->getNotFoundRedirect($response, $pathname);
         }
 
-        // słabe, ogarnąć klasą typu request, podobnie jak w logach
-        $postData = $request->getParsedBody();
-
-        $this
-            ->id3Adapter
-            ->setFile($track->getFile());
-
-        $metadata = [
-            'artist' => $postData['artist'],
-            'title' => $postData['title'],
-            'album' => $postData['album'],
-            'track_number' => $postData['trackNumber'],
-            'publisher' => $postData['publisher'],
-            'genre' => $postData['genre'],
-            'year' => $postData['year'],
-            'initial_key' => $postData['initialKey'],
-            'bpm' => $postData['bpm'],
-        ];
-
-        // mało eleganckie, ogarnąć zwykłymi if-ami
-        foreach ($metadata as $name => $value) {
-            if (empty($value)) {
-                unset($metadata[$name]);
-            }
-        }
-
-        // zapobiega usunięciu danych w przypadku braku ich podania
-        if (empty($metadata['initial_key']) && $track->getInitialKey()) {
-            $metadata['initial_key'] = $track->getInitialKey();
-        }
-
-        if (empty($metadata['bpm']) && $track->getBpm()) {
-            $metadata['bpm'] = $track->getBpm();
-        }
-
-        // @todo: try...catch i wyświetlenie ew. wyjątku na froncie
-        try {
-            $this->id3Adapter->writeMetadata($metadata);
-        } catch (\Exception $e) {
-            var_dump($e->getMessage());
-            var_dump($this->id3Adapter->getWriterErrors());
-            var_dump($this->id3Adapter->getWriterWarnings());
-            exit;
-        }
-
-        if (isset($postData['task:calculate-audio-data'])) {
-            $command = sprintf(
-                'php /data/bin/console.php track:calculate-audio-data -w "%s"',
-                $track->getFile()->getPathname()
-            );
-
-            (new BackgroundProcess($command))->run();
-        }
-
-        if ($postData['guid'] !== $track->getGuid()) {
-            $track = $track->withGuid($postData['guid']);
-
-            $this->trackService->save($track);
-        }
-
-        $trackPathname = $track->getPathname();
-
-        if (
-            $postData['artist'] !== $track->getArtist()
-            || $postData['title'] !== $track->getTitle()
-            || $postData['album'] !== (string) $track->getAlbum()
-            || $postData['trackNumber'] !== (string) $track->getTrackNumber()
-        ) {
-            // Warunek do Arbitra
-            $isSingle = str_contains($track->getFile()->getPathname(), '/collection/Singles');
-
-            if ($isSingle) {
-                $format = '%artist%/%album%/%artist% - %track_number% - %title%';
-            } else {
-                $format = '%artist% - %title%';
-            }
-
-            $file = $this->trackRenameService->rename($track, $format, markAsReady: false);
-
-            $track = $track->withFile($file);
-
-            $this->trackService->save($track);
-
-            $trackPathname = $track->getPathname();
-
-            foreach ($this->trackRenameService->getLeftoverPaths() as $leftoverPath) {
-                $command = sprintf(
-                    'php %s/bin/console.php collection:clean "%s"',
-                    $this->config->get('base_dir'),
-                    $leftoverPath
-                );
-
-                shell_exec($command);
-            }
-
-            foreach ($this->trackRenameService->getCreatedPaths() as $createdPath) {
-                $command = sprintf(
-                    'php /data/bin/console.php collection:index -i pathname "%s"',
-                    $createdPath
-                );
-
-                shell_exec($command);
-            }
-        }
-
-        $command = sprintf(
-            'php /data/bin/console.php collection:index -i pathname "%s"',
-            $trackPathname
+        $editUrl = $this->routeResolver->resolve(
+            Route::create('track.edit.edit')->withParams([ 'pathname' => $pathname ])
         );
 
-        shell_exec($command);
+        try {
+            $updateCommand = UpdateTrackCommand::fromRequest($request);
+            $result = $this->trackUpdateService->update($track, $updateCommand);
+        } catch (\Throwable $e) {
+            $this->logger->error('Track update failed', [ 'pathname' => $pathname, 'error' => $e->getMessage() ]);
+            $this->messages->addError($e->getMessage());
 
-        // jeśli zmieniła się nazwa artysty lub tytuł utworu to zmienił się także guid
-        // dlatego pobieramy utwór raz jeszcze, na podstawie ścieżki aby móc przekierować na nowy guid
-        $track = $this->trackService->getByPathname($trackPathname);
+            return $response->withRedirect($editUrl);
+        }
 
-        $route = Route::create('track.track.index')->withParams([ 'guid' => $track->getGuid() ]);
+        $this->messages->addSuccess('Zapisano zmiany w utworze.');
+
+        foreach ($result->warnings as $warning) {
+            $this->messages->addWarning($warning);
+        }
+
+        $route = Route::create('track.track.index')->withParams([ 'guid' => $result->track->getGuid() ]);
         $redirectUrl = $this->routeResolver->resolve($route);
 
         return $response->withRedirect($redirectUrl);
+    }
+
+    /**
+     * Dane pola wyboru nazwy pliku. Format jest jawnym wejściem zapisu, a rozpoznanie obecnego
+     * układu służy wyłącznie do wstępnego zaznaczenia opcji - użytkownik może wybrać inną albo
+     * wpisać nazwę ręcznie.
+     */
+    private function getRenameData(Track $track): array
+    {
+        $fixedBaseDir = $this->trackRenameService->getFixedBaseDir($track);
+
+        $formats = array_map(
+            static fn (FilenameFormat $format) => [
+                'value' => $format->value,
+                'label' => $format->label(),
+                'description' => $format->description(),
+            ],
+            FilenameFormat::forCollection(),
+        );
+
+        return [
+            'formats' => $formats,
+            'suggested' => $this->filenameFormatSuggester->suggest($track)->value,
+            'manual_choice' => UpdateTrackCommand::MANUAL_RENAME_CHOICE,
+            'keep_choice' => UpdateTrackCommand::KEEP_NAME_CHOICE,
+            'fixed_base_dir' => $fixedBaseDir,
+            'current' => self::toFixedBaseRelative($fixedBaseDir, $track->getFile()->getPathname()),
+        ];
+    }
+
+    /** Ścieżka względem niezmiennej części - tak nazwa jest pokazywana i tak jest przyjmowana z formularza */
+    private static function toFixedBaseRelative(string $fixedBaseDir, string $pathname): string
+    {
+        $fixedBaseDir = rtrim($fixedBaseDir, '/');
+
+        return str_starts_with($pathname, $fixedBaseDir . '/')
+            ? substr($pathname, strlen($fixedBaseDir) + 1)
+            : $pathname;
     }
 
     /** @todo Przenieść do innej klasy */
