@@ -10,6 +10,7 @@ use Assistant\Module\Track\Extension\TrackService;
 use Assistant\Module\Track\Model\MusicClassifierMetadataDto;
 use Assistant\Module\Track\Model\Track;
 use Assistant\Module\Track\Repository\MusicClassifierMetadataRepository;
+use DateTime;
 use KeyTools\KeyTools;
 use MongoDB\BSON\UTCDateTime;
 use Monolog\Handler\TestHandler;
@@ -20,7 +21,9 @@ use Symfony\Component\Console\Tester\CommandTester;
 
 final class MusicClassifierMetadataCalculatorTaskTest extends TestCase
 {
-    private string $tempDir;
+    private const string TRACK_GUID = 'artist-01-track';
+
+    private string $root;
     private string $collectionDir;
 
     private TestHandler $logHandler;
@@ -40,10 +43,10 @@ final class MusicClassifierMetadataCalculatorTaskTest extends TestCase
 
     protected function setUp(): void
     {
-        $this->tempDir = sprintf('%s/assistant-test-%s', sys_get_temp_dir(), bin2hex(random_bytes(6)));
-        $this->collectionDir = $this->tempDir . '/collection';
+        $this->root = sys_get_temp_dir() . '/classifier-metadata-' . bin2hex(random_bytes(6));
+        $this->collectionDir = $this->root . '/collection';
 
-        mkdir($this->collectionDir . '/Singles/2020/01. styczen/Artist/Release', 0777, true);
+        mkdir($this->collectionDir . '/Singles/2020/01. styczen/Artist/Release', 0775, true);
 
         $this->logHandler = new TestHandler();
         $this->logger = new Logger('test', [ $this->logHandler ]);
@@ -66,7 +69,7 @@ final class MusicClassifierMetadataCalculatorTaskTest extends TestCase
 
     protected function tearDown(): void
     {
-        $this->removeDirectory($this->tempDir);
+        exec('rm -rf ' . escapeshellarg($this->root));
     }
 
     public function testStatOptionDisplaysCounts(): void
@@ -115,14 +118,18 @@ final class MusicClassifierMetadataCalculatorTaskTest extends TestCase
 
     public function testDefaultSkipsTracksWithStoredMetadata(): void
     {
-        $mp3Path = $this->createTrackFile();
+        $pathname = $this->createTrackFile();
 
-        $this->expectTrackReadFrom($mp3Path);
+        $this->trackService
+            ->expects(self::once())
+            ->method('createFromFile')
+            ->with($pathname)
+            ->willReturn($this->createTrack($pathname));
 
         $this->musicClassifierMetadataRepository
             ->expects(self::once())
             ->method('getByTrackGuid')
-            ->with('artist-01-track')
+            ->with(self::TRACK_GUID)
             ->willReturn($this->createMetadata());
 
         $this->musicClassifierService
@@ -137,9 +144,11 @@ final class MusicClassifierMetadataCalculatorTaskTest extends TestCase
 
     public function testSkipNotCalculatedOptionSkipsTracksWithoutStoredMetadata(): void
     {
-        $mp3Path = $this->createTrackFile();
+        $pathname = $this->createTrackFile();
 
-        $this->expectTrackReadFrom($mp3Path);
+        $this->trackService
+            ->method('createFromFile')
+            ->willReturn($this->createTrack($pathname));
 
         $this->musicClassifierMetadataRepository
             ->expects(self::once())
@@ -158,9 +167,11 @@ final class MusicClassifierMetadataCalculatorTaskTest extends TestCase
 
     public function testForceOptionRecalculatesEvenWhenMetadataIsStored(): void
     {
-        $mp3Path = $this->createTrackFile();
+        $pathname = $this->createTrackFile();
 
-        $this->expectTrackReadFrom($mp3Path);
+        $this->trackService
+            ->method('createFromFile')
+            ->willReturn($this->createTrack($pathname));
 
         $this->musicClassifierMetadataRepository
             ->expects(self::once())
@@ -184,12 +195,13 @@ final class MusicClassifierMetadataCalculatorTaskTest extends TestCase
 
     public function testCalculatedMetadataIsSavedToRepository(): void
     {
-        $mp3Path = $this->createTrackFile();
+        $pathname = $this->createTrackFile();
 
-        $this->expectTrackReadFrom($mp3Path);
+        $this->trackService
+            ->method('createFromFile')
+            ->willReturn($this->createTrack($pathname));
 
         $this->musicClassifierMetadataRepository
-            ->expects(self::once())
             ->method('getByTrackGuid')
             ->willReturn(null);
 
@@ -201,10 +213,9 @@ final class MusicClassifierMetadataCalculatorTaskTest extends TestCase
         $this->musicClassifierMetadataRepository
             ->expects(self::once())
             ->method('save')
-            ->with(self::callback(
-                static fn (MusicClassifierMetadataDto $dto): bool => $dto->trackGuid === 'artist-01-track'
-                    && $dto->audioMd5 === 'md5-encoded',
-            ));
+            ->with(self::callback(static function (MusicClassifierMetadataDto $dto): bool {
+                return $dto->trackGuid === self::TRACK_GUID && $dto->audioMd5 === 'md5-encoded';
+            }));
 
         $tester = $this->createTester();
         $tester->execute([]);
@@ -214,9 +225,11 @@ final class MusicClassifierMetadataCalculatorTaskTest extends TestCase
 
     public function testDryRunCalculatesMetadataWithoutSavingIt(): void
     {
-        $mp3Path = $this->createTrackFile();
+        $pathname = $this->createTrackFile();
 
-        $this->expectTrackReadFrom($mp3Path);
+        $this->trackService
+            ->method('createFromFile')
+            ->willReturn($this->createTrack($pathname));
 
         $this->musicClassifierMetadataRepository
             ->method('getByTrackGuid')
@@ -259,10 +272,14 @@ final class MusicClassifierMetadataCalculatorTaskTest extends TestCase
 
     public function testMismatchLoggingWhenBpmOrKeyDiffers(): void
     {
-        $mp3Path = $this->createTrackFile();
+        $pathname = $this->createTrackFile();
 
-        // Utwór w bazie: 128.0 BPM, tonacja 11B; wynik klasyfikatora: 120.0 BPM, A minor (8A)
-        $this->expectTrackReadFrom($mp3Path, $this->createTrack($mp3Path, 128.0, '11B'));
+        // utwór w bazie: 128.0 bpm, tonacja 11B; wynik klasyfikatora: 120.0 bpm, A minor (8A)
+        $track = $this->createTrack($pathname, 128.0, '11B');
+
+        $this->trackService
+            ->method('createFromFile')
+            ->willReturn($track);
 
         $this->musicClassifierMetadataRepository
             ->method('getByTrackGuid')
@@ -282,7 +299,7 @@ final class MusicClassifierMetadataCalculatorTaskTest extends TestCase
 
     public function testAbortsWhenClassifierFailsTooOften(): void
     {
-        // Utwórz więcej plików niż wynosi próg, aby wymusić serię błędów klasyfikatora
+        // więcej plików niż wynosi próg bezpiecznika, żeby wymusić serię błędów klasyfikatora
         for ($i = 1; $i <= 12; $i++) {
             $this->createTrackFile(sprintf('Artist - %02d - Track %d.mp3', $i, $i));
         }
@@ -291,7 +308,7 @@ final class MusicClassifierMetadataCalculatorTaskTest extends TestCase
             ->method('createFromFile')
             ->willReturn($this->createTrack());
 
-        // Brak metadanych w bazie -> zadanie próbuje policzyć, a analyze zawsze rzuca wyjątkiem
+        // brak metadanych w bazie, więc task próbuje je wyliczyć, a analyze zawsze rzuca wyjątkiem
         $this->musicClassifierMetadataRepository
             ->method('getByTrackGuid')
             ->willReturn(null);
@@ -323,38 +340,23 @@ final class MusicClassifierMetadataCalculatorTaskTest extends TestCase
         return new CommandTester($task);
     }
 
+    /** Tworzy plik utworu w kolekcji i zwraca jego ścieżkę */
     private function createTrackFile(string $basename = 'Artist - 01 - Track.mp3'): string
     {
-        $pathname = sprintf(
-            '%s/Singles/2020/01. styczen/Artist/Release/%s',
-            $this->collectionDir,
-            $basename,
-        );
+        $pathname = sprintf('%s/Singles/2020/01. styczen/Artist/Release/%s', $this->collectionDir, $basename);
 
         file_put_contents($pathname, 'mp3-content');
 
         return $pathname;
     }
 
-    private function expectTrackReadFrom(string $pathname, ?Track $track = null): void
+    private function createTrack(?string $pathname = null, ?float $bpm = 120.0, ?string $initialKey = '8A'): Track
     {
-        $this->trackService
-            ->expects(self::once())
-            ->method('createFromFile')
-            ->with($pathname)
-            ->willReturn($track ?? $this->createTrack($pathname));
-    }
+        $pathname = $pathname ?: $this->collectionDir . '/Singles/2020/01. styczen/Artist/Release/Artist.mp3';
 
-    private function createTrack(
-        ?string $pathname = null,
-        ?float $bpm = 120.0,
-        ?string $initialKey = '8A',
-    ): Track {
-        $pathname ??= $this->collectionDir . '/Singles/2020/01. styczen/Artist/Release/Artist - 01 - Track.mp3';
-
-        return new Track(
+        $track = new Track(
             id: null,
-            guid: 'artist-01-track',
+            guid: self::TRACK_GUID,
             artist: 'Artist',
             artists: [ 'Artist' ],
             title: 'Track',
@@ -371,30 +373,34 @@ final class MusicClassifierMetadataCalculatorTaskTest extends TestCase
             metadataMd5: 'md5',
             parent: dirname($pathname),
             pathname: $pathname,
-            modifiedDate: new \DateTime(),
-            indexedDate: new \DateTime(),
+            modifiedDate: new DateTime(),
+            indexedDate: new DateTime(),
         );
+
+        return $track;
     }
 
-    private function createMetadata(string $audioMd5 = 'md5-encoded'): MusicClassifierMetadataDto
+    private function createMetadata(): MusicClassifierMetadataDto
     {
-        return new MusicClassifierMetadataDto(
-            'artist-01-track',
-            $audioMd5,
+        $musicClassifierMetadata = new MusicClassifierMetadataDto(
+            self::TRACK_GUID,
+            'md5-encoded',
             new UTCDateTime(),
             120.0,
             'A minor',
             [],
             [],
         );
+
+        return $musicClassifierMetadata;
     }
 
-    private function createClassifierResult(string $audioMd5 = 'md5-encoded'): MusicClassifierResult
+    private function createClassifierResult(): MusicClassifierResult
     {
-        return MusicClassifierResult::fromApiResponse([
+        $result = MusicClassifierResult::fromApiResponse([
             'bpm' => [ 'value' => 120.0, 'confidence' => 0.9 ],
             'key' => [ 'value' => 'A minor', 'confidence' => 0.8 ],
-            'audio_md5' => $audioMd5,
+            'audio_md5' => 'md5-encoded',
             'genre' => [
                 [ 'genre' => 'House', 'confidence' => 0.9 ],
             ],
@@ -402,21 +408,7 @@ final class MusicClassifierMetadataCalculatorTaskTest extends TestCase
                 [ 'label' => 'party', 'type' => 'mood', 'confidence' => 0.8 ],
             ],
         ]);
-    }
 
-    private function removeDirectory(string $path): void
-    {
-        if (!is_dir($path)) {
-            return;
-        }
-
-        $files = array_diff(scandir($path), [ '.', '..' ]);
-
-        foreach ($files as $file) {
-            $fullPath = $path . '/' . $file;
-            is_dir($fullPath) ? $this->removeDirectory($fullPath) : unlink($fullPath);
-        }
-
-        rmdir($path);
+        return $result;
     }
 }

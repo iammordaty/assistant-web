@@ -45,7 +45,7 @@ final class MusicClassifierMetadataDtoTest extends TestCase
         );
     }
 
-    /** Pełna odpowiedź serwisu zostaje zapisana bez zmian, bo baza zastępuje plik z wynikiem */
+    /** Pełna odpowiedź serwisu zostaje zapisana bez zmian, ponieważ baza zastępuje plik z wynikiem */
     public function testRawResultIsStoredWithoutChanges(): void
     {
         $document = $this->createDto()->toStorage();
@@ -57,7 +57,7 @@ final class MusicClassifierMetadataDtoTest extends TestCase
     {
         $calculatedDate = new UTCDateTime();
 
-        $dto = MusicClassifierMetadataDto::fromStorage(new BSONDocument([
+        $document = new BSONDocument([
             'track_guid' => 'artist-title',
             'audio_md5' => 'md5-encoded',
             'calculated_date' => $calculatedDate,
@@ -69,7 +69,9 @@ final class MusicClassifierMetadataDtoTest extends TestCase
             'raw_result' => new BSONDocument([
                 'bpm' => new BSONDocument([ 'value' => 120.0 ]),
             ]),
-        ]));
+        ]);
+
+        $dto = MusicClassifierMetadataDto::fromStorage($document);
 
         self::assertSame('artist-title', $dto->trackGuid);
         self::assertSame($calculatedDate, $dto->calculatedDate);
@@ -77,31 +79,30 @@ final class MusicClassifierMetadataDtoTest extends TestCase
         self::assertSame([ 'bpm' => [ 'value' => 120.0 ] ], $dto->rawResult);
     }
 
-    /** Dokument zapisany zanim cechy lub surowy wynik zaczęły być przechowywane nie przerywa odczytu */
+    /** Dokument zapisany, zanim cechy oraz surowy wynik zaczęły być przechowywane, nie przerywa odczytu */
     public function testMissingOptionalFieldsFallBackToEmptyArrays(): void
     {
-        $dto = MusicClassifierMetadataDto::fromStorage(new BSONDocument([
+        $document = new BSONDocument([
             'track_guid' => 'artist-title',
             'audio_md5' => 'md5-encoded',
             'calculated_date' => new UTCDateTime(),
             'bpm' => 120.0,
             'musical_key' => 'A minor',
-        ]));
+        ]);
+
+        $dto = MusicClassifierMetadataDto::fromStorage($document);
 
         self::assertSame([], $dto->features);
         self::assertSame([], $dto->rawResult);
     }
 
-    /** Reprezentacja prezentacyjna różni się od zapisanej wyłącznie formatem daty */
+    /** Postać prezentacyjna różni się od zapisywanej wyłącznie formatem daty */
     public function testPresentationArrayUsesIsoDate(): void
     {
         $dto = $this->createDto();
         $array = $dto->toArray();
 
-        self::assertSame(
-            $dto->calculatedDate->toDateTime()->format(DATE_ATOM),
-            $array['calculated_date'],
-        );
+        self::assertSame($dto->calculatedDate->toDateTime()->format(DATE_ATOM), $array['calculated_date']);
         self::assertSame(array_keys($dto->toStorage()), array_keys($array));
     }
 
@@ -109,7 +110,9 @@ final class MusicClassifierMetadataDtoTest extends TestCase
     {
         $result = MusicClassifierResult::fromApiResponse($this->apiResponse());
 
-        return MusicClassifierMetadataDto::fromResult('artist-title', $result);
+        $dto = MusicClassifierMetadataDto::fromResult('artist-title', $result);
+
+        return $dto;
     }
 
     /** Minimalna odpowiedź serwisu essentia-music-classifier (endpoint /process) */

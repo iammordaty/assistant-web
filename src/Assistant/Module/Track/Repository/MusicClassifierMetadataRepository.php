@@ -58,11 +58,13 @@ class MusicClassifierMetadataRepository
             return null;
         }
 
-        return MusicClassifierMetadataDto::fromStorage($document);
+        $musicClassifierMetadata = MusicClassifierMetadataDto::fromStorage($document);
+
+        return $musicClassifierMetadata;
     }
 
     /**
-     * Usuwa metadane utworów o podanych guidach.
+     * Usuwa metadane utworów o podanych guidach
      *
      * @param string[] $trackGuids
      * @return int liczba usuniętych dokumentów
@@ -73,9 +75,11 @@ class MusicClassifierMetadataRepository
             return 0;
         }
 
-        return $this->storage->removeBy([
+        $removed = $this->storage->removeBy([
             self::FIELD_TRACK_GUID => [ '$in' => array_values($trackGuids) ],
         ]);
+
+        return $removed;
     }
 
     /**

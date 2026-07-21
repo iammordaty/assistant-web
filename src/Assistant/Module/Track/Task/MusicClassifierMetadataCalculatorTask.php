@@ -22,7 +22,9 @@ use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
+use Throwable;
 
+/** Task wyliczający metadane utworów przy pomocy klasyfikatora audio */
 final class MusicClassifierMetadataCalculatorTask extends AbstractTask
 {
     protected static $defaultName = 'track:calculate-music-classifier-metadata';
@@ -31,19 +33,19 @@ final class MusicClassifierMetadataCalculatorTask extends AbstractTask
     private const string ACTION_SKIP_NOT_CALCULATED = 'skip_not_calculated';
     private const string ACTION_SKIP_ALREADY_CALCULATED = 'skip_already_calculated';
 
-    /** Number of most recently processed tracks the error-rate circuit breaker looks at. */
+    /** Liczba ostatnio przetworzonych utworów branych pod uwagę przez bezpiecznik */
     private const int ERROR_RATE_WINDOW_SIZE = 20;
 
-    /** Task aborts once this many of the last ERROR_RATE_WINDOW_SIZE tracks failed. */
+    /** Liczba błędów w oknie, po której task zostaje przerwany */
     private const int ERROR_RATE_MAX_ERRORS = 10;
 
     private array $stats;
 
     /**
-     * Sliding window of the most recently processed tracks. Each entry is either null (success) or
-     * an error detail array; it powers the circuit breaker and the verbose abort report.
+     * Okno ostatnio przetworzonych utworów. Pojedynczy wpis to null (sukces) albo opis błędu;
+     * na tej podstawie działa bezpiecznik oraz raport kończący task.
      *
-     * @var list<array{type: string, pathname: string, message: string}|null>
+     * @var list<array{ type: string, pathname: string, message: string }|null>
      */
     private array $recentOutcomes = [];
 
@@ -191,7 +193,7 @@ final class MusicClassifierMetadataCalculatorTask extends AbstractTask
                 $error = $this->describeError('result', $file, $e);
 
                 $this->logger->error($e->getMessage(), [ 'pathname' => $file->getPathname() ]);
-            } catch (\Throwable $e) {
+            } catch (Throwable $e) {
                 $this->stats['error']['other']++;
 
                 $error = $this->describeError('other', $file, $e);
@@ -200,109 +202,43 @@ final class MusicClassifierMetadataCalculatorTask extends AbstractTask
             }
 
             $this->registerOutcome($error);
-            $this->reportProgressIfNeeded($totalFiles, $startTime, $lastReportTime, $calculated);
+            $this->reportProgress($totalFiles, $startTime, $lastReportTime, $calculated);
 
-            if ($this->errorsAreTooFrequent()) {
+            if ($this->hasTooFrequentErrors()) {
                 $this->reportErrorRateExceeded();
 
                 return self::FAILURE;
             }
         }
 
-        $this->logger->info('Task finished', $this->stats);
+        $this->logger->debug('Task finished', $this->stats);
 
         return self::SUCCESS;
     }
 
-    /** Builds an error detail entry describing a single failed track for the circuit breaker report. */
-    private function describeError(string $type, SplFileInfo $file, \Throwable $e): array
-    {
-        return [
-            'type' => $type,
-            'pathname' => $file->getPathname(),
-            'message' => $e->getMessage(),
-        ];
-    }
-
-    /** Records the outcome of a processed track (null = success) into the sliding window. */
-    private function registerOutcome(?array $error): void
-    {
-        $this->recentOutcomes[] = $error;
-
-        if (count($this->recentOutcomes) > self::ERROR_RATE_WINDOW_SIZE) {
-            array_shift($this->recentOutcomes);
-        }
-    }
-
-    /** Tells whether the recent tracks failed often enough to consider the classifier broken. */
-    private function errorsAreTooFrequent(): bool
-    {
-        return count($this->getErrorsInWindow()) >= self::ERROR_RATE_MAX_ERRORS;
-    }
-
-    /** @return list<array{type: string, pathname: string, message: string}> */
-    private function getErrorsInWindow(): array
-    {
-        return array_values(
-            array_filter($this->recentOutcomes, static fn(?array $outcome): bool => $outcome !== null),
-        );
-    }
-
     /**
-     * Logs a verbose report explaining why the task stops: the music classifier (essentia) started
-     * failing too often, which usually means the external service itself is broken rather than the
-     * individual tracks. The report states how many tracks failed, of what kind, with which messages
-     * and file paths, so the cause can be diagnosed from the log alone.
-     */
-    private function reportErrorRateExceeded(): void
-    {
-        $errors = $this->getErrorsInWindow();
-
-        $errorsByType = [];
-
-        foreach ($errors as $error) {
-            $errorsByType[$error['type']] = ($errorsByType[$error['type']] ?? 0) + 1;
-        }
-
-        $this->logger->critical('Aborting task: music classifier (essentia) is failing too often', [
-            'reason' => sprintf(
-                'At least %d of the last %d processed tracks failed (allowed: %d)',
-                count($errors),
-                count($this->recentOutcomes),
-                self::ERROR_RATE_MAX_ERRORS,
-            ),
-            'errorsInWindow' => count($errors),
-            'windowSize' => count($this->recentOutcomes),
-            'threshold' => self::ERROR_RATE_MAX_ERRORS,
-            'errorsByType' => $errorsByType,
-            'errors' => $errors,
-            'stats' => $this->stats,
-        ]);
-    }
-
-    /**
-     * Processes a single track: (re)calculates its metadata when needed and stores it in the
-     * database. Returns true when metadata was (re)calculated, so progress reporting can react.
+     * Przetwarza pojedynczy utwór: wylicza metadane, jeśli zachodzi taka potrzeba, i zapisuje je
+     * w bazie danych. Zwraca informację o tym, czy metadane zostały wyliczone.
      */
     private function processFile(SplFileInfo $file, bool $force, bool $skipNotCalculated, bool $dryRun): bool
     {
         $track = $this->trackService->createFromFile($file->getPathname());
 
-        if ($track === null) {
+        if (!$track) {
             $this->stats['skipped']['not_readable']++;
 
-            $this->logger->warning('Skipping unreadable track', [ 'pathname' => $file->getPathname() ]);
+            $this->logger->warning('Track is not readable, skipping', [ 'pathname' => $file->getPathname() ]);
 
             return false;
         }
 
-        $metadata = $this->musicClassifierMetadataRepository->getByTrackGuid($track->getGuid());
-        $action = $this->decideAction($metadata, $force, $skipNotCalculated);
+        $musicClassifierMetadata = $this->musicClassifierMetadataRepository->getByTrackGuid($track->getGuid());
+        $action = $this->decideAction($musicClassifierMetadata, $force, $skipNotCalculated);
 
         if ($action === self::ACTION_SKIP_NOT_CALCULATED) {
             $this->stats['skipped']['not_calculated']++;
 
-            $this->logger->debug('Skipping track without stored metadata', [
+            $this->logger->debug('Track does not have stored metadata, skipping', [
                 'pathname' => $file->getPathname(),
             ]);
 
@@ -312,10 +248,14 @@ final class MusicClassifierMetadataCalculatorTask extends AbstractTask
         if ($action === self::ACTION_SKIP_ALREADY_CALCULATED) {
             $this->stats['skipped']['already_calculated']++;
 
+            $this->logger->debug('Track is already calculated, skipping', [
+                'pathname' => $file->getPathname(),
+            ]);
+
             return false;
         }
 
-        $result = $this->calculateMetadata($file, $metadata !== null);
+        $result = $this->calculateMetadata($file, $musicClassifierMetadata !== null);
 
         if (!$dryRun) {
             $this->saveMetadata($track, $result);
@@ -326,18 +266,20 @@ final class MusicClassifierMetadataCalculatorTask extends AbstractTask
         return true;
     }
 
+    /** Rozstrzyga, co należy zrobić z utworem o podanych metadanych */
     private function decideAction(
-        ?MusicClassifierMetadataDto $metadata,
+        ?MusicClassifierMetadataDto $musicClassifierMetadata,
         bool $force,
         bool $skipNotCalculated,
     ): string {
-        if ($metadata === null) {
+        if (!$musicClassifierMetadata) {
             return $skipNotCalculated ? self::ACTION_SKIP_NOT_CALCULATED : self::ACTION_CALCULATE;
         }
 
         return $force ? self::ACTION_CALCULATE : self::ACTION_SKIP_ALREADY_CALCULATED;
     }
 
+    /** Wylicza metadane utworu przy pomocy klasyfikatora audio */
     private function calculateMetadata(SplFileInfo $file, bool $hadStoredMetadata): MusicClassifierResult
     {
         $result = $this->musicClassifierService->analyze($file);
@@ -352,21 +294,23 @@ final class MusicClassifierMetadataCalculatorTask extends AbstractTask
         return $result;
     }
 
+    /** Zapisuje metadane utworu w bazie danych */
     private function saveMetadata(IncomingTrack|Track $track, MusicClassifierResult $result): void
     {
-        $this->musicClassifierMetadataRepository->save(
-            MusicClassifierMetadataDto::fromResult($track->getGuid(), $result),
-        );
+        $musicClassifierMetadata = MusicClassifierMetadataDto::fromResult($track->getGuid(), $result);
+
+        $this->musicClassifierMetadataRepository->save($musicClassifierMetadata);
 
         $this->stats['saved']++;
     }
 
+    /** Wyświetla liczbę utworów w kolekcji oraz liczbę zapisanych metadanych */
     private function showStats(InputInterface $input, OutputInterface $output): int
     {
         $pathname = $input->getArgument('pathname');
         $files = $this->getFiles($pathname);
-        $mp3Count = count($files);
 
+        $mp3Count = count($files);
         $dbCount = $this->musicClassifierMetadataRepository->count();
 
         $output->writeln(sprintf('MP3 files in collection: %d', $mp3Count));
@@ -382,14 +326,14 @@ final class MusicClassifierMetadataCalculatorTask extends AbstractTask
 
     /**
      * Usuwa metadane utworów, których nie ma już w kolekcji. Utwór uznaje się za nieistniejący,
-     * gdy jego guid nie występuje w indeksie kolekcji.
+     * jeżeli jego guid nie występuje w indeksie kolekcji.
      */
     private function cleanOrphanedMetadata(OutputInterface $output): int
     {
         $orphanedTrackGuids = [];
 
         foreach ($this->musicClassifierMetadataRepository->getTrackGuids() as $trackGuid) {
-            if ($this->trackService->getByGuid($trackGuid) !== null) {
+            if ($this->trackService->getByGuid($trackGuid)) {
                 continue;
             }
 
@@ -398,89 +342,15 @@ final class MusicClassifierMetadataCalculatorTask extends AbstractTask
             $this->logger->info('Removing orphaned metadata', [ 'trackGuid' => $trackGuid ]);
         }
 
-        $cleanedCount = $this->musicClassifierMetadataRepository->removeByTrackGuids($orphanedTrackGuids);
+        $cleaned = $this->musicClassifierMetadataRepository->removeByTrackGuids($orphanedTrackGuids);
 
-        $this->stats['cleaned'] = $cleanedCount;
+        $this->stats['cleaned'] = $cleaned;
 
-        $output->writeln(sprintf('Cleaned %d orphaned metadata record(s).', $cleanedCount));
-        $this->logger->info('Cleanup finished', [ 'cleaned' => $cleanedCount ]);
+        $output->writeln(sprintf('Cleaned %d orphaned metadata record(s).', $cleaned));
+
+        $this->logger->info('Cleanup finished', [ 'cleaned' => $cleaned ]);
 
         return self::SUCCESS;
-    }
-
-    /** @return SplFileInfo[]|Finder */
-    private function getFiles(string $pathname): array|Finder
-    {
-        $collectionRootDir = $this->config->get('collection.root_dir');
-        $isRoot = $pathname === $collectionRootDir;
-
-        $params = [
-            'pathname' => $pathname,
-            'mode' => Finder::MODE_FILES_ONLY,
-            'recursive' => is_dir($pathname),
-            'skip_self' => false,
-        ];
-
-        if ($isRoot) {
-            $params['restrict'] = $this->config->get('collection.indexed_dirs');
-        }
-
-        return Finder::create($params);
-    }
-
-    private function reportProgressIfNeeded(
-        int $totalFiles,
-        float $startTime,
-        float &$lastReportTime,
-        bool $calculated,
-    ): void {
-        $processed = $this->stats['processed'];
-        $now = microtime(true);
-
-        $shouldReport = $calculated
-            || ($processed % 50 === 0)
-            || ($now - $lastReportTime >= 10.0)
-            || ($processed >= $totalFiles);
-
-        if (!$shouldReport || $processed === 0) {
-            return;
-        }
-
-        $lastReportTime = $now;
-        $remaining = max(0, $totalFiles - $processed);
-        $elapsed = $now - $startTime;
-        $avgTimePerFile = $elapsed / $processed;
-        $estimatedRemainingSeconds = (int) round($remaining * $avgTimePerFile);
-        $estimatedTime = $this->formatDuration($estimatedRemainingSeconds);
-        $percent = $totalFiles > 0 ? ($processed / $totalFiles) * 100 : 100;
-
-        $message = sprintf(
-            'Progress: %d/%d (%.1f%%) tracks processed, %d remaining, estimated time remaining: ~%s',
-            $processed,
-            $totalFiles,
-            $percent,
-            $remaining,
-            $estimatedTime,
-        );
-
-        $this->logger->info($message);
-    }
-
-    private function formatDuration(int $seconds): string
-    {
-        if ($seconds < 60) {
-            return sprintf('%ds', $seconds);
-        }
-
-        $hours = (int) floor($seconds / 3600);
-        $minutes = (int) floor(($seconds % 3600) / 60);
-        $secs = $seconds % 60;
-
-        if ($hours > 0) {
-            return sprintf('%dh %02dm %02ds', $hours, $minutes, $secs);
-        }
-
-        return sprintf('%dm %02ds', $minutes, $secs);
     }
 
     /** Zlicza rozbieżności między metadanymi utworu a wartościami wyliczonymi przez klasyfikator */
@@ -518,5 +388,166 @@ final class MusicClassifierMetadataCalculatorTask extends AbstractTask
                 'calculatedInitialKey' => $calculatedKey,
             ]);
         }
+    }
+
+    /** Zwraca opis błędu pojedynczego utworu, używany przez bezpiecznik */
+    private function describeError(string $type, SplFileInfo $file, Throwable $e): array
+    {
+        return [
+            'type' => $type,
+            'pathname' => $file->getPathname(),
+            'message' => $e->getMessage(),
+        ];
+    }
+
+    /** Dopisuje wynik przetworzenia utworu (null oznacza sukces) do okna ostatnich wyników */
+    private function registerOutcome(?array $error): void
+    {
+        $this->recentOutcomes[] = $error;
+
+        if (count($this->recentOutcomes) > self::ERROR_RATE_WINDOW_SIZE) {
+            array_shift($this->recentOutcomes);
+        }
+    }
+
+    /** Informuje, czy ostatnie utwory kończyły się błędem na tyle często, żeby przerwać task */
+    private function hasTooFrequentErrors(): bool
+    {
+        return count($this->getErrorsInWindow()) >= self::ERROR_RATE_MAX_ERRORS;
+    }
+
+    /** @return list<array{ type: string, pathname: string, message: string }> */
+    private function getErrorsInWindow(): array
+    {
+        $errors = array_filter(
+            $this->recentOutcomes,
+            static fn (?array $outcome): bool => $outcome !== null,
+        );
+
+        return array_values($errors);
+    }
+
+    /**
+     * Zapisuje w logu powód przerwania tasku: klasyfikator zaczął zawodzić na tyle często, że
+     * najprawdopodobniej niedostępny jest sam serwis, a nie poszczególne utwory. Raport podaje
+     * liczbę i rodzaj błędów, ich komunikaty oraz ścieżki utworów, żeby przyczynę dało się ustalić
+     * na podstawie samego logu.
+     */
+    private function reportErrorRateExceeded(): void
+    {
+        $errors = $this->getErrorsInWindow();
+
+        $errorsByType = [];
+
+        foreach ($errors as $error) {
+            $errorsByType[$error['type']] = ($errorsByType[$error['type']] ?? 0) + 1;
+        }
+
+        $this->logger->critical('Aborting task: music classifier (essentia) is failing too often', [
+            'reason' => sprintf(
+                'At least %d of the last %d processed tracks failed (allowed: %d)',
+                count($errors),
+                count($this->recentOutcomes),
+                self::ERROR_RATE_MAX_ERRORS,
+            ),
+            'errorsInWindow' => count($errors),
+            'windowSize' => count($this->recentOutcomes),
+            'threshold' => self::ERROR_RATE_MAX_ERRORS,
+            'errorsByType' => $errorsByType,
+            'errors' => $errors,
+            'stats' => $this->stats,
+        ]);
+    }
+
+    /** @return SplFileInfo[]|Finder */
+    private function getFiles(string $pathname): array|Finder
+    {
+        $collectionRootDir = $this->config->get('collection.root_dir');
+        $isRoot = $pathname === $collectionRootDir;
+
+        $params = [
+            'pathname' => $pathname,
+            'mode' => Finder::MODE_FILES_ONLY,
+            'recursive' => is_dir($pathname),
+            'skip_self' => false,
+        ];
+
+        if ($isRoot) {
+            $params['restrict'] = $this->config->get('collection.indexed_dirs');
+        }
+
+        return Finder::create($params);
+    }
+
+    /** Zapisuje w logu postęp przetwarzania wraz z szacowanym czasem pozostałym do końca */
+    private function reportProgress(
+        int $totalFiles,
+        float $startTime,
+        float &$lastReportTime,
+        bool $calculated,
+    ): void {
+        $now = microtime(true);
+
+        if (!$this->isProgressReportNeeded($totalFiles, $lastReportTime, $now, $calculated)) {
+            return;
+        }
+
+        $lastReportTime = $now;
+
+        $processed = $this->stats['processed'];
+        $remaining = max(0, $totalFiles - $processed);
+        $elapsed = $now - $startTime;
+        $avgTimePerFile = $elapsed / $processed;
+        $estimatedRemainingSeconds = (int) round($remaining * $avgTimePerFile);
+        $estimatedTime = $this->formatDuration($estimatedRemainingSeconds);
+        $percent = $totalFiles > 0 ? ($processed / $totalFiles) * 100 : 100;
+
+        $message = sprintf(
+            'Progress: %d/%d (%.1f%%) tracks processed, %d remaining, estimated time remaining: ~%s',
+            $processed,
+            $totalFiles,
+            $percent,
+            $remaining,
+            $estimatedTime,
+        );
+
+        $this->logger->info($message);
+    }
+
+    /** Informuje, czy postęp przetwarzania powinien zostać zapisany w logu */
+    private function isProgressReportNeeded(
+        int $totalFiles,
+        float $lastReportTime,
+        float $now,
+        bool $calculated,
+    ): bool {
+        $processed = $this->stats['processed'];
+
+        if ($processed === 0) {
+            return false;
+        }
+
+        return $calculated
+            || ($processed % 50 === 0)
+            || ($now - $lastReportTime >= 10.0)
+            || ($processed >= $totalFiles);
+    }
+
+    /** Zwraca czas trwania w postaci czytelnej dla człowieka */
+    private function formatDuration(int $seconds): string
+    {
+        if ($seconds < 60) {
+            return sprintf('%ds', $seconds);
+        }
+
+        $hours = (int) floor($seconds / 3600);
+        $minutes = (int) floor(($seconds % 3600) / 60);
+        $secs = $seconds % 60;
+
+        if ($hours > 0) {
+            return sprintf('%dh %02dm %02ds', $hours, $minutes, $secs);
+        }
+
+        return sprintf('%dm %02ds', $minutes, $secs);
     }
 }

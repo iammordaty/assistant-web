@@ -23,23 +23,30 @@ final readonly class MusicClassifierMetadataController
         $track = $this->trackService->getByGuid($guid);
 
         if (!$track) {
+            $message = sprintf('Track "%s" does not exist.', $guid);
+
             return $response
-                ->withJson([ 'message' => sprintf('Track "%s" does not exist.', $guid) ])
+                ->withJson([ 'message' => $message ])
                 ->withStatus(StatusCodeInterface::STATUS_NOT_FOUND);
         }
 
-        $metadata = $this->musicClassifierMetadataRepository->getByTrackGuid($track->getGuid());
+        $musicClassifierMetadata = $this->musicClassifierMetadataRepository->getByTrackGuid($track->getGuid());
 
-        if (!$metadata) {
+        if (!$musicClassifierMetadata) {
+            $message = sprintf('Music classifier metadata for "%s" does not exist.', $guid);
+
             return $response
-                ->withJson([ 'message' => sprintf('Music classifier metadata for "%s" does not exist.', $guid) ])
+                ->withJson([ 'message' => $message ])
                 ->withStatus(StatusCodeInterface::STATUS_NOT_FOUND);
         }
 
-        $filename = str_replace([ '"', "\r", "\n" ], '', sprintf('%s.json', $track->getGuid()));
+        // guid jest slugiem, więc nadaje się na nazwę pliku w nagłówku bez dalszego filtrowania
+        $filename = sprintf('%s.json', $track->getGuid());
 
-        return $response
+        $response = $response
             ->withHeader('Content-Disposition', sprintf('inline; filename="%s"', $filename))
-            ->withJson($metadata->toArray());
+            ->withJson($musicClassifierMetadata->toArray());
+
+        return $response;
     }
 }

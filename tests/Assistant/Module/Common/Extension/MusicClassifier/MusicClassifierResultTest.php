@@ -25,7 +25,7 @@ final class MusicClassifierResultTest extends TestCase
         self::assertSame(128.4, $result->getBpm());
     }
 
-    /** Gatunki i etykiety tworzą jedną listę cech, a pewność wyrażana jest w procentach */
+    /** Gatunki oraz etykiety tworzą jedną listę cech, a pewność wyrażana jest w procentach */
     public function testGenresAndTagsAreMergedIntoFeatures(): void
     {
         $result = MusicClassifierResult::fromApiResponse($this->apiResponse([
@@ -38,13 +38,11 @@ final class MusicClassifierResultTest extends TestCase
             ],
         ]));
 
-        $features = array_map(
-            static fn (MusicClassifierFeature $feature): array => [
-                $feature->getName(),
-                $feature->getProbability(),
-            ],
-            $result->getFeatures(),
-        );
+        $features = [];
+
+        foreach ($result->getFeatures() as $feature) {
+            $features[] = [ $feature->getName(), $feature->getProbability() ];
+        }
 
         self::assertSame(
             [
@@ -56,7 +54,7 @@ final class MusicClassifierResultTest extends TestCase
         );
     }
 
-    /** Brak gatunków i etykiet nie przerywa odczytu wyniku */
+    /** Brak gatunków oraz etykiet nie przerywa odczytu wyniku */
     public function testResultWithoutGenresAndTagsHasNoFeatures(): void
     {
         $rawResult = $this->apiResponse();
@@ -69,8 +67,8 @@ final class MusicClassifierResultTest extends TestCase
     }
 
     /**
-     * Analizator zakończony błędem zwraca null zamiast wartości (częściowy sukces), więc taki wynik
-     * jest odrzucany razem z komunikatami błędów zwróconymi przez serwis.
+     * Analizator zakończony błędem zwraca null zamiast wartości (częściowy sukces), dlatego taki
+     * wynik jest odrzucany razem z komunikatami błędów zwróconymi przez serwis.
      */
     public function testIncompleteResultIsRejectedWithAnalyzerErrors(): void
     {
