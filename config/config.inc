@@ -36,8 +36,11 @@ return static function (string $baseDir): array {
             'ready_dir' => '/collection/_new/_zrobione',
             'metadata_dirs' => [
                 'music_similarity' => '/metadata/musly',
-                'music_classifier' => '/metadata/essentia',
             ],
+        ],
+
+        'music_classifier' => [
+            'base_url' => 'http://assistant-music-classifier:8000',
         ],
 
         'track_metadata_parser' => [
