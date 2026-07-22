@@ -6,10 +6,15 @@
     "watch": "node build.js --watch"
   },
   "dependencies": {
+    "@popperjs/core": "2.11.6",
+    "@tabler/core": "1.0.0-beta19",
     "@tabler/icons-react": "^3.34.0",
+    "jquery": "3.7.0",
     "prop-types": "^15.8.1",
     "react": "19",
-    "react-dom": "19"
+    "react-dom": "19",
+    "tablesorter": "2.31.3",
+    "wavesurfer.js": "7.11.1"
   },
   "devDependencies": {
     "chokidar": "^4.0.1",

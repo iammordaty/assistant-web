@@ -24,6 +24,16 @@ const LogType = {
     WATCH: '👀',
 };
 
+const VENDOR_ASSETS = [
+    { from: '@tabler/core/dist/css/tabler.min.css', to: 'public/vendor/tabler.min.css' },
+    { from: '@tabler/core/dist/css/tabler-vendors.min.css', to: 'public/vendor/tabler-vendors.min.css' },
+    { from: '@tabler/core/dist/js/tabler.min.js', to: 'public/vendor/tabler.min.js' },
+    { from: 'jquery/dist/jquery.min.js', to: 'public/vendor/jquery-3.7.0.min.js' },
+    { from: 'tablesorter/dist/js/jquery.tablesorter.min.js', to: 'public/vendor/jquery.tablesorter.min.js' },
+    { from: '@popperjs/core/dist/umd/popper.min.js', to: 'public/vendor/popper.min.js' },
+    { from: 'wavesurfer.js/dist/wavesurfer.min.js', to: 'public/vendor/wavesurfer.min.js' },
+];
+
 const getFileSize = filePath => {
     try {
         const { size } = fs.statSync(filePath);
@@ -32,6 +42,16 @@ const getFileSize = filePath => {
     } catch {
         return 0;
     }
+};
+
+const copyVendorAssets = () => {
+    VENDOR_ASSETS.forEach(({ from, to }) => {
+        const source = path.resolve(__dirname, 'node_modules', from);
+        const target = path.resolve(__dirname, to);
+
+        fs.mkdirSync(path.dirname(target), { recursive: true });
+        fs.copyFileSync(source, target);
+    });
 };
 
 const createPublicAliasPlugin = () => ({
@@ -93,6 +113,8 @@ const scheduleProductionBuild = (state, buildFn) => {
 
 const executeBuild = async (mode) => {
     const startTime = Date.now();
+
+    copyVendorAssets();
 
     await esbuild.build(createBuildConfig({ mode }));
 

@@ -8,3 +8,10 @@
 node_modules
 public/js/mix.dist.js
 public/js/mix.dist.js.map
+public/vendor/tabler.min.css
+public/vendor/tabler-vendors.min.css
+public/vendor/tabler.min.js
+public/vendor/jquery-3.7.0.min.js
+public/vendor/jquery.tablesorter.min.js
+public/vendor/popper.min.js
+public/vendor/wavesurfer.min.js
