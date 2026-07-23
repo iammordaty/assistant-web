@@ -20,6 +20,7 @@ final class TrackLocationArbiterTest extends TestCase
                 'root_dir' => $this->root,
                 'indexed_dirs' => [ $this->root . '/Singles', $this->root . '/Other' ],
                 'incoming_dir' => $this->root . '/_new',
+                'ready_dir' => $this->root . '/_new/_zrobione',
             ],
         ]));
     }
@@ -31,7 +32,7 @@ final class TrackLocationArbiterTest extends TestCase
 
     public function testRecognizesSinglesByIndexedDir(): void
     {
-        $file = $this->makeFile('/Singles/A/Artist/Album/Artist - Title.mp3');
+        $file = $this->makeFile("/Singles/2009/08. sierpień/Deadmau5/Ghosts 'N' Stuff/Deadmau5 - 01 - Ghosts 'N' Stuff.mp3");
 
         self::assertSame(LocationKind::SINGLES, $this->arbiter->getLocationKind($file));
         self::assertTrue($this->arbiter->isInCollection($file));
@@ -51,6 +52,18 @@ final class TrackLocationArbiterTest extends TestCase
         $file = $this->makeFile('/_new/Artist - Title.mp3');
 
         self::assertSame(LocationKind::INCOMING, $this->arbiter->getLocationKind($file));
+        self::assertTrue($this->arbiter->isInIncoming($file));
+        self::assertFalse($this->arbiter->isReady($file));
+        self::assertFalse($this->arbiter->isInCollection($file));
+    }
+
+    /** ready_dir zawiera się w incoming_dir - musi być rozpoznany jako READY, nie INCOMING */
+    public function testRecognizesReadyAsSublocationOfIncoming(): void
+    {
+        $file = $this->makeFile('/_new/_zrobione/Artist - Title.mp3');
+
+        self::assertSame(LocationKind::READY, $this->arbiter->getLocationKind($file));
+        self::assertTrue($this->arbiter->isReady($file));
         self::assertTrue($this->arbiter->isInIncoming($file));
         self::assertFalse($this->arbiter->isInCollection($file));
     }

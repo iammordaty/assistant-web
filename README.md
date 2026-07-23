@@ -16,6 +16,17 @@ a lot of TODOs, and weird commit messages. :sweat_smile:
 Track similarity is powered by [Musly - Music Similarity Library](https://github.com/dominikschnitzer/musly); audio feature extraction is done using [Essentia](https://github.com/MTG/essentia)
 through the [music extractor](https://github.com/MTG/essentia/blob/master/doc/sphinxdoc/streaming_extractor_music.rst).
 
+## collection layout
+
+The library lives under `/collection`. Only a few directories are relevant to the app (the rest are ignored):
+
+- `_new` — incoming: newly added tracks awaiting tag fixes, renaming, and indexing (a queue).
+- `_new/_zrobione` — ready: processed incoming tracks (tags fixed / renamed), moved here and waiting for further handling.
+- `Other` — single tracks already in the collection (`Artist - Track.mp3`).
+- `Singles` — whole releases, nested as `Year/Month/Artist/Release/…` (`Artist - NN - Track.mp3`, or `NN. Artist - Track.mp3` for various-artists releases).
+
+`Other` and `Singles` are the indexed parts of the collection; `_new` (and `_new/_zrobione`) are not.
+
 ## stack
 
 - PHP

@@ -26,15 +26,20 @@ final class LocationKindTest extends TestCase
         return [
             [ LocationKind::OTHER ],
             [ LocationKind::INCOMING ],
+            [ LocationKind::READY ],
             [ LocationKind::UNSUPPORTED ],
         ];
     }
 
     public function testSinglesBaseDirIsTwoLevelsAboveFile(): void
     {
-        $file = new SplFileInfo('/collection/Singles/A/Artist/Album/Artist - Title.mp3');
+        // realna struktura: /collection/Singles/<Rok>/<Miesiąc>/<Artist>/<Release>/plik
+        // baza = dwa poziomy nad plikiem (Rok/Miesiąc), format sam odbuduje Artist/Release z metadanych
+        $file = new SplFileInfo(
+            "/collection/Singles/2009/08. sierpień/Deadmau5/Ghosts 'N' Stuff/Deadmau5 - 01 - Ghosts 'N' Stuff.mp3"
+        );
 
-        self::assertSame('/collection/Singles/A', LocationKind::SINGLES->baseDir($file));
+        self::assertSame('/collection/Singles/2009/08. sierpień', LocationKind::SINGLES->baseDir($file));
     }
 
     public function testOtherBaseDirIsFileDirectory(): void

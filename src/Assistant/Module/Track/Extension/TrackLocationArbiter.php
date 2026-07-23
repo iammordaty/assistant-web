@@ -20,9 +20,18 @@ final class TrackLocationArbiter
         return $kind === LocationKind::SINGLES || $kind === LocationKind::OTHER;
     }
 
+    /** Czy plik leży fizycznie w incoming (surowy incoming lub gotowy ready) - oba są poza kolekcją */
     public function isInIncoming(mixed $file): bool
     {
-        return $this->getLocationKind($file) === LocationKind::INCOMING;
+        $kind = $this->getLocationKind($file);
+
+        return $kind === LocationKind::INCOMING || $kind === LocationKind::READY;
+    }
+
+    /** Czy plik leży w ready_dir - przetworzony i gotowy do dodania do kolekcji (nie: surowy incoming) */
+    public function isReady(mixed $file): bool
+    {
+        return $this->getLocationKind($file) === LocationKind::READY;
     }
 
     /**
@@ -37,7 +46,12 @@ final class TrackLocationArbiter
             return LocationKind::UNSUPPORTED;
         }
 
-        // kolejność istotna: incoming_dir zawiera się w root_dir
+        // kolejność istotna, od najbardziej szczegółowego: ready_dir zawiera się w incoming_dir,
+        // a incoming_dir w root_dir - najpierw więc ready, potem incoming
+        if ($this->isWithin($pathname, $this->config->get('collection.ready_dir'))) {
+            return LocationKind::READY;
+        }
+
         if ($this->isWithin($pathname, $this->config->get('collection.incoming_dir'))) {
             return LocationKind::INCOMING;
         }
