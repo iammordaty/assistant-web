@@ -1,0 +1,59 @@
+{% extends '@common/layout.twig' %}
+
+{% block title %}{{ viewType.label }} - Status kolekcji{% endblock %}
+
+{% block page_header %}{{ viewType.label }}{% endblock %}
+
+{% block page_header_description %}
+    {% if summary %}
+        Ostatnia analiza: {{ summary.created_at|date('d.m.Y, H:i') }}
+    {% endif %}
+{% endblock %}
+
+{% block page_actions %}
+    <a href="{{ url_for('collection.status.index') }}" class="btn">
+        <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+            <path d="M9 14l-4 -4l4 -4" />
+            <path d="M5 10h11a4 4 0 1 1 0 8h-1" />
+        </svg>
+        Powrót
+    </a>
+
+    <button
+        class="btn"
+        data-role="run-collection-analysis"
+        data-url="{{ url_for('common.task.run-collection-analysis') }}"
+        title="Uruchom analizę kolekcji"
+    >
+        <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+            <path d="M20 11a8.1 8.1 0 0 0 -6.986 -6.918a8.095 8.095 0 0 0 -8.019 3.918" />
+            <path d="M4 13a8.1 8.1 0 0 0 15 3" />
+            <path d="M19 16a1 1 0 1 0 2 0a1 1 0 1 0 -2 0" />
+            <path d="M5 8a1 1 0 1 0 2 0a1 1 0 1 0 -2 0" />
+            <path d="M9 12a3 3 0 1 0 6 0a3 3 0 1 0 -6 0" />
+        </svg>
+        Sprawdź teraz
+    </button>
+{% endblock %}
+
+{% block content %}
+    {% block detail_content %}{% endblock %}
+
+    <div class="modal modal-blur fade" id="rawDataModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Dane z bazy</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Zamknij"></button>
+                </div>
+                <div class="modal-body">
+                    <pre id="rawDataContent" class="mb-0" style="white-space: pre-wrap; word-break: break-all;"></pre>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="/js/status.js"></script>
+{% endblock %}

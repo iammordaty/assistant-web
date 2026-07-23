@@ -39,7 +39,7 @@ final class FileReader implements ReaderInterface
             album: $metadata['album'] ?? null,
             trackNumber: $metadata['track_number'] ?? null,
             year: $metadata['year'] ?? null, // starszy kawałek w kolekcji
-            genre: $metadata['genre'] ?? null,
+            genre: $metadata['genre'] ?? '',
             publisher: $metadata['publisher'] ?? null,
             bpm: $metadata['bpm'],
             initialKey: $metadata['initial_key'],

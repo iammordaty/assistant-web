@@ -58,8 +58,11 @@ final class TrackStatsRepository
         $pipeline = [
             [ '$group' => $group, ],
             [ '$sort' => $sort, ],
-            [ '$limit' => $limit, ],
         ];
+
+        if ($limit !== null) {
+            $pipeline[] = [ '$limit' => $limit ];
+        }
 
         if ($fieldType === self::FIELD_TYPE_ARRAY) {
             array_unshift($pipeline, [ '$unwind' => '$' . $fieldName ]);

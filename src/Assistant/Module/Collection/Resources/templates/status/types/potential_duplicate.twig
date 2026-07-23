@@ -1,0 +1,111 @@
+{% extends '@collection/status/detail.twig' %}
+
+{% block detail_content %}
+{# ignorowane na koniec listy #}
+{% set issues = issues|sort((a, b) => a.ignored ? 1 : (b.ignored ? -1 : 0)) %}
+
+{% for issue in issues %}
+    {% set a = issue.details.track_a|default(null) %}
+    {% set b = issue.details.track_b|default(null) %}
+    {% set fa = issue.details.file_a|default({}) %}
+    {% set fb = issue.details.file_b|default({}) %}
+    {% set guid_a = a ? a.guid : issue.details.guid_a %}
+    {% set guid_b = b ? b.guid : issue.details.guid_b %}
+    {% set name_a = a ? a.name : (issue.details.name_a|default(issue.details.guid_a)) %}
+    {% set name_b = b ? b.name : (issue.details.name_b|default(issue.details.guid_b)) %}
+    {% set path_a = a.pathname|replace({'/collection/': ''})|split('/')|slice(0, -1)|join('/') %}
+    {% set path_b = b.pathname|replace({'/collection/': ''})|split('/')|slice(0, -1)|join('/') %}
+    {% set size_a = fa.size|format_filesize %}
+    {% set size_b = fb.size|format_filesize %}
+    {% set audio_a = fa.bitrate ~ ' kbps' ~ (fa.bitrate_mode|upper == 'VBR' ? ' (VBR)' : '') ~ ', ' ~ ((fa.sample_rate / 1000)|number_format(1)) ~ ' kHz, ' ~ (fa.channel_mode|capitalize) %}
+    {% set audio_b = fb.bitrate ~ ' kbps' ~ (fb.bitrate_mode|upper == 'VBR' ? ' (VBR)' : '') ~ ', ' ~ ((fb.sample_rate / 1000)|number_format(1)) ~ ' kHz, ' ~ (fb.channel_mode|capitalize) %}
+
+    <div
+        class="card mb-3{% if issue.ignored %} ast-status-ignored{% endif %}"
+        data-element="analysis-issue"
+        data-url="{{ url_for('collection.status.toggle-ignore', { hash: issue.hash }) }}"
+    >
+        <div class="row g-0 ast-sim-header position-relative">
+            <div class="col-6 ast-sim-side ast-sim-side-outlier justify-content-end" style="padding-right: 3rem;">
+                <a class="ast-sim-value text-reset text-truncate" href="{{ url_for('track.track.index', { guid: guid_a }) }}" title="{{ name_a }}">
+                    {{ name_a }}
+                </a>
+            </div>
+            <div class="col-6 ast-sim-side ast-sim-side-popular justify-content-start" style="padding-left: 3rem;">
+                <a class="ast-sim-value text-reset text-truncate text-end" href="{{ url_for('track.track.index', { guid: guid_b }) }}" title="{{ name_b }}">
+                    {{ name_b }}
+                </a>
+            </div>
+            <span class="ast-sim-connector" aria-hidden="true">≈</span>
+            <div class="card-actions btn-list ast-sim-actions">
+                <button class="btn btn-icon" data-role="show-raw-data" data-raw="{{ issue.toRawArray|json_encode }}" title="Pokaż dane">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-database-search">
+                        <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                        <path d="M4 6c0 1.657 3.582 3 8 3s8 -1.343 8 -3s-3.582 -3 -8 -3s-8 1.343 -8 3" />
+                        <path d="M4 6v6c0 1.657 3.582 3 8 3m8 -3.5v-5.5" />
+                        <path d="M4 12v6c0 1.657 3.582 3 8 3" />
+                        <path d="M15 18a3 3 0 1 0 6 0a3 3 0 1 0 -6 0" />
+                        <path d="M20.2 20.2l1.8 1.8" />
+                    </svg>
+                </button>
+                <button class="btn btn-icon{% if issue.ignored %} d-none{% endif %}" data-role="ignore-issue" title="Akceptuj">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-circle-check">
+                        <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+                        <path d="M3 12a9 9 0 1 0 18 0a9 9 0 1 0 -18 0" />
+                        <path d="M9 12l2 2l4 -4" />
+                    </svg>
+                </button>
+                <button class="btn btn-icon{% if not issue.ignored %} d-none{% endif %}" data-role="restore-issue" title="Przywróć">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-arrow-back-up">
+                        <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+                        <path d="M9 14l-4 -4l4 -4" />
+                        <path d="M5 10h11a4 4 0 1 1 0 8h-1" />
+                    </svg>
+                </button>
+            </div>
+        </div>
+
+        {% set fields = [
+            { label: 'Gatunek', a: a.genre, b: b.genre },
+            { label: 'Album', a: a.album, b: b.album },
+            { label: 'Wydawca', a: a.publisher, b: b.publisher },
+            { label: 'Rok', a: a.year, b: b.year },
+            { label: 'BPM', a: a.bpm, b: b.bpm },
+            { label: 'Tonacja', a: a.initial_key, b: b.initial_key },
+            { label: 'Czas', a: a.length|format_duration, b: b.length|format_duration },
+            { label: 'Audio', a: audio_a, b: audio_b },
+            { label: 'Rozmiar', a: size_a, b: size_b },
+        ] %}
+
+        <div class="ast-sim-body ast-dup-body">
+            <dl class="ast-dup-grid">
+                <div class="ast-dup-cell ast-dup-cell-a">
+                    <div class="ast-dup-cell-scroll" data-element="scrollable-breadcrumb" data-diff-a="{{ a.artist }} - {{ a.title }}">
+                        {{ a.artist }} - {{ a.title }}
+                    </div>
+                </div>
+                <div class="ast-dup-cell ast-dup-cell-label"><span class="small">Utwór</span></div>
+                <div class="ast-dup-cell ast-dup-cell-b">
+                    <div class="ast-dup-cell-scroll" data-element="scrollable-breadcrumb" data-diff-b="{{ b.artist }} - {{ b.title }}">
+                        {{ b.artist }} - {{ b.title }}
+                    </div>
+                </div>
+
+                {% for field in fields %}
+                    <div class="ast-dup-cell ast-dup-cell-a" data-diff-a="{{ field.a }}">{{ field.a }}</div>
+                    <div class="ast-dup-cell ast-dup-cell-label"><span class="small">{{ field.label }}</span></div>
+                    <div class="ast-dup-cell ast-dup-cell-b" data-diff-b="{{ field.b }}">{{ field.b }}</div>
+                {% endfor %}
+
+                <div class="ast-dup-cell ast-dup-cell-a">
+                    <div class="ast-dup-cell-scroll" data-element="scrollable-breadcrumb" data-diff-a="{{ path_a }}">{{ path_a }}</div>
+                </div>
+                <div class="ast-dup-cell ast-dup-cell-label"><span class="small">Położenie</span></div>
+                <div class="ast-dup-cell ast-dup-cell-b">
+                    <div class="ast-dup-cell-scroll" data-element="scrollable-breadcrumb" data-diff-b="{{ path_b }}">{{ path_b }}</div>
+                </div>
+            </dl>
+        </div>
+    </div>
+{% endfor %}
+{% endblock %}

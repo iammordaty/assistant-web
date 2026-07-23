@@ -14,7 +14,7 @@
             {% include '@track/track/toolbar.twig' with { track } only %}
         </div>
 
-        <div class="col-sm-8 col-12 mt-1">
+        <div class="col-sm-9 col-12 mt-1">
             <div class="card">
                 <a href="{{ url_for('search.advanced.index', query_params = {
                     bpm: track.bpm,
@@ -37,7 +37,7 @@
             </div>
         </div>
 
-        <div class="col-sm-4 d-none d-sm-flex mt-1">
+        <div class="col-sm-3 d-none d-sm-flex mt-1">
             {% include '@track/track/musicalKeyInfo.twig' with musicalKeyInfo only %}
         </div>
 

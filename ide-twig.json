@@ -5,6 +5,10 @@
       "path": "src/Assistant/Module/Common/Resources/templates"
     },
     {
+      "namespace": "collection",
+      "path": "src/Assistant/Module/Collection/Resources/templates"
+    },
+    {
       "namespace": "dashboard",
       "path": "src/Assistant/Module/Dashboard/Resources/templates"
     },

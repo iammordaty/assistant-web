@@ -31,6 +31,14 @@ final class TrackRenameService
     ) {
     }
 
+    public static function sanitizeForFilesystem(string $value): string
+    {
+        $value = str_replace(['/', ':'], '-', $value);
+        $value = str_replace('"', "'", $value);
+
+        return str_replace(['*', '?'], '', $value);
+    }
+
     public function clean(Track|IncomingTrack $track): SplFileInfo
     {
         $target = $this->trackFilenameSuggestion->getSuggestedFilename($track->getFile());
@@ -58,11 +66,7 @@ final class TrackRenameService
                 return $field;
             }
 
-            $field = str_replace([ '/', ':' ], '-', $field);
-            $field = str_replace('"', '\'', $field);
-            $field = str_replace([ '*', '?' ], '', $field);
-
-            return $field;
+            return self::sanitizeForFilesystem($field);
         }, $metadata);
 
         if (isset($metadata['track_number']) && $metadata['track_number'] < 10) {

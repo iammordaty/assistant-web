@@ -64,9 +64,17 @@
                         </span>
                     </a>
                 </li>
+                <li class="nav-item">
                     <a class="nav-link {% if menu == "mix" %}active{% endif %}" href="{{ url_for('mix.harmonize.index') }}">
                         <span class="nav-link-title">
                           Uporządkuj mix
+                        </span>
+                    </a>
+                </li>
+                <li class="nav-item {% if menu == "collection-status" %}active{% endif %}">
+                    <a class="nav-link" href="{{ url_for('collection.status.index') }}">
+                        <span class="nav-link-title">
+                          Status
                         </span>
                     </a>
                 </li>

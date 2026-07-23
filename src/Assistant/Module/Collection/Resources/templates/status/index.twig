@@ -1,0 +1,160 @@
+{% extends '@common/layout.twig' %}
+
+{% block title 'Status kolekcji' %}
+
+{% block page_header 'Status kolekcji' %}
+
+{% block page_header_description %}
+    {% if summary %}
+        Ostatnia analiza: {{ summary.created_at|date('d.m.Y, H:i') }}
+    {% endif %}
+{% endblock %}
+
+{% block page_actions %}
+    <button
+        class="btn"
+        data-role="run-collection-analysis"
+        data-url="{{ url_for('common.task.run-collection-analysis') }}"
+        title="Uruchom analizę kolekcji"
+    >
+        <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+            <path d="M20 11a8.1 8.1 0 0 0 -6.986 -6.918a8.095 8.095 0 0 0 -8.019 3.918" />
+            <path d="M4 13a8.1 8.1 0 0 0 15 3" />
+            <path d="M19 16a1 1 0 1 0 2 0a1 1 0 1 0 -2 0" />
+            <path d="M5 8a1 1 0 1 0 2 0a1 1 0 1 0 -2 0" />
+            <path d="M9 12a3 3 0 1 0 6 0a3 3 0 1 0 -6 0" />
+        </svg>
+        Sprawdź teraz
+    </button>
+{% endblock %}
+
+{% block content %}
+    {% if not summary %}
+        <div class="card">
+            <div class="card-body">
+                <div class="empty">
+                    <p class="empty-title">Brak danych</p>
+                    <p class="empty-subtitle text-muted">
+                        Uruchom analizę kolekcji, aby zobaczyć wyniki.
+                    </p>
+                    <p class="empty-subtitle text-muted">
+                        <code>php bin/console.php collection:analyze</code>
+                    </p>
+                </div>
+            </div>
+        </div>
+    {% else %}
+        <div class="row row-deck row-cards mb-3">
+            <div class="col-sm-6 col-lg-3">
+                <div class="card card-sm">
+                    <div class="card-body">
+                        <div class="row align-items-center">
+                            <div class="col-auto">
+                                <span class="bg-primary text-white avatar">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"></path><circle cx="6" cy="17" r="3"></circle><circle cx="16" cy="17" r="3"></circle><polyline points="9 17 9 4 19 4 19 17"></polyline><line x1="9" y1="8" x2="19" y2="8"></line></svg>
+                                </span>
+                            </div>
+                            <div class="col">
+                                <div class="fw-bold fs-3">{{ summary.tracks_in_db }}</div>
+                                <div class="text-muted">Utworów</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-sm-6 col-lg-3">
+                <div class="card card-sm">
+                    <div class="card-body">
+                        <div class="row align-items-center">
+                            <div class="col-auto">
+                                <span class="bg-green text-white avatar">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"></path><path d="M5 4h4l3 3h7a2 2 0 0 1 2 2v8a2 2 0 0 1 -2 2h-14a2 2 0 0 1 -2 -2v-11a2 2 0 0 1 2 -2"></path></svg>
+                                </span>
+                            </div>
+                            <div class="col">
+                                <div class="fw-bold fs-3">{{ summary.directories_count }}</div>
+                                <div class="text-muted">Katalogów</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-sm-6 col-lg-3">
+                <div class="card card-sm">
+                    <div class="card-body">
+                        <div class="row align-items-center">
+                            <div class="col-auto">
+                                <span class="bg-azure text-white avatar">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"></path><path d="M11 3l9 9a1.5 1.5 0 0 1 0 2l-6 6a1.5 1.5 0 0 1 -2 0l-9 -9v-4a4 4 0 0 1 4 -4h4"></path><circle cx="9" cy="9" r="2"></circle></svg>
+                                </span>
+                            </div>
+                            <div class="col">
+                                <div class="fw-bold fs-3">{{ summary.genres_count }}</div>
+                                <div class="text-muted">Gatunków</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-sm-6 col-lg-3">
+                <div class="card card-sm">
+                    <div class="card-body">
+                        <div class="row align-items-center">
+                            <div class="col-auto">
+                                <span class="bg-purple text-white avatar">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"></path><circle cx="12" cy="7" r="4"></circle><path d="M6 21v-2a4 4 0 0 1 4 -4h4a4 4 0 0 1 4 4v2"></path></svg>
+                                </span>
+                            </div>
+                            <div class="col">
+                                <div class="fw-bold fs-3">{{ summary.artists_count }}</div>
+                                <div class="text-muted">Wykonawców</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">Wykryte problemy</h3>
+            </div>
+            {% set routeNames = {
+                'cross-reference': 'collection.status.cross-reference',
+                'filename-mismatch': 'collection.status.filename-mismatch',
+                'empty-metadata': 'collection.status.empty-metadata',
+                'low-audio-quality': 'collection.status.low-audio-quality',
+                'similar-artist': 'collection.status.similar-artist',
+                'similar-publisher': 'collection.status.similar-publisher',
+                'similar-genre': 'collection.status.similar-genre',
+                'suspicious-year': 'collection.status.suspicious-year',
+                'rare-genre': 'collection.status.rare-genre',
+                'rare-key': 'collection.status.rare-key',
+                'potential-duplicate': 'collection.status.potential-duplicate',
+            } %}
+            <div class="table-responsive">
+                <table class="table table-vcenter card-table">
+                    <tbody>
+                        {% for row in summary.rows %}
+                            <tr class="{% if row.unignored == 0 %}opacity-25{% endif %}">
+                                <td>
+                                    <a href="{{ url_for(routeNames[row.viewType.value]) }}">
+                                        {{ row.viewType.label }}
+                                    </a>
+                                </td>
+                                <td class="text-end w-1">
+                                    <span class="badge {{ row.unignored > 0 ? 'bg-warning' : 'bg-muted' }}">
+                                        {{ row.unignored }}
+                                    </span>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    {% endif %}
+
+    <script src="/js/status.js"></script>
+{% endblock %}

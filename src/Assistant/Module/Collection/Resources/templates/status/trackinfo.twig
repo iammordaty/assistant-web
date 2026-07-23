@@ -1,0 +1,90 @@
+{% set fields = highlight_fields is defined ? highlight_fields : (highlight_field is defined and highlight_field ? [highlight_field] : []) %}
+
+<div>
+    <div class="ast-track-name">
+        <a class="text-reset" href="{{ url_for('track.track.index', { guid: track.guid }) }}" title="{{ track.name }}">
+            {{ track.name }}
+        </a>
+    </div>
+    <div class="text-muted small py-1">
+        <ol class="breadcrumb ast-breadcrumb-dotted ast-breadcrumb-scrollable" data-element="scrollable-breadcrumb">
+            {% if track.genre %}
+                <li class="breadcrumb-item{% if 'genre' in fields %} text-danger{% endif %}">
+                    <a class="text-reset" href="{{ url_for('search.advanced.index', query_params = { genre: track.genre }) }}">{{ track.genre }}</a>
+                </li>
+            {% else %}
+                <li class="breadcrumb-item text-danger">(brak gatunku)</li>
+            {% endif %}
+
+            {% if track.album %}
+                <li class="breadcrumb-item">{{ track.album }}</li>
+            {% endif %}
+
+            {% if track.publisher %}
+                <li class="breadcrumb-item{% if 'publisher' in fields %} text-danger{% endif %}">
+                    <a class="text-reset" href="{{ url_for('search.advanced.index', query_params = { publisher: track.publisher }) }}">{{ track.publisher }}</a>
+                </li>
+            {% else %}
+                {% if 'publisher' in fields %}
+                    <li class="breadcrumb-item text-danger">(brak wydawcy)</li>
+                {% endif %}
+            {% endif %}
+
+            {% if track.year %}
+                <li class="breadcrumb-item{% if 'year' in fields %} text-danger{% endif %}">
+                    <a class="text-reset" href="{{ url_for('search.advanced.index', query_params = { year: track.year }) }}">{{ track.year }}</a>
+                </li>
+            {% else %}
+                <li class="breadcrumb-item text-danger">(brak roku)</li>
+            {% endif %}
+
+            {% if track.bpm %}
+                <li class="breadcrumb-item{% if 'bpm' in fields %} text-danger{% endif %}">
+                    <a class="text-reset" href="{{ url_for('search.advanced.index', query_params = { bpm: track.bpm }) }}">{{ track.bpm }} BPM</a>
+                </li>
+            {% else %}
+                <li class="breadcrumb-item text-danger">(brak BPM)</li>
+            {% endif %}
+
+            {% if track.initial_key %}
+                <li class="breadcrumb-item{% if 'initial_key' in fields %} text-danger{% endif %}">
+                    <a class="text-reset" href="{{ url_for('search.advanced.index', query_params = { key: track.initial_key }) }}">{{ track.initial_key }}</a>
+                </li>
+            {% else %}
+                <li class="breadcrumb-item text-danger">(brak tonacji)</li>
+            {% endif %}
+
+            {% if track.length %}
+                <li class="breadcrumb-item">{{ track.length|format_duration }}</li>
+            {% endif %}
+        </ol>
+    </div>
+    {% if file is defined and file|length > 0 %}
+        <div class="text-muted small">
+            <ol class="breadcrumb ast-breadcrumb-dotted ast-breadcrumb-scrollable mb-0" data-element="scrollable-breadcrumb">
+                {% if file.size is defined and file.size %}
+                    <li class="breadcrumb-item">{{ file.size|format_filesize }}</li>
+                {% endif %}
+                {% if file.bitrate is defined and file.bitrate %}
+                    <li class="breadcrumb-item{% if 'bitrate' in fields %} text-danger{% endif %}">
+                        {{ file.bitrate }} kbps
+                        {% if file.bitrate_mode is defined and file.bitrate_mode %}
+                            ({{ file.bitrate_mode|upper }})
+                        {% endif %}
+                    </li>
+                {% endif %}
+                {% if file.sample_rate is defined and file.sample_rate %}
+                    <li class="breadcrumb-item">{{ (file.sample_rate / 1000)|number_format(1) }} kHz</li>
+                {% endif %}
+                {% if file.channel_mode is defined and file.channel_mode %}
+                    <li class="breadcrumb-item{% if 'channel_mode' in fields %} text-danger{% endif %}">
+                        {{ file.channel_mode|capitalize }}
+                    </li>
+                {% endif %}
+                {% if track.pathname is defined and track.pathname %}
+                    <li class="breadcrumb-item" title="{{ track.pathname }}">{{ track.pathname|replace({'/collection/': ''}) | split('/') | slice(0, -1) | join('/') }}</li>
+                {% endif %}
+            </ol>
+        </div>
+    {% endif %}
+</div>

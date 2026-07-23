@@ -4,15 +4,15 @@ namespace Assistant\Module\Track\Extension;
 
 final readonly class TrackMetadataFields
 {
-    public const ALBUM = 'album';
-    public const ARTIST = 'artist';
-    public const BPM = 'bpm';
-    public const GENRE = 'genre';
-    public const INITIAL_KEY = 'initial_key';
-    public const PUBLISHER = 'publisher';
-    public const TITLE = 'title';
-    public const TRACK_NUMBER = 'track_number';
-    public const YEAR = 'year';
+    public const string ALBUM = 'album';
+    public const string ARTIST = 'artist';
+    public const string BPM = 'bpm';
+    public const string GENRE = 'genre';
+    public const string INITIAL_KEY = 'initial_key';
+    public const string PUBLISHER = 'publisher';
+    public const string TITLE = 'title';
+    public const string TRACK_NUMBER = 'track_number';
+    public const string YEAR = 'year';
 
     public static function isSupportedMetadataField(string $field): bool
     {

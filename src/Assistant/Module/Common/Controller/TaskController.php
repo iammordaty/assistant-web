@@ -89,6 +89,19 @@ final readonly class TaskController
         return $response->withRedirect($redirectUrl);
     }
 
+    public function runCollectionAnalysis(ServerRequest $request, Response $response): ResponseInterface
+    {
+        $command = sprintf('php %s/bin/console.php collection:analyze', $this->baseDir);
+
+        $backgroundProcess = new BackgroundProcess($command);
+        $backgroundProcess->run();
+
+        return $response->withJson([
+            'command' => $command,
+            'pid' => $backgroundProcess->getPid(),
+        ]);
+    }
+
     public function reindexSimilarTracksCollection(ServerRequest $request, Response $response): ResponseInterface
     {
         $command = sprintf('php %s/bin/console.php collection:reindex-similar-tracks', $this->baseDir);

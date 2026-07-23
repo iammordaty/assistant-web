@@ -87,6 +87,13 @@ final class DirectoryRepository
         return $this->storage->removeById($dto->getObjectId());
     }
 
+    public function countBy(SearchCriteria $searchCriteria): int
+    {
+        $criteria = Query::fromSearchCriteria($searchCriteria);
+
+        return $this->storage->count($criteria->toStorage());
+    }
+
     private function findOneBy(array $conditions): ?Directory
     {
         $document = $this->storage->findOneBy($conditions);
