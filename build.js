@@ -34,6 +34,23 @@ const VENDOR_ASSETS = [
     { from: 'wavesurfer.js/dist/wavesurfer.min.js', to: 'public/vendor/wavesurfer.min.js' },
 ];
 
+const log = (type, message, data = undefined) => {
+    const timestamp = new Intl.DateTimeFormat('pl-PL', {
+        day: '2-digit',
+        month: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+        fractionalSecondDigits: 3,
+    })
+    .format(new Date());
+
+    const prefix = `[${timestamp}] ${type}`;
+    const payload = data === undefined ? message : `${message} | Details:`;
+
+    console.log(prefix, payload, ...(data === undefined ? [] : [ data ]));
+};
+
 const getFileSize = filePath => {
     try {
         const { size } = fs.statSync(filePath);
@@ -187,23 +204,6 @@ const startWatchMode = async (state) => {
     watcher.on('ready', () => log(LogType.INFO, 'Watching for changes...'));
 
     watcher.on('change', (changedPath) => handleFileChange(changedPath, state));
-};
-
-const log = (type, message, data = undefined) => {
-    const timestamp = new Intl.DateTimeFormat('pl-PL', {
-        day: '2-digit',
-        month: '2-digit',
-        hour: '2-digit',
-        minute: '2-digit',
-        second: '2-digit',
-        fractionalSecondDigits: 3,
-    })
-    .format(new Date());
-
-    const prefix = `[${timestamp}] ${type}`;
-    const payload = data === undefined ? message : `${message} | Details:`;
-
-    console.log(prefix, payload, ...(data === undefined ? [] : [ data ]));
 };
 
 const main = async () => {
