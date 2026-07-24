@@ -163,12 +163,12 @@ final class Track implements CollectionItemInterface
         return $clone;
     }
 
-    public function getGenre(): string
+    public function getGenre(): ?string
     {
         return $this->genre;
     }
 
-    public function withGenre(string $genre): self
+    public function withGenre(?string $genre): self
     {
         $clone = clone $this;
         $clone->genre = $genre;
@@ -181,12 +181,12 @@ final class Track implements CollectionItemInterface
         return $this->publisher;
     }
 
-    public function getBpm(): float
+    public function getBpm(): ?float
     {
         return $this->bpm;
     }
 
-    public function withBpm(float $bpm): self
+    public function withBpm(?float $bpm): self
     {
         $clone = clone $this;
         $clone->bpm = $bpm;
@@ -194,12 +194,12 @@ final class Track implements CollectionItemInterface
         return $clone;
     }
 
-    public function getInitialKey(): string
+    public function getInitialKey(): ?string
     {
         return $this->initialKey;
     }
 
-    public function withInitialKey(string $initialKey): self
+    public function withInitialKey(?string $initialKey): self
     {
         $clone = clone $this;
         $clone->initialKey = $initialKey;

@@ -1,6 +1,8 @@
 <?php
 
 use Assistant\Module\Collection\Extension\Autocomplete\TrackAutocompleteService;
+use Assistant\Module\Collection\Task\CleanerTask;
+use Assistant\Module\Collection\Task\IndexerTask;
 use Assistant\Module\Collection\Extension\Reader\DirectoryReader;
 use Assistant\Module\Collection\Extension\Reader\FileReader;
 use Assistant\Module\Collection\Extension\Reader\FileReaderFacade;
@@ -12,6 +14,7 @@ use Assistant\Module\Common\Extension\Breadcrumbs\BreadcrumbsBuilder;
 use Assistant\Module\Common\Extension\Config;
 use Assistant\Module\Common\Extension\GetId3\Adapter as Id3Adapter;
 use Assistant\Module\Common\Extension\LogView;
+use Assistant\Module\Common\Extension\Messages;
 use Assistant\Module\Common\Extension\Pagerfanta\PagerfantaTwigRuntimeLoaderFactory;
 use Assistant\Module\Common\Extension\RouteResolver;
 use Assistant\Module\Common\Extension\SimilarTracksCollection\SimilarTracksCollectionService;
@@ -97,6 +100,12 @@ return static fn (string $baseDir, array $config): array => [
     },
 
     Id3Adapter::class => create(),
+
+    Messages::class => create(),
+
+    IndexerTask::class => fn (Container $container): IndexerTask => IndexerTask::factory($container),
+
+    CleanerTask::class => fn (Container $container): CleanerTask => CleanerTask::factory($container),
 
     Logger::class => function (Container $container): LoggerInterface {
         $storage = $container->get(Config::class)->get('storage');

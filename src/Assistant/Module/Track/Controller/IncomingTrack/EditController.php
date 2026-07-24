@@ -2,12 +2,14 @@
 
 namespace Assistant\Module\Track\Controller\IncomingTrack;
 
-use Assistant\Module\Common\Extension\GetId3\Adapter as Id3Adapter;
+use Assistant\Module\Common\Extension\Messages;
 use Assistant\Module\Common\Extension\Route;
 use Assistant\Module\Common\Extension\RouteResolver;
 use Assistant\Module\Track\Extension\BeatportTrackMetadataSuggestionsService;
+use Assistant\Module\Track\Extension\TrackMetadataWriter;
 use Assistant\Module\Track\Extension\TrackService;
-use Cocur\BackgroundProcess\BackgroundProcess;
+use Assistant\Module\Track\Extension\UpdateTrackCommand;
+use Monolog\Logger;
 use Psr\Http\Message\ResponseInterface;
 use Slim\Http\Response;
 use Slim\Http\ServerRequest;
@@ -16,10 +18,12 @@ use Slim\Views\Twig;
 final class EditController
 {
     public function __construct(
-        private Id3Adapter $id3Adapter,
         private RouteResolver $routeResolver,
         private TrackService $trackService,
         private BeatportTrackMetadataSuggestionsService $trackMetadataSuggestions,
+        private TrackMetadataWriter $trackMetadataWriter,
+        private Messages $messages,
+        private Logger $logger,
         private Twig $view,
     ) {
     }
@@ -67,66 +71,31 @@ final class EditController
             return $this->getNotFoundRedirect($response, $pathname);
         }
 
-        // słabe, ogarnąć klasą typu request, podobnie jak w logach
-        $postData = $request->getParsedBody();
+        $editUrl = $this->routeResolver->resolve(
+            Route::create('incoming-track.edit.edit')->withParams([ 'pathname' => $track->getFile()->getPathname() ])
+        );
 
-        $this
-            ->id3Adapter
-            ->setFile($track->getFile());
-
-        $metadata = [
-            'artist' => $postData['artist'],
-            'title' => $postData['title'],
-            'album' => $postData['album'],
-            'track_number' => $postData['trackNumber'],
-            'publisher' => $postData['publisher'],
-            'genre' => $postData['genre'],
-            'year' => $postData['year'],
-            'initial_key' => $postData['initialKey'],
-            'bpm' => $postData['bpm'],
-        ];
-
-        // mało eleganckie, ogarnąć zwykłymi if-ami
-        foreach ($metadata as $name => $value) {
-            if (empty($value)) {
-                unset($metadata[$name]);
-            }
-        }
-
-        // zapobiega usunięciu danych w przypadku braku ich podania
-        if (empty($metadata['initial_key']) && $track->getInitialKey()) {
-            $metadata['initial_key'] = $track->getInitialKey();
-        }
-
-        if (empty($metadata['bpm']) && $track->getBpm()) {
-            $metadata['bpm'] = $track->getBpm();
-        }
-
-        // @todo: try...catch i wyświetlenie ew. wyjątku na froncie
         try {
-            $this->id3Adapter->writeMetadata($metadata);
-        } catch (\Exception $e) {
-            var_dump($e->getMessage());
-            var_dump($this->id3Adapter->getWriterErrors());
-            var_dump($this->id3Adapter->getWriterWarnings());
-            exit;
+            $updateCommand = UpdateTrackCommand::fromRequest($request);
+            $warnings = $this->trackMetadataWriter->write($track->getFile(), $updateCommand->toMetadata());
+
+            if ($updateCommand->calculateAudioData) {
+                $this->trackMetadataWriter->calculateAudioData($track->getFile()->getPathname());
+            }
+        } catch (\Throwable $e) {
+            $this->logger->error('Incoming track update failed', [ 'pathname' => $pathname, 'error' => $e->getMessage() ]);
+            $this->messages->addError($e->getMessage());
+
+            return $response->withRedirect($editUrl);
         }
 
-        if (isset($postData['task:calculate-audio-data'])) {
-            $command = sprintf(
-                'php /data/bin/console.php track:calculate-audio-data -w "%s"',
-                $track->getFile()->getPathname()
-            );
+        $this->messages->addSuccess('Zapisano metadane utworu.');
 
-            (new BackgroundProcess($command))->run();
+        foreach ($warnings as $warning) {
+            $this->messages->addWarning($warning);
         }
 
-        $route = Route::create('incoming-track.edit.edit')
-            ->withParams([ 'pathname' => $track->getFile()->getPathname() ]);
-
-        $redirectUrl = $this->routeResolver->resolve($route);
-
-        return $response->withRedirect($redirectUrl);
+        return $response->withRedirect($editUrl);
     }
 
     /** @todo Przenieść do innej klasy */

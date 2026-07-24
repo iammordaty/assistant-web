@@ -54,6 +54,16 @@ const initSortableTables = (container) => {
         });
 }
 
+const initMessages = (container) => {
+    container
+        .querySelectorAll('[data-role="alert"]')
+        .forEach(el => {
+            const alert = new bootstrap.Alert(el);
+
+            setTimeout(() => alert.close(), 5000);
+        });
+}
+
 const initScrollableBreadcrumbs = (container) => {
     container
         .querySelectorAll('[data-element="scrollable-breadcrumb"]')
@@ -72,5 +82,6 @@ export {
     initTooltips,
     initPopovers,
     initSortableTables,
-    initScrollableBreadcrumbs
+    initScrollableBreadcrumbs,
+    initMessages,
 };
