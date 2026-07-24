@@ -187,6 +187,80 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@popperjs/core@npm:2.11.6":
+  version: 2.11.6
+  resolution: "@popperjs/core@npm:2.11.6"
+  checksum: 10c0/90b1361ab1a19cd351e482a88cb6cf13cf25973e20797bf9b97223e64b87bde8d9668ab2f33be24475e2a092d362ac256c361b16ea4e4ab5b21f2aeaef5f9bb7
+  languageName: node
+  linkType: hard
+
+"@popperjs/core@npm:^2.11.7":
+  version: 2.11.8
+  resolution: "@popperjs/core@npm:2.11.8"
+  checksum: 10c0/4681e682abc006d25eb380d0cf3efc7557043f53b6aea7a5057d0d1e7df849a00e281cd8ea79c902a35a414d7919621fc2ba293ecec05f413598e0b23d5a1e63
+  languageName: node
+  linkType: hard
+
+"@tabler/core@npm:1.0.0-beta19":
+  version: 1.0.0-beta19
+  resolution: "@tabler/core@npm:1.0.0-beta19"
+  dependencies:
+    "@popperjs/core": "npm:^2.11.7"
+    bootstrap: "npm:5.3.0-alpha3"
+  peerDependencies:
+    apexcharts: ^3.40.0
+    autosize: ^6.0.1
+    choices.js: ^10.2.0
+    countup.js: ^2.6.2
+    dropzone: ^6.0.0-beta.2
+    flatpickr: ^4.6.13
+    fslightbox: ^3.4.1
+    imask: ^6.6.1
+    jsvectormap: ^1.5.3
+    list.js: ^2.3.1
+    litepicker: ^2.0.12
+    nouislider: ^15.7.0
+    plyr: ^3.7.8
+    star-rating.js: ^4.3.0
+    tinymce: ^6.4.2
+    tom-select: ^2.2.2
+  peerDependenciesMeta:
+    apexcharts:
+      optional: true
+    autosize:
+      optional: true
+    choices.js:
+      optional: true
+    countup.js:
+      optional: true
+    dropzone:
+      optional: true
+    flatpickr:
+      optional: true
+    fslightbox:
+      optional: true
+    imask:
+      optional: true
+    jsvectormap:
+      optional: true
+    list.js:
+      optional: true
+    litepicker:
+      optional: true
+    nouislider:
+      optional: true
+    plyr:
+      optional: true
+    star-rating.js:
+      optional: true
+    tinymce:
+      optional: true
+    tom-select:
+      optional: true
+  checksum: 10c0/5ac15e891077a0501acca184a95b4e9c03e78a9eed1c36652ff42dd2c0922f683118131c660aca4143c970b1766ac3366b244ac6f84067e78d9f3ef725a7628e
+  languageName: node
+  linkType: hard
+
 "@tabler/icons-react@npm:^3.34.0":
   version: 3.35.0
   resolution: "@tabler/icons-react@npm:3.35.0"
@@ -209,14 +283,28 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "assistant-web@workspace:."
   dependencies:
+    "@popperjs/core": "npm:2.11.6"
+    "@tabler/core": "npm:1.0.0-beta19"
     "@tabler/icons-react": "npm:^3.34.0"
     chokidar: "npm:^4.0.1"
     esbuild: "npm:^0.25.5"
+    jquery: "npm:3.7.0"
     prop-types: "npm:^15.8.1"
     react: "npm:19"
     react-dom: "npm:19"
+    tablesorter: "npm:2.31.3"
+    wavesurfer.js: "npm:7.11.1"
   languageName: unknown
   linkType: soft
+
+"bootstrap@npm:5.3.0-alpha3":
+  version: 5.3.0-alpha3
+  resolution: "bootstrap@npm:5.3.0-alpha3"
+  peerDependencies:
+    "@popperjs/core": ^2.11.7
+  checksum: 10c0/23d4f3a2bb9cff9628b6439f5d945fccc0e9e314682fa84c421bfdea9c565a6033dfa594c2c76031be982629c53009161b0fcba9387d46d5b383858f4998f1fd
+  languageName: node
+  linkType: hard
 
 "chokidar@npm:^4.0.1":
   version: 4.0.3
@@ -316,6 +404,20 @@ __metadata:
   languageName: node
   linkType: hard
 
+"jquery@npm:3.7.0":
+  version: 3.7.0
+  resolution: "jquery@npm:3.7.0"
+  checksum: 10c0/2eea1d9ce48fabd0d8736b8bed2e2087c33f038a077ea9f8dcbad55b07c3a1abc226898f498fc992b7fb02c1296cbe79d6283902a9d2027ed41efab04d86da6f
+  languageName: node
+  linkType: hard
+
+"jquery@npm:>=1.2.6":
+  version: 4.0.0
+  resolution: "jquery@npm:4.0.0"
+  checksum: 10c0/06d8d0f51121af5a691f8b59c74823157bb5b60eea915b30eaa920d6c0ffd91e60ba81e9b97bd8203f331f9dd8d0ec9a4b010935ea314bdd2f15453c29bc780b
+  languageName: node
+  linkType: hard
+
 "js-tokens@npm:^3.0.0 || ^4.0.0":
   version: 4.0.0
   resolution: "js-tokens@npm:4.0.0"
@@ -388,5 +490,21 @@ __metadata:
   version: 0.27.0
   resolution: "scheduler@npm:0.27.0"
   checksum: 10c0/4f03048cb05a3c8fddc45813052251eca00688f413a3cee236d984a161da28db28ba71bd11e7a3dd02f7af84ab28d39fb311431d3b3772fed557945beb00c452
+  languageName: node
+  linkType: hard
+
+"tablesorter@npm:2.31.3":
+  version: 2.31.3
+  resolution: "tablesorter@npm:2.31.3"
+  dependencies:
+    jquery: "npm:>=1.2.6"
+  checksum: 10c0/8a5a7dced74d36b27390e331effe7a412b9521563e4c1abe355f3f22b91974df0639d1b6c32a939ee19a3d5f3b3548cbde33dae6a03adeba42dab25d4d450837
+  languageName: node
+  linkType: hard
+
+"wavesurfer.js@npm:7.11.1":
+  version: 7.11.1
+  resolution: "wavesurfer.js@npm:7.11.1"
+  checksum: 10c0/97a4e94d5db3b0fd728005dbc6b3307813661dd8c948e49c9315dbf84408e7890f1eb8e57697c2529c1e3ff1ec8e548196d70ed105d92851f3f43689756fc546
   languageName: node
   linkType: hard

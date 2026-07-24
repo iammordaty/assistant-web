@@ -63,10 +63,12 @@
                                                     {#         uwaga, to samo jest w track-edit.js:19 #}
 
                                                     {{ track.name }}
-                                                    [
-                                                    {{- track.release.date|date('d.m.Y') -}},&nbsp
-                                                    {{- track.release.label -}}
-                                                    ]
+                                                    {%- if track.release -%}
+                                                        [
+                                                            {{- track.release.date|date('d.m.Y') -}},&nbsp
+                                                            {{- track.release.label -}}
+                                                        ]
+                                                    {%- endif -%}
                                                 </option>
                                             {% endwith %}
                                         {% endfor %}

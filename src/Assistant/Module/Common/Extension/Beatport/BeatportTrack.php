@@ -4,7 +4,7 @@ namespace Assistant\Module\Common\Extension\Beatport;
 
 final readonly class BeatportTrack
 {
-    private const DEFAULT_MIX_NAME = 'Original Mix';
+    private const string DEFAULT_MIX_NAME = 'Original Mix';
 
     private function __construct(
         public int $id,
@@ -14,7 +14,7 @@ final readonly class BeatportTrack
         public string $mixName,
         public ?array $remixers,
         public string $name,
-        public BeatportRelease $release,
+        public ?BeatportRelease $release,
         public ?int $trackNumber,
         public string $genre,
         public ?string $subGenre,
@@ -43,7 +43,7 @@ final readonly class BeatportTrack
             mixName: $mixName,
             remixers: $remixers,
             name: $name,
-            release: BeatportRelease::create($track['release']),
+            release: $track['release'] !== null ? BeatportRelease::create($track['release']) : null,
             trackNumber: $track['number'],
             genre: $track['genre']['name'],
             subGenre: $track['sub_genre']['name'] ?? null,
