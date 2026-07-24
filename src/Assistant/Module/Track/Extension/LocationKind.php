@@ -10,17 +10,17 @@ use SplFileInfo;
  */
 enum LocationKind
 {
-    case SINGLES;
-    case OTHER;
     case INCOMING;
+    case OTHER;
     case READY;
+    case SINGLES;
     case UNSUPPORTED;
 
     public function filenameFormat(): string
     {
         return match ($this) {
-            self::SINGLES => '%artist%/%album%/%artist% - %track_number% - %title%',
             self::OTHER => '%artist% - %title%',
+            self::SINGLES => '%artist%/%album%/%artist% - %track_number% - %title%',
             
             default => '%artist% - %title%',
         };

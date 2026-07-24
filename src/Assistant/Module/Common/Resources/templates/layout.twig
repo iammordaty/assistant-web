@@ -57,7 +57,7 @@
             </div>
         </div>
 
-        {% include '@common/messages.twig' %}
+        {% include '@common/messages.twig' with { flash: flash|default({}) } only %}
 
         <script type="module" src="/js/app/index.js"></script>
     </body>
