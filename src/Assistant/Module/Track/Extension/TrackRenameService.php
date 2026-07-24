@@ -27,42 +27,105 @@ final class TrackRenameService
 
     public function clean(Track|IncomingTrack $track): RenameResult
     {
-        $target = $this->trackFilenameSuggestion->getSuggestedFilename($track->getFile());
+        $target = new SplFileInfo($this->trackFilenameSuggestion->getSuggestedFilename($track->getFile()));
 
-        return $this->move($track->getFile(), new SplFileInfo($target));
+        return $this->move($track->getFile(), $this->resolveAbsoluteTarget($track->getFile(), $target));
     }
 
     /**
-     * Buduje docelową nazwę pliku na podstawie przekazanych metadanych (a nie ponownej analizy pliku)
-     * i przenosi tam plik. Źródłem prawdy jest $metadata podane przez wywołującego (F4).
+     * Buduje docelową nazwę pliku z jawnie podanego formatu i metadanych, po czym przenosi tam plik.
+     * Źródłem prawdy jest $metadata podane przez wywołującego (F4), nie ponowna analiza pliku.
+     * Używane m.in. przez CLI (track:rename) z jawnym formatem.
      *
      * @param array $metadata metadane (tagi) w postaci [ pole => wartość ], np. z UpdateTrackCommand::toMetadata()
      */
     public function rename(Track|IncomingTrack $track, string $format, array $metadata, bool $markAsReady): RenameResult
     {
-        $target = $this->buildTargetFilename($track, $format, $metadata, $markAsReady);
+        $target = new SplFileInfo($this->buildTargetFilename($track, $format, $metadata, $markAsReady));
 
-        return $this->move($track->getFile(), new SplFileInfo($target));
+        return $this->move($track->getFile(), $this->resolveAbsoluteTarget($track->getFile(), $target));
     }
 
     public function target(Track|IncomingTrack $track, SplFileInfo $target): RenameResult
     {
-        return $this->move($track->getFile(), $target);
+        return $this->move($track->getFile(), $this->resolveAbsoluteTarget($track->getFile(), $target));
     }
 
     /**
-     * Liczy docelową (absolutną) ścieżkę dla rename() BEZ efektów ubocznych (bez mkdir/rename/rmdir).
-     * Pozwala zawczasu wykryć konflikt nazwy zanim cokolwiek zostanie zapisane (dry-run, F3).
+     * Liczy docelową (absolutną) ścieżkę dla renameToCollectionLayout() BEZ efektów ubocznych,
+     * pozwalając zawczasu wykryć konflikt nazwy zanim cokolwiek zostanie zapisane (dry-run, F3).
      */
-    public function resolveTargetPathname(
-        Track|IncomingTrack $track,
-        string $format,
-        array $metadata,
-        bool $markAsReady,
-    ): SplFileInfo {
-        $target = new SplFileInfo($this->buildTargetFilename($track, $format, $metadata, $markAsReady));
+    public function resolveCollectionTarget(Track|IncomingTrack $track, array $metadata): SplFileInfo
+    {
+        [ $relativeTarget, $baseDir ] = $this->resolveCollectionLayout($track, $metadata);
 
-        return $this->resolveAbsoluteTarget($track->getFile(), $target);
+        return new SplFileInfo(sprintf('%s/%s', $baseDir, $relativeTarget));
+    }
+
+    /**
+     * Zmienia nazwę/lokalizację utworu wg układu kolekcji, dobierając format i katalog bazowy
+     * automatycznie z jego lokalizacji (patrz resolveCollectionLayout()).
+     */
+    public function renameToCollectionLayout(Track|IncomingTrack $track, array $metadata): RenameResult
+    {
+        return $this->move($track->getFile(), $this->resolveCollectionTarget($track, $metadata));
+    }
+
+    /**
+     * Dobiera format nazwy i katalog bazowy z logicznej lokalizacji utworu (F6). Dla Singles zachowuje
+     * istniejący wzorzec nazwy: single-artist "Artist - NN - Title" (odbudowa katalogu Artist/Release
+     * z metadanych) vs various-artists "NN. Artist - Title" (zmiana tylko nazwy pliku w miejscu, bo
+     * katalogu wydania nie da się rzetelnie odtworzyć z metadanych pojedynczego tracka).
+     *
+     * @return array{0: string, 1: string} [ względna nazwa pliku, katalog bazowy ]
+     */
+    private function resolveCollectionLayout(Track|IncomingTrack $track, array $metadata): array
+    {
+        $source = $track->getFile();
+        $kind = $this->trackService->getLocationArbiter()->getLocationKind($source);
+        $isVariousArtists = $kind === LocationKind::SINGLES && self::isVariousArtistsFilename($source);
+
+        $format = self::collectionFilenameFormat($kind, $isVariousArtists);
+        $baseDir = $isVariousArtists ? $source->getPath() : self::baseDirFor($source, $kind);
+
+        return [ $this->buildTargetFilename($track, $format, $metadata, markAsReady: false), $baseDir ];
+    }
+
+    /** Format nazwy pliku dla danej lokalizacji i wariantu Singles - patrz struktura kolekcji w AGENTS.md */
+    private static function collectionFilenameFormat(LocationKind $kind, bool $isVariousArtists): string
+    {
+        if ($kind !== LocationKind::SINGLES) {
+            return '%artist% - %title%';
+        }
+
+        return $isVariousArtists
+            ? '%track_number%. %artist% - %title%'
+            : '%artist%/%album%/%artist% - %track_number% - %title%';
+    }
+
+    /** Wzorzec various-artists w Singles: nazwa pliku zaczyna się od "NN. " (numer ścieżki + kropka) */
+    private static function isVariousArtistsFilename(SplFileInfo $file): bool
+    {
+        $basename = $file->getBasename('.' . $file->getExtension());
+
+        return preg_match('/^\d+\.\s/', $basename) === 1;
+    }
+
+    /**
+     * Katalog bazowy dla danej lokalizacji. Dla Singles to dwa poziomy nad plikiem (Rok/Miesiąc),
+     * bo format odbudowuje z metadanych segment Artist/Release; poza Singles - katalog pliku.
+     */
+    private static function baseDirFor(SplFileInfo $source, LocationKind $kind): string
+    {
+        return $kind === LocationKind::SINGLES ? dirname($source->getPath(), 2) : $source->getPath();
+    }
+
+    /** Dokleja katalog bazowy (wyprowadzony z lokalizacji) do względnej nazwy pliku */
+    private function resolveAbsoluteTarget(SplFileInfo $source, SplFileInfo $target): SplFileInfo
+    {
+        $kind = $this->trackService->getLocationArbiter()->getLocationKind($source);
+
+        return new SplFileInfo(sprintf('%s/%s', self::baseDirFor($source, $kind), $target));
     }
 
     /** Buduje względną nazwę pliku (bez katalogu bazowego) z formatu i metadanych */
@@ -109,14 +172,6 @@ final class TrackRenameService
         }
 
         return $target;
-    }
-
-    /** Dokleja katalog bazowy (wyprowadzony z typu lokalizacji) do względnej nazwy pliku */
-    private function resolveAbsoluteTarget(SplFileInfo $source, SplFileInfo $target): SplFileInfo
-    {
-        $baseDir = $this->trackService->getLocationArbiter()->getLocationKind($source)->baseDir($source);
-
-        return new SplFileInfo(sprintf('%s/%s', $baseDir, $target));
     }
 
     /**
@@ -180,8 +235,6 @@ final class TrackRenameService
 
         $logContext['source'] = $source->getPathname();
         $logContext['source_in_collection'] = $sourceInCollection;
-
-        $target = $this->resolveAbsoluteTarget($source, $target);
 
         // Na filesystemach case-insensitive (APFS, HFS+, NTFS) file_exists() zwróci true również gdy
         // zmieniła się wyłącznie wielkość liter w nazwie (bo to fizycznie ten sam plik / inode) - taki

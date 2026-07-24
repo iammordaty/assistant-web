@@ -98,6 +98,43 @@ final class TrackRenameServiceTest extends TestCase
         self::assertFalse($this->invokeIsDirectoryEmpty('/no/such/dir/here'));
     }
 
+    /** @dataProvider dataCollectionFilenameFormat */
+    public function testCollectionFilenameFormat(LocationKind $kind, bool $isVariousArtists, string $expected): void
+    {
+        $method = new \ReflectionMethod(TrackRenameService::class, 'collectionFilenameFormat');
+
+        self::assertSame($expected, $method->invoke(null, $kind, $isVariousArtists));
+    }
+
+    public function dataCollectionFilenameFormat(): array
+    {
+        return [
+            'singles single-artist' => [
+                LocationKind::SINGLES, false, '%artist%/%album%/%artist% - %track_number% - %title%',
+            ],
+            'singles various-artists' => [ LocationKind::SINGLES, true, '%track_number%. %artist% - %title%' ],
+            'other is flat' => [ LocationKind::OTHER, false, '%artist% - %title%' ],
+            'incoming is flat' => [ LocationKind::INCOMING, false, '%artist% - %title%' ],
+        ];
+    }
+
+    /** @dataProvider dataVariousArtistsFilename */
+    public function testIsVariousArtistsFilename(string $pathname, bool $expected): void
+    {
+        $method = new \ReflectionMethod(TrackRenameService::class, 'isVariousArtistsFilename');
+
+        self::assertSame($expected, $method->invoke(null, new \SplFileInfo($pathname)));
+    }
+
+    public function dataVariousArtistsFilename(): array
+    {
+        return [
+            'various-artists NN. prefix' => [ '/c/Singles/2009/08/VA/Rel/01. Artist - Title.mp3', true ],
+            'single-artist Artist - NN - Title' => [ '/c/Singles/2009/08/A/Rel/Artist - 01 - Title.mp3', false ],
+            'flat other' => [ '/c/Other/Artist - Title.mp3', false ],
+        ];
+    }
+
     private function invokeRemoveEmptyDirectoriesUpTo(string $startDir, string $boundary): array
     {
         $method = new \ReflectionMethod(TrackRenameService::class, 'removeEmptyDirectoriesUpTo');

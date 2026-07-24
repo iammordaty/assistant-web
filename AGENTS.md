@@ -134,8 +134,23 @@ The music library lives under `collection.root_dir` (`/collection`). Only three 
 - **`/collection/Singles`** — indexed. **Whole releases** (single/EP/maxi/remix pack, 1..N tracks). Nested structure:
 
 ```
-Singles/<Year>/<Month No> <Month Name>/<Artist>/<Release>/<files>.mp3
-# e.g. Singles/2009/08. sierpień/Deadmau5/Ghosts 'N' Stuff/Deadmau5 - 01 - Ghosts 'N' Stuff.mp3
+Singles/<Year>/<Month No> <Month Name>/<Artist>/<Release>/<Artist> - <Track No> - <Title 1>.mp3
+Singles/<Year>/<Month No> <Month Name>/<Artist>/<Release>/<Artist> - <Track No> - <Title 2>.mp3
+Singles/<Year>/<Month No> <Month Name>/<Artist>/<Release>/<Artist> - <Track No> - <Title 3>.mp3
+# ...
+
+# or
+
+Singles/<Year>/<Month No> <Month Name>/<Artist>/<Release>/<Track No>. <Artist 1> - <Title 1>.mp3
+Singles/<Year>/<Month No> <Month Name>/<Artist>/<Release>/<Track No>. <Artist 1> feat. <Artist 2> - <Title 2>.mp3
+Singles/<Year>/<Month No> <Month Name>/<Artist>/<Release>/<Track No>. <Artist 1> feat. <Artist 3> - <Title 3>.mp3
+# ...
+
+# where Month No is as 1-based, zero-padded month number, Month No - lowercased month full name in polish, ie:
+# 01. styczeń
+# 04. kwiecień
+# 09. wrzesień
+# 12. grudzień
 ```
 
 Two valid filename formats in `Singles`:
@@ -144,11 +159,12 @@ Two valid filename formats in `Singles`:
 
 ### Location rules & gotchas
 
-- Location type is resolved by `TrackLocationArbiter` against `collection.indexed_dirs` / `incoming_dir` / `ready_dir`, **not** by `root_dir` (a path under root but outside indexed dirs is `UNSUPPORTED`, not in-collection). See `LocationKind` enum for per-location filename format and base dir.
+- Location type is resolved by `TrackLocationArbiter` against `collection.indexed_dirs` / `incoming_dir` / `ready_dir`, **not** by `root_dir` (a path under root but outside indexed dirs is `UNSUPPORTED`, not in-collection). `LocationKind` is a **pure classification** enum; the per-location filename format and base-dir policy live in `TrackRenameService` (which also has the track context needed to pick the right `Singles` variant).
 - `ready_dir` is nested inside `incoming_dir`, so the arbiter checks it **first** (most-specific wins) and maps it to `LocationKind::READY`, distinct from `INCOMING`. `isInIncoming()` is true for both (physically under incoming, both outside the collection); `isReady()` is the precise predicate for "in `ready_dir`". Use `isReady()` (not `isInIncoming()`) when selecting processed files to promote into the collection, so raw incoming files are not swept in.
 - The same track may exist both as a single in `Other` and as part of a full release in `Singles` — always consider the directory context.
 - **There is NO letter directory** (e.g. `Singles/A/...`). Any older comment/test implying a `<letter>` segment is wrong; the segment two levels above the file is `Year/Month`.
-- `LocationKind::baseDir()` for `Singles` is `dirname($file->getPath(), 2)` — **positional relative to the file** (the two levels above `Artist/Album`), whose name is preserved verbatim. It is intentionally NOT derived from the artist and NOT relocated when the artist changes (deliberate — see plan item "B4, rezygnacja"). Do not "fix" it to compute a letter from the artist; that would corrupt the real `Year/Month` structure.
+- The `Singles` base dir (`TrackRenameService::baseDirFor()`) is `dirname($file->getPath(), 2)` — **positional relative to the file** (the two levels above `Artist/Release`, i.e. `Year/Month`), whose name is preserved verbatim. It is intentionally NOT derived from the artist and NOT relocated when the artist changes (deliberate — see plan item "B4, rezygnacja"). Do not "fix" it to compute a letter from the artist; that would corrupt the real `Year/Month` structure.
+- When renaming a `Singles` track (collection edit flow, `TrackRenameService::renameToCollectionLayout()`), the **existing filename pattern is preserved**: single-artist (`Artist - NN - Title`) rebuilds the `Artist/Release` dirs from metadata under `Year/Month`; various-artists (`NN. Artist - Title`, detected by a leading `NN.` prefix) only renames the file in place — the release directory is not rebuilt from a single track's metadata (there is no album-artist concept in the model). CLI `track:rename --format` still takes an explicit format.
 
 ## Data Flow
 

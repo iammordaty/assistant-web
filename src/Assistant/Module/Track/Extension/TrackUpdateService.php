@@ -34,10 +34,7 @@ final readonly class TrackUpdateService
 
         // F3: policz docelową ścieżkę i wykryj konflikt ZANIM zmodyfikujemy plik
         if ($renameNeeded) {
-            // format nazwy wyprowadzamy z typu lokalizacji - kontroler nie zna struktury katalogów (F6)
-            $format = $this->trackService->getLocationArbiter()->getLocationKind($track->getFile())->filenameFormat();
-
-            $target = $this->trackRenameService->resolveTargetPathname($track, $format, $metadata, markAsReady: false);
+            $target = $this->trackRenameService->resolveCollectionTarget($track, $metadata);
 
             if ($this->isConflicting($track->getFile(), $target)) {
                 throw new TrackUpdateException(
@@ -72,7 +69,7 @@ final readonly class TrackUpdateService
             $sourceFile = $track->getFile();
 
             try {
-                $result = $this->trackRenameService->rename($track, $format, $metadata, markAsReady: false);
+                $result = $this->trackRenameService->renameToCollectionLayout($track, $metadata);
             } catch (\Throwable $e) {
                 throw new TrackUpdateException(
                     sprintf('Nie udało się zmienić nazwy pliku: %s', $e->getMessage()),
