@@ -54,16 +54,13 @@ const initSortableTables = (container) => {
         });
 }
 
-const initToasts = (container) => {
-    // toasty są renderowane serwerowo od razu widoczne (klasa `show`), więc pojawią się niezależnie
-    // od JS. Tutaj dokładamy jedynie auto-ukrywanie po czasie z data-bs-delay.
+const initMessages = (container) => {
     container
-        .querySelectorAll('.toast')
+        .querySelectorAll('[data-role="alert"]')
         .forEach(el => {
-            const delay = Number(el.dataset.bsDelay) || 6000;
-            const toast = bootstrap.Toast.getOrCreateInstance(el, { autohide: false });
+            const alert = new bootstrap.Alert(el);
 
-            setTimeout(() => toast.hide(), delay);
+            setTimeout(() => alert.close(), 5000);
         });
 }
 
@@ -86,5 +83,5 @@ export {
     initPopovers,
     initSortableTables,
     initScrollableBreadcrumbs,
-    initToasts,
+    initMessages,
 };

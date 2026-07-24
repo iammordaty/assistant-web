@@ -36,7 +36,7 @@ final class TrackLocationArbiter
 
     /**
      * Rozpoznaje logiczny typ lokalizacji pliku na podstawie realnie indeksowanych katalogów
-     * (collection.indexed_dirs) oraz katalogu incoming - a nie samego root_dir (F14).
+     * (collection.indexed_dirs) oraz katalogu incoming — a nie samego root_dir.
      */
     public function getLocationKind(mixed $file): LocationKind
     {
@@ -79,13 +79,10 @@ final class TrackLocationArbiter
 
     private function matchIndexedDir(string $pathname): ?string
     {
-        foreach ((array) $this->config->get('collection.indexed_dirs') as $indexedDir) {
-            if ($this->isWithin($pathname, $indexedDir)) {
-                return $indexedDir;
-            }
-        }
-
-        return null;
+        return array_find(
+            (array) $this->config->get('collection.indexed_dirs'),
+            fn ($indexedDir) => $this->isWithin($pathname, $indexedDir)
+        );
     }
 
     /** Czy $pathname leży wewnątrz katalogu $dir (z granicą na separatorze, by uniknąć kolizji prefiksów) */

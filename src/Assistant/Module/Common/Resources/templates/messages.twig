@@ -6,11 +6,14 @@
     'warning': 'alert-warning',
 } %}
 
-{# Pozycja, wygląd i ikona alertów #}
-<div class="ast-alerts-container">
+<div class="position-fixed bottom-0 start-50 translate-middle-x p-3 z-3">
     {% for type, messages in flash %}
         {% for message in messages %}
-            <div class="alert alert-important {{ alert[type]|default }} alert-dismissible" role="alert">
+            <div 
+                data-role="alert"
+                class="alert {{ alert[type]|default }} alert-dismissible"
+                role="alert"
+            >
                 <div class="d-flex">
                     <div>
                         {% if type == 'success' %}
