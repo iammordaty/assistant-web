@@ -103,8 +103,6 @@ return static fn (string $baseDir, array $config): array => [
 
     Messages::class => create(),
 
-    // taski konsolowe udostępnione też przez kontener, aby móc je uruchamiać w procesie
-    // (CollectionMaintenanceService / TrackMetadataWriter), bez powłoki - patrz ConsoleCommandRunner
     IndexerTask::class => fn (Container $container): IndexerTask => IndexerTask::factory($container),
 
     CleanerTask::class => fn (Container $container): CleanerTask => CleanerTask::factory($container),

@@ -134,7 +134,7 @@ The music library lives under `collection.root_dir` (`/collection`). Only three 
 - **`/collection/Singles`** — indexed. **Whole releases** (single/EP/maxi/remix pack, 1..N tracks). Nested structure:
 
 ```
-Singles/<Year>/<Month>/<Artist>/<Release>/<files>.mp3
+Singles/<Year>/<Month No> <Month Name>/<Artist>/<Release>/<files>.mp3
 # e.g. Singles/2009/08. sierpień/Deadmau5/Ghosts 'N' Stuff/Deadmau5 - 01 - Ghosts 'N' Stuff.mp3
 ```
 
