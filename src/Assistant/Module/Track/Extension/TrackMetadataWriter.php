@@ -13,7 +13,7 @@ use SplFileInfo;
 final readonly class TrackMetadataWriter
 {
     /** Nazwa komendy konsolowej liczącej BPM/tonację (zob. AudioDataCalculatorTask) */
-    private const CALCULATE_AUDIO_DATA_COMMAND = 'track:calculate-audio-data';
+    private const string CALCULATE_AUDIO_DATA_COMMAND = 'track:calculate-audio-data';
 
     public function __construct(
         private Id3Adapter $id3Adapter,
