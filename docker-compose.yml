@@ -61,15 +61,17 @@ services:
         command: bash -c "corepack enable && yarn install && yarn watch"
 
     music-classifier:
-        build: ./.docker/music-classifier
+        build: ${ASSISTANT_MUSIC_CLASSIFIER_DIR}
         image: assistant-music-classifier
         container_name: assistant-music-classifier
         restart: always
         networks:
             - assistant
         hostname: assistant-music-classifier
-        ports:
-            - "22"
+        expose:
+            - 8000
+        environment:
+            - ${ASSISTANT_MUSIC_CLASSIFIER_CACHE_DIR}=/metadata/essentia-cache
         volumes:
             - ${ASSISTANT_COLLECTION_VOLUME}:/collection
             - ${ASSISTANT_METADATA_VOLUME}:/metadata

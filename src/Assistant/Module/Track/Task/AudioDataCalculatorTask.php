@@ -6,7 +6,7 @@ use Assistant\Module\Collection\Extension\Finder;
 use Assistant\Module\Common\Extension\Config;
 use Assistant\Module\Common\Extension\GetId3\Adapter as Id3Adapter;
 use Assistant\Module\Common\Extension\GetId3\Exception\GetId3Exception;
-use Assistant\Module\Common\Extension\MusicClassifier\MusicClassifierProcessException;
+use Assistant\Module\Common\Extension\MusicClassifier\MusicClassifierException;
 use Assistant\Module\Common\Extension\MusicClassifier\MusicClassifierResult;
 use Assistant\Module\Common\Extension\MusicClassifier\MusicClassifierService;
 use Assistant\Module\Common\Task\AbstractTask;
@@ -146,7 +146,7 @@ final class AudioDataCalculatorTask extends AbstractTask
                         'pathname' => $file->getPathname(),
                         'bpm' => $metadata['bpm'],
                         'initial_key' => $metadata['initial_key'],
-                        'classificationResultFilename' => $classificationResult->getFile()?->getBasename(),
+                        'audioMd5' => $classificationResult->getMd5(),
                     ]);
 
                     unset($file, $track, $metadata, $classificationResult, $audioData);
@@ -168,7 +168,7 @@ final class AudioDataCalculatorTask extends AbstractTask
                         'initial_key' => $hasInitialKey === true ? $metadata['initial_key'] : null,
                         'bpm' => $hasBpm === true ? $metadata['bpm'] : null,
                     ],
-                    'classificationResultFilename' => $classificationResult->getFile()?->getBasename(),
+                    'audioMd5' => $classificationResult->getMd5(),
                 ]);
 
                 if ($writeData === true) {
@@ -187,13 +187,12 @@ final class AudioDataCalculatorTask extends AbstractTask
                 }
 
                 $this->logger->debug('Track processing completed successfully', [ 'pathname' => $file->getPathname() ]);
-            } catch (MusicClassifierProcessException $e) {
+            } catch (MusicClassifierException $e) {
                 $this->stats['error']['classifier']++;
 
                 $this->logger->error($e->getMessage(), [
                     'pathname' => $track->getPathname(),
                     'metadata' => $metadata ?? null,
-                    'commandLine' => $e->getProcessCommandLine(),
                 ]);
             } catch (GetId3Exception $e) {
                 $this->stats['error']['tags']++;

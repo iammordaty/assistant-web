@@ -115,7 +115,8 @@ Multi-provider system combining Musly audio similarity with metadata matching.
 
 ### Audio Data
 
-Essentia-based BPM, key, and feature extraction.
+Essentia-based BPM, key, and feature extraction via the essentia-music-classifier HTTP service
+(`music-classifier` container, `GET /process`, port 8000). Results are cached service-side by audio MD5.
 
 ### Mix Frontend
 
