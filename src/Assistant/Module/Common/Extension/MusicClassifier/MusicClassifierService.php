@@ -67,6 +67,42 @@ final class MusicClassifierService
         return $result;
     }
 
+    /**
+     * Zwraca istniejący wynik klasyfikacji bez uruchamiania ekstraktora.
+     * Szuka pliku w kanonicznej lokalizacji po indeksacji:
+     * /collection/a/b/c/track.mp3 -> /metadata/essentia/a/b/c/track.json
+     */
+    public function getResult(SplFileInfo $track): ?MusicClassifierResult
+    {
+        $pathname = $this->getIndexedResultPathname($track);
+
+        if (!is_readable($pathname)) {
+            return null;
+        }
+
+        return MusicClassifierResult::fromResultFile($pathname);
+    }
+
+    /**
+     * Ścieżka wyniku klasyfikacji po przeniesieniu do katalogu metadanych.
+     *
+     * @see \Assistant\Module\Collection\Extension\Writer\TrackWriter::moveClassificationResultFile()
+     */
+    public function getIndexedResultPathname(SplFileInfo $track): string
+    {
+        return str_replace(
+            [
+                $this->config->get('collection.root_dir'),
+                $track->getExtension(),
+            ],
+            [
+                $this->config->get('collection.metadata_dirs.music_classifier'),
+                'json',
+            ],
+            $track->getPathname(),
+        );
+    }
+
     private function findResultFile(SplFileInfo $track): ?string
     {
         $audioMd5 = $this->audioMd5Calculator->calculate($track);

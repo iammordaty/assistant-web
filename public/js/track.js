@@ -1,8 +1,11 @@
 /* global $ */
 
 import formatSeconds from './modules/format-seconds.js';
+import initClassifierMetadataModal from './modules/classifier-metadata-modal.js';
 import renderWaveform from './modules/render-waveform.js';
 import toggleFavorite from './modules/toggle-favorite.js';
+
+console.log('track.js loaded');
 
 $(function () {
 	const $wave = $('#wave-container');
@@ -92,7 +95,7 @@ $(function () {
 	});
 
 	$(document).on('keydown', function (e) {
-		if (e.target !== document.body) {
+		if (e.target !== document.body || document.querySelector('.modal.show')) {
 			return;
 		}
 
@@ -284,4 +287,6 @@ $(function () {
 	// -- akcje
 
 	$('[data-action="track:toggle-favorite"]').on('click', e => toggleFavorite(e.currentTarget));
+
+	initClassifierMetadataModal();
 });

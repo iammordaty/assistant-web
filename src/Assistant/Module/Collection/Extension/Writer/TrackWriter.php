@@ -3,7 +3,6 @@
 namespace Assistant\Module\Collection\Extension\Writer;
 
 use Assistant\Module\Collection\Model\CollectionItemInterface;
-use Assistant\Module\Common\Extension\Config;
 use Assistant\Module\Common\Extension\MusicClassifier\MusicClassifierResult;
 use Assistant\Module\Common\Extension\MusicClassifier\MusicClassifierService;
 use Assistant\Module\Common\Extension\SimilarTracksCollection\SimilarTracksCollectionService;
@@ -17,7 +16,6 @@ use Assistant\Module\Track\Model\Track;
 final readonly class TrackWriter implements WriterInterface
 {
     public function __construct(
-        private Config $config,
         private MusicClassifierService $musicClassifierService,
         private TrackService $trackService,
         private TrackSearchService $searchService,
@@ -99,13 +97,8 @@ final readonly class TrackWriter implements WriterInterface
         Track $track,
         MusicClassifierResult $classificationResult,
     ): void {
-        $collectionRootDir = $this->config->get('collection.root_dir');
-        $classifierMetadataDir = $this->config->get('collection.metadata_dirs.music_classifier');
-
-        $newClassificationResultPathname = str_replace(
-            [ $collectionRootDir, $track->getFile()->getExtension() ],
-            [ $classifierMetadataDir, $classificationResult->getFile()->getExtension() ],
-            $track->getPathname()
+        $newClassificationResultPathname = $this->musicClassifierService->getIndexedResultPathname(
+            $track->getFile(),
         );
 
         $parent = dirname($newClassificationResultPathname);
