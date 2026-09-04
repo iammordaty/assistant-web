@@ -10,17 +10,20 @@ use SplFileInfo;
 
 final class SimilarTracksCollectionService
 {
-    private const COLLECTION_PATHNAME = 'collection.musly';
-    private const SIMILAR_TRACKS_LIMIT = 200; // @idea Zastanowić się nad zwiększeniem lub uelastycznieniem limitu
-    private const WITH_TRACK_DISTANCE = '-o long';
+    private const string COLLECTION_PATHNAME = 'collection.musly';
+    private const string NAN = '-nan';
+    private const int SIMILAR_TRACKS_LIMIT = 1000; // @idea Zastanowić się nad zwiększeniem lub uelastycznieniem limitu
+    private const string WITH_TRACK_DISTANCE = '-o long';
 
     private Musly $musly;
 
     /** Liczba utworów w kolekcji, do której odnoszą się odległości zwracane przez musly */
     private int $collectionSize;
 
-    public function __construct(private Config $config)
-    {
+    public function __construct(
+        private Config $config,
+        private DistanceToSimilarityMapper $distanceToSimilarityCalculator,
+    ) {
         $pathname = $this->config->get('collection.metadata_dirs.music_similarity') . '/' . self::COLLECTION_PATHNAME;
 
         $musly = new Musly();
@@ -67,9 +70,22 @@ final class SimilarTracksCollectionService
             throw new SimilarTracksCollectionException($error);
         }
 
-        $similarTracksResults = SimilarTracksResultList::factory($track, $similarTracks, $this->collectionSize);
+        $results = [];
 
-        return $similarTracksResults;
+        foreach ($similarTracks as $similarTrack) {
+            // sytuacja, w której jako dystans zwracany jest "-nan" powinna być obsłużona po stronie musly (cpp)
+            if ($similarTrack['track-distance'] === self::NAN) {
+                continue;
+            }
+
+            $results[] = new SimilarTracksResult(
+                $track,
+                new SplFileInfo($similarTrack['track-origin']),
+                ($this->distanceToSimilarityCalculator)($this->collectionSize, (float) $similarTrack['track-distance']),
+            );
+        }
+
+        return new SimilarTracksResultList(...$results);
     }
 
     public function getTracks(): array

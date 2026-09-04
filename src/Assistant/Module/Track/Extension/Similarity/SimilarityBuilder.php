@@ -119,9 +119,9 @@ final class SimilarityBuilder
         }
 
         $this->similarityService = new Similarity(
-            $this->trackSearchService,
-            $providers,
-            $this->providersWeights,
+            new SimilarityCandidatesFinder($this->trackSearchService, $providers),
+            new SimilarityCalculator($providers, $this->providersWeights),
+            new SimilarityCandidatesSorter(),
             $this->minSimilarityValue,
             $this->maxTracks,
         );
