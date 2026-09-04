@@ -52,7 +52,7 @@ final class MusicalKeyTest extends TestCase
     }
 
     /** @dataProvider keyPairs */
-    public function testSimilarityValueForKeyPair(?string $baseKey, ?string $comparedKey, int $expected): void
+    public function testSimilarityValueForKeyPair(?string $baseKey, ?string $comparedKey, ?int $expected): void
     {
         $similarity = $this->provider->getSimilarityValue(
             TrackFactory::create(initialKey: $baseKey),
@@ -87,8 +87,9 @@ final class MusicalKeyTest extends TestCase
         yield 'tonacja niepowiązana' => [ '8A', '2B', 0 ];
         yield 'tonacja poza notacją' => [ '08A', '8A', 0 ];
         yield 'notacja muzyczna' => [ 'Am', '8A', 0 ];
-        yield 'brak tonacji bazowej' => [ null, '8A', 0 ];
-        yield 'brak tonacji porównywanej' => [ '8A', null, 0 ];
+        // brak danych to nie zero: dostawca nie bierze wtedy udziału w wyniku
+        yield 'brak tonacji bazowej' => [ null, '8A', null ];
+        yield 'brak tonacji porównywanej' => [ '8A', null, null ];
     }
 
     public static function keysWithoutCriteria(): iterable

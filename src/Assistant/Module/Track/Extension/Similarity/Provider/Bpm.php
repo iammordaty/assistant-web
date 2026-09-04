@@ -8,7 +8,7 @@ use Assistant\Module\Track\Model\Track;
 final class Bpm extends AbstractProvider
 {
     /** {@inheritDoc} */
-    public const NAME = 'BPM';
+    public const string NAME = 'BPM';
 
     /** {@inheritDoc} */
     protected array $similarityMap = [
@@ -25,13 +25,13 @@ final class Bpm extends AbstractProvider
     }
 
     /** {@inheritDoc} */
-    public function getSimilarityValue(Track $baseTrack, Track $comparedTrack): int
+    public function getSimilarityValue(Track $baseTrack, Track $comparedTrack): ?int
     {
         $baseBpm = $baseTrack->getBpm();
         $comparedBpm = $comparedTrack->getBpm();
 
         if (!$baseBpm || !$comparedBpm) {
-            return 0;
+            return null;
         }
 
         $distance = (int) round(abs($baseBpm - $comparedBpm));

@@ -25,7 +25,7 @@ final class YearTest extends TestCase
     }
 
     /** @dataProvider yearPairs */
-    public function testSimilarityValueForYearPair(?int $baseYear, ?int $comparedYear, int $expected): void
+    public function testSimilarityValueForYearPair(?int $baseYear, ?int $comparedYear, ?int $expected): void
     {
         $similarity = $this->provider->getSimilarityValue(
             TrackFactory::create(year: $baseYear),
@@ -70,10 +70,11 @@ final class YearTest extends TestCase
         yield 'różnica czterech lat' => [ 2024, 2020, 40 ];
         yield 'różnica pięciu lat' => [ 2024, 2019, 20 ];
         yield 'różnica poza mapą' => [ 2024, 2018, 0 ];
-        yield 'brak roku bazowego' => [ null, 2024, 0 ];
-        yield 'brak roku porównywanego' => [ 2024, null, 0 ];
+        // brak danych to nie zero: dostawca nie bierze wtedy udziału w wyniku
+        yield 'brak roku bazowego' => [ null, 2024, null ];
+        yield 'brak roku porównywanego' => [ 2024, null, null ];
 
         // dwa nieznane roczniki nie są tym samym rocznikiem
-        yield 'brak obu roczników' => [ null, null, 0 ];
+        yield 'brak obu roczników' => [ null, null, null ];
     }
 }

@@ -16,13 +16,13 @@ final class MusicalKey extends AbstractProvider
     }
 
     /** {@inheritDoc} */
-    public function getSimilarityValue(Track $baseTrack, Track $comparedTrack): int
+    public function getSimilarityValue(Track $baseTrack, Track $comparedTrack): ?int
     {
         $baseKey = $baseTrack->getInitialKey();
         $comparedKey = $comparedTrack->getInitialKey();
 
         if (!$baseKey || !$comparedKey) {
-            return 0;
+            return null;
         }
 
         $similarity = $this->similarityMap[$baseKey][$comparedKey] ?? 0;

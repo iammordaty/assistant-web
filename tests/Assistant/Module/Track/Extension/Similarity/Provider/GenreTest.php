@@ -55,7 +55,7 @@ final class GenreTest extends TestCase
     }
 
     /** @dataProvider genrePairs */
-    public function testSimilarityValueForGenrePair(?string $baseGenre, ?string $comparedGenre, int $expected): void
+    public function testSimilarityValueForGenrePair(?string $baseGenre, ?string $comparedGenre, ?int $expected): void
     {
         $similarity = $this->provider->getSimilarityValue(
             TrackFactory::create(genre: $baseGenre),
@@ -95,10 +95,12 @@ final class GenreTest extends TestCase
         yield 'Deep House -> Techno' => [ 'Deep House', 'Techno', 55 ];
 
         yield 'gatunki bez wspólnego wpisu' => [ 'House', 'Hardstyle', 0 ];
-        yield 'brak gatunku bazowego' => [ null, 'House', 0 ];
-        yield 'brak gatunku porównywanego' => [ 'House', null, 0 ];
-        yield 'brak obu gatunków' => [ null, null, 0 ];
-        yield 'pusty gatunek' => [ '', 'House', 0 ];
+
+        // brak danych to nie zero: dostawca nie bierze wtedy udziału w wyniku
+        yield 'brak gatunku bazowego' => [ null, 'House', null ];
+        yield 'brak gatunku porównywanego' => [ 'House', null, null ];
+        yield 'brak obu gatunków' => [ null, null, null ];
+        yield 'pusty gatunek' => [ '', 'House', null ];
     }
 
     public static function genresWithoutCriteria(): iterable

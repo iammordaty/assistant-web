@@ -5,6 +5,8 @@ namespace Assistant\Module\Track\Extension\Similarity\Provider;
 use Assistant\Module\Common\Extension\SimilarTracksCollection\SimilarTracksCollectionService;
 use Assistant\Module\Track\Extension\Similarity\DeprecationGuard;
 use Assistant\Module\Track\Extension\Similarity\TrackFactory;
+use Assistant\Module\Track\Model\Track;
+use Musly\Exception\RuntimeException as MuslyException;
 use Musly\Musly as MuslyLibrary;
 use PHPUnit\Framework\TestCase;
 use ReflectionClass;
@@ -30,9 +32,7 @@ final class MuslyTest extends TestCase
         $library
             ->expects(self::exactly(2))
             ->method('getSimilarTracks')
-            ->willReturn([
-                [ 'track-origin' => $secondTrack->getPathname(), 'track-distance' => '0.0153444' ],
-            ]);
+            ->willReturn($this->neighbourList($secondTrack));
 
         $provider = new Musly($this->createService($library));
 
@@ -43,36 +43,104 @@ final class MuslyTest extends TestCase
         $provider->getSimilarityValue($firstTrack, $secondTrack);
     }
 
-    public function testSimilarityValueIsCalculatedFromDistance(): void
+    /**
+     * Odległości po normalizacji Mutual Proximity są ściśnięte w okolicach zera, więc wartość wynika
+     * z pozycji na liście, a nie z samej odległości.
+     */
+    public function testSimilarityValueIsCalculatedFromNeighbourPosition(): void
     {
         $baseTrack = TrackFactory::create(guid: 'base-track');
         $comparedTrack = TrackFactory::create(guid: 'compared-track');
 
         $library = $this->createMock(MuslyLibrary::class);
-        $library->method('getSimilarTracks')->willReturn([
-            [ 'track-origin' => $comparedTrack->getPathname(), 'track-distance' => '0.0153444' ],
-        ]);
+        $library->method('getSimilarTracks')->willReturn($this->neighbourList(
+            TrackFactory::create(guid: 'nearest-track'),
+            $comparedTrack,
+            TrackFactory::create(guid: 'third-track'),
+            TrackFactory::create(guid: 'fourth-track'),
+        ));
 
         $provider = new Musly($this->createService($library));
 
-        // 100 - 0,0153444 * 100 = 98,47, obcięte do liczby całkowitej
-        self::assertSame(98, $provider->getSimilarityValue($baseTrack, $comparedTrack));
+        // druga pozycja z czterech: 100 * (1 - 1/4)
+        self::assertSame(75, $provider->getSimilarityValue($baseTrack, $comparedTrack));
     }
 
     public function testTrackOutsideNeighbourListGivesZero(): void
     {
         $baseTrack = TrackFactory::create(guid: 'base-track');
         $comparedTrack = TrackFactory::create(guid: 'compared-track');
-        $otherTrack = TrackFactory::create(guid: 'other-track');
 
         $library = $this->createMock(MuslyLibrary::class);
-        $library->method('getSimilarTracks')->willReturn([
-            [ 'track-origin' => $otherTrack->getPathname(), 'track-distance' => '0.0153444' ],
-        ]);
+        $library->method('getSimilarTracks')->willReturn(
+            $this->neighbourList(TrackFactory::create(guid: 'other-track')),
+        );
 
         $provider = new Musly($this->createService($library));
 
         self::assertSame(0, $provider->getSimilarityValue($baseTrack, $comparedTrack));
+    }
+
+    public function testCandidatePathnamesComeFromNeighbourList(): void
+    {
+        $baseTrack = TrackFactory::create(guid: 'base-track');
+        $nearestTrack = TrackFactory::create(guid: 'nearest-track');
+
+        $library = $this->createMock(MuslyLibrary::class);
+        $library->method('getSimilarTracks')->willReturn($this->neighbourList($nearestTrack));
+
+        $provider = new Musly($this->createService($library));
+
+        self::assertSame([ $nearestTrack->getPathname() ], $provider->getCandidatePathnames($baseTrack));
+    }
+
+    /**
+     * Niedostępna lista oznacza brak danych, a nie zero: awaria wyłącza składnik Musly z wyniku,
+     * zamiast obniżać go dla wszystkich par. Nieudana próba jest pamiętana, żeby jedna awaria
+     * nie mnożyła wywołań zewnętrznego procesu.
+     */
+    public function testUnavailableNeighbourListGivesNoValue(): void
+    {
+        $baseTrack = TrackFactory::create(guid: 'base-track');
+        $comparedTrack = TrackFactory::create(guid: 'compared-track');
+
+        $library = $this->createMock(MuslyLibrary::class);
+        $library
+            ->expects(self::once())
+            ->method('getSimilarTracks')
+            ->willThrowException(new MuslyException('collection not available'));
+
+        $provider = new Musly($this->createService($library));
+
+        // provider zgłasza błąd przez Kint, którego wydruk nie jest częścią testowanego zachowania
+        ob_start();
+
+        try {
+            $similarityValue = $provider->getSimilarityValue($baseTrack, $comparedTrack);
+            $repeatedSimilarityValue = $provider->getSimilarityValue($baseTrack, $comparedTrack);
+            $candidatePathnames = $provider->getCandidatePathnames($baseTrack);
+        } finally {
+            ob_end_clean();
+        }
+
+        self::assertNull($similarityValue);
+        self::assertNull($repeatedSimilarityValue);
+        self::assertSame([], $candidatePathnames);
+    }
+
+    /** @return array<int, array<string, string>> */
+    private function neighbourList(Track ...$tracks): array
+    {
+        $neighbours = [];
+
+        foreach ($tracks as $index => $track) {
+            $neighbours[] = [
+                'track-origin' => $track->getPathname(),
+                'track-distance' => sprintf('0.0%d', $index + 1),
+            ];
+        }
+
+        return $neighbours;
     }
 
     /**

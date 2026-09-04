@@ -25,13 +25,13 @@ final class Year extends AbstractProvider
     }
 
     /** {@inheritDoc} */
-    public function getSimilarityValue(Track $baseTrack, Track $comparedTrack): int
+    public function getSimilarityValue(Track $baseTrack, Track $comparedTrack): ?int
     {
         $baseYear = $baseTrack->getYear();
         $comparedYear = $comparedTrack->getYear();
 
         if ($baseYear === null || $comparedYear === null) {
-            return 0;
+            return null;
         }
 
         $distance = abs($baseYear - $comparedYear);

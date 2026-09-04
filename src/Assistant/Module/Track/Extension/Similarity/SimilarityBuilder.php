@@ -14,7 +14,10 @@ use Assistant\Module\Track\Model\Track;
 
 final class SimilarityBuilder
 {
-    private array $providers = Similarity::PROVIDERS;
+    private array $providerNames = Similarity::PROVIDERS;
+
+    /** @var ProviderInterface[] Dostawcy zbudowani przez createService() */
+    private array $providers = [];
 
     private Similarity $similarityService;
 
@@ -38,24 +41,6 @@ final class SimilarityBuilder
         return $this;
     }
 
-    /**
-     * @param string[] $providers
-     * @return self
-     */
-    public function withProviders(array $providers): self
-    {
-        $this->setProviders($providers);
-
-        return $this;
-    }
-
-    public function withProviderParameters(array $parameters): self
-    {
-        $this->providersParameters = $parameters;
-
-        return $this;
-    }
-
     public function withForm(SimilarityParametersForm $similarityParametersForm): self
     {
         if ($similarityParametersForm->request->providers) {
@@ -63,27 +48,6 @@ final class SimilarityBuilder
         }
 
         $this->similarityParametersForm = $similarityParametersForm;
-
-        return $this;
-    }
-
-    public function withProviderWeights(array $weights): self
-    {
-        $this->providersWeights = $weights;
-
-        return $this;
-    }
-
-    public function withMinSimilarityValue(int $minSimilarityValue): self
-    {
-        $this->minSimilarityValue = $minSimilarityValue;
-
-        return $this;
-    }
-
-    public function withMaxTracks(int $maxTracks): self
-    {
-        $this->maxTracks = $maxTracks;
 
         return $this;
     }
@@ -113,6 +77,8 @@ final class SimilarityBuilder
             $providers[] = new Year($this->providersParameters[Year::NAME]);
         }
 
+        $this->providers = $providers;
+
         $this->similarityService = new Similarity(
             $this->trackSearchService,
             $providers,
@@ -126,7 +92,26 @@ final class SimilarityBuilder
 
     public function getSimilarityService(): Similarity
     {
+        if (!isset($this->similarityService)) {
+            $this->createService();
+        }
+
         return $this->similarityService;
+    }
+
+    /**
+     * Zwraca zbudowanych dostawców, żeby wołający mógł odczytać ich wartości bez pośrednictwa
+     * modułu podobieństwa (task track:similarity-report).
+     *
+     * @return ProviderInterface[]
+     */
+    public function getProviders(): array
+    {
+        if (!$this->providers) {
+            $this->createService();
+        }
+
+        return $this->providers;
     }
 
     public function getSimilarTracks(?Track $track = null): array
@@ -162,17 +147,17 @@ final class SimilarityBuilder
 
     private function isProviderEnabled(string $name): bool
     {
-        return in_array($name, $this->providers);
+        return in_array($name, $this->providerNames);
     }
 
-    private function setProviders(array $providers): void
+    private function setProviders(array $providerNames): void
     {
-        foreach ($providers as $providerName) {
+        foreach ($providerNames as $providerName) {
             if (!in_array($providerName, Similarity::PROVIDERS)) {
                 throw new \RuntimeException(sprintf('Unknown provider: "%s"', $providerName));
             }
         }
 
-        $this->providers = $providers;
+        $this->providerNames = $providerNames;
     }
 }

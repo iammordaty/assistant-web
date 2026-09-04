@@ -77,13 +77,13 @@ final class Genre extends AbstractProvider
     }
 
     /** {@inheritDoc} */
-    public function getSimilarityValue(Track $baseTrack, Track $comparedTrack): int
+    public function getSimilarityValue(Track $baseTrack, Track $comparedTrack): ?int
     {
         $baseGenre = $baseTrack->getGenre();
         $comparedGenre = $comparedTrack->getGenre();
 
         if (!$baseGenre || !$comparedGenre) {
-            return 0;
+            return null;
         }
 
         if ($baseGenre === $comparedGenre) {

@@ -25,7 +25,7 @@ final class BpmTest extends TestCase
     }
 
     /** @dataProvider bpmPairs */
-    public function testSimilarityValueForBpmPair(?float $baseBpm, ?float $comparedBpm, int $expected): void
+    public function testSimilarityValueForBpmPair(?float $baseBpm, ?float $comparedBpm, ?int $expected): void
     {
         $similarity = $this->provider->getSimilarityValue(
             TrackFactory::create(bpm: $baseBpm),
@@ -73,8 +73,9 @@ final class BpmTest extends TestCase
         yield 'różnica pięciu uderzeń' => [ 128.0, 133.0, 30 ];
         yield 'różnica poza mapą' => [ 128.0, 134.0, 0 ];
         yield 'tempo połówkowe nie jest rozpoznawane' => [ 128.0, 64.0, 0 ];
-        yield 'brak tempa bazowego' => [ null, 128.0, 0 ];
-        yield 'brak tempa porównywanego' => [ 128.0, null, 0 ];
-        yield 'brak obu temp' => [ null, null, 0 ];
+        // brak danych to nie zero: dostawca nie bierze wtedy udziału w wyniku
+        yield 'brak tempa bazowego' => [ null, 128.0, null ];
+        yield 'brak tempa porównywanego' => [ 128.0, null, null ];
+        yield 'brak obu temp' => [ null, null, null ];
     }
 }

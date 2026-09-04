@@ -88,19 +88,49 @@ final class SimilarityTest extends TestCase
         );
     }
 
-    public function testProviderSimilarityValuesAreKeyedByProviderName(): void
+    /**
+     * Dostawca bez danych nie bierze udziału w wyniku. Gdyby brak danych traktować jak zero,
+     * utwór z niepełnymi tagami byłby karany za coś, o czym nic nie wiadomo.
+     */
+    public function testProviderWithoutDataIsExcludedFromResult(): void
     {
         $providers = [
-            new FixedValueBpmProvider(70),
-            new FixedValueMuslyProvider(40),
+            new FixedValueMuslyProvider(80),
+            new FixedValueGenreProvider(null),
         ];
 
         $service = $this->buildSimilarity(new ReflectionClass(Similarity::class), $providers, self::PROVIDERS_WEIGHTS);
 
-        self::assertSame(
-            [ Bpm::NAME => 70, Musly::NAME => 40 ],
-            $service->getProviderSimilarityValues(TrackFactory::create(), TrackFactory::create()),
-        );
+        // liczy się wyłącznie Musly, więc wynik to jego wartość
+        self::assertSame(80, $service->getSimilarityValue(TrackFactory::create(), TrackFactory::create()));
+    }
+
+    public function testResultIsZeroWhenNoProviderHasData(): void
+    {
+        $providers = [
+            new FixedValueMuslyProvider(null),
+            new FixedValueGenreProvider(null),
+        ];
+
+        $service = $this->buildSimilarity(new ReflectionClass(Similarity::class), $providers, self::PROVIDERS_WEIGHTS);
+
+        self::assertSame(0, $service->getSimilarityValue(TrackFactory::create(), TrackFactory::create()));
+    }
+
+    /** @dataProvider valuesOutsideRange */
+    public function testProviderValueIsClampedToDeclaredRange(?int $providerValue, int $expected): void
+    {
+        $providers = [ new FixedValueMuslyProvider($providerValue) ];
+
+        $service = $this->buildSimilarity(new ReflectionClass(Similarity::class), $providers, self::PROVIDERS_WEIGHTS);
+
+        self::assertSame($expected, $service->getSimilarityValue(TrackFactory::create(), TrackFactory::create()));
+    }
+
+    public static function valuesOutsideRange(): iterable
+    {
+        yield 'wartość powyżej maksimum' => [ 150, 100 ];
+        yield 'wartość ujemna' => [ -50, 0 ];
     }
 
     public function testSetupRejectsProviderWithoutWeight(): void
@@ -208,7 +238,7 @@ final class SimilarityTest extends TestCase
             $reflection->getProperty($name)->setValue($service, $value);
         }
 
-        $reflection->getMethod('setup')->invoke($service);
+        $reflection->getMethod('validateProviders')->invoke($service);
 
         return $service;
     }

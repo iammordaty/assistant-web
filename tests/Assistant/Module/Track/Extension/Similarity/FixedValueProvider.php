@@ -19,12 +19,12 @@ use Assistant\Module\Track\Model\Track;
  */
 abstract class FixedValueProvider extends AbstractProvider
 {
-    public function __construct(private int $similarityValue)
+    public function __construct(private ?int $similarityValue)
     {
     }
 
     /** {@inheritDoc} */
-    public function getSimilarityValue(Track $baseTrack, Track $comparedTrack): int
+    public function getSimilarityValue(Track $baseTrack, Track $comparedTrack): ?int
     {
         return $this->similarityValue;
     }
@@ -38,25 +38,25 @@ abstract class FixedValueProvider extends AbstractProvider
 
 final class FixedValueBpmProvider extends FixedValueProvider
 {
-    public const NAME = Bpm::NAME;
+    public const string NAME = Bpm::NAME;
 }
 
 final class FixedValueGenreProvider extends FixedValueProvider
 {
-    public const NAME = Genre::NAME;
+    public const string NAME = Genre::NAME;
 }
 
 final class FixedValueMusicalKeyProvider extends FixedValueProvider
 {
-    public const NAME = MusicalKey::NAME;
+    public const string NAME = MusicalKey::NAME;
 }
 
 final class FixedValueMuslyProvider extends FixedValueProvider
 {
-    public const NAME = Musly::NAME;
+    public const string NAME = Musly::NAME;
 }
 
 final class FixedValueYearProvider extends FixedValueProvider
 {
-    public const NAME = Year::NAME;
+    public const string NAME = Year::NAME;
 }
