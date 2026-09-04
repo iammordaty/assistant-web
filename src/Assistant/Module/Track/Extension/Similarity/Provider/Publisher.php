@@ -4,17 +4,10 @@ namespace Assistant\Module\Track\Extension\Similarity\Provider;
 
 use Assistant\Module\Track\Model\Track;
 
-/**
- * Provider podobieństwa oparty na wytwórni.
- *
- * W muzyce klubowej wytwórnia jest mocnym wyznacznikiem estetyki: katalog jednej oficyny bywa
- * spójniejszy brzmieniowo niż cały gatunek. Sygnał jest dwustanowy, więc pełni rolę premii,
- * a nie miary odległości.
- */
 final class Publisher extends AbstractProvider
 {
     /** {@inheritDoc} */
-    public const NAME = 'Publisher';
+    public const string NAME = 'Publisher';
 
     /** {@inheritDoc} */
     public function getSimilarityValue(Track $baseTrack, Track $comparedTrack): ?int

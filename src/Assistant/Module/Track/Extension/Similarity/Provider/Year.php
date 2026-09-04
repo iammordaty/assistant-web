@@ -8,7 +8,7 @@ use Assistant\Module\Track\Model\Track;
 final class Year extends AbstractProvider
 {
     /** {@inheritDoc} */
-    public const NAME = 'Year';
+    public const string NAME = 'Year';
 
     /** {@inheritDoc} */
     protected array $similarityMap = [
@@ -30,7 +30,7 @@ final class Year extends AbstractProvider
         $baseYear = $baseTrack->getYear();
         $comparedYear = $comparedTrack->getYear();
 
-        if ($baseYear === null || $comparedYear === null) {
+        if (!$baseYear || !$comparedYear) {
             return null;
         }
 
@@ -44,13 +44,10 @@ final class Year extends AbstractProvider
     {
         $year = $baseTrack->getYear();
 
-        // bez roku utworu bazowego okno nie ma środka, więc filtr roku jest pomijany
-        if ($year === null) {
+        if (!$year) {
             return null;
         }
 
-        // okno pokrywa się z nośnikiem mapy podobieństwa, więc filtr nie wpuszcza utworów,
-        // którym dostawca przyznałby zero punktów
         $fromYear = $year - $this->parameters['tolerance'];
         $toYear = $year + $this->parameters['tolerance'];
 

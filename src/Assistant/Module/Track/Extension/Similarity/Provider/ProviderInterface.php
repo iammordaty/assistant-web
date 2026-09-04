@@ -7,7 +7,7 @@ use Assistant\Module\Track\Model\Track;
 interface ProviderInterface
 {
     /** Nazwa dostawcy */
-    public const NAME = '';
+    public const string NAME = '';
 
     /** Zwraca nazwę dostawcy */
     public function getName(): string;
