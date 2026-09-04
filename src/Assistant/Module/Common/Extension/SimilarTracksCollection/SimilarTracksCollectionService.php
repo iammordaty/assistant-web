@@ -16,6 +16,9 @@ final class SimilarTracksCollectionService
 
     private Musly $musly;
 
+    /** Liczba utworów w kolekcji, do której odnoszą się odległości zwracane przez musly */
+    private int $collectionSize;
+
     public function __construct(private Config $config)
     {
         $pathname = $this->config->get('collection.metadata_dirs.music_similarity') . '/' . self::COLLECTION_PATHNAME;
@@ -34,6 +37,7 @@ final class SimilarTracksCollectionService
         $musly->setCollection($collection);
 
         $this->musly = $musly;
+        $this->collectionSize = count($this->getTracks());
     }
 
     public function add(SplFileInfo $collectionItem): bool
@@ -63,7 +67,7 @@ final class SimilarTracksCollectionService
             throw new SimilarTracksCollectionException($error);
         }
 
-        $similarTracksResults = SimilarTracksResultList::factory($track, $similarTracks);
+        $similarTracksResults = SimilarTracksResultList::factory($track, $similarTracks, $this->collectionSize);
 
         return $similarTracksResults;
     }

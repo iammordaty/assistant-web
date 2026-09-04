@@ -4,9 +4,9 @@ namespace Assistant\Module\Track\Extension\Similarity;
 
 use Assistant\Module\Search\Extension\Criteria\Not;
 use Assistant\Module\Search\Extension\Criteria\SearchCriteria;
-use Assistant\Module\Search\Extension\Criteria\SearchSort;
 use Assistant\Module\Search\Extension\Service\TrackSearchService;
 use Assistant\Module\Track\Extension\Similarity\Provider\Bpm;
+use Assistant\Module\Track\Extension\Similarity\Provider\CandidateProviderInterface;
 use Assistant\Module\Track\Extension\Similarity\Provider\Genre;
 use Assistant\Module\Track\Extension\Similarity\Provider\MusicalKey;
 use Assistant\Module\Track\Extension\Similarity\Provider\Musly;
@@ -57,19 +57,16 @@ final class Similarity
     /** Zwraca utwory podobne do podanego */
     public function getSimilarTracks(Track $baseTrack): array
     {
-        $criteria = $this->getSimilarityCriteria($baseTrack);
-        $result = $this->trackSearchService->search($criteria, SearchSort::byName(), limit: null);
-
         $similarTracks = array_map(
             fn (Track $similarTrack) => new SimilarTracks(
                 $baseTrack,
                 $similarTrack,
                 $this->getSimilarityValue($baseTrack, $similarTrack)
             ),
-            iterator_to_array($result->tracks)
+            $this->getCandidates($baseTrack)
         );
 
-        // posortuj wg podoieństwa
+        // posortuj wg podobieństwa
 
         $similarTracks = $this->sort($similarTracks);
 
@@ -118,6 +115,54 @@ final class Similarity
         }
 
         return (int) round($weightedSimilarity * 100 / $maxWeightedSimilarity);
+    }
+
+    /**
+     * Zbiór kandydatów to suma dopasowania metadanych oraz utworów wskazanych przez dostawców
+     * potrafiących zgłosić własnych kandydatów. Kryteria w warstwie zapytań łączą się iloczynem,
+     * więc sumy nie da się wyrazić jednym zapytaniem.
+     *
+     * @return Track[]
+     */
+    private function getCandidates(Track $baseTrack): array
+    {
+        $candidates = [];
+
+        foreach ($this->getCandidateCriteria($baseTrack) as $criteria) {
+            $result = $this->trackSearchService->search($criteria);
+
+            foreach ($result->tracks as $candidate) {
+                // guid jako klucz usuwa powtórzenia utworów obecnych w obu zbiorach
+                $candidates[$candidate->getGuid()] = $candidate;
+            }
+        }
+
+        unset($candidates[$baseTrack->getGuid()]);
+
+        return array_values($candidates);
+    }
+
+    /** @return SearchCriteria[] */
+    private function getCandidateCriteria(Track $baseTrack): array
+    {
+        $criteria = [ $this->getSimilarityCriteria($baseTrack) ];
+
+        foreach ($this->providers as $provider) {
+            if (!$provider instanceof CandidateProviderInterface) {
+                continue;
+            }
+
+            $pathnames = $provider->getCandidatePathnames($baseTrack);
+
+            if ($pathnames) {
+                $criteria[] = new SearchCriteria(
+                    guid: Not::equal($baseTrack->getGuid()),
+                    pathname: $pathnames,
+                );
+            }
+        }
+
+        return $criteria;
     }
 
     /** Przygotowuje moduł podobieństwa do użycia */

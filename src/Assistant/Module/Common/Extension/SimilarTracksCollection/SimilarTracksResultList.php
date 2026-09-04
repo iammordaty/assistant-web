@@ -27,8 +27,11 @@ final class SimilarTracksResultList
         );
     }
 
-    public static function factory(SplFileInfo|string $baseTrack, array $similarTracks): self
-    {
+    public static function factory(
+        int $collectionSize,
+        SplFileInfo|string $baseTrack,
+        array $similarTracks,
+    ): self {
         if (is_string($baseTrack)) {
             $baseTrack = new SplFileInfo($baseTrack);
         }
@@ -40,8 +43,12 @@ final class SimilarTracksResultList
         );
 
         $similarTracks = array_map(
-            fn (array $similarTrack): SimilarTracksResult =>
-            SimilarTracksResult::factory($baseTrack, $similarTrack['track-origin'], $similarTrack['track-distance']),
+            fn (array $similarTrack): SimilarTracksResult => SimilarTracksResult::factory(
+                $collectionSize,
+                $baseTrack,
+                $similarTrack['track-origin'],
+                $similarTrack['track-distance'],
+            ),
             $similarTracks
         );
 
@@ -53,15 +60,12 @@ final class SimilarTracksResultList
         return $this->baseTrack;
     }
 
-    public function getSimilarityValue(SplFileInfo $track): float
+    /** Zwraca null dla utworu, który nie zmieścił się na liście; nie znaczy to, że jest niepodobny */
+    public function getSimilarityValue(SplFileInfo $track): ?float
     {
         $similarTracksResult = $this->similarTracks[$track->getPathname()] ?? null;
 
-        if (!$similarTracksResult) {
-            return 0;
-        }
-
-        return $similarTracksResult->getSimilarityValue();
+        return $similarTracksResult?->getSimilarityValue();
     }
 
     /** @return SimilarTracksResult[] */
