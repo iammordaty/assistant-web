@@ -6,6 +6,7 @@ use Assistant\Module\Collection\Task\SimilarTracksCollectionReIndexerTask;
 use Assistant\Module\Track\Task\AudioDataCalculatorTask;
 use Assistant\Module\Track\Task\RemoveMetadataTask;
 use Assistant\Module\Track\Task\RenameTrackTask;
+use Assistant\Module\Track\Task\SimilarityReportTask;
 use Psr\Container\ContainerInterface as Container;
 
 return static fn (Container $container): array => [
@@ -14,5 +15,6 @@ return static fn (Container $container): array => [
     IndexerTask::factory($container),
     RemoveMetadataTask::factory($container),
     RenameTrackTask::factory($container),
+    SimilarityReportTask::factory($container),
     SimilarTracksCollectionReIndexerTask::factory($container),
 ];

@@ -7,18 +7,13 @@ use Assistant\Module\Common\Extension\SimilarTracksCollection\SimilarTracksColle
 use Assistant\Module\Common\Extension\SimilarTracksCollection\SimilarTracksResultList;
 use Assistant\Module\Track\Model\Track;
 
-/**
- * Provider podobieństwa oparty na bibliotece Musly.
- *
- * Instancja tej klasy cache'uje wyniki dla pierwszego baseTrack, dla którego zostanie wywołana
- * metoda getSimilarityValue(). Należy tworzyć nową instancję dla każdego nowego utworu bazowego.
- * Nie należy współdzielić instancji między różnymi wywołaniami getSimilarTracks().
- */
+/** Provider podobieństwa oparty na bibliotece Musly. */
 final class Musly extends AbstractProvider
 {
-    public const NAME = 'Musly';
+    public const string NAME = 'Musly';
 
-    private ?SimilarTracksResultList $similarTracks = null;
+    /** @var array<string, SimilarTracksResultList> */
+    private array $guidToSimilarTracksMap = [];
 
     public function __construct(private SimilarTracksCollectionService $service)
     {
@@ -27,24 +22,36 @@ final class Musly extends AbstractProvider
     /** {@inheritDoc} */
     public function getSimilarityValue(Track $baseTrack, Track $comparedTrack): int
     {
-        if ($this->similarTracks === null) {
-            try {
-                $this->similarTracks = $this->service->getSimilarTracks($baseTrack->getFile());
-            } catch (SimilarTracksCollectionException $e) {
-                // @idea: usunąć try-catch i łapać wyżej?
+        $similarTracks = $this->getSimilarTracksFor($baseTrack);
 
-                // @fixme: błąd powinien być komunikowany na froncie w normalny sposób
-                d($e->getMessage());
-
-                $this->similarTracks = SimilarTracksResultList::factory($baseTrack->getFile(), []);
-
-                return 0;
-            }
-        }
-
-        $similarityValue = (int) $this->similarTracks->getSimilarityValue($comparedTrack->getFile());
+        $similarityValue = (int) $similarTracks->getSimilarityValue($comparedTrack->getFile());
 
         return $similarityValue;
+    }
+
+    /** Zwraca listę sąsiadów utworu bazowego, pobierając ją najwyżej raz dla danej ścieżki */
+    private function getSimilarTracksFor(Track $baseTrack): SimilarTracksResultList
+    {
+        $guid = $baseTrack->getGuid();
+
+        if (isset($this->guidToSimilarTracksMap[$guid])) {
+            return $this->guidToSimilarTracksMap[$guid];
+        }
+
+        try {
+            $similarTracks = $this->service->getSimilarTracks($baseTrack->getFile());
+        } catch (SimilarTracksCollectionException $e) {
+            // @idea: usunąć try-catch i łapać wyżej?
+
+            // @fixme: błąd powinien być komunikowany na froncie w normalny sposób
+            d($e->getMessage());
+
+            $similarTracks = SimilarTracksResultList::factory($baseTrack->getFile(), []);
+        }
+
+        $this->guidToSimilarTracksMap[$guid] = $similarTracks;
+
+        return $similarTracks;
     }
 
     /** {@inheritDoc} */

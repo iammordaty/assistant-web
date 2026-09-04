@@ -7,7 +7,7 @@ use Assistant\Module\Track\Model\Track;
 final class Genre extends AbstractProvider
 {
     /** {@inheritDoc} */
-    public const NAME = 'Genre';
+    public const string NAME = 'Genre';
 
     private array $similarityMapBase = [
         ['House', 'Tech House', 90],
@@ -19,7 +19,6 @@ final class Genre extends AbstractProvider
         ['House', 'Club', 60],
         ['House', 'Dance', 55],
         ['House', 'UK Garage', 55],
-        ['House', 'Afro House', 55],
         ['House', 'Acid House', 55],
         ['House', 'Tribal House', 55],
         ['House', 'Electronic', 50],
@@ -57,7 +56,6 @@ final class Genre extends AbstractProvider
         ['Techno', 'Hard House', 85],
         ['Techno', 'Minimal', 85],
         ['Techno', 'Electronic', 75],
-        ['Techno', 'Deep House', 55],
         ['Techno', 'Indie Dance', 50],
         ['Techno', 'Electro', 50],
 
@@ -81,16 +79,23 @@ final class Genre extends AbstractProvider
     /** {@inheritDoc} */
     public function getSimilarityValue(Track $baseTrack, Track $comparedTrack): int
     {
-        if ($comparedTrack->getGenre() === $baseTrack->getGenre()) {
+        $baseGenre = $baseTrack->getGenre();
+        $comparedGenre = $comparedTrack->getGenre();
+
+        if (!$baseGenre || !$comparedGenre) {
+            return 0;
+        }
+
+        if ($baseGenre === $comparedGenre) {
             return self::MAX_SIMILARITY_VALUE;
         }
 
         $similarity = 0;
 
         foreach ($this->similarityMap as $map) {
-            [ $baseGenre, $comparedGenre, $genreSimilarity ] = $map;
+            [ $mapBaseGenre, $mapComparedGenre, $genreSimilarity ] = $map;
 
-            if ($baseTrack->getGenre() === $baseGenre && $comparedTrack->getGenre() === $comparedGenre) {
+            if ($baseGenre === $mapBaseGenre && $comparedGenre === $mapComparedGenre) {
                 $similarity = $genreSimilarity;
 
                 break;
@@ -119,7 +124,7 @@ final class Genre extends AbstractProvider
             return null;
         }
 
-        return $genres;
+        return array_values(array_unique($genres));
     }
 
     /** Przygotowuje dostawcę do użycia */

@@ -4,7 +4,6 @@ namespace Assistant\Module\Track\Extension\Similarity;
 
 use Assistant\Module\Search\Extension\Criteria\Not;
 use Assistant\Module\Search\Extension\Criteria\SearchCriteria;
-use Assistant\Module\Search\Extension\Criteria\SearchSort;
 use Assistant\Module\Search\Extension\Service\TrackSearchService;
 use Assistant\Module\Track\Extension\Similarity\Provider\Bpm;
 use Assistant\Module\Track\Extension\Similarity\Provider\Genre;
@@ -31,11 +30,8 @@ final class Similarity
         Year::NAME,
     ];
 
-    /** Liczba dostępnych dostawców */
-    private int $providersCount;
-
     /** Maksymalna, uwzględniająca wagi dostawców, wartość podobieństwa, która może zostać zwrócona */
-    private int $maxSimilarityValue;
+    private float $maxSimilarityValue;
 
     /**
      * @param TrackSearchService $trackSearchService
@@ -51,9 +47,7 @@ final class Similarity
         private int $minSimilarityValue,
         private int $maxTracks,
     ) {
-        $this->providersCount = count($this->providers);
-
-        if ($this->providersCount === 0) {
+        if (count($this->providers) === 0) {
             throw new \RuntimeException('At least one similarity provider must be enabled');
         }
 
@@ -64,7 +58,7 @@ final class Similarity
     public function getSimilarTracks(Track $baseTrack): array
     {
         $criteria = $this->getSimilarityCriteria($baseTrack);
-        $result = $this->trackSearchService->search($criteria, SearchSort::byName(), limit: null);
+        $result = $this->trackSearchService->search($criteria);
 
         $similarTracks = array_map(
             fn (Track $similarTrack) => new SimilarTracks(
@@ -75,7 +69,7 @@ final class Similarity
             iterator_to_array($result->tracks)
         );
 
-        // posortuj wg podoieństwa
+        // posortuj wg podobieństwa
 
         $similarTracks = $this->sort($similarTracks);
 
@@ -94,18 +88,35 @@ final class Similarity
     /** Oblicza podobieństwo pomiędzy utworami */
     public function getSimilarityValue(Track $baseTrack, Track $comparedTrack): int
     {
-        $similarity = 0;
+        $similarity = 0.0;
 
-        foreach ($this->providers as $provider) {
-            $providerSimilarity = $provider->getSimilarityValue($baseTrack, $comparedTrack);
+        $providerSimilarityValues = $this->getProviderSimilarityValues($baseTrack, $comparedTrack);
 
-            $providerName = $provider::NAME;
-            $providerWeight = $this->providersWeights[$providerName];
-
-            $similarity += $providerSimilarity * $providerWeight;
+        foreach ($providerSimilarityValues as $providerName => $providerSimilarity) {
+            $similarity += $providerSimilarity * $this->providersWeights[$providerName];
         }
 
-        return round(($similarity / $this->providersCount * 100) / $this->maxSimilarityValue);
+        return (int) round($similarity * 100 / $this->maxSimilarityValue);
+    }
+
+    /**
+     * Zwraca wartości zwrócone przez poszczególnych dostawców, bez uwzględnienia wag.
+     * Służy diagnostyce rozkładu wartości (task track:similarity-report).
+     *
+     * @fixme: To nie powinno być tutaj, wynieść do innej klasy (typowo diagnostycznej, albo anonimowej)
+     *         lub włączyć w skład taska jako metoda prywatna.
+     *
+     * @return array<string, int>
+     */
+    public function getProviderSimilarityValues(Track $baseTrack, Track $comparedTrack): array
+    {
+        $similarityValues = [];
+
+        foreach ($this->providers as $provider) {
+            $similarityValues[$provider::NAME] = $provider->getSimilarityValue($baseTrack, $comparedTrack);
+        }
+
+        return $similarityValues;
     }
 
     /** Przygotowuje moduł podobieństwa do użycia */
@@ -139,18 +150,23 @@ final class Similarity
             unset($providerName, $provider);
         }
 
-        $maxSimilarityValue = array_reduce($this->providers, fn ($similarityValue, ProviderInterface $provider) => (
-            $similarityValue + ($provider->getMaxSimilarityValue() * $this->providersWeights[$provider::NAME])
-        ), 0);
-
-        $this->maxSimilarityValue = $maxSimilarityValue / $this->providersCount;
+        $this->maxSimilarityValue = array_reduce(
+            $this->providers,
+            fn (float $maxSimilarityValue, ProviderInterface $provider) => (
+                $maxSimilarityValue + ($provider->getMaxSimilarityValue() * $this->providersWeights[$provider::NAME])
+            ),
+            0.0,
+        );
     }
 
     /**
      * Zwraca kryteria, które muszą zostać spełnione, aby w trybie wyszukiwania
      * uznać utwór za podobny do podanego (i został pobrany z repozytorium)
+     *
+     * @fixme: To nie powinna być publiczna metoda. Podobnie jak getProviderSimilarityValues wynieść do innej klasy,
+     *         lub włączyć w skład taska jako metoda prywatna.
      */
-    private function getSimilarityCriteria(Track $baseTrack): SearchCriteria
+    public function getSimilarityCriteria(Track $baseTrack): SearchCriteria
     {
         $providerCriteria = [];
 

@@ -32,7 +32,7 @@ final class SimilarityParametersForm
         $trackYear = $trackDto->getYear();
 
         $request = new SimilarityParametersRequest(
-            $queryParams[self::NAME_PROVIDERS] ?? Similarity::PROVIDERS,
+            self::getProviders($queryParams) ?? Similarity::PROVIDERS,
             $queryParams[Bpm::NAME] ?? $trackBpm,
             $queryParams[Genre::NAME] ?? $trackGenre,
             $queryParams[MusicalKey::NAME] ?? $trackKey,
@@ -56,5 +56,25 @@ final class SimilarityParametersForm
     public function isProviderEnabled(string $providerName): bool
     {
         return in_array($providerName, $this->request->providers);
+    }
+
+    /**
+     * Parametry pochodzą z adresu, więc nazwy nieznanych dostawców są pomijane, a puste żądanie
+     * oznacza zestaw domyślny. Bez tego nieznana nazwa kończy się wyjątkiem i błędem 500.
+     */
+    private static function getProviders(array $queryParams): ?array
+    {
+        $providers = $queryParams[self::NAME_PROVIDERS] ?? null;
+
+        if (!$providers) {
+            return null;
+        }
+
+        return $providers
+            |> (fn ($providers) => is_array($providers) ? $providers : [$providers])
+            |> (fn ($providers) => array_filter($providers, 'is_string'))
+            |> (fn ($providers) => array_intersect($providers, Similarity::PROVIDERS))
+            |> array_values(...)
+            ?: null;
     }
 }
