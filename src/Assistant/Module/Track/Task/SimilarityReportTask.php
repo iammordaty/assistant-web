@@ -5,11 +5,13 @@ namespace Assistant\Module\Track\Task;
 use Assistant\Module\Common\Task\AbstractTask;
 use Assistant\Module\Search\Extension\Criteria\Not;
 use Assistant\Module\Search\Extension\Criteria\SearchCriteria;
+use Assistant\Module\Search\Extension\Service\RandomTrackListGenerator;
 use Assistant\Module\Search\Extension\Service\TrackSearchService;
 use Assistant\Module\Track\Extension\Similarity\Provider\Bpm;
 use Assistant\Module\Track\Extension\Similarity\Provider\CandidateProviderInterface;
 use Assistant\Module\Track\Extension\Similarity\Provider\Genre;
 use Assistant\Module\Track\Extension\Similarity\Provider\MusicalKey;
+use Assistant\Module\Track\Extension\Similarity\Provider\ProviderInterface;
 use Assistant\Module\Track\Extension\Similarity\Provider\Year;
 use Assistant\Module\Track\Extension\Similarity\SimilarityBuilder;
 use Assistant\Module\Track\Extension\Similarity\SimilarTracks;
@@ -29,8 +31,9 @@ use Symfony\Component\Console\Output\OutputInterface;
  * ilu sąsiadów wskazanych przez Musly nie przechodzi progu. Bez tych liczb strojenie wag i progu jest
  * zgadywaniem.
  *
- * Próbka pochodzi z cache'owanej listy losowych utworów, więc dwa przebiegi obejmują te same utwory
- * bazowe i dają się porównać.
+ * Próbka jest losowana przy każdym przebiegu, więc dwa przebiegi obejmują inne utwory bazowe.
+ * Porównywać należy rozkłady, nie pojedyncze wartości - przy próbce rzędu stu utworów rozkłady są
+ * stabilne, a przywiązanie do jednej listy utworów fałszowałoby obraz kolekcji.
  *
  * @fixme Wybór kandydatów (getCandidates, getCandidateCriteria, getSimilarityCriteria) powtarza logikę
  *        prywatnych metod klasy Similarity, ponieważ raport potrzebuje zbioru kandydatów przed progiem,
@@ -49,6 +52,7 @@ final class SimilarityReportTask extends AbstractTask
         Logger $logger,
         private SimilarityBuilder $similarityBuilder,
         private TrackSearchService $searchService,
+        private RandomTrackListGenerator $randomTrackListGenerator,
     ) {
         parent::__construct($logger);
     }
@@ -59,6 +63,7 @@ final class SimilarityReportTask extends AbstractTask
             $container->get(Logger::class),
             $container->get(SimilarityBuilder::class),
             $container->get(TrackSearchService::class),
+            $container->get(RandomTrackListGenerator::class),
         );
     }
 
@@ -86,7 +91,10 @@ final class SimilarityReportTask extends AbstractTask
         $this->logger->debug('Task executed', self::getInputParams($input));
 
         $sampleSize = (int) $input->getOption('sample');
-        $baseTracks = $this->searchService->getRandom($sampleSize);
+
+        // generator stosuje własne widełki na zakres i zwraca liczbę utworów tylko zbliżoną
+        // do żądanej, dlatego próbka jest dodatkowo obcinana
+        $baseTracks = array_slice($this->randomTrackListGenerator->getRandomTracks($sampleSize), 0, $sampleSize);
 
         if (!$baseTracks) {
             $output->writeln('<error>Collection is empty, nothing to report</error>');
@@ -94,7 +102,13 @@ final class SimilarityReportTask extends AbstractTask
             return self::FAILURE;
         }
 
-        $similarityService = $this->similarityBuilder->getSimilarityService();
+        $providerNames = array_map(
+            static fn (ProviderInterface $provider) => $provider->getName(),
+            $this->similarityBuilder->getProviders(),
+        );
+
+        $reportFile = $input->getOption('report-file');
+        $reportHandle = $reportFile ? $this->openReportFile($reportFile, $providerNames) : null;
 
         $candidateCounts = [];
         $resultCounts = [];
@@ -102,9 +116,12 @@ final class SimilarityReportTask extends AbstractTask
         $providerValues = [];
         $neighbourCounts = [];
         $rejectedNeighbourCounts = [];
-        $rows = [];
 
         foreach ($baseTracks as $baseTrack) {
+            // dostawcy pamiętają dane pobrane dla utworu bazowego, a przy próbce liczonej w setkach
+            // te pamięci narastałyby przez cały przebieg, dlatego każdy utwór dostaje własny zestaw
+            $similarityService = $this->similarityBuilder->createService()->getSimilarityService();
+
             $candidates = $this->getCandidates($baseTrack);
             $similarTracks = $similarityService->getSimilarTracks($baseTrack);
 
@@ -125,14 +142,16 @@ final class SimilarityReportTask extends AbstractTask
                     $providerValues[$providerName][] = $value;
                 }
 
-                $rows[] = array_merge(
-                    [
-                        $baseTrack->getGuid(),
-                        $comparedTrack->getGuid(),
-                        (int) round($similarTrack->getSimilarityValue()),
-                    ],
-                    array_map(static fn (?int $value) => $value ?? '', array_values($values)),
-                );
+                if ($reportHandle) {
+                    fputcsv($reportHandle, array_merge(
+                        [
+                            $baseTrack->getGuid(),
+                            $comparedTrack->getGuid(),
+                            (int) round($similarTrack->getSimilarityValue()),
+                        ],
+                        array_map(static fn (?int $value) => $value ?? '', array_values($values)),
+                    ));
+                }
             }
 
             [ $neighbourCounts[], $rejectedNeighbourCounts[] ] = $this->countRejectedNeighbours(
@@ -142,17 +161,15 @@ final class SimilarityReportTask extends AbstractTask
             );
         }
 
-        $this->writeSummary($output, $baseTracks, $candidateCounts, $resultCounts, $candidateSimilarityValues);
-        $this->writeProviderDistribution($output, $providerValues);
-        $this->writeNeighbourLoss($output, $neighbourCounts, $rejectedNeighbourCounts);
-
-        $reportFile = $input->getOption('report-file');
-
-        if ($reportFile) {
-            $this->writeReportFile($reportFile, $rows, array_keys($providerValues));
+        if ($reportHandle) {
+            fclose($reportHandle);
 
             $output->writeln(sprintf('Per-pair values written to <info>%s</info>', $reportFile));
         }
+
+        $this->writeSummary($output, $baseTracks, $candidateCounts, $resultCounts, $candidateSimilarityValues);
+        $this->writeProviderDistribution($output, $providerValues);
+        $this->writeNeighbourLoss($output, $neighbourCounts, $rejectedNeighbourCounts);
 
         $this->logger->debug('Task finished');
 
@@ -368,7 +385,14 @@ final class SimilarityReportTask extends AbstractTask
         $table->render();
     }
 
-    private function writeReportFile(string $reportFile, array $rows, array $providerNames): void
+    /**
+     * Wiersze są zapisywane w trakcie przebiegu, a nie zbierane w pamięci: przy próbce rzędu stu
+     * utworów bazowych jest ich kilkadziesiąt tysięcy.
+     *
+     * @param string[] $providerNames
+     * @return resource
+     */
+    private function openReportFile(string $reportFile, array $providerNames)
     {
         $handle = fopen($reportFile, 'wb');
 
@@ -378,11 +402,7 @@ final class SimilarityReportTask extends AbstractTask
 
         fputcsv($handle, array_merge([ 'base_track', 'compared_track', 'similarity' ], $providerNames));
 
-        foreach ($rows as $row) {
-            fputcsv($handle, $row);
-        }
-
-        fclose($handle);
+        return $handle;
     }
 
     private static function percentile(array $values, int $percentile): int|string
