@@ -5,6 +5,7 @@ namespace Assistant\Module\Track\Model;
 use MongoDB\BSON\ObjectId;
 use MongoDB\BSON\UTCDateTime;
 use MongoDB\Model\BSONArray;
+use MongoDB\Model\BSONDocument;
 use stdClass;
 
 final readonly class TrackDto
@@ -30,6 +31,7 @@ final readonly class TrackDto
         public string $pathname,
         public UTCDateTime $modifiedDate,
         public ?UTCDateTime $indexedDate,
+        public BSONDocument $audioFeatures = new BSONDocument(),
     ) {
     }
 
@@ -56,6 +58,8 @@ final readonly class TrackDto
             $document->pathname,
             $document->modified_date,
             $document->indexed_date,
+            // pole nie istnieje w dokumentach zaindeksowanych przed jego wprowadzeniem
+            $document->audio_features ?? new BSONDocument(),
         );
 
         return $dto;
@@ -89,6 +93,7 @@ final readonly class TrackDto
             $track->getPathname(),
             new UTCDateTime($modifiedTimestamp),
             $indexedTimestamp ? new UTCDateTime($indexedTimestamp) : null,
+            new BSONDocument($track->getAudioFeatures()),
         );
 
         return $dto;
@@ -117,6 +122,7 @@ final readonly class TrackDto
             'pathname' => $this->pathname,
             'modified_date' => $this->modifiedDate,
             'indexed_date' => $this->indexedDate,
+            'audio_features' => $this->audioFeatures,
         ];
     }
 

@@ -2,11 +2,13 @@
 
 namespace Assistant\Module\Track\Extension\Similarity;
 
+use Assistant\Module\Track\Extension\Similarity\Provider\AudioFeatures;
 use Assistant\Module\Track\Extension\Similarity\Provider\Bpm;
 use Assistant\Module\Track\Extension\Similarity\Provider\Genre;
 use Assistant\Module\Track\Extension\Similarity\Provider\MusicalKey;
 use Assistant\Module\Track\Extension\Similarity\Provider\Musly;
 use Assistant\Module\Track\Extension\Similarity\Provider\ProviderInterface;
+use Assistant\Module\Track\Extension\Similarity\Provider\Publisher;
 use Assistant\Module\Track\Extension\Similarity\Provider\Year;
 use PHPUnit\Framework\TestCase;
 use ReflectionClass;
@@ -22,18 +24,22 @@ final class SimilarityTest extends TestCase
 
     /** Wagi zgodne z config/config.inc */
     private const array PROVIDERS_WEIGHTS = [
+        AudioFeatures::NAME => 0.85,
         Bpm::NAME => 0.70,
         Genre::NAME => 0.75,
         MusicalKey::NAME => 0.90,
         Musly::NAME => 1,
+        Publisher::NAME => 0.40,
         Year::NAME => 0.60,
     ];
 
     private const array PROVIDER_DOUBLES = [
+        AudioFeatures::NAME => FixedValueAudioFeaturesProvider::class,
         Bpm::NAME => FixedValueBpmProvider::class,
         Genre::NAME => FixedValueGenreProvider::class,
         MusicalKey::NAME => FixedValueMusicalKeyProvider::class,
         Musly::NAME => FixedValueMuslyProvider::class,
+        Publisher::NAME => FixedValuePublisherProvider::class,
         Year::NAME => FixedValueYearProvider::class,
     ];
 
@@ -151,7 +157,7 @@ final class SimilarityTest extends TestCase
         $this->buildSimilarity(new ReflectionClass(Similarity::class), $providers, self::PROVIDERS_WEIGHTS);
     }
 
-    /** Wszystkie 31 niepustych podzbiorów pięciu dostawców */
+    /** Wszystkie niepuste podzbiory dostawców */
     public static function providerSubsets(): iterable
     {
         $providerNames = Similarity::PROVIDERS;

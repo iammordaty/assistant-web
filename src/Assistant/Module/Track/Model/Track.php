@@ -39,6 +39,8 @@ final class Track implements CollectionItemInterface
         private string $pathname,
         private DateTime $modifiedDate,
         private ?DateTime $indexedDate = null,
+        /** @var array<string, int> Wektor cech wysokopoziomowych z klasyfikatora audio */
+        private array $audioFeatures = [],
     ) {
         $this->name = $artist . ' - ' . $title;
 
@@ -72,6 +74,7 @@ final class Track implements CollectionItemInterface
             $dto->pathname,
             $dto->modifiedDate->toDateTime(),
             $dto->indexedDate->toDateTime(),
+            $dto->audioFeatures->getArrayCopy(),
         );
 
         return $track;
@@ -284,6 +287,26 @@ final class Track implements CollectionItemInterface
     {
         $clone = clone $this;
         $clone->indexedDate = $indexedDate;
+
+        return $clone;
+    }
+
+    /**
+     * Wektor cech wysokopoziomowych z klasyfikatora audio: nazwa wymiaru => wartość w procentach.
+     * Pusty dla utworów zaindeksowanych przed wprowadzeniem tego pola.
+     *
+     * @return array<string, int>
+     */
+    public function getAudioFeatures(): array
+    {
+        return $this->audioFeatures;
+    }
+
+    /** @param array<string, int> $audioFeatures */
+    public function withAudioFeatures(array $audioFeatures): self
+    {
+        $clone = clone $this;
+        $clone->audioFeatures = $audioFeatures;
 
         return $clone;
     }

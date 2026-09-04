@@ -3,11 +3,13 @@
 namespace Assistant\Module\Track\Extension\Similarity;
 
 use Assistant\Module\Common\Extension\SimilarTracksCollection\SimilarTracksCollectionService;
+use Assistant\Module\Track\Extension\Similarity\Provider\AudioFeatures;
 use Assistant\Module\Track\Extension\Similarity\Provider\Bpm;
 use Assistant\Module\Track\Extension\Similarity\Provider\Genre;
 use Assistant\Module\Track\Extension\Similarity\Provider\MusicalKey;
 use Assistant\Module\Track\Extension\Similarity\Provider\Musly;
 use Assistant\Module\Track\Extension\Similarity\Provider\ProviderInterface;
+use Assistant\Module\Track\Extension\Similarity\Provider\Publisher;
 use Assistant\Module\Track\Extension\Similarity\Provider\Year;
 use Assistant\Module\Search\Extension\Service\TrackSearchService;
 use Assistant\Module\Track\Model\Track;
@@ -54,28 +56,21 @@ final class SimilarityBuilder
 
     public function createService(): self
     {
+        $factories = [
+            AudioFeatures::NAME => static fn (): ProviderInterface => new AudioFeatures(),
+            Bpm::NAME => fn (): ProviderInterface => new Bpm($this->providersParameters[Bpm::NAME]),
+            Genre::NAME => static fn (): ProviderInterface => new Genre(),
+            MusicalKey::NAME => static fn (): ProviderInterface => new MusicalKey(),
+            Musly::NAME => fn (): ProviderInterface => new Musly($this->service),
+            Publisher::NAME => static fn (): ProviderInterface => new Publisher(),
+            Year::NAME => fn (): ProviderInterface => new Year($this->providersParameters[Year::NAME]),
+        ];
+
         /** @var ProviderInterface[] $providers */
-        $providers = [];
-
-        if ($this->isProviderEnabled(Bpm::NAME)) {
-            $providers[] = new Bpm($this->providersParameters[Bpm::NAME]);
-        }
-
-        if ($this->isProviderEnabled(Genre::NAME)) {
-            $providers[] = new Genre();
-        }
-
-        if ($this->isProviderEnabled(MusicalKey::NAME)) {
-            $providers[] = new MusicalKey();
-        }
-
-        if ($this->isProviderEnabled(Musly::NAME)) {
-            $providers[] = new Musly($this->service);
-        }
-
-        if ($this->isProviderEnabled(Year::NAME)) {
-            $providers[] = new Year($this->providersParameters[Year::NAME]);
-        }
+        $providers = array_values(array_map(
+            static fn (callable $factory): ProviderInterface => $factory(),
+            array_filter($factories, $this->isProviderEnabled(...), ARRAY_FILTER_USE_KEY),
+        ));
 
         $this->providers = $providers;
 

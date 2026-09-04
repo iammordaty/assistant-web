@@ -11,6 +11,27 @@ use SplFileInfo;
 final class MusicClassifierResult
 {
     /**
+     * Klasyfikatory wysokopoziomowe brane do wektora cech, wraz z klasą, której prawdopodobieństwo
+     * jest odczytywane. Każdy z nich jest klasyfikatorem dwuklasowym, więc jedna liczba opisuje cały
+     * wymiar, a wszystkie wymiary są w tej samej skali.
+     *
+     * Świadomie pominięte są `genre_electronic` i `moods_mirex`: pierwszy powtarza sygnał gatunku,
+     * drugi jest skorelowany z pozostałymi wymiarami nastroju.
+     */
+    private const array AUDIO_FEATURE_CLASSES = [
+        'danceability' => 'danceable',
+        'mood_acoustic' => 'acoustic',
+        'mood_aggressive' => 'aggressive',
+        'mood_happy' => 'happy',
+        'mood_party' => 'party',
+        'mood_relaxed' => 'relaxed',
+        'mood_sad' => 'sad',
+        'timbre' => 'bright',
+        'tonal_atonal' => 'tonal',
+        'voice_instrumental' => 'voice',
+    ];
+
+    /**
      * @param string $musicalKey
      * @param float $bpm
      * @param string $chromaprint
@@ -78,6 +99,31 @@ final class MusicClassifierResult
     public function getFeatures(): array
     {
         return $this->features;
+    }
+
+    /**
+     * Wektor cech wysokopoziomowych: nazwa wymiaru => prawdopodobieństwo w procentach.
+     *
+     * W przeciwieństwie do getFeatures(), które zwraca zwycięskie etykiety klasyfikacji, jest to
+     * wielkość porównywalna między utworami: zawsze ten sam wymiar i zawsze ta sama skala. Wymiary
+     * nieobecne w wyniku są pomijane, więc starszy wynik klasyfikacji nie powoduje błędu.
+     *
+     * @return array<string, int>
+     */
+    public function getAudioFeatures(): array
+    {
+        $highLevel = $this->rawResult['highlevel'] ?? [];
+        $audioFeatures = [];
+
+        foreach (self::AUDIO_FEATURE_CLASSES as $classifier => $class) {
+            $probability = $highLevel[$classifier]['all'][$class] ?? null;
+
+            if ($probability !== null) {
+                $audioFeatures[$classifier] = (int) round($probability * 100);
+            }
+        }
+
+        return $audioFeatures;
     }
 
     public function getRawResult(): array

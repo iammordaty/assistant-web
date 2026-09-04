@@ -5,12 +5,14 @@ namespace Assistant\Module\Track\Extension\Similarity;
 use Assistant\Module\Search\Extension\Criteria\Not;
 use Assistant\Module\Search\Extension\Criteria\SearchCriteria;
 use Assistant\Module\Search\Extension\Service\TrackSearchService;
+use Assistant\Module\Track\Extension\Similarity\Provider\AudioFeatures;
 use Assistant\Module\Track\Extension\Similarity\Provider\Bpm;
 use Assistant\Module\Track\Extension\Similarity\Provider\CandidateProviderInterface;
 use Assistant\Module\Track\Extension\Similarity\Provider\Genre;
 use Assistant\Module\Track\Extension\Similarity\Provider\MusicalKey;
 use Assistant\Module\Track\Extension\Similarity\Provider\Musly;
 use Assistant\Module\Track\Extension\Similarity\Provider\ProviderInterface;
+use Assistant\Module\Track\Extension\Similarity\Provider\Publisher;
 use Assistant\Module\Track\Extension\Similarity\Provider\Year;
 use Assistant\Module\Track\Model\Track;
 
@@ -24,10 +26,12 @@ final class Similarity
 {
     /** Lista dostępnych dostawców podobieństwa */
     public const array PROVIDERS = [
+        AudioFeatures::NAME,
         Bpm::NAME,
         Genre::NAME,
         MusicalKey::NAME,
         Musly::NAME,
+        Publisher::NAME,
         Year::NAME,
     ];
 

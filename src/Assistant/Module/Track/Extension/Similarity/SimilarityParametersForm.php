@@ -2,10 +2,12 @@
 
 namespace Assistant\Module\Track\Extension\Similarity;
 
+use Assistant\Module\Track\Extension\Similarity\Provider\AudioFeatures;
 use Assistant\Module\Track\Extension\Similarity\Provider\Bpm;
 use Assistant\Module\Track\Extension\Similarity\Provider\Genre;
 use Assistant\Module\Track\Extension\Similarity\Provider\MusicalKey;
 use Assistant\Module\Track\Extension\Similarity\Provider\Musly;
+use Assistant\Module\Track\Extension\Similarity\Provider\Publisher;
 use Assistant\Module\Track\Extension\Similarity\Provider\Year;
 use Assistant\Module\Track\Model\TrackDto;
 use Psr\Http\Message\ServerRequestInterface;
@@ -43,6 +45,8 @@ final class SimilarityParametersForm
 
         $parameters = [
             new SimilarityParameter(Musly::NAME, 'Musly'),
+            new SimilarityParameter(AudioFeatures::NAME, 'Cechy audio'),
+            new SimilarityParameter(Publisher::NAME, 'Wytwórnia'),
             new SimilarityParameter(Genre::NAME, 'Gatunek', 'text', $request->genre, $trackGenre),
             new SimilarityParameter(Year::NAME, 'Rok', 'number', $request->year, $trackYear, 1980, $trackMaxYear),
             new SimilarityParameter(Bpm::NAME, 'BPM', 'number', $request->bpm, $trackBpm, 50, 200, 0.1),

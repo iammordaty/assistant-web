@@ -3,10 +3,12 @@
 namespace Assistant\Module\Track\Extension\Similarity;
 
 use Assistant\Module\Track\Extension\Similarity\Provider\AbstractProvider;
+use Assistant\Module\Track\Extension\Similarity\Provider\AudioFeatures;
 use Assistant\Module\Track\Extension\Similarity\Provider\Bpm;
 use Assistant\Module\Track\Extension\Similarity\Provider\Genre;
 use Assistant\Module\Track\Extension\Similarity\Provider\MusicalKey;
 use Assistant\Module\Track\Extension\Similarity\Provider\Musly;
+use Assistant\Module\Track\Extension\Similarity\Provider\Publisher;
 use Assistant\Module\Track\Extension\Similarity\Provider\Year;
 use Assistant\Module\Track\Model\Track;
 
@@ -34,6 +36,16 @@ abstract class FixedValueProvider extends AbstractProvider
     {
         return null;
     }
+}
+
+final class FixedValueAudioFeaturesProvider extends FixedValueProvider
+{
+    public const string NAME = AudioFeatures::NAME;
+}
+
+final class FixedValuePublisherProvider extends FixedValueProvider
+{
+    public const string NAME = Publisher::NAME;
 }
 
 final class FixedValueBpmProvider extends FixedValueProvider

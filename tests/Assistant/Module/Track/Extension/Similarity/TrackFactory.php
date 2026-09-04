@@ -19,6 +19,8 @@ final class TrackFactory
         string $guid = 'artist-title',
         ?string $pathname = null,
         string $artist = 'Artist',
+        ?string $publisher = null,
+        array $audioFeatures = [],
     ): Track {
         return new Track(
             id: null,
@@ -30,7 +32,7 @@ final class TrackFactory
             trackNumber: null,
             year: $year,
             genre: $genre,
-            publisher: null,
+            publisher: $publisher,
             bpm: $bpm,
             initialKey: $initialKey,
             length: 300,
@@ -40,6 +42,7 @@ final class TrackFactory
             parent: 'parent',
             pathname: $pathname ?? sprintf('/collection/Other/%s.mp3', $guid),
             modifiedDate: new DateTime(),
+            audioFeatures: $audioFeatures,
         );
     }
 }
