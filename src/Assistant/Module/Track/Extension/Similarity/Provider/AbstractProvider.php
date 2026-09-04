@@ -6,10 +6,10 @@ namespace Assistant\Module\Track\Extension\Similarity\Provider;
 abstract class AbstractProvider implements ProviderInterface
 {
     /** Nazwa dostawcy */
-    public const string NAME = ProviderInterface::NAME;
+    public const NAME = ProviderInterface::NAME;
 
     /** Maksymalna wartość podobieństwa, jaką może zwrócić dostawca */
-    protected const int MAX_SIMILARITY_VALUE = 100;
+    protected const MAX_SIMILARITY_VALUE = 100;
 
     /** Mapa podobieństwa */
     protected array $similarityMap = [];

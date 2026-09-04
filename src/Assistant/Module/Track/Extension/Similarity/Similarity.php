@@ -4,10 +4,9 @@ namespace Assistant\Module\Track\Extension\Similarity;
 
 use Assistant\Module\Search\Extension\Criteria\Not;
 use Assistant\Module\Search\Extension\Criteria\SearchCriteria;
+use Assistant\Module\Search\Extension\Criteria\SearchSort;
 use Assistant\Module\Search\Extension\Service\TrackSearchService;
-use Assistant\Module\Track\Extension\Similarity\Provider\AudioFeatures;
 use Assistant\Module\Track\Extension\Similarity\Provider\Bpm;
-use Assistant\Module\Track\Extension\Similarity\Provider\CandidateProviderInterface;
 use Assistant\Module\Track\Extension\Similarity\Provider\Genre;
 use Assistant\Module\Track\Extension\Similarity\Provider\MusicalKey;
 use Assistant\Module\Track\Extension\Similarity\Provider\Musly;
@@ -26,7 +25,6 @@ final class Similarity
 {
     /** Lista dostępnych dostawców podobieństwa */
     public const array PROVIDERS = [
-        AudioFeatures::NAME,
         Bpm::NAME,
         Genre::NAME,
         MusicalKey::NAME,
@@ -53,16 +51,32 @@ final class Similarity
             throw new \RuntimeException('At least one similarity provider must be enabled');
         }
 
-        $this->validateProviders();
+        $this->setup();
     }
 
     /** Zwraca utwory podobne do podanego */
     public function getSimilarTracks(Track $baseTrack): array
     {
-        // odrzuć wartości poniżej progu i ogranicz do zadanej wartości
+        $criteria = $this->getSimilarityCriteria($baseTrack);
+        $result = $this->trackSearchService->search($criteria, SearchSort::byName(), limit: null);
+
+        $similarTracks = array_map(
+            fn (Track $similarTrack) => new SimilarTracks(
+                $baseTrack,
+                $similarTrack,
+                $this->getSimilarityValue($baseTrack, $similarTrack)
+            ),
+            iterator_to_array($result->tracks)
+        );
+
+        // posortuj wg podoieństwa
+
+        $similarTracks = $this->sort($similarTracks);
+
+        // i odrzuć wartości poniżej progu i ogranicz do zadanej wartości
 
         $similarTracks = array_filter(
-            $this->getScoredCandidates($baseTrack),
+            $similarTracks,
             fn (SimilarTracks $similarTrack) => $similarTrack->getSimilarityValue() >= $this->minSimilarityValue
         );
 
@@ -72,40 +86,13 @@ final class Similarity
     }
 
     /**
-     * Zwraca wszystkich kandydatów z wyliczonym podobieństwem, posortowanych malejąco.
-     * getSimilarTracks() zawęża tę listę progiem i limitem.
-     *
-     * @return SimilarTracks[]
-     */
-    private function getScoredCandidates(Track $baseTrack): array
-    {
-        $similarTracks = array_map(
-            fn (Track $candidate) => new SimilarTracks(
-                $baseTrack,
-                $candidate,
-                $this->getRawSimilarityValue($baseTrack, $candidate)
-            ),
-            $this->getCandidates($baseTrack)
-        );
-
-        return $this->sort($similarTracks);
-    }
-
-    /** Oblicza podobieństwo pomiędzy utworami */
-    public function getSimilarityValue(Track $baseTrack, Track $comparedTrack): int
-    {
-        return (int) round($this->getRawSimilarityValue($baseTrack, $comparedTrack));
-    }
-
-    /**
-     * Podobieństwo bez zaokrąglenia, żeby sortowanie nie opierało się na wartościach spłaszczonych
-     * do liczb całkowitych. Zaokrąglenie należy do prezentacji.
+     * Oblicza podobieństwo pomiędzy utworami
      *
      * Mianownik liczony jest dla każdej pary osobno, wyłącznie z dostawców, którzy mieli dane.
      * Dzięki temu utwór z niepełnymi tagami nie jest karany za brak danych, a wynik pozostaje
      * w skali 0-100 niezależnie od tego, ilu dostawców jest włączonych.
      */
-    private function getRawSimilarityValue(Track $baseTrack, Track $comparedTrack): float
+    public function getSimilarityValue(Track $baseTrack, Track $comparedTrack): int
     {
         $weightedSimilarity = 0.0;
         $maxWeightedSimilarity = 0.0;
@@ -120,71 +107,21 @@ final class Similarity
             $maxProviderSimilarity = $provider->getMaxSimilarityValue();
             $providerWeight = $this->providersWeights[$provider::NAME];
 
-            // wartość poza zadeklarowanym zakresem nie może przesuwać wyniku poza skalę
-            $providerSimilarity = min(max($providerSimilarity, 0), $maxProviderSimilarity);
-
             $weightedSimilarity += $providerSimilarity * $providerWeight;
             $maxWeightedSimilarity += $maxProviderSimilarity * $providerWeight;
         }
 
         if ($maxWeightedSimilarity <= 0.0) {
             // żaden dostawca nie miał danych o tej parze
-            return 0.0;
+
+            return 0;
         }
 
-        return $weightedSimilarity * 100 / $maxWeightedSimilarity;
+        return (int) round($weightedSimilarity * 100 / $maxWeightedSimilarity);
     }
 
-    /**
-     * Zbiór kandydatów to suma dopasowania metadanych oraz utworów wskazanych przez dostawców
-     * potrafiących zgłosić własnych kandydatów. Kryteria w warstwie zapytań łączą się iloczynem,
-     * więc sumy nie da się wyrazić jednym zapytaniem.
-     *
-     * @return Track[]
-     */
-    private function getCandidates(Track $baseTrack): array
-    {
-        $candidates = [];
-
-        foreach ($this->getCandidateCriteria($baseTrack) as $criteria) {
-            $result = $this->trackSearchService->search($criteria);
-
-            foreach ($result->tracks as $candidate) {
-                // guid jako klucz usuwa powtórzenia utworów obecnych w obu zbiorach
-                $candidates[$candidate->getGuid()] = $candidate;
-            }
-        }
-
-        unset($candidates[$baseTrack->getGuid()]);
-
-        return array_values($candidates);
-    }
-
-    /** @return SearchCriteria[] */
-    private function getCandidateCriteria(Track $baseTrack): array
-    {
-        $criteria = [ $this->getSimilarityCriteria($baseTrack) ];
-
-        foreach ($this->providers as $provider) {
-            if (!$provider instanceof CandidateProviderInterface) {
-                continue;
-            }
-
-            $pathnames = $provider->getCandidatePathnames($baseTrack);
-
-            if ($pathnames) {
-                $criteria[] = new SearchCriteria(
-                    guid: Not::equal($baseTrack->getGuid()),
-                    pathname: $pathnames,
-                );
-            }
-        }
-
-        return $criteria;
-    }
-
-    /** Sprawdza poprawność konfiguracji dostawców */
-    private function validateProviders(): void
+    /** Przygotowuje moduł podobieństwa do użycia */
+    private function setup(): void
     {
         $providerNames = [];
 
@@ -243,6 +180,14 @@ final class Similarity
             // podobieństwo malejąco
 
             $result = $first->getSimilarityValue() <=> $second->getSimilarityValue();
+
+            if ($result !== 0) {
+                return $result * -1;
+            }
+
+            // rok malejąco
+
+            $result = $first->getSecondTrack()->getYear() <=> $second->getSecondTrack()->getYear();
 
             if ($result !== 0) {
                 return $result * -1;

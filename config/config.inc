@@ -6,7 +6,6 @@ use Assistant\Module\Common\Extension\TrackSearch\GoogleBeatportSearchTracks;
 use Assistant\Module\Common\Extension\TrackSearch\GoogleSearchApiClient;
 use Assistant\Module\Track\Extension\BeatportTrackMetadataSuggestionsService;
 use Assistant\Module\Track\Extension\Similarity\Similarity;
-use Assistant\Module\Track\Extension\Similarity\Provider\AudioFeatures;
 use Assistant\Module\Track\Extension\Similarity\Provider\Bpm;
 use Assistant\Module\Track\Extension\Similarity\Provider\MusicalKey;
 use Assistant\Module\Track\Extension\Similarity\Provider\Genre;
@@ -98,7 +97,6 @@ return static function (string $baseDir): array {
                 Year::NAME => [ 'tolerance' => 5 ],
             ],
             'providers_weights' => [
-                AudioFeatures::NAME => 0.85,
                 Bpm::NAME => 0.70,
                 Genre::NAME => 0.75,
                 MusicalKey::NAME => 0.90,

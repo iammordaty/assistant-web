@@ -8,7 +8,7 @@ use KeyTools\KeyTools;
 final class MusicalKey extends AbstractProvider
 {
     /** {@inheritDoc} */
-    public const string NAME = 'MusicalKey';
+    public const NAME = 'MusicalKey';
 
     public function __construct()
     {

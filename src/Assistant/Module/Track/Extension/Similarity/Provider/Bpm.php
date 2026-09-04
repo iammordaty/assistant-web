@@ -8,7 +8,7 @@ use Assistant\Module\Track\Model\Track;
 final class Bpm extends AbstractProvider
 {
     /** {@inheritDoc} */
-    public const string NAME = 'BPM';
+    public const NAME = 'BPM';
 
     /** {@inheritDoc} */
     protected array $similarityMap = [

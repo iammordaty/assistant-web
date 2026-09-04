@@ -4,33 +4,32 @@ namespace Assistant\Module\Track\Extension\Similarity\Provider;
 
 use Assistant\Module\Common\Extension\SimilarTracksCollection\SimilarTracksCollectionException;
 use Assistant\Module\Common\Extension\SimilarTracksCollection\SimilarTracksCollectionService;
-use Assistant\Module\Common\Extension\SimilarTracksCollection\SimilarTracksResultList;
+use Assistant\Module\Common\Extension\SimilarTracksCollection\SimilarTracksResult;
 use Assistant\Module\Track\Model\Track;
 
 /**
  * Provider podobieństwa oparty na bibliotece Musly.
  *
- * Wartość wynika z pozycji utworu na liście sąsiadów, a nie ze zwróconej odległości. Odległości po
- * normalizacji Mutual Proximity są bardzo małe i ściśnięte, więc każdy sąsiad dostawałby niemal
- * identyczną wartość; informacja siedzi w kolejności listy.
+ * Wartość wynika z odległości zwróconej przez musly, a nie z pozycji utworu na liście sąsiadów.
+ * Po normalizacji Mutual Proximity odległość wyraża wzajemny udział kolekcji znajdujący się bliżej
+ * (d ≈ (r + r') / N), więc jest miarą porównywalną między utworami bazowymi i niezależną od liczby
+ * pobranych sąsiadów. Pozycja na liście jest wobec niej funkcją stratną.
  *
  * Instancja pamięta listy sąsiadów dla wszystkich utworów bazowych, o które była pytana, ponieważ
  * pobranie listy to wywołanie zewnętrznego procesu. Dzięki temu siatka podobieństwa miksu, która
  * wraca do tych samych utworów w kolejnych wierszach, płaci za każdy utwór bazowy tylko raz.
  */
-final class Musly extends AbstractProvider implements CandidateProviderInterface
+final class Musly extends AbstractProvider
 {
-    /** {@inheritDoc} */
-    public const string NAME = 'Musly';
+    public const NAME = 'Musly';
 
-    /** @var array<string, SimilarTracksResultList> */
-    private array $similarTracks = [];
-
-    /** @var array<string, array<string, int>> Pozycje sąsiadów, w kolejności rosnącej odległości */
-    private array $neighbourRanks = [];
+    /** @var array<string, array<string, float>> Odległości sąsiadów wg ścieżki utworu bazowego */
+    private array $neighbourDistances = [];
 
     /** @var array<string, true> Ścieżki, dla których pobranie listy zakończyło się błędem */
     private array $failedTracks = [];
+
+    private ?int $collectionSize = null;
 
     public function __construct(private SimilarTracksCollectionService $service)
     {
@@ -39,19 +38,23 @@ final class Musly extends AbstractProvider implements CandidateProviderInterface
     /** {@inheritDoc} */
     public function getSimilarityValue(Track $baseTrack, Track $comparedTrack): ?int
     {
-        if ($this->getSimilarTracksFor($baseTrack) === null) {
+        $distances = $this->getNeighbourDistances($baseTrack);
+
+        if ($distances === null) {
             // lista sąsiadów jest niedostępna, więc dostawca nie ma zdania o tej parze
+
             return null;
         }
 
-        $ranks = $this->neighbourRanks[$baseTrack->getPathname()];
-        $rank = $ranks[$comparedTrack->getPathname()] ?? null;
+        $distance = $distances[$comparedTrack->getPathname()] ?? null;
 
-        if ($rank === null) {
-            return 0;
+        if ($distance === null) {
+            // utwór nie zmieścił się w czołówce listy, co nie znaczy, że jest niepodobny
+
+            return null;
         }
 
-        return (int) round(self::MAX_SIMILARITY_VALUE * (1 - $rank / count($ranks)));
+        return $this->distanceToSimilarityValue($distance);
     }
 
     /** {@inheritDoc} */
@@ -60,20 +63,14 @@ final class Musly extends AbstractProvider implements CandidateProviderInterface
         return null;
     }
 
-    /** {@inheritDoc} */
-    public function getCandidatePathnames(Track $baseTrack): array
-    {
-        $similarTracks = $this->getSimilarTracksFor($baseTrack);
-
-        return $similarTracks !== null ? array_keys($similarTracks->getSimilarTracks()) : [];
-    }
-
     /**
-     * Zwraca listę sąsiadów utworu bazowego, pobierając ją najwyżej raz dla danej ścieżki.
+     * Zwraca odległości sąsiadów utworu bazowego, pobierając listę najwyżej raz dla danej ścieżki.
      * Zwraca null, gdy lista jest niedostępna; nieudana próba również jest pamiętana, żeby jedna
      * awaria nie mnożyła wywołań zewnętrznego procesu.
+     *
+     * @return array<string, float>|null
      */
-    private function getSimilarTracksFor(Track $baseTrack): ?SimilarTracksResultList
+    private function getNeighbourDistances(Track $baseTrack): ?array
     {
         $pathname = $baseTrack->getPathname();
 
@@ -81,8 +78,8 @@ final class Musly extends AbstractProvider implements CandidateProviderInterface
             return null;
         }
 
-        if (isset($this->similarTracks[$pathname])) {
-            return $this->similarTracks[$pathname];
+        if (isset($this->neighbourDistances[$pathname])) {
+            return $this->neighbourDistances[$pathname];
         }
 
         try {
@@ -96,9 +93,57 @@ final class Musly extends AbstractProvider implements CandidateProviderInterface
             return null;
         }
 
-        $this->similarTracks[$pathname] = $similarTracks;
-        $this->neighbourRanks[$pathname] = array_flip(array_keys($similarTracks->getSimilarTracks()));
+        $this->neighbourDistances[$pathname] = array_map(
+            fn (SimilarTracksResult $similarTrack): float => $similarTrack->getDistance(),
+            $similarTracks->getSimilarTracks()
+        );
 
-        return $similarTracks;
+        return $this->neighbourDistances[$pathname];
+    }
+
+    /**
+     * Przelicza odległość Mutual Proximity na wartość w skali 0-MAX_SIMILARITY_VALUE.
+     *
+     * Najlepsza osiągalna odległość to 2/N, mediana to 1, dlatego skala jest logarytmiczna:
+     * rozciąga czołówkę listy, gdzie odległości różnią się o rzędy wielkości, i — dzięki odniesieniu
+     * do rozmiaru kolekcji — pozostaje porównywalna między bibliotekami różnej wielkości.
+     * Wartość maksymalna oznacza parę wzajemnie najbliższych sąsiadów, zero — odległość mediany.
+     */
+    private function distanceToSimilarityValue(float $distance): ?int
+    {
+        $collectionSize = $this->getCollectionSize();
+
+        if ($collectionSize === null) {
+            // bez rozmiaru kolekcji skala nie ma odniesienia
+
+            return null;
+        }
+
+        if ($collectionSize < 4) {
+            return self::MAX_SIMILARITY_VALUE;
+        }
+
+        // 0 jest zwracane dla utworu porównanego z samym sobą
+        $bestPossible = 2.0 / $collectionSize;
+        $distance = min(max($distance, $bestPossible), 1.0);
+
+        $normalized = log10(1.0 / $distance) / log10($collectionSize / 2.0);
+
+        return (int) round(self::MAX_SIMILARITY_VALUE * max(0.0, min(1.0, $normalized)));
+    }
+
+    /** Zwraca liczbę utworów w kolekcji musly albo null, gdy kolekcja jest niedostępna */
+    private function getCollectionSize(): ?int
+    {
+        if ($this->collectionSize === null) {
+            try {
+                $this->collectionSize = count($this->service->getTracks());
+            } catch (SimilarTracksCollectionException) {
+                // zero oznacza nieudaną próbę i zapobiega ponownym wywołaniom zewnętrznego procesu
+                $this->collectionSize = 0;
+            }
+        }
+
+        return $this->collectionSize ?: null;
     }
 }

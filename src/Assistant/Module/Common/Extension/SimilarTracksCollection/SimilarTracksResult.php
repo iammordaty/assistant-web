@@ -14,11 +14,19 @@ final class SimilarTracksResult
 
     private float $similarityValue;
 
-    public function __construct(SplFileInfo $firstTrack, SplFileInfo $secondTrack, float $similarityValue)
-    {
+    /** Odległość zwrócona przez musly, znormalizowana metodą Mutual Proximity */
+    private float $distance;
+
+    public function __construct(
+        SplFileInfo $firstTrack,
+        SplFileInfo $secondTrack,
+        float $similarityValue,
+        float $distance,
+    ) {
         $this->firstTrack = $firstTrack;
         $this->secondTrack = $secondTrack;
         $this->similarityValue = $similarityValue;
+        $this->distance = $distance;
     }
 
     public static function factory(
@@ -35,7 +43,7 @@ final class SimilarTracksResult
 
         $similarityValue = round(100 - ($distance * 100), 2);
 
-        return new self($firstTrack, $secondTrack, $similarityValue);
+        return new self($firstTrack, $secondTrack, $similarityValue, $distance);
     }
 
     // do zastanowienia się, czy to utrzymywać
@@ -52,5 +60,14 @@ final class SimilarTracksResult
     public function getSimilarityValue(): float
     {
         return $this->similarityValue;
+    }
+
+    /**
+     * Odległość w zakresie 0-1; niższa oznacza większe podobieństwo. Wyraża wzajemny udział kolekcji
+     * znajdujący się bliżej, więc niesie więcej informacji niż pozycja na liście sąsiadów.
+     */
+    public function getDistance(): float
+    {
+        return $this->distance;
     }
 }

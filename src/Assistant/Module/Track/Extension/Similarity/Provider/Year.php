@@ -8,7 +8,7 @@ use Assistant\Module\Track\Model\Track;
 final class Year extends AbstractProvider
 {
     /** {@inheritDoc} */
-    public const string NAME = 'Year';
+    public const NAME = 'Year';
 
     /** {@inheritDoc} */
     protected array $similarityMap = [

@@ -14,7 +14,7 @@ use Assistant\Module\Track\Model\Track;
 final class Publisher extends AbstractProvider
 {
     /** {@inheritDoc} */
-    public const string NAME = 'Publisher';
+    public const NAME = 'Publisher';
 
     /** {@inheritDoc} */
     public function getSimilarityValue(Track $baseTrack, Track $comparedTrack): ?int

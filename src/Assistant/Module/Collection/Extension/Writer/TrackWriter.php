@@ -3,7 +3,6 @@
 namespace Assistant\Module\Collection\Extension\Writer;
 
 use Assistant\Module\Collection\Model\CollectionItemInterface;
-use Assistant\Module\Common\Extension\MusicClassifier\MusicClassifierException;
 use Assistant\Module\Common\Extension\MusicClassifier\MusicClassifierResult;
 use Assistant\Module\Common\Extension\MusicClassifier\MusicClassifierService;
 use Assistant\Module\Common\Extension\SimilarTracksCollection\SimilarTracksCollectionService;
@@ -38,16 +37,13 @@ final readonly class TrackWriter implements WriterInterface
 
             $classificationResult = $this->musicClassifierService->analyze($collectionItem->getFile());
             $this->moveClassificationResultFile($collectionItem, $classificationResult);
-
-            $collectionItem = $collectionItem->withAudioFeatures($classificationResult->getAudioFeatures());
         } else {
             $collectionItem = $collectionItem
                 ->withId($indexedTrack->getId())
                 ->withIsFavorite($indexedTrack->getIsFavorite())
                 ->withTags($indexedTrack->getTags())
                 ->withIndexedDate($indexedTrack->getIndexedDate())
-                ->withModifiedDate($indexedTrack->getModifiedDate())
-                ->withAudioFeatures($this->getAudioFeatures($indexedTrack));
+                ->withModifiedDate($indexedTrack->getModifiedDate());
 
             // Jeśli wyniku zmiany metadanych zmiana uległa nazwa pliku, to trzeba do dodać ponownie
             if (!$this->isInSimilarTracksCollection($indexedTrack)) {
@@ -58,30 +54,6 @@ final readonly class TrackWriter implements WriterInterface
         $this->trackService->save($collectionItem);
 
         return $collectionItem;
-    }
-
-    /**
-     * Zwraca wektor cech utworu już zaindeksowanego. Zapisany wektor jest przepisywany, a jego brak
-     * (utwór zaindeksowany przed wprowadzeniem tego pola) uzupełniany z gotowego wyniku klasyfikacji,
-     * bez uruchamiania ekstraktora. Wektor jest wzbogaceniem, więc jego brak nie przerywa indeksacji.
-     *
-     * @return array<string, int>
-     */
-    private function getAudioFeatures(Track $indexedTrack): array
-    {
-        $audioFeatures = $indexedTrack->getAudioFeatures();
-
-        if ($audioFeatures) {
-            return $audioFeatures;
-        }
-
-        try {
-            $classificationResult = $this->musicClassifierService->getResult($indexedTrack->getFile());
-        } catch (MusicClassifierException) {
-            return [];
-        }
-
-        return $classificationResult?->getAudioFeatures() ?? [];
     }
 
     /** Zwraca unikalny guid dla podanego utworu */

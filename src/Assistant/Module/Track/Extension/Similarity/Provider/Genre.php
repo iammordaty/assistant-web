@@ -7,7 +7,7 @@ use Assistant\Module\Track\Model\Track;
 final class Genre extends AbstractProvider
 {
     /** {@inheritDoc} */
-    public const string NAME = 'Genre';
+    public const NAME = 'Genre';
 
     private array $similarityMapBase = [
         ['House', 'Tech House', 90],
