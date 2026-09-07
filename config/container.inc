@@ -35,6 +35,7 @@ use Assistant\Module\Track\Extension\Similarity\SimilarityBuilder;
 use Assistant\Module\Track\Extension\TrackFilenameSuggestion;
 use Assistant\Module\Track\Extension\TrackLocationArbiter;
 use Assistant\Module\Track\Extension\TrackService;
+use Assistant\Module\Track\Repository\MusicClassifierMetadataRepository;
 use Assistant\Module\Track\Repository\TrackRepository;
 use Assistant\Module\Track\Repository\TrackStatsRepository;
 use gfaugere\Monolog\Formatter\ColoredLineFormatter;
@@ -200,6 +201,19 @@ return static fn (string $baseDir, array $config): array => [
     TrackLocationArbiter::class => autowire(),
 
     BeatportTrackMetadataSuggestionsService::class => autowire(),
+
+    MusicClassifierMetadataRepository::class => function (
+        Container $container,
+    ): MusicClassifierMetadataRepository {
+        $storage = $container->get(Config::class)->get('storage');
+
+        $client = new MongoDBClient($storage['connection_uri']);
+        $database = $client->selectDatabase($storage['database']);
+
+        $repository = MusicClassifierMetadataRepository::factory($database);
+
+        return $repository;
+    },
 
     TrackRepository::class => function (Container $container): TrackRepository {
         $storage = $container->get(Config::class)->get('storage');

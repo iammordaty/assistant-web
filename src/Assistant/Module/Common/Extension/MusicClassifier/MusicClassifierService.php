@@ -67,6 +67,66 @@ final class MusicClassifierService
         return $result;
     }
 
+    /**
+     * Zwraca istniejący wynik klasyfikacji bez uruchamiania ekstraktora.
+     * Szuka pliku w kanonicznej lokalizacji po indeksacji:
+     * /collection/a/b/c/track.mp3 -> /metadata/essentia/a/b/c/track.json
+     */
+    public function getResult(SplFileInfo $track): ?MusicClassifierResult
+    {
+        $pathname = $this->getIndexedResultPathname($track);
+
+        if (!is_readable($pathname)) {
+            return null;
+        }
+
+        return MusicClassifierResult::fromResultFile($pathname);
+    }
+
+    /**
+     * Ścieżka wyniku klasyfikacji po przeniesieniu do katalogu metadanych.
+     *
+     * @see \Assistant\Module\Collection\Extension\Writer\TrackWriter::moveClassificationResultFile()
+     */
+    public function getIndexedResultPathname(SplFileInfo $track): string
+    {
+        return str_replace(
+            [
+                $this->config->get('collection.root_dir'),
+                $track->getExtension(),
+            ],
+            [
+                $this->config->get('collection.metadata_dirs.music_classifier'),
+                'json',
+            ],
+            $track->getPathname(),
+        );
+    }
+
+    /**
+     * Przenosi plik z wynikiem klasyfikacji do lokalizacji odzwierciedlającej układ kolekcji,
+     * wg poniższego schematu
+     * /collection/a/b/c/track.mp3 -> /metadata/essentia/a/b/c/track.json
+     *
+     * analyze() zapisuje wynik pod nazwą zawierającą md5 audio, w katalogu głównym metadanych,
+     * a getResult() czyta go już z lokalizacji odpowiadającej ścieżce utworu.
+     */
+    public function moveResultToIndexedLocation(SplFileInfo $track, MusicClassifierResult $result): void
+    {
+        $indexedResultPathname = $this->getIndexedResultPathname($track);
+
+        $parent = dirname($indexedResultPathname);
+
+        if (!file_exists($parent)) {
+            mkdir($parent, recursive: true);
+        }
+
+        rename(
+            from: $result->getFile()->getPathname(),
+            to: $indexedResultPathname,
+        );
+    }
+
     private function findResultFile(SplFileInfo $track): ?string
     {
         $audioMd5 = $this->audioMd5Calculator->calculate($track);

@@ -16,6 +16,8 @@ use Symfony\Component\Console\Output\OutputInterface;
 
 final class SimilarTracksCollectionReIndexerTask extends AbstractTask
 {
+    private const int BACKUP_RETENTION = 5;
+
     protected static $defaultName = 'collection:reindex-similar-tracks';
 
     public function __construct(
@@ -75,8 +77,37 @@ final class SimilarTracksCollectionReIndexerTask extends AbstractTask
         $track = $this->searchService->findOne(new SearchCriteria());
         $this->similarTracksCollectionService->getSimilarTracks($track->getFile());
 
+        $this->cleanupBackups($collectionPathname, $jukeboxPathname);
+
         $this->logger->debug('Task finished');
 
         return self::SUCCESS;
+    }
+
+    private function cleanupBackups(string $collectionPathname, string $jukeboxPathname): void
+    {
+        $clean = function (string $pathname): void {
+            $backupFiles = glob($pathname . '.*.bak');
+
+            if (!$backupFiles || count($backupFiles) <= self::BACKUP_RETENTION) {
+                return;
+            }
+
+            usort(
+                $backupFiles,
+                static fn (string $a, string $b): int => filemtime($b) <=> filemtime($a)
+            );
+
+            foreach (array_slice($backupFiles, self::BACKUP_RETENTION) as $backupFile) {
+                if (unlink($backupFile)) {
+                    $this->logger->debug('Removed old backup', [ 'file' => $backupFile ]);
+                }
+            }
+        };
+
+        array_map(
+            $clean,
+            array_filter([ $collectionPathname, $jukeboxPathname ])
+        );
     }
 }
