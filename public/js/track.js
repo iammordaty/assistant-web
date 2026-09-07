@@ -1,7 +1,7 @@
 /* global $ */
 
 import formatSeconds from './modules/format-seconds.js';
-import initClassifierMetadataModal from './modules/classifier-metadata-modal.js';
+import initMusicClassifierMetadataModal from './modules/music-classifier-metadata-modal.js';
 import renderWaveform from './modules/render-waveform.js';
 import toggleFavorite from './modules/toggle-favorite.js';
 
@@ -288,5 +288,5 @@ $(function () {
 
 	$('[data-action="track:toggle-favorite"]').on('click', e => toggleFavorite(e.currentTarget));
 
-	initClassifierMetadataModal();
+	initMusicClassifierMetadataModal();
 });

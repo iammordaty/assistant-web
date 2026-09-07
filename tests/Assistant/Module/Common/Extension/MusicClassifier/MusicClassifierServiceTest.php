@@ -90,6 +90,46 @@ final class MusicClassifierServiceTest extends TestCase
         self::assertSame($resultPath, $result->getFile()?->getPathname());
     }
 
+    /**
+     * Ekstraktor zapisuje wynik pod płaską nazwą w katalogu głównym metadanych, a odczytywany jest
+     * z lokalizacji odpowiadającej ścieżce utworu — przeniesienie zamyka tę różnicę.
+     */
+    public function testResultIsMovedToIndexedLocation(): void
+    {
+        $track = new SplFileInfo($this->root . '/collection/Other/Artist - Title.mp3');
+        $flatResultPath = $this->root . '/metadata/essentia/basename:artist-title,md5:md5-encoded.json';
+
+        file_put_contents($flatResultPath, json_encode($this->minimalResult()));
+
+        $this->service->moveResultToIndexedLocation(
+            $track,
+            MusicClassifierResult::fromResultFile($flatResultPath),
+        );
+
+        self::assertFileDoesNotExist($flatResultPath);
+        self::assertFileExists($this->root . '/metadata/essentia/Other/Artist - Title.json');
+    }
+
+    /** Katalogi docelowe nie istnieją przed przeniesieniem pierwszego wyniku z danej gałęzi */
+    public function testMissingDirectoriesAreCreatedWhileMovingResult(): void
+    {
+        $track = new SplFileInfo(
+            $this->root . '/collection/Singles/2009/08. sierpień/Deadmau5/Ghosts/Deadmau5 - 01 - Ghosts.mp3',
+        );
+        $flatResultPath = $this->root . '/metadata/essentia/basename:deadmau5-ghosts,md5:md5-encoded.json';
+
+        file_put_contents($flatResultPath, json_encode($this->minimalResult()));
+
+        $this->service->moveResultToIndexedLocation(
+            $track,
+            MusicClassifierResult::fromResultFile($flatResultPath),
+        );
+
+        self::assertFileExists(
+            $this->root . '/metadata/essentia/Singles/2009/08. sierpień/Deadmau5/Ghosts/Deadmau5 - 01 - Ghosts.json',
+        );
+    }
+
     private function minimalResult(array $overrides = []): array
     {
         $highlevel = [

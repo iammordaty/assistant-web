@@ -10,7 +10,7 @@ use Psr\Http\Message\ResponseInterface;
 use Slim\Http\Response;
 use Slim\Http\ServerRequest;
 
-final readonly class ClassifierMetadataController
+final readonly class MusicClassifierMetadataController
 {
     public function __construct(
         private MusicClassifierService $musicClassifierService,
@@ -39,7 +39,7 @@ final readonly class ClassifierMetadataController
 
         if (!$result) {
             return $response
-                ->withJson([ 'message' => sprintf('Classifier metadata for "%s" does not exist.', $guid) ])
+                ->withJson([ 'message' => sprintf('Music classifier metadata for "%s" does not exist.', $guid) ])
                 ->withStatus(StatusCodeInterface::STATUS_NOT_FOUND);
         }
 

@@ -1,21 +1,20 @@
 import renderJsonTree from './json-tree.js';
 
-export default function initClassifierMetadataModal() {
-    const trigger = document.querySelector('[data-role="track:classifier-metadata"]');
-    const modalEl = document.getElementById('modal-classifier-metadata');
+export default function initMusicClassifierMetadataModal() {
+    const trigger = document.querySelector('[data-role="track:music-classifier-metadata"]');
+    const modalEl = document.getElementById('modal-music-classifier-metadata');
 
-    console.log('classifier-metadata-modal.js loaded', trigger, modalEl);
     if (!trigger || !modalEl) {
         return;
     }
 
     const modal = new window.bootstrap.Modal(modalEl);
-    const loading = modalEl.querySelector('[data-role="classifier-metadata:loading"]');
-    const error = modalEl.querySelector('[data-role="classifier-metadata:error"]');
-    const tree = modalEl.querySelector('[data-role="classifier-metadata:tree"]');
-    const copyBtn = modalEl.querySelector('[data-role="classifier-metadata:copy"]');
-    const downloadBtn = modalEl.querySelector('[data-role="classifier-metadata:download"]');
-    const copyLabel = modalEl.querySelector('[data-role="classifier-metadata:copy-label"]');
+    const loading = modalEl.querySelector('[data-role="music-classifier-metadata:loading"]');
+    const error = modalEl.querySelector('[data-role="music-classifier-metadata:error"]');
+    const tree = modalEl.querySelector('[data-role="music-classifier-metadata:tree"]');
+    const copyBtn = modalEl.querySelector('[data-role="music-classifier-metadata:copy"]');
+    const downloadBtn = modalEl.querySelector('[data-role="music-classifier-metadata:download"]');
+    const copyLabel = modalEl.querySelector('[data-role="music-classifier-metadata:copy-label"]');
     const originalCopyLabel = copyLabel.textContent;
 
     let data = null;

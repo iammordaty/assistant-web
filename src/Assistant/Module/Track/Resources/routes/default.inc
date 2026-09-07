@@ -1,7 +1,7 @@
 <?php
 
 use Assistant\Module\Track\Controller\Track\AutocompleteController;
-use Assistant\Module\Track\Controller\Track\ClassifierMetadataController;
+use Assistant\Module\Track\Controller\Track\MusicClassifierMetadataController;
 use Assistant\Module\Track\Controller\Track\ContentsController;
 use Assistant\Module\Track\Controller\Track\EditController as TrackEditController;
 use Assistant\Module\Track\Controller\IncomingTrack\EditController as IncomingTrackEditController;
@@ -18,8 +18,8 @@ return static function (App $app): void {
         $group->post('/{guid}/favorite', [ TrackController::class, 'favorite' ])->setName('track.track.favorite');
 
         $group
-            ->get('/{guid}/classifier-metadata', [ ClassifierMetadataController::class, 'get' ])
-            ->setName('track.classifier-metadata.get');
+            ->get('/{guid}/music-classifier-metadata', [ MusicClassifierMetadataController::class, 'get' ])
+            ->setName('track.music-classifier-metadata.get');
 
         $group->get('/{pathname:.*}/contents', [ ContentsController::class, 'get' ])->setName('track.contents.get');
 

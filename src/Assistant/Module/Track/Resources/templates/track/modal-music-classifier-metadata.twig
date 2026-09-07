@@ -1,10 +1,10 @@
 <div
     class="modal"
-    id="modal-classifier-metadata"
+    id="modal-music-classifier-metadata"
     tabindex="-1"
     aria-modal="true"
     role="dialog"
-    data-url="{{ url_for('track.classifier-metadata.get', { guid: track.guid }) }}"
+    data-url="{{ url_for('track.music-classifier-metadata.get', { guid: track.guid }) }}"
     data-filename="{{ track.guid }}.json"
 >
     <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable" role="document">
@@ -14,20 +14,20 @@
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
-                <div data-role="classifier-metadata:loading">
+                <div data-role="music-classifier-metadata:loading">
                     <div class="progress progress-sm mb-3">
                         <div class="progress-bar progress-bar-indeterminate"></div>
                     </div>
                     <div class="text-center text-muted">Ładowanie metadanych Essentia…</div>
                 </div>
-                <div class="text-center text-muted py-4 d-none" data-role="classifier-metadata:error"></div>
-                <div class="d-none" data-role="classifier-metadata:tree"></div>
+                <div class="text-center text-muted py-4 d-none" data-role="music-classifier-metadata:error"></div>
+                <div class="d-none" data-role="music-classifier-metadata:tree"></div>
             </div>
             <div class="modal-footer">
                 <button
                     type="button"
                     class="btn"
-                    data-role="classifier-metadata:copy"
+                    data-role="music-classifier-metadata:copy"
                     disabled
                 >
                     <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-copy" width="24" height="24" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
@@ -35,12 +35,12 @@
                         <path d="M7 7m0 2.667a2.667 2.667 0 0 1 2.667 -2.667h8.666a2.667 2.667 0 0 1 2.667 2.667v8.666a2.667 2.667 0 0 1 -2.667 2.667h-8.666a2.667 2.667 0 0 1 -2.667 -2.667z"></path>
                         <path d="M4.012 16.737a2.005 2.005 0 0 1 -1.012 -1.737v-10c0 -1.1 .9 -2 2 -2h10c.75 0 1.158 .385 1.5 1"></path>
                     </svg>
-                    <span data-role="classifier-metadata:copy-label">Kopiuj</span>
+                    <span data-role="music-classifier-metadata:copy-label">Kopiuj</span>
                 </button>
                 <button
                     type="button"
                     class="btn btn-success"
-                    data-role="classifier-metadata:download"
+                    data-role="music-classifier-metadata:download"
                     disabled
                 >
                     <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-download" width="24" height="24" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">

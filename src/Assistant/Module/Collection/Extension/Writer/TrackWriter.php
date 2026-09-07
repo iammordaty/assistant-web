@@ -3,7 +3,6 @@
 namespace Assistant\Module\Collection\Extension\Writer;
 
 use Assistant\Module\Collection\Model\CollectionItemInterface;
-use Assistant\Module\Common\Extension\MusicClassifier\MusicClassifierResult;
 use Assistant\Module\Common\Extension\MusicClassifier\MusicClassifierService;
 use Assistant\Module\Common\Extension\SimilarTracksCollection\SimilarTracksCollectionService;
 use Assistant\Module\Search\Extension\Criteria\Regex;
@@ -36,7 +35,11 @@ final readonly class TrackWriter implements WriterInterface
             $this->addToSimilarTracksCollection($collectionItem);
 
             $classificationResult = $this->musicClassifierService->analyze($collectionItem->getFile());
-            $this->moveClassificationResultFile($collectionItem, $classificationResult);
+
+            $this->musicClassifierService->moveResultToIndexedLocation(
+                $collectionItem->getFile(),
+                $classificationResult,
+            );
         } else {
             $collectionItem = $collectionItem
                 ->withId($indexedTrack->getId())
@@ -89,27 +92,4 @@ final readonly class TrackWriter implements WriterInterface
         $this->similarTracksCollectionService->add($collectionItem->getFile());
     }
 
-    /**
-     * Przenosi plik z wynikiem klasyfikacji utworu do katalogu z metadanymi, wg poniższego schematu
-     * /collection/a/b/c/track.mp3 -> /metadata/essentia/a/b/c/track.json
-     **/
-    private function moveClassificationResultFile(
-        Track $track,
-        MusicClassifierResult $classificationResult,
-    ): void {
-        $newClassificationResultPathname = $this->musicClassifierService->getIndexedResultPathname(
-            $track->getFile(),
-        );
-
-        $parent = dirname($newClassificationResultPathname);
-
-        if (!file_exists($parent)) {
-            mkdir($parent, recursive: true);
-        }
-
-        rename(
-            from: $classificationResult->getFile()->getPathname(),
-            to: $newClassificationResultPathname,
-        );
-    }
 }

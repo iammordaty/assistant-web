@@ -103,6 +103,30 @@ final class MusicClassifierService
         );
     }
 
+    /**
+     * Przenosi plik z wynikiem klasyfikacji do lokalizacji odzwierciedlającej układ kolekcji,
+     * wg poniższego schematu
+     * /collection/a/b/c/track.mp3 -> /metadata/essentia/a/b/c/track.json
+     *
+     * analyze() zapisuje wynik pod nazwą zawierającą md5 audio, w katalogu głównym metadanych,
+     * a getResult() czyta go już z lokalizacji odpowiadającej ścieżce utworu.
+     */
+    public function moveResultToIndexedLocation(SplFileInfo $track, MusicClassifierResult $result): void
+    {
+        $indexedResultPathname = $this->getIndexedResultPathname($track);
+
+        $parent = dirname($indexedResultPathname);
+
+        if (!file_exists($parent)) {
+            mkdir($parent, recursive: true);
+        }
+
+        rename(
+            from: $result->getFile()->getPathname(),
+            to: $indexedResultPathname,
+        );
+    }
+
     private function findResultFile(SplFileInfo $track): ?string
     {
         $audioMd5 = $this->audioMd5Calculator->calculate($track);
