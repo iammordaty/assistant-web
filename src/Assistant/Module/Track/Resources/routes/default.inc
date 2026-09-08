@@ -26,6 +26,10 @@ return static function (App $app): void {
         $group->get('/{pathname:.*}/edit', [ TrackEditController::class, 'edit' ])->setName('track.edit.edit');
 
         $group->post('/{pathname:.*}/save', [ TrackEditController::class, 'save' ])->setName('track.edit.save');
+
+        $group
+            ->post('/{pathname:.*}/name-preview', [ TrackEditController::class, 'namePreview' ])
+            ->setName('track.edit.name-preview');
     });
 
     $app->group('/incoming-track', function (RouteCollectorProxy $group) {

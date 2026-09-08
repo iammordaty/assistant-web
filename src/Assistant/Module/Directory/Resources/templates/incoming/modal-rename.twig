@@ -62,6 +62,35 @@
                             <input class="form-check-input" type="checkbox" name="mark_as_ready" value="1">
                             <span class="form-check-label">Oznacz jako gotowy (przenieś do katalogu <i>_zrobione</i>)</span>
                         </label>
+
+                        <label class="form-check">
+                            <input class="form-check-input" type="checkbox" name="move_to_date_dir" value="1"
+                                   data-role="incoming-tracks:rename:date-dir">
+                            <span class="form-check-label">Przenieś do katalogu <i>rok</i> / <i>miesiąc</i></span>
+                            <span class="form-check-description">
+                                Domyślnie wg daty każdego pliku z osobna. Poniżej można narzucić jedną datę
+                                dla całego zaznaczenia.
+                            </span>
+                        </label>
+
+                        <div class="row g-2 mt-1 ms-4 d-none" data-role="incoming-tracks:rename:date-dir-fields">
+                            <div class="col-4">
+                                <input type="text" name="date_dir_year" class="form-control rounded"
+                                       inputmode="numeric" pattern="\d{4}" placeholder="rok">
+                            </div>
+                            <div class="col-8">
+                                <select name="date_dir_month" class="form-select rounded">
+                                    <option value="">(miesiąc z daty pliku)</option>
+                                    {% for month in [
+                                        '01. styczeń', '02. luty', '03. marzec', '04. kwiecień',
+                                        '05. maj', '06. czerwiec', '07. lipiec', '08. sierpień',
+                                        '09. wrzesień', '10. październik', '11. listopad', '12. grudzień'
+                                    ] %}
+                                        <option value="{{ month }}">{{ month }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
                     </div>
                 </div>
                 <div class="modal-footer">

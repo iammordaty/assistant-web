@@ -9,6 +9,15 @@ use stdClass;
 
 final readonly class TrackDto
 {
+    /**
+     * @fixme $genre, $bpm i $initialKey są tu nienullowalne, a Track::getGenre()/getBpm()/getInitialKey()
+     *        zwracają null - fromModel() rzuci więc TypeError dla utworu, który nie ma tych tagów
+     *        zapisanych w pliku. W codziennym przepływie to nie występuje, bo tonację i BPM uzupełnia
+     *        track:calculate-audio-data, a gatunek jest wymagany przy dodawaniu do kolekcji; problem
+     *        ujawni się dla pliku wstawionego do kolekcji z pominięciem tej ścieżki (np. import
+     *        z zewnątrz albo ręczne skopiowanie do katalogu indeksowanego). To samo dotyczy
+     *        getIsFavorite(): bool przy nullowalnym $isFavorite.
+     */
     public function __construct(
         public ?ObjectId $objectId,
         public string $guid,

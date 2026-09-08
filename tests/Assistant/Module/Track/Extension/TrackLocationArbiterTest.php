@@ -78,6 +78,34 @@ final class TrackLocationArbiterTest extends TestCase
         self::assertNull($this->arbiter->getIndexedDir($file));
     }
 
+    /** Katalog <rok>/<miesiąc> to granica, ponad którą nie wyjdzie żadna zmiana nazwy */
+    public function testDateDirIsTwoLevelsUnderIndexedDir(): void
+    {
+        $file = $this->makeFile('/Singles/2013/04. kwiecień/David Guetta vs. The Egg/Love/03. The Egg - Walking Away.mp3');
+
+        self::assertSame($this->root . '/Singles/2013/04. kwiecień', $this->arbiter->getDateDir($file));
+    }
+
+    public function testDateDirForFlatOtherTrack(): void
+    {
+        $file = $this->makeFile('/Other/2009/08. sierpień/Artist - Title.mp3');
+
+        self::assertSame($this->root . '/Other/2009/08. sierpień', $this->arbiter->getDateDir($file));
+    }
+
+    /** Plik leżący płytko (bez rok/miesiąc) - granicą jest sam katalog indeksowany */
+    public function testDateDirFallsBackToIndexedDirForShallowPath(): void
+    {
+        $file = $this->makeFile('/Other/Artist - Title.mp3');
+
+        self::assertSame($this->root . '/Other', $this->arbiter->getDateDir($file));
+    }
+
+    public function testDateDirIsNullOutsideCollection(): void
+    {
+        self::assertNull($this->arbiter->getDateDir($this->makeFile('/_new/Artist - Title.mp3')));
+    }
+
     private function makeFile(string $relativePath): SplFileInfo
     {
         $pathname = $this->root . $relativePath;

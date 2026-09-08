@@ -5,9 +5,13 @@ namespace Assistant\Module\Track\Controller\Track;
 use Assistant\Module\Common\Extension\Messages;
 use Assistant\Module\Common\Extension\Route;
 use Assistant\Module\Common\Extension\RouteResolver;
+use Assistant\Module\Track\Extension\FilenameFormat;
+use Assistant\Module\Track\Extension\FilenameFormatSuggester;
+use Assistant\Module\Track\Extension\TrackRenameService;
 use Assistant\Module\Track\Extension\TrackService;
 use Assistant\Module\Track\Extension\TrackUpdateService;
 use Assistant\Module\Track\Extension\UpdateTrackCommand;
+use Assistant\Module\Track\Model\Track;
 use Monolog\Logger;
 use Psr\Http\Message\ResponseInterface;
 use Slim\Http\Response;
@@ -20,6 +24,8 @@ final class EditController
         private RouteResolver $routeResolver,
         private TrackService $trackService,
         private TrackUpdateService $trackUpdateService,
+        private TrackRenameService $trackRenameService,
+        private FilenameFormatSuggester $filenameFormatSuggester,
         private Messages $messages,
         private Logger $logger,
         private Twig $view,
@@ -46,7 +52,44 @@ final class EditController
             ],
             'pathname' => $pathname,
             'track' => $track,
+            'rename' => $this->getRenameData($track),
             'return_url' => $returnUrl,
+        ]);
+    }
+
+    /**
+     * Podgląd nazwy pliku dla bieżącej zawartości formularza - liczony przez ten sam kod, który
+     * wykona zapis, żeby podstawienie pól, uzupełnienie numeru i sanityzacja nazwy nie musiały być
+     * duplikowane w JS (i nie mogły się z nim po cichu rozjechać).
+     */
+    public function namePreview(ServerRequest $request, Response $response): ResponseInterface
+    {
+        $pathname = $request->getAttribute('pathname');
+        $track = $this->trackService->getByPathname($pathname);
+
+        if (!$track) {
+            return $response->withJson([ 'target' => null, 'error' => 'Nie znaleziono utworu.' ], 404);
+        }
+
+        try {
+            $command = UpdateTrackCommand::fromRequest($request);
+            $format = $command->format ?? $this->filenameFormatSuggester->suggest($track);
+
+            $target = $this->trackRenameService->resolveTarget(
+                $track,
+                $format->value,
+                $command->toMetadata(),
+                markAsReady: false,
+            );
+        } catch (\Throwable $e) {
+            // niekompletne dane w formularzu są normalnym stanem w trakcie pisania - podgląd
+            // pokazuje wtedy powód, zamiast wywracać żądanie
+            return $response->withJson([ 'target' => null, 'error' => $e->getMessage() ]);
+        }
+
+        return $response->withJson([
+            'target' => $this->toFixedBaseRelative($track, $target->getPathname()),
+            'error' => null,
         ]);
     }
 
@@ -83,6 +126,43 @@ final class EditController
         $redirectUrl = $this->routeResolver->resolve($route);
 
         return $response->withRedirect($redirectUrl);
+    }
+
+    /**
+     * Dane pola wyboru nazwy pliku. Format jest jawnym wejściem zapisu, a rozpoznanie obecnego
+     * układu służy wyłącznie do wstępnego zaznaczenia opcji - użytkownik może wybrać inną albo
+     * wpisać nazwę ręcznie.
+     */
+    private function getRenameData(Track $track): array
+    {
+        $fixedBaseDir = $this->trackRenameService->getFixedBaseDir($track);
+
+        $formats = array_map(
+            static fn (FilenameFormat $format) => [
+                'value' => $format->value,
+                'label' => $format->label(),
+                'description' => $format->description(),
+            ],
+            FilenameFormat::cases(),
+        );
+
+        return [
+            'formats' => $formats,
+            'suggested' => $this->filenameFormatSuggester->suggest($track)->value,
+            'manual_choice' => UpdateTrackCommand::MANUAL_RENAME_CHOICE,
+            'fixed_base_dir' => $fixedBaseDir,
+            'current' => $this->toFixedBaseRelative($track, $track->getFile()->getPathname()),
+        ];
+    }
+
+    /** Ścieżka względem niezmiennej części - tak nazwa jest pokazywana i tak jest przyjmowana z formularza */
+    private function toFixedBaseRelative(Track $track, string $pathname): string
+    {
+        $fixedBaseDir = rtrim($this->trackRenameService->getFixedBaseDir($track), '/');
+
+        return str_starts_with($pathname, $fixedBaseDir . '/')
+            ? substr($pathname, strlen($fixedBaseDir) + 1)
+            : $pathname;
     }
 
     /** @todo Przenieść do innej klasy */

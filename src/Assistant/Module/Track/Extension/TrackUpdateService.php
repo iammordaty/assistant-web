@@ -12,9 +12,10 @@ use SplFileInfo;
  * zapis tagów ID3 -> (opcjonalny) rename pliku -> pojedynczy zapis do DB -> (opcjonalne) BPM/tonacja
  * -> reindeks/sprzątanie kolekcji, tak aby po powrocie DB odzwierciedlała stan na dysku.
  *
- * Docelowa ścieżka jest liczona zawczasu (dry-run), więc konflikt nazwy jest wykrywany zanim
- * cokolwiek zostanie zmodyfikowane (F3). Zapis do DB następuje dopiero po udanej operacji na
- * filesystemie, a jego niepowodzenie kompensujemy przywróceniem pliku (F10).
+ * Format nazwy pliku jest jawnym wejściem (UpdateTrackCommand), nie jest tu zgadywany. Docelowa
+ * ścieżka jest liczona zawczasu (dry-run), więc konflikt nazwy jest wykrywany zanim cokolwiek
+ * zostanie zmodyfikowane (F3). Zapis do DB następuje dopiero po udanej operacji na filesystemie,
+ * a jego niepowodzenie kompensujemy przywróceniem pliku (F10).
  */
 final readonly class TrackUpdateService
 {
@@ -30,17 +31,15 @@ final readonly class TrackUpdateService
     public function update(Track $track, UpdateTrackCommand $command): UpdateResult
     {
         $metadata = $command->toMetadata();
-        $renameNeeded = $this->isRenameNeeded($track, $command);
 
         // F3: policz docelową ścieżkę i wykryj konflikt ZANIM zmodyfikujemy plik
-        if ($renameNeeded) {
-            $target = $this->trackRenameService->resolveCollectionTarget($track, $metadata);
+        $target = $this->resolveTarget($track, $command, $metadata);
+        $renameNeeded = $target !== null && $target->getPathname() !== $track->getFile()->getPathname();
 
-            if ($this->isConflicting($track->getFile(), $target)) {
-                throw new TrackUpdateException(
-                    sprintf('Nie można zmienić nazwy - plik docelowy już istnieje: %s', $target->getPathname())
-                );
-            }
+        if ($renameNeeded && $this->isConflicting($track->getFile(), $target)) {
+            throw new TrackUpdateException(
+                sprintf('Nie można zmienić nazwy - plik docelowy już istnieje: %s', $target->getPathname())
+            );
         }
 
         // zapis tagów ID3 w pliku
@@ -69,7 +68,7 @@ final readonly class TrackUpdateService
             $sourceFile = $track->getFile();
 
             try {
-                $result = $this->trackRenameService->renameToCollectionLayout($track, $metadata);
+                $result = $this->trackRenameService->moveTo($track, $target);
             } catch (\Throwable $e) {
                 throw new TrackUpdateException(
                     sprintf('Nie udało się zmienić nazwy pliku: %s', $e->getMessage()),
@@ -123,16 +122,29 @@ final readonly class TrackUpdateService
     }
 
     /**
-     * Czy potrzebny jest rename - porównujemy pola wpływające na nazwę pliku.
+     * Docelowa ścieżka wynikająca z jawnego wyboru użytkownika: wybranego formatu albo nazwy
+     * wpisanej ręcznie. Null oznacza, że nazwa pliku nie jest w ogóle zmieniana.
      *
-     * @todo docelowo kryterium wyprowadzić z arbitra/DesiredFilename (desired !== current) - F6
+     * Kryterium "czy renamować" to porównanie tej ścieżki z bieżącą (desired !== current), więc
+     * edycja pola nieuczestniczącego w nazwie - gatunku, roku, wydawcy, tonacji, BPM - nie
+     * przenosi pliku ani nie tworzy i nie kasuje katalogów.
      */
-    private function isRenameNeeded(Track $track, UpdateTrackCommand $command): bool
+    private function resolveTarget(Track $track, UpdateTrackCommand $command, array $metadata): ?SplFileInfo
     {
-        return $command->artist !== $track->getArtist()
-            || $command->title !== $track->getTitle()
-            || $command->album !== $track->getAlbum()
-            || $command->trackNumber !== $track->getTrackNumber();
+        if ($command->manualTarget !== null) {
+            return $this->trackRenameService->resolveManualTarget($track, $command->manualTarget);
+        }
+
+        if ($command->format === null) {
+            return null;
+        }
+
+        return $this->trackRenameService->resolveTarget(
+            $track,
+            $command->format->value,
+            $metadata,
+            markAsReady: false,
+        );
     }
 
     private function isConflicting(SplFileInfo $source, SplFileInfo $target): bool

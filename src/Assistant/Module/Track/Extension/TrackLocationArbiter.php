@@ -77,6 +77,39 @@ final class TrackLocationArbiter
         return $pathname !== null ? $this->matchIndexedDir($pathname) : null;
     }
 
+    /**
+     * Zwraca katalog <rok>/<miesiąc> zawierający plik w kolekcji - górną granicę przenoszenia pliku
+     * przy zmianie nazwy. Singles/Other, rok i miesiąc są nienaruszalne, więc żaden format ani nazwa
+     * wpisana ręcznie nie może wyjść ponad ten katalog.
+     *
+     * Dla plików leżących płytko (płaskie wpisy wprost w katalogu indeksowanym) granicą jest sam
+     * katalog indeksowany. Null oznacza plik spoza kolekcji.
+     */
+    public function getDateDir(mixed $file): ?string
+    {
+        $pathname = $this->getPathname($file);
+
+        if ($pathname === null) {
+            return null;
+        }
+
+        $indexedDir = $this->matchIndexedDir($pathname);
+
+        if ($indexedDir === null) {
+            return null;
+        }
+
+        $indexedDir = rtrim($indexedDir, '/');
+        $segments = explode('/', substr($pathname, strlen($indexedDir) + 1));
+
+        // <rok>/<miesiąc>/<...>/plik.mp3 - potrzebne co najmniej dwa segmenty katalogów przed plikiem
+        if (count($segments) < 3) {
+            return $indexedDir;
+        }
+
+        return sprintf('%s/%s/%s', $indexedDir, $segments[0], $segments[1]);
+    }
+
     private function matchIndexedDir(string $pathname): ?string
     {
         return array_find(

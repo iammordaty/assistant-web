@@ -153,18 +153,42 @@ Singles/<Year>/<Month No> <Month Name>/<Artist>/<Release>/<Track No>. <Artist 1>
 # 12. grudzień
 ```
 
-Two valid filename formats in `Singles`:
-- Single artist for whole release (most common): `Artist - NN - Track.mp3` (track number mandatory).
-- Various artists within a release: `NN. Artist - Track.mp3` (leading number preserves release order intentionally).
+Two equally valid filename formats in `Singles`. Neither is a fallback or an exception —
+which one applies is decided by **sort order inside the release directory**: the track number must
+sit wherever it keeps files in the same order as on the real release (CD, vinyl, digital single).
+
+- **Single artist across the whole release** — the artist does not affect sorting, so the number
+  goes in the middle: `Artist - NN - Title.mp3` (track number mandatory).
+- **Artist varies within the release** (various artists, "X vs. Y", collaborations) — the artist
+  name would break the order, so the number leads: `NN. Artist - Title.mp3`.
+
+```
+Singles/2009/08. sierpień/Hardy Hard/Hardy Hard presents The Silver Surfer 2003/
+    Hardy Hard - 01 - The Silver Surfer 2003 [DJ Kadozer Short Mix].mp3
+    Hardy Hard - 02 - The Silver Surfer 2003 [Original Short Mix].mp3
+
+Singles/2013/04. kwiecień/David Guetta vs. The Egg/Love Don't Let Me Go (Walking Away)/
+    01. David Guetta vs. The Egg - Love Don't Let Me Go (Walking Away) [Famous Radio Edit].mp3
+    03. The Egg - Walking Away [Tocadisco's Acid Walk Mix].mp3
+```
+
+In the second layout the release directory (`David Guetta vs. The Egg`) **cannot be rebuilt from a
+single track's metadata** — track 03 has artist `The Egg`, and the model has no album-artist
+concept. That is why renaming in that layout changes the filename only and leaves the release
+directory untouched.
 
 ### Location rules & gotchas
 
-- Location type is resolved by `TrackLocationArbiter` against `collection.indexed_dirs` / `incoming_dir` / `ready_dir`, **not** by `root_dir` (a path under root but outside indexed dirs is `UNSUPPORTED`, not in-collection). `LocationKind` is a **pure classification** enum; the per-location filename format and base-dir policy live in `TrackRenameService` (which also has the track context needed to pick the right `Singles` variant).
+- Location type is resolved by `TrackLocationArbiter` against `collection.indexed_dirs` / `incoming_dir` / `ready_dir`, **not** by `root_dir` (a path under root but outside indexed dirs is `UNSUPPORTED`, not in-collection). `LocationKind` is a **pure classification** enum. The filename patterns live in the `FilenameFormat` enum, picking one is `FilenameFormatSuggester`'s job (suggestion only), and turning a chosen format into a real path is `TrackRenameService`'s.
 - `ready_dir` is nested inside `incoming_dir`, so the arbiter checks it **first** (most-specific wins) and maps it to `LocationKind::READY`, distinct from `INCOMING`. `isInIncoming()` is true for both (physically under incoming, both outside the collection); `isReady()` is the precise predicate for "in `ready_dir`". Use `isReady()` (not `isInIncoming()`) when selecting processed files to promote into the collection, so raw incoming files are not swept in.
 - The same track may exist both as a single in `Other` and as part of a full release in `Singles` — always consider the directory context.
 - **There is NO letter directory** (e.g. `Singles/A/...`). Any older comment/test implying a `<letter>` segment is wrong; the segment two levels above the file is `Year/Month`.
-- The `Singles` base dir (`TrackRenameService::baseDirFor()`) is `dirname($file->getPath(), 2)` — **positional relative to the file** (the two levels above `Artist/Release`, i.e. `Year/Month`), whose name is preserved verbatim. It is intentionally NOT derived from the artist and NOT relocated when the artist changes (deliberate — see plan item "B4, rezygnacja"). Do not "fix" it to compute a letter from the artist; that would corrupt the real `Year/Month` structure.
-- When renaming a `Singles` track (collection edit flow, `TrackRenameService::renameToCollectionLayout()`), the **existing filename pattern is preserved**: single-artist (`Artist - NN - Title`) rebuilds the `Artist/Release` dirs from metadata under `Year/Month`; various-artists (`NN. Artist - Title`, detected by a leading `NN.` prefix) only renames the file in place — the release directory is not rebuilt from a single track's metadata (there is no album-artist concept in the model). CLI `track:rename --format` still takes an explicit format.
+- **`Singles`/`Other`, `<Year>` and `<Month>` are immutable during a rename.** `TrackRenameService::baseDirFor()` climbs one directory level per `/` in the chosen format and **never goes above the `Year/Month` dir** (`TrackLocationArbiter::getDateDir()`); outside the collection the boundary is `incoming_dir` / `ready_dir`. That single rule reproduces every layout: a format with two slashes rebuilds `Artist/Release` under `Year/Month`, a format with none renames the file where it already sits — which is exactly why the various-artists layout leaves the release directory alone.
+- The `Year/Month` segment is **positional relative to the file** and its name is preserved verbatim. It is never derived from metadata and never relocated when the artist changes. Do not "fix" it to compute anything from the artist; that would corrupt the real `Year/Month` structure.
+- **The write layer never guesses the format** — it is always an explicit input (`UpdateTrackCommand::$format`, CLI `track:rename --format`). Recognising the current layout happens only in `FilenameFormatSuggester`, to preselect a choice the user sees and can override. A wrong suggestion is self-correcting; a wrong silent rename is not.
+- **Every action that changes the filesystem must suggest as much as possible and force nothing.** Releases that escape the rules do exist and have to be nameable by hand, so each rename entry point also offers a manual target path.
+- A track is a **single** (→ `Singles`) when Beatport reports `release.trackCount === 1 && trackNumber === 1`; otherwise it is one track off an album or compilation (→ `Other`). **No data → `Other`.**
+- **Never move files between incoming and the collection.** Incoming is a separate world (it can be reorganised straight from Finder without affecting anything else); no rename flow crosses that boundary.
 
 ## Data Flow
 

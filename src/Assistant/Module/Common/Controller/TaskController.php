@@ -3,8 +3,10 @@
 namespace Assistant\Module\Common\Controller;
 
 use Assistant\Module\Common\Extension\Config;
+use Assistant\Module\Common\Extension\ConsoleCommandRunner;
 use Assistant\Module\Common\Extension\Route;
 use Assistant\Module\Common\Extension\RouteResolver;
+use Assistant\Module\Track\Extension\DateDirectory;
 use Cocur\BackgroundProcess\BackgroundProcess;
 use Psr\Http\Message\ResponseInterface;
 use Slim\Http\Response;
@@ -14,8 +16,11 @@ final readonly class TaskController
 {
     private string $baseDir;
 
-    public function __construct(private RouteResolver $routeResolver, Config $config)
-    {
+    public function __construct(
+        private RouteResolver $routeResolver,
+        private ConsoleCommandRunner $consoleCommandRunner,
+        Config $config,
+    ) {
         $this->baseDir = $config->get('base_dir');
     }
 
@@ -69,16 +74,35 @@ final readonly class TaskController
     {
         $collectionItems = json_decode($request->getParsedBodyParam('elements'), true);
         $format = $request->getParsedBodyParam('format');
-        $markAsReady = $request->getParsedBodyParam('mark_as_ready') ? '--mark-as-ready' : '';
+
+        $options = [];
+
+        if ($request->getParsedBodyParam('mark_as_ready')) {
+            $options[] = '--mark-as-ready';
+        }
+
+        if ($request->getParsedBodyParam('move_to_date_dir')) {
+            $options[] = '--date-dir';
+
+            $dateDir = DateDirectory::tryParse(sprintf(
+                '%s/%s',
+                trim((string) $request->getParsedBodyParam('date_dir_year')),
+                trim((string) $request->getParsedBodyParam('date_dir_month')),
+            ));
+
+            if ($dateDir !== null) {
+                $options[] = '--date-dir-value=' . $dateDir;
+            }
+        }
 
         foreach ($collectionItems as $pathname) {
-            $command = sprintf(
-                'php %s/bin/console.php track:rename %s --format="%s" "%s"',
-                $this->baseDir,
-                $markAsReady,
-                $format,
-                $pathname
-            );
+            // każdy token escapowany przez runner - format i ścieżka pochodzą z formularza (B11)
+            $command = $this->consoleCommandRunner->buildConsoleCommandLine([
+                'track:rename',
+                ...$options,
+                '--format=' . $format,
+                $pathname,
+            ]);
 
             shell_exec($command);
         }

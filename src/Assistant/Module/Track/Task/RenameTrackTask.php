@@ -5,6 +5,7 @@ namespace Assistant\Module\Track\Task;
 use Assistant\Module\Collection\Task\CollectionGuard;
 use Assistant\Module\Common\Extension\GetId3\Adapter as Id3Adapter;
 use Assistant\Module\Common\Task\AbstractTask;
+use Assistant\Module\Track\Extension\DateDirectory;
 use Assistant\Module\Track\Extension\TrackRenameService;
 use Assistant\Module\Track\Extension\TrackService;
 use Monolog\Logger;
@@ -49,7 +50,19 @@ final class RenameTrackTask extends AbstractTask
             ->addOption('clean', 'c', InputOption::VALUE_NONE)
             ->addOption('mark-as-ready', 'r', InputOption::VALUE_NONE)
             ->addOption('format', 'f', InputOption::VALUE_REQUIRED)
-            ->addOption('target', 't', InputOption::VALUE_REQUIRED);
+            ->addOption('target', 't', InputOption::VALUE_REQUIRED)
+            ->addOption(
+                'date-dir',
+                'D',
+                InputOption::VALUE_NONE,
+                'Prefixes the target with a <year>/<NN. month> directory',
+            )
+            ->addOption(
+                'date-dir-value',
+                null,
+                InputOption::VALUE_REQUIRED,
+                'Explicit <year>/<NN. month> to use instead of the one derived from the file',
+            );
     }
 
     protected function interact(InputInterface $input, OutputInterface $output): void
@@ -70,6 +83,23 @@ final class RenameTrackTask extends AbstractTask
         }
     }
 
+    /**
+     * Dokłada do formatu segment <rok>/<NN. miesiąc>, gdy poproszono o uporządkowanie plików
+     * wg daty. Segment jest częścią formatu, więc odbudowuje katalogi tak samo jak każdy inny
+     * poziom struktury.
+     */
+    private function prependDateDir(InputInterface $input, string $format, \SplFileInfo $file): string
+    {
+        if (!$input->getOption('date-dir')) {
+            return $format;
+        }
+
+        $dateDir = DateDirectory::tryParse($input->getOption('date-dir-value'))
+            ?? DateDirectory::forFile($file);
+
+        return sprintf('%s/%s', $dateDir, $format);
+    }
+
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $this->logger->debug('Task executed', self::getInputParams($input));
@@ -86,6 +116,8 @@ final class RenameTrackTask extends AbstractTask
                 ->setFile($track->getFile())
                 ->analyze()
                 ->getMetadata();
+
+            $format = $this->prependDateDir($input, $format, $track->getFile());
 
             $result = $this->trackRenameService->rename($track, $format, $metadata, $input->getOption('mark-as-ready'));
         } elseif ($targetString = $input->getOption('target')) {
