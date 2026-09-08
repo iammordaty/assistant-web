@@ -3,7 +3,7 @@
 {% block title track.name %}
 
 {% block page_header %}
-    {% include '@track/common/header.twig' with { track: track } only %}
+    {% include '@track/common/header.twig' with { track } only %}
 {% endblock %}
 
 {% block content %}
@@ -14,7 +14,7 @@
     ></div>
 
     <div class="row row-deck row-cards">
-        {% include '@track/common/wave.twig' with { track: track } only %}
+        {% include '@track/common/wave.twig' with { track } only %}
 
         <div class="col-12">
             <form method="GET" action="{{ url_for('incoming-track.edit.edit', { pathname: pathname|url_encode }) }}" class="card" role="form">

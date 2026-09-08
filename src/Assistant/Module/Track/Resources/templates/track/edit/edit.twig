@@ -3,12 +3,12 @@
 {% block title track.name %}
 
 {% block page_header %}
-    {% include '@track/common/header.twig' with { track: track } only %}
+    {% include '@track/common/header.twig' with { track } only %}
 {% endblock %}
 
 {% block content %}
     <div class="row row-deck row-cards">
-        {% include '@track/common/wave.twig' with { track: track } only %}
+        {% include '@track/common/wave.twig' with { track } only %}
 
         <div class="col-12">
             <form method="POST" action="{{ url_for('track.edit.save', { pathname: pathname|url_encode }) }}" class="card" role="form">

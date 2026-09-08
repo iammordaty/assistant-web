@@ -21,9 +21,11 @@ $(function () {
 	const $trackPlayPause = $('[data-role="track:play-pause"]');
 
 	wavesurfer.on('ready', function () {
-		$('#wave-progress').fadeOut('fast', function () {
-			$(this).remove();
-		});
+		setTimeout(() => {
+			$('#wave-loader').fadeOut('fast', function () {
+				$(this).remove();
+			});
+		}, 500);
 
 		$trackPlayPause.fadeTo('fast', 1).addClass('cursor-pointer');
 

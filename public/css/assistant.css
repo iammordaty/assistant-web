@@ -39,6 +39,16 @@
     overflow: hidden;
 }
 
+#wave-loader {
+    align-items: center;
+    display: flex;
+    inset: 0;
+    left: 0;
+    right: 0;
+    justify-content: center;
+    position: absolute;
+}
+
 #wave-container {
     height: 200px;
     visibility: hidden;
