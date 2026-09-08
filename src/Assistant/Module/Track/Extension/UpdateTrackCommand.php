@@ -10,9 +10,19 @@ use Slim\Http\ServerRequest;
  *
  * Puste (po trim) oznacza "usuń tag"
  * @see self::toMetadata
+ *
+ * Format nazwy pliku jest jawnym wejściem: albo wybrany $format, albo $manualTarget wpisany
+ * ręcznie. Gdy oba są puste - bo wybrano "nie zmieniaj nazwy" albo formularz w ogóle nie ma tego
+ * pola (edycja utworu w incoming) - nazwa pliku nie jest zmieniana.
  */
 final readonly class UpdateTrackCommand
 {
+    /** Wartość pola wyboru oznaczająca nazwę wpisaną ręcznie zamiast jednego z formatów */
+    public const string MANUAL_RENAME_CHOICE = 'manual';
+
+    /** Wartość pola wyboru oznaczająca jawną rezygnację ze zmiany nazwy */
+    public const string KEEP_NAME_CHOICE = 'keep';
+
     public function __construct(
         public string $guid,
         public string $artist,
@@ -25,6 +35,8 @@ final readonly class UpdateTrackCommand
         public ?string $initialKey,
         public ?float $bpm,
         public bool $calculateAudioData,
+        public ?FilenameFormat $format = null,
+        public ?string $manualTarget = null,
     ) {
     }
 
@@ -55,6 +67,8 @@ final readonly class UpdateTrackCommand
             throw new \InvalidArgumentException('Nieprawidłowe BPM (dozwolony zakres: 1-300).');
         }
 
+        [ $format, $manualTarget ] = self::parseRenameChoice($postData);
+
         return new self(
             guid: self::normalizeString($postData['guid'] ?? null) ?? '',
             artist: $artist,
@@ -67,7 +81,41 @@ final readonly class UpdateTrackCommand
             initialKey: self::normalizeString($postData['initialKey'] ?? null),
             bpm: $bpm,
             calculateAudioData: isset($postData['task:calculate-audio-data']),
+            format: $format,
+            manualTarget: $manualTarget,
         );
+    }
+
+    /**
+     * Rozstrzyga wybór z formularza: preset formatu albo nazwa wpisana ręcznie.
+     *
+     * @return array{0: ?FilenameFormat, 1: ?string}
+     */
+    private static function parseRenameChoice(array $postData): array
+    {
+        $choice = self::normalizeString($postData['rename_format'] ?? null);
+
+        if ($choice === null || $choice === self::KEEP_NAME_CHOICE) {
+            return [ null, null ];
+        }
+
+        if ($choice === self::MANUAL_RENAME_CHOICE) {
+            $manualTarget = self::normalizeString($postData['rename_target'] ?? null);
+
+            if ($manualTarget === null) {
+                throw new \InvalidArgumentException('Podaj nazwę pliku albo wybierz jeden z formatów.');
+            }
+
+            return [ null, $manualTarget ];
+        }
+
+        $format = FilenameFormat::tryFrom($choice);
+
+        if ($format === null) {
+            throw new \InvalidArgumentException('Nieznany format nazwy pliku.');
+        }
+
+        return [ $format, null ];
     }
 
     /**

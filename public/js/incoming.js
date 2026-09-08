@@ -88,12 +88,25 @@ const showRenameModal = elements => {
     const $modal = $('#modal-rename');
     const myModal = new bootstrap.Modal($modal);
 
-    $modal.on('show.bs.modal', function () {
+    const $dateDirFields = $modal.find('[data-role="incoming-tracks:rename:date-dir-fields"]');
+
+    $modal.off('show.bs.modal').on('show.bs.modal', function () {
         $modal.find('input[type="radio"]:first').prop('checked', true);
         $modal.find('input[type=checkbox]').prop('checked', false);
 
         $modal.find('input[name="elements"]').val(JSON.stringify(elements));
+
+        $modal.find('input[name="date_dir_year"]').val('');
+        $modal.find('select[name="date_dir_month"]').val('');
+        $dateDirFields.addClass('d-none');
     });
+
+    $modal
+        .find('[data-role="incoming-tracks:rename:date-dir"]')
+        .off('change')
+        .on('change', function () {
+            $dateDirFields.toggleClass('d-none', !this.checked);
+        });
 
     myModal.show();
 };

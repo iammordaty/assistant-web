@@ -22,10 +22,59 @@
                                 <div class="row mb-2">
                                     <label class="col-3 col-form-label">{{ fieldInfo.title }}</label>
                                     <div class="col-7">
-                                        <input type="text" name="{{ fieldInfo.field }}" value="{{ attribute(track, fieldInfo.field) }}" class="form-control rounded" />
+                                        <input type="text" name="{{ fieldInfo.field }}" value="{{ attribute(track, fieldInfo.field) }}" class="form-control rounded" data-role="track-edit:field" />
                                     </div>
                                 </div>
                             {% endfor %}
+
+                            <div class="row mt-4" data-role="track-edit:rename"
+                                 data-preview-url="{{ url_for('track.edit.name-preview', { pathname: pathname|url_encode }) }}"
+                                 data-manual-choice="{{ rename.manual_choice }}"
+                                 data-keep-choice="{{ rename.keep_choice }}">
+                                <label class="col-3 col-form-label pt-0">
+                                    Nazwa pliku
+                                    <span class="d-block text-secondary small">{{ rename.fixed_base_dir }}/</span>
+                                </label>
+                                <div class="col-7">
+                                    <label class="form-check">
+                                        <input class="form-check-input" type="radio" name="rename_format"
+                                               value="{{ rename.keep_choice }}" data-role="track-edit:rename-format">
+                                        <span class="form-check-label">nie zmieniaj nazwy pliku</span>
+                                        <span class="form-check-description">
+                                            Zapisuje metadane, zostawiając nazwę i katalogi bez zmian.
+                                        </span>
+                                    </label>
+
+                                    {% for format in rename.formats %}
+                                        <label class="form-check">
+                                            <input class="form-check-input" type="radio" name="rename_format"
+                                                   value="{{ format.value }}" data-role="track-edit:rename-format"
+                                                   {{ format.value == rename.suggested ? 'checked' : '' }}>
+                                            <span class="form-check-label">{{ format.label }}</span>
+                                            <span class="form-check-description">{{ format.description }}</span>
+                                        </label>
+                                    {% endfor %}
+
+                                    <a class="d-inline-block mt-2 small" data-bs-toggle="collapse" href="#rename-manual" role="button" aria-expanded="false" aria-controls="rename-manual">
+                                        Więcej opcji
+                                    </a>
+
+                                    <div class="collapse" id="rename-manual">
+                                        <label class="form-check mt-2">
+                                            <input class="form-check-input" type="radio" name="rename_format"
+                                                   value="{{ rename.manual_choice }}" data-role="track-edit:rename-format">
+                                            <span class="form-check-label">ręcznie</span>
+                                            <span class="form-check-description">
+                                                Nazwa wpisana samodzielnie, względem katalogu wyżej.
+                                            </span>
+                                        </label>
+                                        <input type="text" name="rename_target" class="form-control rounded mt-2"
+                                               data-role="track-edit:rename-target" value="{{ rename.current }}" disabled>
+                                    </div>
+
+                                    <div class="mt-2 small text-secondary" data-role="track-edit:rename-preview">{{ rename.current }}</div>
+                                </div>
+                            </div>
 
                             {% for fieldInfo in track_data.options %}
                                 <div class="row {% if loop.first %}mt-3{% endif %}">

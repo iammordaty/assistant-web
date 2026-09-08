@@ -12,15 +12,17 @@ use SplFileInfo;
  * zapis tagów ID3 -> (opcjonalny) rename pliku -> pojedynczy zapis do DB -> (opcjonalne) BPM/tonacja
  * -> reindeks/sprzątanie kolekcji, tak aby po powrocie DB odzwierciedlała stan na dysku.
  *
- * Docelowa ścieżka jest liczona zawczasu (dry-run), więc konflikt nazwy jest wykrywany zanim
- * cokolwiek zostanie zmodyfikowane (F3). Zapis do DB następuje dopiero po udanej operacji na
- * filesystemie, a jego niepowodzenie kompensujemy przywróceniem pliku (F10).
+ * Format nazwy pliku jest jawnym wejściem (UpdateTrackCommand), nie jest tu zgadywany. Docelowa
+ * ścieżka jest liczona zawczasu (dry-run), więc konflikt nazwy jest wykrywany zanim cokolwiek
+ * zostanie zmodyfikowane (F3). Zapis do DB następuje dopiero po udanej operacji na filesystemie,
+ * a jego niepowodzenie kompensujemy przywróceniem pliku (F10).
  */
 final readonly class TrackUpdateService
 {
     public function __construct(
         private TrackMetadataWriter $trackMetadataWriter,
         private TrackRenameService $trackRenameService,
+        private FilenameFormatSuggester $filenameFormatSuggester,
         private TrackService $trackService,
         private CollectionMaintenanceService $collectionMaintenance,
         private Logger $logger,
@@ -30,17 +32,23 @@ final readonly class TrackUpdateService
     public function update(Track $track, UpdateTrackCommand $command): UpdateResult
     {
         $metadata = $command->toMetadata();
-        $renameNeeded = $this->isRenameNeeded($track, $command);
 
         // F3: policz docelową ścieżkę i wykryj konflikt ZANIM zmodyfikujemy plik
-        if ($renameNeeded) {
-            $target = $this->trackRenameService->resolveCollectionTarget($track, $metadata);
+        try {
+            $target = $this->resolveTargetFor($track, $command);
+        } catch (\Throwable $e) {
+            throw new TrackUpdateException(
+                sprintf('Nie można wyznaczyć nazwy pliku: %s', $e->getMessage()),
+                previous: $e,
+            );
+        }
 
-            if ($this->isConflicting($track->getFile(), $target)) {
-                throw new TrackUpdateException(
-                    sprintf('Nie można zmienić nazwy - plik docelowy już istnieje: %s', $target->getPathname())
-                );
-            }
+        $renameNeeded = $this->isRenameNeeded($track, $command, $target);
+
+        if ($renameNeeded && $this->isConflicting($track->getFile(), $target)) {
+            throw new TrackUpdateException(
+                sprintf('Nie można zmienić nazwy - plik docelowy już istnieje: %s', $target->getPathname())
+            );
         }
 
         // zapis tagów ID3 w pliku
@@ -69,7 +77,7 @@ final readonly class TrackUpdateService
             $sourceFile = $track->getFile();
 
             try {
-                $result = $this->trackRenameService->renameToCollectionLayout($track, $metadata);
+                $result = $this->trackRenameService->moveTo($track, $target);
             } catch (\Throwable $e) {
                 throw new TrackUpdateException(
                     sprintf('Nie udało się zmienić nazwy pliku: %s', $e->getMessage()),
@@ -123,11 +131,53 @@ final readonly class TrackUpdateService
     }
 
     /**
-     * Czy potrzebny jest rename - porównujemy pola wpływające na nazwę pliku.
+     * Docelowa ścieżka wynikająca z jawnego wyboru użytkownika: wybranego formatu albo nazwy
+     * wpisanej ręcznie. Null oznacza jawną rezygnację ze zmiany nazwy.
      *
-     * @todo docelowo kryterium wyprowadzić z arbitra/DesiredFilename (desired !== current) - F6
+     * Publiczna, bo tę samą decyzję musi podjąć podgląd nazwy w kontrolerze - inaczej podgląd
+     * i zapis liczyłyby ścieżkę różnymi regułami.
      */
-    private function isRenameNeeded(Track $track, UpdateTrackCommand $command): bool
+    public function resolveTargetFor(Track $track, UpdateTrackCommand $command): ?SplFileInfo
+    {
+        if ($command->manualTarget !== null) {
+            return $this->trackRenameService->resolveManualTarget($track, $command->manualTarget);
+        }
+
+        if ($command->format === null) {
+            return null;
+        }
+
+        return $this->trackRenameService->resolveTarget(
+            $track,
+            $command->format->value,
+            $command->toMetadata(),
+            markAsReady: false,
+        );
+    }
+
+    /**
+     * Zmiana nazwy wymaga, by użytkownik faktycznie o nią poprosił: albo zmienił pole
+     * uczestniczące w nazwie, albo świadomie wybrał inny format lub nazwę wpisaną ręcznie.
+     *
+     * Samo porównanie "policzona ścieżka != bieżąca" NIE wystarcza. Nazwa pliku bywa zgodna
+     * z zasadą, a mimo to różna od tego, co odtworzyłby format - np. katalog wydania
+     * "Hardy Hard presents The Silver Surfer 2003" przy tagu album "The Silver Surfer 2003".
+     * Bez tego warunku poprawka samego gatunku odbudowałaby katalogi i skasowała stary,
+     * łamiąc zasadę, że pole spoza ścieżki niczego nie przenosi ani nie kasuje.
+     */
+    private function isRenameNeeded(Track $track, UpdateTrackCommand $command, ?SplFileInfo $target): bool
+    {
+        if ($target === null || $target->getPathname() === $track->getFile()->getPathname()) {
+            return false;
+        }
+
+        return $this->isNameMetadataChanged($track, $command)
+            || $command->manualTarget !== null
+            || $command->format !== $this->filenameFormatSuggester->suggest($track);
+    }
+
+    /** Czy zmieniło się którekolwiek pole wchodzące do nazwy pliku */
+    private function isNameMetadataChanged(Track $track, UpdateTrackCommand $command): bool
     {
         return $command->artist !== $track->getArtist()
             || $command->title !== $track->getTitle()
