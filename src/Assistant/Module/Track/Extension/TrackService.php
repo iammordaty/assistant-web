@@ -9,12 +9,12 @@ use Assistant\Module\Track\Model\Track;
 use Assistant\Module\Track\Repository\TrackRepository;
 use SplFileInfo;
 
-final readonly class TrackService
+class TrackService
 {
     public function __construct(
-        private FileReaderFacade $fileReader,
-        private TrackLocationArbiter $arbiter,
-        private TrackRepository $trackRepository,
+        private readonly FileReaderFacade $fileReader,
+        private readonly TrackLocationArbiter $arbiter,
+        private readonly TrackRepository $trackRepository,
     ) {
     }
 

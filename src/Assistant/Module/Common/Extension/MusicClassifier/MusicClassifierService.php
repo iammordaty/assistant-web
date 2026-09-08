@@ -8,7 +8,7 @@ use Assistant\Module\Common\Extension\SlugifyService;
 use SplFileInfo;
 use Symfony\Component\Process\Process;
 
-final class MusicClassifierService
+class MusicClassifierService
 {
     /**
      * Uwaga, plik wykonywalny znajduje się w innym kontenerze.

@@ -7,13 +7,13 @@ use Assistant\Module\Track\Model\MusicClassifierMetadataDto;
 use MongoDB\Database;
 
 /** Repozytorium metadanych z klasyfikatora audio */
-final class MusicClassifierMetadataRepository
+class MusicClassifierMetadataRepository
 {
     private const string COLLECTION_NAME = 'music_classifier_metadata';
 
     private const string FIELD_TRACK_GUID = 'track_guid';
 
-    private function __construct(private Storage $storage)
+    public function __construct(private Storage $storage)
     {
     }
 
@@ -68,5 +68,10 @@ final class MusicClassifierMetadataRepository
         }
 
         return $trackGuids;
+    }
+
+    public function count(): int
+    {
+        return $this->storage->count();
     }
 }

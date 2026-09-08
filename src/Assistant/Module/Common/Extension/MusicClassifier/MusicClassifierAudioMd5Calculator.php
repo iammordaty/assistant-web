@@ -5,7 +5,7 @@ namespace Assistant\Module\Common\Extension\MusicClassifier;
 use SplFileInfo;
 use Symfony\Component\Process\Process;
 
-final class MusicClassifierAudioMd5Calculator
+class MusicClassifierAudioMd5Calculator
 {
     /**
      * Uwaga, plik wykonywalny znajduje się w innym kontenerze.
