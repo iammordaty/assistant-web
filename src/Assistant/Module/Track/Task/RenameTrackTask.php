@@ -8,12 +8,15 @@ use Assistant\Module\Common\Task\AbstractTask;
 use Assistant\Module\Track\Extension\DateDirectory;
 use Assistant\Module\Track\Extension\TrackRenameService;
 use Assistant\Module\Track\Extension\TrackService;
+use Assistant\Module\Track\Model\IncomingTrack;
+use Assistant\Module\Track\Model\Track;
 use Monolog\Logger;
 use Psr\Container\ContainerInterface;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
+use SplFileInfo;
 
 final class RenameTrackTask extends AbstractTask
 {
@@ -58,10 +61,16 @@ final class RenameTrackTask extends AbstractTask
                 'Prefixes the target with a <year>/<NN. month> directory',
             )
             ->addOption(
-                'date-dir-value',
+                'date-dir-year',
                 null,
                 InputOption::VALUE_REQUIRED,
-                'Explicit <year>/<NN. month> to use instead of the one derived from the file',
+                'Explicit year to use instead of the one derived from the file',
+            )
+            ->addOption(
+                'date-dir-month',
+                null,
+                InputOption::VALUE_REQUIRED,
+                'Explicit "NN. month" to use instead of the one derived from the file',
             );
     }
 
@@ -75,29 +84,10 @@ final class RenameTrackTask extends AbstractTask
 
         $track = $this->trackService->createFromFile($pathname);
 
+        // pytanie o zgodę ma sens tylko tu; brak potwierdzenia kończy się wyjątkiem, a uruchomienie
+        // nieinteraktywne w ogóle nie wchodzi do interact() - dlatego samą regułę egzekwuje execute()
         $guard = new CollectionGuard($this->trackService, $this->getHelper('question'), $input, $output);
         $guard($track);
-
-        if ($this->trackService->getLocationArbiter()->isInCollection($track) && $input->getOption('mark-as-ready')) {
-            throw new \RuntimeException("File {$pathname} is in collection so it cannot be marked as ready.");
-        }
-    }
-
-    /**
-     * Dokłada do formatu segment <rok>/<NN. miesiąc>, gdy poproszono o uporządkowanie plików
-     * wg daty. Segment jest częścią formatu, więc odbudowuje katalogi tak samo jak każdy inny
-     * poziom struktury.
-     */
-    private function prependDateDir(InputInterface $input, string $format, \SplFileInfo $file): string
-    {
-        if (!$input->getOption('date-dir')) {
-            return $format;
-        }
-
-        $dateDir = DateDirectory::tryParse($input->getOption('date-dir-value'))
-            ?? DateDirectory::forFile($file);
-
-        return sprintf('%s/%s', $dateDir, $format);
     }
 
     protected function execute(InputInterface $input, OutputInterface $output): int
@@ -106,6 +96,8 @@ final class RenameTrackTask extends AbstractTask
 
         $pathname = $input->getArgument('pathname');
         $track = $this->trackService->createFromFile($pathname);
+
+        $this->assertOptionsAllowed($input, $track);
 
         if ($input->getOption('clean')) {
             $result = $this->trackRenameService->clean($track);
@@ -135,5 +127,59 @@ final class RenameTrackTask extends AbstractTask
         $this->logger->debug('Task finished');
 
         return self::SUCCESS;
+    }
+
+    /**
+     * Reguły dopuszczalności operacji. Celowo w execute(), a nie w interact(): Symfony wywołuje
+     * interact() wyłącznie dla wejścia interaktywnego, więc strażnik postawiony tam nie działa
+     * przy uruchomieniu w procesie (ConsoleCommandRunner::runSync ustawia non-interactive).
+     */
+    private function assertOptionsAllowed(InputInterface $input, Track|IncomingTrack $track): void
+    {
+        if (!$this->trackService->getLocationArbiter()->isInCollection($track)) {
+            return;
+        }
+
+        $pathname = $track->getFile()->getPathname();
+
+        // Zmiana nazwy pliku w kolekcji wymaga świadomego potwierdzenia (CollectionGuard w interact()).
+        // Symfony pomija interact() dla wejścia nieinteraktywnego - a tak działa uruchomienie
+        // w procesie (ConsoleCommandRunner::runSync, m.in. zbiorcza zmiana nazwy z listy incoming) -
+        // więc bez tego warunku operacja przeszłaby w ogóle bez pytania.
+        if (!$input->isInteractive()) {
+            throw new \RuntimeException(
+                "File {$pathname} is in collection so it can only be renamed interactively."
+            );
+        }
+
+        if ($input->getOption('mark-as-ready')) {
+            throw new \RuntimeException("File {$pathname} is in collection so it cannot be marked as ready.");
+        }
+
+        // rok i miesiąc utworu w kolekcji wynikają z jego położenia i są nienaruszalne;
+        // doklejenie segmentu daty utworzyłoby zagnieżdżony, fałszywy katalog rok/miesiąc
+        if ($input->getOption('date-dir')) {
+            throw new \RuntimeException("File {$pathname} is in collection so its date directory cannot be changed.");
+        }
+    }
+
+    /**
+     * Dokłada do formatu segment <rok>/<NN. miesiąc>, gdy poproszono o uporządkowanie plików
+     * wg daty. Segment jest częścią formatu, więc odbudowuje katalogi tak samo jak każdy inny
+     * poziom struktury. Rok i miesiąc są niezależne - pominięty bierze się z daty pliku.
+     */
+    private function prependDateDir(InputInterface $input, string $format, SplFileInfo $file): string
+    {
+        if (!$input->getOption('date-dir')) {
+            return $format;
+        }
+
+        $dateDir = DateDirectory::forFile(
+            $file,
+            DateDirectory::tryParseYear($input->getOption('date-dir-year')),
+            DateDirectory::tryParseMonth($input->getOption('date-dir-month')),
+        );
+
+        return sprintf('%s/%s', $dateDir, $format);
     }
 }

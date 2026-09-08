@@ -46,9 +46,9 @@ final class TrackRenameService
         return $this->moveTo($track, $this->resolveTarget($track, $format, $metadata, $markAsReady));
     }
 
-    public function target(Track|IncomingTrack $track, SplFileInfo|string $target): RenameResult
+    public function target(Track|IncomingTrack $track, string $relativeTarget): RenameResult
     {
-        return $this->moveTo($track, $this->resolveManualTarget($track, (string) $target));
+        return $this->moveTo($track, $this->resolveManualTarget($track, $relativeTarget));
     }
 
     /**
@@ -61,7 +61,9 @@ final class TrackRenameService
         array $metadata,
         bool $markAsReady,
     ): SplFileInfo {
-        $relativeTarget = $this->buildTargetFilename($track, $format, $metadata, $markAsReady);
+        $relativeTarget = self::normalizeRelativeTarget(
+            $this->buildTargetFilename($track, $format, $metadata, $markAsReady)
+        );
 
         // liczba poziomów bierze się z formatu, nie z gotowej nazwy - prefiks katalogu "gotowe"
         // dokładany przez markAsReady nie jest odbudowywanym poziomem struktury
@@ -78,9 +80,40 @@ final class TrackRenameService
      */
     public function resolveManualTarget(Track|IncomingTrack $track, string $relativeTarget): SplFileInfo
     {
-        $relativeTarget = trim($relativeTarget, '/');
+        $relativeTarget = self::normalizeRelativeTarget($relativeTarget);
 
         return new SplFileInfo(sprintf('%s/%s', $this->getFixedBaseDir($track), $relativeTarget));
+    }
+
+    /**
+     * Sprowadza ścieżkę względną do postaci, która na pewno zostanie pod katalogiem bazowym.
+     *
+     * Bez tego obietnica "nie wyjdzie ponad <rok>/<miesiąc>" jest pusta: SplFileInfo nie normalizuje
+     * ścieżki, więc segment ".." przetrwałby do rename() i do zapisu w bazie. Dotyczy zarówno nazwy
+     * wpisanej ręcznie, jak i formatu - ten drugi bywa przekazany wprost z formularza (modal listy).
+     *
+     * @throws \InvalidArgumentException gdy ścieżka próbuje wyjść w górę drzewa albo jest pusta
+     */
+    private static function normalizeRelativeTarget(string $relativeTarget): string
+    {
+        $segments = explode('/', trim($relativeTarget, '/'));
+
+        foreach ($segments as $segment) {
+            if ($segment === '' || $segment === '.' || $segment === '..') {
+                throw new \InvalidArgumentException(
+                    sprintf('Nieprawidłowa nazwa pliku: "%s" - nie może zawierać "." ani "..".', $relativeTarget)
+                );
+            }
+        }
+
+        $segments = array_map(self::sanitizeForFilesystem(...), $segments);
+        $normalized = implode('/', $segments);
+
+        if (trim($normalized, '/_') === '') {
+            throw new \InvalidArgumentException('Nazwa pliku jest pusta po oczyszczeniu.');
+        }
+
+        return $normalized;
     }
 
     /**
@@ -114,7 +147,9 @@ final class TrackRenameService
     private function baseDirFor(SplFileInfo $source, int $directoryLevels): string
     {
         $dir = $source->getPath();
-        $boundary = $this->climbBoundaryFor($source);
+        // ten sam fallback co w getFixedBaseDir(): dla lokalizacji nieobsługiwanej granicą jest
+        // katalog pliku, więc format po prostu nie odbudowuje niczego w górę
+        $boundary = $this->climbBoundaryFor($source) ?? $dir;
 
         while ($directoryLevels-- > 0 && $dir !== $boundary && dirname($dir) !== $dir) {
             $dir = dirname($dir);
@@ -152,7 +187,7 @@ final class TrackRenameService
         $metadata = array_filter($metadata, static fn ($field) => trim((string) $field) !== '');
 
         if (empty($metadata)) {
-            throw new \RuntimeException('Cannot prepare target filename: no metadata');
+            throw new \RuntimeException('Nie można zbudować nazwy pliku - brak metadanych.');
         }
 
         $metadata = array_map(
@@ -172,9 +207,14 @@ final class TrackRenameService
             // nie trafią do komunikatu - a to one najczęściej są puste (B3)
             preg_match_all('/%[a-z_]+%/', $target, $matches);
 
+            $fields = array_map(
+                static fn (string $placeholder) => TrackMetadataFields::label(trim($placeholder, '%')),
+                $matches[0],
+            );
+
             $message = sprintf(
-                'Cannot prepare target filename: some metadata fields are empty (%s)',
-                implode(', ', $matches[0])
+                'Nie można zbudować nazwy pliku - wymagany format potrzebuje pól: %s.',
+                implode(', ', $fields)
             );
 
             throw new \RuntimeException($message);
@@ -182,7 +222,8 @@ final class TrackRenameService
 
         $target .= sprintf('.%s', strtolower($track->getFile()->getExtension()));
 
-        if ($markAsReady) {
+        // plik już gotowy nie dostaje drugiego prefiksu - inaczej powstałoby _zrobione/_zrobione
+        if ($markAsReady && !$this->locationArbiter->isReady($track->getFile())) {
             $target = sprintf('%s/%s', basename($this->config->get('collection.ready_dir')), $target);
         }
 

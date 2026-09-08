@@ -2,6 +2,7 @@
 
 use Assistant\Module\Collection\Extension\Autocomplete\TrackAutocompleteService;
 use Assistant\Module\Collection\Task\CleanerTask;
+use Assistant\Module\Track\Task\RenameTrackTask;
 use Assistant\Module\Collection\Task\IndexerTask;
 use Assistant\Module\Collection\Extension\Reader\DirectoryReader;
 use Assistant\Module\Collection\Extension\Reader\FileReader;
@@ -107,6 +108,8 @@ return static fn (string $baseDir, array $config): array => [
     IndexerTask::class => fn (Container $container): IndexerTask => IndexerTask::factory($container),
 
     CleanerTask::class => fn (Container $container): CleanerTask => CleanerTask::factory($container),
+
+    RenameTrackTask::class => fn (Container $container): RenameTrackTask => RenameTrackTask::factory($container),
 
     Logger::class => function (Container $container): LoggerInterface {
         $storage = $container->get(Config::class)->get('storage');

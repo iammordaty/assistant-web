@@ -12,11 +12,10 @@ final readonly class TrackDto
     /**
      * @fixme $genre, $bpm i $initialKey są tu nienullowalne, a Track::getGenre()/getBpm()/getInitialKey()
      *        zwracają null - fromModel() rzuci więc TypeError dla utworu, który nie ma tych tagów
-     *        zapisanych w pliku. W codziennym przepływie to nie występuje, bo tonację i BPM uzupełnia
-     *        track:calculate-audio-data, a gatunek jest wymagany przy dodawaniu do kolekcji; problem
-     *        ujawni się dla pliku wstawionego do kolekcji z pominięciem tej ścieżki (np. import
-     *        z zewnątrz albo ręczne skopiowanie do katalogu indeksowanego). To samo dotyczy
-     *        getIsFavorite(): bool przy nullowalnym $isFavorite.
+     *        zapisanych w pliku. Nie ujawnia się to dlatego, że TrackValidator odrzuca utwór bez
+     *        tonacji, BPM lub gatunku jeszcze przed zapisem (indekser loguje wtedy "does not contain metadata or it is
+     *        invalid"). Crash wystąpiłby dopiero, gdyby ktoś ominął walidację albo ją poluzował.
+     *        To samo dotyczy getIsFavorite(): bool przy nullowalnym $isFavorite.
      */
     public function __construct(
         public ?ObjectId $objectId,

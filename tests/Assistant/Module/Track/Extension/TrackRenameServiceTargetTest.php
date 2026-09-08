@@ -142,14 +142,64 @@ final class TrackRenameServiceTargetTest extends TestCase
         );
     }
 
-    /** Nawet nazwa z próbą wyjścia w górę zostaje pod katalogiem miesiąca */
-    public function testManualTargetCannotEscapeAboveMonthDirectory(): void
+    /** @dataProvider dataEscapingTarget */
+    public function testManualTargetCannotEscapeAboveMonthDirectory(string $manualTarget): void
+    {
+        $track = $this->makeTrack('/Other/2009/08. sierpień/Artist - Title.mp3');
+
+        $this->expectException(\InvalidArgumentException::class);
+
+        $this->service->resolveManualTarget($track, $manualTarget);
+    }
+
+    public function dataEscapingTarget(): array
+    {
+        return [
+            'wyjście w górę' => [ '../../../_new/pwned.mp3' ],
+            'wyjście w górę w środku ścieżki' => [ 'a/../../../b.mp3' ],
+            'bieżący katalog' => [ './x.mp3' ],
+            'pusta nazwa' => [ '   ' ],
+        ];
+    }
+
+    /** Wiodący ukośnik jest tylko obcinany - nazwa zostaje pod katalogiem miesiąca */
+    public function testLeadingSlashIsStrippedFromManualTarget(): void
     {
         $track = $this->makeTrack('/Other/2009/08. sierpień/Artist - Title.mp3');
 
         $target = $this->service->resolveManualTarget($track, '/Artist - Title.mp3');
 
-        self::assertStringStartsWith($this->root . '/Other/2009/08. sierpień/', $target->getPathname());
+        self::assertSame($this->root . '/Other/2009/08. sierpień/Artist - Title.mp3', $target->getPathname());
+    }
+
+    /** Format bywa przekazany wprost z formularza (modal listy) - musi przejść tę samą bramkę */
+    public function testFormatCannotEscapeAboveBoundary(): void
+    {
+        $track = $this->makeTrack('/Other/2009/08. sierpień/Artist - Title.mp3');
+
+        $this->expectException(\InvalidArgumentException::class);
+
+        $this->service->resolveTarget(
+            $track,
+            '../../../_new/%artist% - %title%',
+            $this->metadata([]),
+            markAsReady: false,
+        );
+    }
+
+    /** Plik już gotowy nie dostaje drugiego prefiksu _zrobione */
+    public function testMarkAsReadyDoesNotDoublePrefixForReadyTrack(): void
+    {
+        $track = $this->makeTrack('/_new/_zrobione/Artist - Title.mp3');
+
+        $target = $this->service->resolveTarget(
+            $track,
+            FilenameFormat::ARTIST_TITLE->value,
+            $this->metadata([ 'artist' => 'Artist', 'title' => 'Inny' ]),
+            markAsReady: true,
+        );
+
+        self::assertSame($this->root . '/_new/_zrobione/Artist - Inny.mp3', $target->getPathname());
     }
 
     /** W incoming granicą jest katalog incoming, a "oznacz jako gotowy" dokłada podkatalog _zrobione */

@@ -112,9 +112,11 @@ $(function () {
     const $preview = $rename.find('[data-role="track-edit:rename-preview"]');
 
     const manualChoice = $rename.data('manual-choice');
+    const keepChoice = $rename.data('keep-choice');
     const previewUrl = $rename.data('preview-url');
 
-    const isManual = () => $formats.filter(':checked').val() === manualChoice;
+    const choice = () => $formats.filter(':checked').val();
+    const isManual = () => choice() === manualChoice;
 
     /** AI: duplikat wzorca debounce z public/js/track.js - świadomy, do scalenia przy refaktorze */
     let debounceTimerId;
@@ -141,6 +143,12 @@ $(function () {
             }
 
             $preview.removeClass('text-danger');
+
+            if (choice() === keepChoice) {
+                $preview.text(response.target);
+
+                return;
+            }
 
             // w trybie ręcznym zapisana zostanie wpisana nazwa, więc to ona jest podglądem;
             // poza nim pole podąża za podglądem, żeby po przełączeniu było od czego zacząć

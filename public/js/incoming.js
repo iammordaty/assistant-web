@@ -90,12 +90,14 @@ const showRenameModal = elements => {
 
     const $dateDirFields = $modal.find('[data-role="incoming-tracks:rename:date-dir-fields"]');
 
-    $modal.on('show.bs.modal', function () {
+    $modal.off('show.bs.modal').on('show.bs.modal', function () {
         $modal.find('input[type="radio"]:first').prop('checked', true);
         $modal.find('input[type=checkbox]').prop('checked', false);
 
         $modal.find('input[name="elements"]').val(JSON.stringify(elements));
 
+        $modal.find('input[name="date_dir_year"]').val('');
+        $modal.find('select[name="date_dir_month"]').val('');
         $dateDirFields.addClass('d-none');
     });
 

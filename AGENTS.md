@@ -130,7 +130,7 @@ The music library lives under `collection.root_dir` (`/collection`). Only three 
 
 - **`/collection/_new`** — incoming (`collection.incoming_dir`). Newly bought/added tracks not yet part of the collection: awaiting tag fixes, renaming, and DB indexing. Treat as a queue.
 - **`/collection/_new/_zrobione`** — ready (`collection.ready_dir`). Transitional "done" folder inside incoming, holding tracks already processed (tags fixed / renamed) and ready for further handling. When a track is renamed with the "mark as ready" flag, `TrackRenameService` prepends this dir's basename to the target path, moving the file here. Not indexed as part of the collection.
-- **`/collection/Other`** — indexed. **Single tracks** already in the collection (one track picked from an album/single/EP — never a whole release). Flat structure. Filename format: `Artist - Track.mp3` (no track numbers).
+- **`/collection/Other`** — indexed. **Single tracks** already in the collection (one track picked from an album/single/EP — never a whole release). Same `<Year>/<Month No> <Month Name>` nesting as `Singles`, but **no `Artist/Release` directories** — that is all "flat" means here: `Other/<Year>/<Month No> <Month Name>/Artist - Track.mp3` (no track numbers). A handful of older entries sit one level shallower, in a year-only bucket such as `Other/- 2006/` (the leading dash is stripped by `IndexedDate`); treat those as legacy, not as the norm.
 - **`/collection/Singles`** — indexed. **Whole releases** (single/EP/maxi/remix pack, 1..N tracks). Nested structure:
 
 ```
@@ -187,7 +187,7 @@ directory untouched.
 - The `Year/Month` segment is **positional relative to the file** and its name is preserved verbatim. It is never derived from metadata and never relocated when the artist changes. Do not "fix" it to compute anything from the artist; that would corrupt the real `Year/Month` structure.
 - **The write layer never guesses the format** — it is always an explicit input (`UpdateTrackCommand::$format`, CLI `track:rename --format`). Recognising the current layout happens only in `FilenameFormatSuggester`, to preselect a choice the user sees and can override. A wrong suggestion is self-correcting; a wrong silent rename is not.
 - **Every action that changes the filesystem must suggest as much as possible and force nothing.** Releases that escape the rules do exist and have to be nameable by hand, so each rename entry point also offers a manual target path.
-- A track is a **single** (→ `Singles`) when Beatport reports `release.trackCount === 1 && trackNumber === 1`; otherwise it is one track off an album or compilation (→ `Other`). **No data → `Other`.**
+- A track is a **single** (→ `Singles`) when Beatport reports `release.trackCount === 1 && trackNumber === 1`; otherwise it is one track off an album or compilation (→ `Other`). **No data → `Other`.** This is a domain rule about where a track belongs; **no code implements it yet** — `FilenameFormatSuggester` currently keys only off `LocationKind` and the existing filename, because nothing in the app moves a track between `Singles` and `Other`.
 - **Never move files between incoming and the collection.** Incoming is a separate world (it can be reorganised straight from Finder without affecting anything else); no rename flow crosses that boundary.
 
 ## Data Flow

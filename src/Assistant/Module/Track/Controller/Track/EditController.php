@@ -71,24 +71,24 @@ final class EditController
             return $response->withJson([ 'target' => null, 'error' => 'Nie znaleziono utworu.' ], 404);
         }
 
+        $fixedBaseDir = $this->trackRenameService->getFixedBaseDir($track);
+
         try {
             $command = UpdateTrackCommand::fromRequest($request);
-            $format = $command->format ?? $this->filenameFormatSuggester->suggest($track);
 
-            $target = $this->trackRenameService->resolveTarget(
-                $track,
-                $format->value,
-                $command->toMetadata(),
-                markAsReady: false,
-            );
+            // ta sama decyzja, którą podejmie zapis - inaczej podgląd pokazywałby co innego,
+            // niż faktycznie się wydarzy (w szczególności w trybie ręcznym)
+            $target = $this->trackUpdateService->resolveTargetFor($track, $command);
         } catch (\Throwable $e) {
             // niekompletne dane w formularzu są normalnym stanem w trakcie pisania - podgląd
             // pokazuje wtedy powód, zamiast wywracać żądanie
             return $response->withJson([ 'target' => null, 'error' => $e->getMessage() ]);
         }
 
+        $pathname = $target?->getPathname() ?? $track->getFile()->getPathname();
+
         return $response->withJson([
-            'target' => $this->toFixedBaseRelative($track, $target->getPathname()),
+            'target' => self::toFixedBaseRelative($fixedBaseDir, $pathname),
             'error' => null,
         ]);
     }
@@ -143,22 +143,23 @@ final class EditController
                 'label' => $format->label(),
                 'description' => $format->description(),
             ],
-            FilenameFormat::cases(),
+            FilenameFormat::forCollection(),
         );
 
         return [
             'formats' => $formats,
             'suggested' => $this->filenameFormatSuggester->suggest($track)->value,
             'manual_choice' => UpdateTrackCommand::MANUAL_RENAME_CHOICE,
+            'keep_choice' => UpdateTrackCommand::KEEP_NAME_CHOICE,
             'fixed_base_dir' => $fixedBaseDir,
-            'current' => $this->toFixedBaseRelative($track, $track->getFile()->getPathname()),
+            'current' => self::toFixedBaseRelative($fixedBaseDir, $track->getFile()->getPathname()),
         ];
     }
 
     /** Ścieżka względem niezmiennej części - tak nazwa jest pokazywana i tak jest przyjmowana z formularza */
-    private function toFixedBaseRelative(Track $track, string $pathname): string
+    private static function toFixedBaseRelative(string $fixedBaseDir, string $pathname): string
     {
-        $fixedBaseDir = rtrim($this->trackRenameService->getFixedBaseDir($track), '/');
+        $fixedBaseDir = rtrim($fixedBaseDir, '/');
 
         return str_starts_with($pathname, $fixedBaseDir . '/')
             ? substr($pathname, strlen($fixedBaseDir) + 1)

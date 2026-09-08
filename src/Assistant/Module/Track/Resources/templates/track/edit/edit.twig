@@ -29,12 +29,22 @@
 
                             <div class="row mt-4" data-role="track-edit:rename"
                                  data-preview-url="{{ url_for('track.edit.name-preview', { pathname: pathname|url_encode }) }}"
-                                 data-manual-choice="{{ rename.manual_choice }}">
+                                 data-manual-choice="{{ rename.manual_choice }}"
+                                 data-keep-choice="{{ rename.keep_choice }}">
                                 <label class="col-3 col-form-label pt-0">
                                     Nazwa pliku
                                     <span class="d-block text-secondary small">{{ rename.fixed_base_dir }}/</span>
                                 </label>
                                 <div class="col-7">
+                                    <label class="form-check">
+                                        <input class="form-check-input" type="radio" name="rename_format"
+                                               value="{{ rename.keep_choice }}" data-role="track-edit:rename-format">
+                                        <span class="form-check-label">nie zmieniaj nazwy pliku</span>
+                                        <span class="form-check-description">
+                                            Zapisuje metadane, zostawiając nazwę i katalogi bez zmian.
+                                        </span>
+                                    </label>
+
                                     {% for format in rename.formats %}
                                         <label class="form-check">
                                             <input class="form-check-input" type="radio" name="rename_format"

@@ -25,23 +25,57 @@ final class DateDirectoryTest extends TestCase
         ];
     }
 
-    /** @dataProvider dataTryParse */
-    public function testTryParse(?string $input, ?string $expected): void
+    /** @dataProvider dataTryParseYear */
+    public function testTryParseYear(?string $input, ?string $expected): void
     {
-        self::assertSame($expected, DateDirectory::tryParse($input));
+        self::assertSame($expected, DateDirectory::tryParseYear($input));
     }
 
-    public function dataTryParse(): array
+    public function dataTryParseYear(): array
     {
         return [
-            'poprawny segment' => [ '2026/08. sierpień', '2026/08. sierpień' ],
-            'obcięte ukośniki' => [ '/2026/08. sierpień/', '2026/08. sierpień' ],
+            'poprawny rok' => [ '2026', '2026' ],
             'brak wartości' => [ null, null ],
-            'sam rok' => [ '2026', null ],
-            'miesiąc bez zera wiodącego' => [ '2026/8. sierpień', null ],
-            'próba wyjścia w górę drzewa' => [ '../../etc', null ],
-            'doklejone wyjście w górę' => [ '2026/08. sierpień/../..', null ],
+            'pusty' => [ '  ', null ],
+            'za krótki' => [ '26', null ],
+            'próba wyjścia w górę drzewa' => [ '../..', null ],
         ];
+    }
+
+    /** @dataProvider dataTryParseMonth */
+    public function testTryParseMonth(?string $input, ?string $expected): void
+    {
+        self::assertSame($expected, DateDirectory::tryParseMonth($input));
+    }
+
+    public function dataTryParseMonth(): array
+    {
+        return [
+            'poprawny miesiąc' => [ '08. sierpień', '08. sierpień' ],
+            'brak wartości' => [ null, null ],
+            'bez zera wiodącego' => [ '8. sierpień', null ],
+            'z ukośnikiem' => [ '08. sierpień/..', null ],
+            'próba wyjścia w górę drzewa' => [ '../etc', null ],
+        ];
+    }
+
+    /** Rok i miesiąc są niezależne - pominięty bierze się z daty pliku */
+    public function testYearAndMonthAreIndependentOverrides(): void
+    {
+        $pathname = sys_get_temp_dir() . '/date-dir-' . bin2hex(random_bytes(6)) . '.mp3';
+        $timestamp = (new DateTimeImmutable('2013-04-29 12:00:00'))->getTimestamp();
+
+        touch($pathname, $timestamp, $timestamp);
+        $file = new SplFileInfo($pathname);
+
+        try {
+            self::assertSame('2013/04. kwiecień', DateDirectory::forFile($file));
+            self::assertSame('2026/04. kwiecień', DateDirectory::forFile($file, '2026', null));
+            self::assertSame('2013/09. wrzesień', DateDirectory::forFile($file, null, '09. wrzesień'));
+            self::assertSame('2026/09. wrzesień', DateDirectory::forFile($file, '2026', '09. wrzesień'));
+        } finally {
+            unlink($pathname);
+        }
     }
 
     /** Kaskada: bierzemy wcześniejszy z czasów pliku, bo ctime bywa późniejszy niż mtime */

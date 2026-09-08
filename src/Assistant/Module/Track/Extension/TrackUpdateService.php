@@ -22,6 +22,7 @@ final readonly class TrackUpdateService
     public function __construct(
         private TrackMetadataWriter $trackMetadataWriter,
         private TrackRenameService $trackRenameService,
+        private FilenameFormatSuggester $filenameFormatSuggester,
         private TrackService $trackService,
         private CollectionMaintenanceService $collectionMaintenance,
         private Logger $logger,
@@ -33,8 +34,16 @@ final readonly class TrackUpdateService
         $metadata = $command->toMetadata();
 
         // F3: policz docelową ścieżkę i wykryj konflikt ZANIM zmodyfikujemy plik
-        $target = $this->resolveTarget($track, $command, $metadata);
-        $renameNeeded = $target !== null && $target->getPathname() !== $track->getFile()->getPathname();
+        try {
+            $target = $this->resolveTargetFor($track, $command);
+        } catch (\Throwable $e) {
+            throw new TrackUpdateException(
+                sprintf('Nie można wyznaczyć nazwy pliku: %s', $e->getMessage()),
+                previous: $e,
+            );
+        }
+
+        $renameNeeded = $this->isRenameNeeded($track, $command, $target);
 
         if ($renameNeeded && $this->isConflicting($track->getFile(), $target)) {
             throw new TrackUpdateException(
@@ -123,13 +132,12 @@ final readonly class TrackUpdateService
 
     /**
      * Docelowa ścieżka wynikająca z jawnego wyboru użytkownika: wybranego formatu albo nazwy
-     * wpisanej ręcznie. Null oznacza, że nazwa pliku nie jest w ogóle zmieniana.
+     * wpisanej ręcznie. Null oznacza jawną rezygnację ze zmiany nazwy.
      *
-     * Kryterium "czy renamować" to porównanie tej ścieżki z bieżącą (desired !== current), więc
-     * edycja pola nieuczestniczącego w nazwie - gatunku, roku, wydawcy, tonacji, BPM - nie
-     * przenosi pliku ani nie tworzy i nie kasuje katalogów.
+     * Publiczna, bo tę samą decyzję musi podjąć podgląd nazwy w kontrolerze - inaczej podgląd
+     * i zapis liczyłyby ścieżkę różnymi regułami.
      */
-    private function resolveTarget(Track $track, UpdateTrackCommand $command, array $metadata): ?SplFileInfo
+    public function resolveTargetFor(Track $track, UpdateTrackCommand $command): ?SplFileInfo
     {
         if ($command->manualTarget !== null) {
             return $this->trackRenameService->resolveManualTarget($track, $command->manualTarget);
@@ -142,9 +150,39 @@ final readonly class TrackUpdateService
         return $this->trackRenameService->resolveTarget(
             $track,
             $command->format->value,
-            $metadata,
+            $command->toMetadata(),
             markAsReady: false,
         );
+    }
+
+    /**
+     * Zmiana nazwy wymaga, by użytkownik faktycznie o nią poprosił: albo zmienił pole
+     * uczestniczące w nazwie, albo świadomie wybrał inny format lub nazwę wpisaną ręcznie.
+     *
+     * Samo porównanie "policzona ścieżka != bieżąca" NIE wystarcza. Nazwa pliku bywa zgodna
+     * z zasadą, a mimo to różna od tego, co odtworzyłby format - np. katalog wydania
+     * "Hardy Hard presents The Silver Surfer 2003" przy tagu album "The Silver Surfer 2003".
+     * Bez tego warunku poprawka samego gatunku odbudowałaby katalogi i skasowała stary,
+     * łamiąc zasadę, że pole spoza ścieżki niczego nie przenosi ani nie kasuje.
+     */
+    private function isRenameNeeded(Track $track, UpdateTrackCommand $command, ?SplFileInfo $target): bool
+    {
+        if ($target === null || $target->getPathname() === $track->getFile()->getPathname()) {
+            return false;
+        }
+
+        return $this->isNameMetadataChanged($track, $command)
+            || $command->manualTarget !== null
+            || $command->format !== $this->filenameFormatSuggester->suggest($track);
+    }
+
+    /** Czy zmieniło się którekolwiek pole wchodzące do nazwy pliku */
+    private function isNameMetadataChanged(Track $track, UpdateTrackCommand $command): bool
+    {
+        return $command->artist !== $track->getArtist()
+            || $command->title !== $track->getTitle()
+            || $command->album !== $track->getAlbum()
+            || $command->trackNumber !== $track->getTrackNumber();
     }
 
     private function isConflicting(SplFileInfo $source, SplFileInfo $target): bool

@@ -34,7 +34,7 @@ final class FilenameFormatSuggester
     }
 
     /** Układ z numerem z przodu ("NN. Artysta - Tytuł") - stosowany, gdy artysta zmienia się w wydaniu */
-    public static function hasLeadingTrackNumber(SplFileInfo $file): bool
+    private static function hasLeadingTrackNumber(SplFileInfo $file): bool
     {
         $basename = $file->getBasename('.' . $file->getExtension());
 

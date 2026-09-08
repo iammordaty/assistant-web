@@ -102,12 +102,14 @@ final class TrackLocationArbiter
         $indexedDir = rtrim($indexedDir, '/');
         $segments = explode('/', substr($pathname, strlen($indexedDir) + 1));
 
-        // <rok>/<miesiąc>/<...>/plik.mp3 - potrzebne co najmniej dwa segmenty katalogów przed plikiem
-        if (count($segments) < 3) {
-            return $indexedDir;
-        }
+        // pełna struktura to <rok>/<miesiąc>/<...>/plik.mp3, ale w kolekcji są też starsze wpisy
+        // płytsze o jeden poziom (np. Other/- 2006/plik.mp3) - bierzemy tyle segmentów katalogów,
+        // ile realnie poprzedza plik, żeby granica nigdy nie zeszła poniżej katalogu pliku
+        $levels = min(2, count($segments) - 1);
 
-        return sprintf('%s/%s/%s', $indexedDir, $segments[0], $segments[1]);
+        return $levels > 0
+            ? sprintf('%s/%s', $indexedDir, implode('/', array_slice($segments, 0, $levels)))
+            : $indexedDir;
     }
 
     private function matchIndexedDir(string $pathname): ?string

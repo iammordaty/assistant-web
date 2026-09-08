@@ -41,8 +41,8 @@ final class FileReader implements ReaderInterface
             year: $metadata['year'] ?? null, // starszy kawałek w kolekcji
             genre: $metadata['genre'] ?? null,
             publisher: $metadata['publisher'] ?? null,
-            bpm: $metadata['bpm'],
-            initialKey: $metadata['initial_key'],
+            bpm: $metadata['bpm'] ?? null,
+            initialKey: $metadata['initial_key'] ?? null,
             length: $this->id3Adapter->getTrackDuration(),
             tags: [],
             isFavorite: false,

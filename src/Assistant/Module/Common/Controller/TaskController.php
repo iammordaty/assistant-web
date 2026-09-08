@@ -4,9 +4,12 @@ namespace Assistant\Module\Common\Controller;
 
 use Assistant\Module\Common\Extension\Config;
 use Assistant\Module\Common\Extension\ConsoleCommandRunner;
+use Assistant\Module\Common\Extension\Messages;
 use Assistant\Module\Common\Extension\Route;
 use Assistant\Module\Common\Extension\RouteResolver;
 use Assistant\Module\Track\Extension\DateDirectory;
+use Assistant\Module\Track\Extension\FilenameFormat;
+use Assistant\Module\Track\Task\RenameTrackTask;
 use Cocur\BackgroundProcess\BackgroundProcess;
 use Psr\Http\Message\ResponseInterface;
 use Slim\Http\Response;
@@ -19,6 +22,8 @@ final readonly class TaskController
     public function __construct(
         private RouteResolver $routeResolver,
         private ConsoleCommandRunner $consoleCommandRunner,
+        private RenameTrackTask $renameTrackTask,
+        private Messages $messages,
         Config $config,
     ) {
         $this->baseDir = $config->get('base_dir');
@@ -72,45 +77,82 @@ final readonly class TaskController
 
     public function rename(ServerRequest $request, Response $response): ResponseInterface
     {
-        $collectionItems = json_decode($request->getParsedBodyParam('elements'), true);
-        $format = $request->getParsedBodyParam('format');
-
-        $options = [];
-
-        if ($request->getParsedBodyParam('mark_as_ready')) {
-            $options[] = '--mark-as-ready';
-        }
-
-        if ($request->getParsedBodyParam('move_to_date_dir')) {
-            $options[] = '--date-dir';
-
-            $dateDir = DateDirectory::tryParse(sprintf(
-                '%s/%s',
-                trim((string) $request->getParsedBodyParam('date_dir_year')),
-                trim((string) $request->getParsedBodyParam('date_dir_month')),
-            ));
-
-            if ($dateDir !== null) {
-                $options[] = '--date-dir-value=' . $dateDir;
-            }
-        }
-
-        foreach ($collectionItems as $pathname) {
-            // każdy token escapowany przez runner - format i ścieżka pochodzą z formularza (B11)
-            $command = $this->consoleCommandRunner->buildConsoleCommandLine([
-                'track:rename',
-                ...$options,
-                '--format=' . $format,
-                $pathname,
-            ]);
-
-            shell_exec($command);
-        }
-
         $route = Route::create('directory.browse.incoming');
         $redirectUrl = $this->routeResolver->resolve($route);
 
+        $format = FilenameFormat::tryFrom((string) $request->getParsedBodyParam('format'));
+
+        if ($format === null) {
+            $this->messages->addError('Nieznany format nazwy pliku - nie zmieniono nic.');
+
+            return $response->withRedirect($redirectUrl);
+        }
+
+        $collectionItems = json_decode($request->getParsedBodyParam('elements'), true) ?: [];
+        $options = $this->getRenameOptions($request);
+        $failed = [];
+
+        foreach ($collectionItems as $pathname) {
+            $exitCode = $this->consoleCommandRunner->runSync($this->renameTrackTask, [
+                'pathname' => $pathname,
+                '--format' => $format->value,
+                ...$options,
+            ]);
+
+            if ($exitCode !== 0) {
+                $failed[] = basename($pathname);
+            }
+        }
+
+        $this->reportRenameResult(count($collectionItems), $failed);
+
         return $response->withRedirect($redirectUrl);
+    }
+
+    /** Opcje zmiany nazwy wspólne dla całego zaznaczenia; rok i miesiąc są niezależnymi nadpisaniami */
+    private function getRenameOptions(ServerRequest $request): array
+    {
+        $options = [];
+
+        if ($request->getParsedBodyParam('mark_as_ready')) {
+            $options['--mark-as-ready'] = true;
+        }
+
+        if (!$request->getParsedBodyParam('move_to_date_dir')) {
+            return $options;
+        }
+
+        $options['--date-dir'] = true;
+
+        $year = DateDirectory::tryParseYear($request->getParsedBodyParam('date_dir_year'));
+        $month = DateDirectory::tryParseMonth($request->getParsedBodyParam('date_dir_month'));
+
+        if ($year !== null) {
+            $options['--date-dir-year'] = $year;
+        }
+
+        if ($month !== null) {
+            $options['--date-dir-month'] = $month;
+        }
+
+        return $options;
+    }
+
+    /** @param string[] $failed */
+    private function reportRenameResult(int $total, array $failed): void
+    {
+        if (!$failed) {
+            $this->messages->addSuccess(sprintf('Zmieniono nazwę: %d.', $total));
+
+            return;
+        }
+
+        $this->messages->addError(sprintf(
+            'Nie udało się zmienić nazwy %d z %d plików: %s',
+            count($failed),
+            $total,
+            implode(', ', $failed),
+        ));
     }
 
     public function reindexSimilarTracksCollection(ServerRequest $request, Response $response): ResponseInterface

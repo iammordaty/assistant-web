@@ -12,12 +12,16 @@ use Slim\Http\ServerRequest;
  * @see self::toMetadata
  *
  * Format nazwy pliku jest jawnym wejściem: albo wybrany $format, albo $manualTarget wpisany
- * ręcznie. Gdy oba są puste (np. edycja utworu w incoming), nazwa pliku nie jest zmieniana.
+ * ręcznie. Gdy oba są puste - bo wybrano "nie zmieniaj nazwy" albo formularz w ogóle nie ma tego
+ * pola (edycja utworu w incoming) - nazwa pliku nie jest zmieniana.
  */
 final readonly class UpdateTrackCommand
 {
     /** Wartość pola wyboru oznaczająca nazwę wpisaną ręcznie zamiast jednego z formatów */
     public const string MANUAL_RENAME_CHOICE = 'manual';
+
+    /** Wartość pola wyboru oznaczająca jawną rezygnację ze zmiany nazwy */
+    public const string KEEP_NAME_CHOICE = 'keep';
 
     public function __construct(
         public string $guid,
@@ -91,7 +95,7 @@ final readonly class UpdateTrackCommand
     {
         $choice = self::normalizeString($postData['rename_format'] ?? null);
 
-        if ($choice === null) {
+        if ($choice === null || $choice === self::KEEP_NAME_CHOICE) {
             return [ null, null ];
         }
 

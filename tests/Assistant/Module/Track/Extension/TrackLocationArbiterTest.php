@@ -86,15 +86,23 @@ final class TrackLocationArbiterTest extends TestCase
         self::assertSame($this->root . '/Singles/2013/04. kwiecień', $this->arbiter->getDateDir($file));
     }
 
-    public function testDateDirForFlatOtherTrack(): void
+    /** Other też ma rok/miesiąc - "płaski" znaczy tylko brak katalogów artysty i albumu */
+    public function testDateDirForOtherTrack(): void
     {
         $file = $this->makeFile('/Other/2009/08. sierpień/Artist - Title.mp3');
 
         self::assertSame($this->root . '/Other/2009/08. sierpień', $this->arbiter->getDateDir($file));
     }
 
-    /** Plik leżący płytko (bez rok/miesiąc) - granicą jest sam katalog indeksowany */
-    public function testDateDirFallsBackToIndexedDirForShallowPath(): void
+    /** Starszy wpis płytszy o jeden poziom - granicą jest jego własny katalog, nie katalog indeksowany */
+    public function testDateDirForLegacyYearOnlyPath(): void
+    {
+        $file = $this->makeFile('/Other/- 2006/Artist - Title.mp3');
+
+        self::assertSame($this->root . '/Other/- 2006', $this->arbiter->getDateDir($file));
+    }
+
+    public function testDateDirFallsBackToIndexedDirForFileDirectlyInIt(): void
     {
         $file = $this->makeFile('/Other/Artist - Title.mp3');
 

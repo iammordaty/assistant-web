@@ -22,26 +22,45 @@ final class DateDirectory
 {
     private const string MONTH_NAME_PATTERN = 'LLLL';
 
-    public static function forFile(SplFileInfo $file): string
+    /**
+     * Rok i miesiąc są niezależnymi nadpisaniami: każdy podany wygrywa, każdy pominięty bierze się
+     * z daty pliku. Dzięki temu da się narzucić jeden rok całemu zaznaczeniu, zostawiając miesiąc
+     * wyliczany per plik - i odwrotnie.
+     */
+    public static function forFile(SplFileInfo $file, ?string $year = null, ?string $month = null): string
     {
-        return self::format(self::resolveDate($file));
+        $date = self::resolveDate($file);
+
+        return sprintf('%s/%s', $year ?? $date->format('Y'), $month ?? self::monthSegment($date));
+    }
+
+    /** Rok podany wprost (np. z formularza); null gdy pusty albo w niepoprawnym formacie */
+    public static function tryParseYear(?string $value): ?string
+    {
+        $value = trim((string) $value);
+
+        return preg_match('/^\d{4}$/', $value) === 1 ? $value : null;
     }
 
     /**
-     * Przyjmuje segment podany wprost (np. z formularza) tylko wtedy, gdy ma dokładnie kształt
-     * "RRRR/NN. miesiąc". Wartość trafia do formatu nazwy pliku, więc cokolwiek innego - w tym
-     * próba wyjścia w górę drzewa - musi zostać odrzucone.
+     * Miesiąc podany wprost, wyłącznie w kształcie "NN. nazwa". Wartość trafia do formatu nazwy
+     * pliku, więc cokolwiek innego - w tym próba wyjścia w górę drzewa - musi zostać odrzucone.
      */
-    public static function tryParse(?string $value): ?string
+    public static function tryParseMonth(?string $value): ?string
     {
-        $value = trim((string) $value, " \t\n\r\0\x0B/");
+        $value = trim((string) $value);
 
-        return preg_match('/^\d{4}\/\d{2}\. \p{L}+$/u', $value) === 1 ? $value : null;
+        return preg_match('/^\d{2}\. \p{L}+$/u', $value) === 1 ? $value : null;
     }
 
     public static function format(DateTimeImmutable $date): string
     {
-        return sprintf('%s/%s. %s', $date->format('Y'), $date->format('m'), self::monthName($date));
+        return sprintf('%s/%s', $date->format('Y'), self::monthSegment($date));
+    }
+
+    private static function monthSegment(DateTimeImmutable $date): string
+    {
+        return sprintf('%s. %s', $date->format('m'), self::monthName($date));
     }
 
     private static function resolveDate(SplFileInfo $file): DateTimeImmutable
