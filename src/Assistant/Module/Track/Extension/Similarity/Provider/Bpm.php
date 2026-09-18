@@ -8,7 +8,7 @@ use Assistant\Module\Track\Model\Track;
 final class Bpm extends AbstractProvider
 {
     /** {@inheritDoc} */
-    public const NAME = 'BPM';
+    public const string NAME = 'BPM';
 
     /** {@inheritDoc} */
     protected array $similarityMap = [
@@ -25,20 +25,32 @@ final class Bpm extends AbstractProvider
     }
 
     /** {@inheritDoc} */
-    public function getSimilarityValue(Track $baseTrack, Track $comparedTrack): int
+    public function getSimilarityValue(Track $baseTrack, Track $comparedTrack): ?int
     {
-        $distance = (int) round(abs($baseTrack->getBpm() - $comparedTrack->getBpm()));
-        $similarity = $this->similarityMap[$distance] ?? 0;
+        $baseBpm = $baseTrack->getBpm();
+        $comparedBpm = $comparedTrack->getBpm();
+
+        if (!$baseBpm || !$comparedBpm) {
+            return null;
+        }
+
+        $distance = (int) round(abs($baseBpm - $comparedBpm));
 
         // echo $baseTrack->getBpm(), ' vs. ', $comparedTrack->getBpm(), ' = ', $similarity, " ($distance)", PHP_EOL;
 
-        return $similarity;
+        return $this->similarityMap[$distance] ?? 0;
     }
 
     /** {@inheritDoc} */
-    public function getCriteria(Track $baseTrack): MinMaxInfo
+    public function getCriteria(Track $baseTrack): ?MinMaxInfo
     {
-        $roundedBpm = round($baseTrack->getBpm());
+        $bpm = $baseTrack->getBpm();
+
+        if (!$bpm) {
+            return null;
+        }
+
+        $roundedBpm = round($bpm);
 
         $minBpm = $roundedBpm - $this->parameters['tolerance'];
         $maxBpm = $roundedBpm + $this->parameters['tolerance'];

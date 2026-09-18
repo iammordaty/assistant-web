@@ -8,7 +8,7 @@ use KeyTools\KeyTools;
 final class MusicalKey extends AbstractProvider
 {
     /** {@inheritDoc} */
-    public const NAME = 'MusicalKey';
+    public const string NAME = 'MusicalKey';
 
     public function __construct()
     {
@@ -16,9 +16,16 @@ final class MusicalKey extends AbstractProvider
     }
 
     /** {@inheritDoc} */
-    public function getSimilarityValue(Track $baseTrack, Track $comparedTrack): int
+    public function getSimilarityValue(Track $baseTrack, Track $comparedTrack): ?int
     {
-        $similarity = $this->similarityMap[$baseTrack->getInitialKey()][$comparedTrack->getInitialKey()] ?? 0;
+        $baseKey = $baseTrack->getInitialKey();
+        $comparedKey = $comparedTrack->getInitialKey();
+
+        if (!$baseKey || !$comparedKey) {
+            return null;
+        }
+
+        $similarity = $this->similarityMap[$baseKey][$comparedKey] ?? 0;
 
         return $similarity;
     }
@@ -26,7 +33,13 @@ final class MusicalKey extends AbstractProvider
     /** {@inheritDoc} */
     public function getCriteria(Track $baseTrack): ?array
     {
-        $initialKeySimilarityMap = $this->similarityMap[$baseTrack->getInitialKey()] ?? null;
+        $baseKey = $baseTrack->getInitialKey();
+
+        if (!$baseKey) {
+            return null;
+        }
+
+        $initialKeySimilarityMap = $this->similarityMap[$baseKey] ?? null;
 
         if (!$initialKeySimilarityMap) {
             return null;

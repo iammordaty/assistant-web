@@ -25,13 +25,13 @@ abstract class AbstractSimilarityStrategy implements NextTrackStrategy
 
     /**
      * 1. Do przemyślenia czy da się to osiągnąć bardziej czytelnie i elegancko.
-     *    Zerknąć na SimilarTracks, pewnie da się wykorzystać
+     *    Zerknąć na ScoredTrack, pewnie da się wykorzystać
      *
      * 2. Może należałoby rozdzielić tworzenie tablicy wielowymiarowej i wyliczania podobieństwa między ścieżkami?
      *
      * @param Track[] $listing
      * @return array
-     * @see SimilarTracks
+     * @see SimilarityCandidateTrack
      */
     protected function computeSimilarityGrid(array $listing): array
     {

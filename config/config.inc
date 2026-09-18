@@ -10,6 +10,7 @@ use Assistant\Module\Track\Extension\Similarity\Provider\Bpm;
 use Assistant\Module\Track\Extension\Similarity\Provider\MusicalKey;
 use Assistant\Module\Track\Extension\Similarity\Provider\Genre;
 use Assistant\Module\Track\Extension\Similarity\Provider\Musly;
+use Assistant\Module\Track\Extension\Similarity\Provider\Publisher;
 use Assistant\Module\Track\Extension\Similarity\Provider\Year;
 use Dotenv\Dotenv;
 
@@ -100,6 +101,7 @@ return static function (string $baseDir): array {
                 Genre::NAME => 0.75,
                 MusicalKey::NAME => 0.90,
                 Musly::NAME => 1,
+                Publisher::NAME => 0.40,
                 Year::NAME => 0.60,
             ],
             'min_similarity_value' => 60,

@@ -6,6 +6,7 @@ use Assistant\Module\Track\Extension\Similarity\Provider\Bpm;
 use Assistant\Module\Track\Extension\Similarity\Provider\Genre;
 use Assistant\Module\Track\Extension\Similarity\Provider\MusicalKey;
 use Assistant\Module\Track\Extension\Similarity\Provider\Musly;
+use Assistant\Module\Track\Extension\Similarity\Provider\Publisher;
 use Assistant\Module\Track\Extension\Similarity\Provider\Year;
 use Assistant\Module\Track\Model\TrackDto;
 use Psr\Http\Message\ServerRequestInterface;
@@ -32,7 +33,7 @@ final class SimilarityParametersForm
         $trackYear = $trackDto->getYear();
 
         $request = new SimilarityParametersRequest(
-            $queryParams[self::NAME_PROVIDERS] ?? Similarity::PROVIDERS,
+            self::getProviders($queryParams) ?? Similarity::PROVIDERS,
             $queryParams[Bpm::NAME] ?? $trackBpm,
             $queryParams[Genre::NAME] ?? $trackGenre,
             $queryParams[MusicalKey::NAME] ?? $trackKey,
@@ -43,6 +44,7 @@ final class SimilarityParametersForm
 
         $parameters = [
             new SimilarityParameter(Musly::NAME, 'Musly'),
+            new SimilarityParameter(Publisher::NAME, 'Wytwórnia'),
             new SimilarityParameter(Genre::NAME, 'Gatunek', 'text', $request->genre, $trackGenre),
             new SimilarityParameter(Year::NAME, 'Rok', 'number', $request->year, $trackYear, 1980, $trackMaxYear),
             new SimilarityParameter(Bpm::NAME, 'BPM', 'number', $request->bpm, $trackBpm, 50, 200, 0.1),
@@ -56,5 +58,25 @@ final class SimilarityParametersForm
     public function isProviderEnabled(string $providerName): bool
     {
         return in_array($providerName, $this->request->providers);
+    }
+
+    /**
+     * Parametry pochodzą z adresu, więc nazwy nieznanych dostawców są pomijane, a puste żądanie
+     * oznacza zestaw domyślny. Bez tego nieznana nazwa kończy się wyjątkiem i błędem 500.
+     */
+    private static function getProviders(array $queryParams): ?array
+    {
+        $providers = $queryParams[self::NAME_PROVIDERS] ?? null;
+
+        if (!$providers) {
+            return null;
+        }
+
+        return $providers
+            |> (fn ($providers) => is_array($providers) ? $providers : [$providers])
+            |> (fn ($providers) => array_filter($providers, 'is_string'))
+            |> (fn ($providers) => array_intersect($providers, Similarity::PROVIDERS))
+            |> array_values(...)
+            ?: null;
     }
 }

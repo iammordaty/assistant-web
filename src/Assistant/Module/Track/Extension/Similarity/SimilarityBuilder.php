@@ -8,6 +8,7 @@ use Assistant\Module\Track\Extension\Similarity\Provider\Genre;
 use Assistant\Module\Track\Extension\Similarity\Provider\MusicalKey;
 use Assistant\Module\Track\Extension\Similarity\Provider\Musly;
 use Assistant\Module\Track\Extension\Similarity\Provider\ProviderInterface;
+use Assistant\Module\Track\Extension\Similarity\Provider\Publisher;
 use Assistant\Module\Track\Extension\Similarity\Provider\Year;
 use Assistant\Module\Search\Extension\Service\TrackSearchService;
 use Assistant\Module\Track\Model\Track;
@@ -109,14 +110,18 @@ final class SimilarityBuilder
             $providers[] = new Musly($this->service);
         }
 
+        if ($this->isProviderEnabled(Publisher::NAME)) {
+            $providers[] = new Publisher();
+        }
+
         if ($this->isProviderEnabled(Year::NAME)) {
             $providers[] = new Year($this->providersParameters[Year::NAME]);
         }
 
         $this->similarityService = new Similarity(
-            $this->trackSearchService,
-            $providers,
-            $this->providersWeights,
+            new SimilarityCandidatesFinder($this->trackSearchService, $providers),
+            new SimilarityCalculator($providers, $this->providersWeights),
+            new SimilarityCandidatesSorter(),
             $this->minSimilarityValue,
             $this->maxTracks,
         );

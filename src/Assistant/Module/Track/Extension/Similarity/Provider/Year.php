@@ -8,7 +8,7 @@ use Assistant\Module\Track\Model\Track;
 final class Year extends AbstractProvider
 {
     /** {@inheritDoc} */
-    public const NAME = 'Year';
+    public const string NAME = 'Year';
 
     /** {@inheritDoc} */
     protected array $similarityMap = [
@@ -25,27 +25,31 @@ final class Year extends AbstractProvider
     }
 
     /** {@inheritDoc} */
-    public function getSimilarityValue(Track $baseTrack, Track $comparedTrack): int
+    public function getSimilarityValue(Track $baseTrack, Track $comparedTrack): ?int
     {
-        if ($comparedTrack->getYear() === $baseTrack->getYear()) {
-            return self::MAX_SIMILARITY_VALUE;
+        $baseYear = $baseTrack->getYear();
+        $comparedYear = $comparedTrack->getYear();
+
+        if (!$baseYear || !$comparedYear) {
+            return null;
         }
 
-        $distance = abs($baseTrack->getYear() - $comparedTrack->getYear());
-        $similarity = $this->similarityMap[$distance] ?? 0;
+        $distance = abs($baseYear - $comparedYear);
 
-        // echo $baseTrack->getYear(), ' vs. ', $comparedTrack->getYear(), ' = ', $similarity, " ($distance)", PHP_EOL;
-
-        return $similarity;
+        return $this->similarityMap[$distance] ?? 0;
     }
 
     /** {@inheritDoc} */
-    public function getCriteria(Track $baseTrack): MinMaxInfo
+    public function getCriteria(Track $baseTrack): ?MinMaxInfo
     {
-        $fromYear = $baseTrack->getYear() - $this->parameters['tolerance'];
+        $year = $baseTrack->getYear();
 
-        $currentYear = (new \DateTime())->format('Y');
-        $toYear = (int) max($currentYear, $baseTrack->getYear() + $this->parameters['tolerance']);
+        if (!$year) {
+            return null;
+        }
+
+        $fromYear = $year - $this->parameters['tolerance'];
+        $toYear = $year + $this->parameters['tolerance'];
 
         $minMaxInfo = MinMaxInfo::create([
             MinMaxInfo::GREATER_THAN_OR_EQUAL => $fromYear,

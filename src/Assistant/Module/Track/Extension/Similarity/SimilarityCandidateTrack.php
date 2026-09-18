@@ -4,23 +4,18 @@ namespace Assistant\Module\Track\Extension\Similarity;
 
 use Assistant\Module\Track\Model\Track;
 
-final class SimilarTracks
+/** Kandydat wraz z przyznaną mu wartością podobieństwa do utworu bazowego */
+final class SimilarityCandidateTrack
 {
     public function __construct(
-        private Track $firstTrack,
-        private Track $secondTrack,
+        private Track $track,
         private float $similarityValue,
     ) {
     }
 
-    public function getFirstTrack(): Track
+    public function getTrack(): Track
     {
-        return $this->firstTrack;
-    }
-
-    public function getSecondTrack(): Track
-    {
-        return $this->secondTrack;
+        return $this->track;
     }
 
     public function getSimilarityValue(): float

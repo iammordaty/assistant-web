@@ -14,9 +14,9 @@
                     </tr>
                 </thead>
                 <tbody>
-                    {% for similarTracks in similarTracksList %}
-                        {% set similarTrack = similarTracks.secondTrack %}
-                        {% set similarityValue = similarTracks.similarityValue %}
+                    {% for scoredTrack in similarTracksList %}
+                        {% set similarTrack = scoredTrack.track %}
+                        {% set similarityValue = scoredTrack.similarityValue %}
 
                         <tr class="{% if loop.index >= similarTracksSoftLimit %}d-none{% endif %}">
                             <td style="width: 43%">
