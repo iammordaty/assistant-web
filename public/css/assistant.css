@@ -621,11 +621,118 @@ table .ast-track-name span {
 }
 
 /* AI: nagłówek utworu: powiększony awatar (ten sam wzorzec co TrackAvatar w Miksach) oraz dane utworu
-   rozdzielone kropkami, jak w widoku miksu */
+   rozdzielone kropkami, jak w widoku miksu. Awatar jest przyciskiem odtwarzania: najechanie zamienia inicjały
+   na ikonę odtwarzania, a podczas odtwarzania awatar pokazuje pauzę i postęp utworu. Na urządzeniach bez
+   najechania ikona pojawia się na chwilę po załadowaniu fali, aby było widać, że awatar jest przyciskiem. */
 .ast-track-avatar {
+    border: 0;
+    font-family: inherit;
     font-size: 1.375rem;
     height: 4.5rem;
+    overflow: hidden;
+    padding: 0;
+    position: relative;
     width: 4.5rem;
+}
+
+.ast-track-avatar:not(:disabled) {
+    cursor: pointer;
+}
+
+.ast-track-avatar:focus-visible {
+    box-shadow: 0 0 0 .25rem rgba(var(--tblr-primary-rgb), .25);
+    outline: 0;
+}
+
+.ast-track-avatar-initials,
+.ast-track-avatar-icon {
+    align-items: center;
+    display: flex;
+    inset: 0;
+    justify-content: center;
+    position: absolute;
+    transition: opacity .2s ease, transform .2s ease;
+}
+
+.ast-track-avatar-icon {
+    opacity: 0;
+    transform: scale(.8);
+}
+
+.ast-track-avatar-icon .icon {
+    height: 1.75rem;
+    position: absolute;
+    transition: opacity .25s ease, transform .25s ease;
+    width: 1.75rem;
+}
+
+.ast-track-avatar-pause,
+.ast-track-avatar.active .ast-track-avatar-play {
+    opacity: 0;
+    transform: scale(.6);
+}
+
+.ast-track-avatar.active .ast-track-avatar-pause {
+    opacity: 1;
+    transform: none;
+}
+
+.ast-track-avatar.active .ast-track-avatar-initials {
+    opacity: 0;
+}
+
+.ast-track-avatar.active .ast-track-avatar-icon {
+    opacity: 1;
+    transform: none;
+}
+
+.ast-track-avatar-progress {
+    background: currentColor;
+    bottom: 0;
+    height: 3px;
+    left: 0;
+    opacity: 0;
+    position: absolute;
+    transition: opacity .2s ease;
+    width: 0;
+}
+
+.ast-track-avatar.active .ast-track-avatar-progress {
+    opacity: .6;
+}
+
+@media (hover: hover) {
+    .ast-track-avatar:not(:disabled):hover .ast-track-avatar-initials {
+        opacity: 0;
+    }
+
+    .ast-track-avatar:not(:disabled):hover .ast-track-avatar-icon {
+        opacity: 1;
+        transform: none;
+    }
+}
+
+@media (hover: none) {
+    .ast-track-avatar:not(:disabled) .ast-track-avatar-initials {
+        animation: ast-track-avatar-hint-initials 1.4s ease .3s;
+    }
+
+    .ast-track-avatar:not(:disabled) .ast-track-avatar-icon {
+        animation: ast-track-avatar-hint-icon 1.4s ease .3s;
+    }
+}
+
+@keyframes ast-track-avatar-hint-initials {
+    20%, 75% {
+        opacity: 0;
+    }
+}
+
+@keyframes ast-track-avatar-hint-icon {
+    20%, 75% {
+        opacity: 1;
+        transform: none;
+    }
 }
 
 @media only screen and (max-width: 575.98px) {

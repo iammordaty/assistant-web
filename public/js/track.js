@@ -27,7 +27,7 @@ $(function () {
 			});
 		}, 500);
 
-		$trackPlayPause.fadeTo('fast', 1).addClass('cursor-pointer');
+		$trackPlayPause.prop('disabled', false);
 
 		$('#wave-container').css('visibility', 'visible').hide().fadeIn('slow');
 	});
@@ -39,6 +39,7 @@ $(function () {
 	});
 
 	const $currentTimeIndicator = $('#wave-time-current-time');
+	const $trackProgress = $('[data-role="track:progress"]');
 
 	wavesurfer.on('timeupdate', (currentTime) => {
 		const trackDuration = wavesurfer.getDuration();
@@ -54,6 +55,7 @@ $(function () {
 		}
 
 		$currentTimeIndicator.html(prefix + formatSeconds(time));
+		$trackProgress.css('width', `${currentTime / trackDuration * 100}%`);
 	});
 
 	wavesurfer.on('play', function () {
@@ -80,8 +82,6 @@ $(function () {
 			$('#wave-container').slideUp('fast', function () {
 				$(this).parent('div').remove();
 			});
-
-			$trackPlayPause.animate({ opacity: 0.2 }, 350);
 		}, 3000);
 	});
 

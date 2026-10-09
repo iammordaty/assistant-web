@@ -1,3 +1,23 @@
 {# @var avatar \Assistant\Module\Track\Extension\TrackAvatar #}
-{# AI: wspólny dla stron utworu w kolekcji i w Incoming #}
-<span class="avatar avatar-initials rounded-2 ast-track-avatar {{ avatar.cssClass }}">{{ avatar.initials }}</span>
+{# AI: wspólny dla stron utworu w kolekcji i w Incoming; awatar jest też przyciskiem odtwarzania, aktywnym po załadowaniu fali #}
+<button
+    type="button"
+    class="avatar avatar-initials rounded-2 ast-track-avatar {{ avatar.cssClass }}"
+    data-role="track:play-pause"
+    aria-label="Odtwórz lub wstrzymaj"
+    disabled
+>
+    <span class="ast-track-avatar-initials">{{ avatar.initials }}</span>
+    <span class="ast-track-avatar-icon">
+        <svg xmlns="http://www.w3.org/2000/svg" class="icon ast-track-avatar-play" width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+            <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+            <path d="M6 4v16a1 1 0 0 0 1.524 .852l13 -8a1 1 0 0 0 0 -1.704l-13 -8a1 1 0 0 0 -1.524 .852z"></path>
+        </svg>
+        <svg xmlns="http://www.w3.org/2000/svg" class="icon ast-track-avatar-pause" width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+            <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+            <path d="M9 4h-2a2 2 0 0 0 -2 2v12a2 2 0 0 0 2 2h2a2 2 0 0 0 2 -2v-12a2 2 0 0 0 -2 -2z"></path>
+            <path d="M17 4h-2a2 2 0 0 0 -2 2v12a2 2 0 0 0 2 2h2a2 2 0 0 0 2 -2v-12a2 2 0 0 0 -2 -2z"></path>
+        </svg>
+    </span>
+    <span class="ast-track-avatar-progress" data-role="track:progress"></span>
+</button>
