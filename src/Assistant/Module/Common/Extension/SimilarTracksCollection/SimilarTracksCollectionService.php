@@ -24,23 +24,23 @@ final class SimilarTracksCollectionService
         private Config $config,
         private DistanceToSimilarityMapper $distanceToSimilarityCalculator,
     ) {
-        $pathname = $this->config->get('collection.metadata_dirs.music_similarity') . '/' . self::COLLECTION_PATHNAME;
+        // $pathname = $this->config->get('collection.metadata_dirs.music_similarity') . '/' . self::COLLECTION_PATHNAME;
 
-        $musly = new Musly();
+        // $musly = new Musly();
 
-        $collection = new Collection([
-            'pathname' => $pathname,
-            'jukeboxPathname' => Collection::USE_DEFAULT_JUKEBOX_PATHNAME,
-        ]);
+        // $collection = new Collection([
+        //     'pathname' => $pathname,
+        //     'jukeboxPathname' => Collection::USE_DEFAULT_JUKEBOX_PATHNAME,
+        // ]);
 
-        if (!$collection->isInitialized()) {
-            $musly->initializeCollection($collection);
-        }
+        // if (!$collection->isInitialized()) {
+        //     $musly->initializeCollection($collection);
+        // }
 
-        $musly->setCollection($collection);
+        // $musly->setCollection($collection);
 
-        $this->musly = $musly;
-        $this->collectionSize = count($this->getTracks());
+        // $this->musly = $musly;
+        // $this->collectionSize = count($this->getTracks());
     }
 
     public function add(SplFileInfo $collectionItem): bool

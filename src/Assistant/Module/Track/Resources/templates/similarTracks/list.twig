@@ -53,17 +53,21 @@
                                 <a class="text-reset" href="{{ url_for('search.advanced.index', query_params = { initial_key: similarTrack.initialKey }) }}">
                                     {{ similarTrack.initialKey }}
                                 </a>
-                                {% if showDeltas %}
-                                    {% include '@track/similarTracks/keyMove.twig' with { from: track.initialKey, to: similarTrack.initialKey } only %}
-                                {% endif %}
+                                <span class="ast-delta-slot">
+                                    {%- if showDeltas -%}
+                                        {% include '@track/similarTracks/keyMove.twig' with { from: track.initialKey, to: similarTrack.initialKey } only %}
+                                    {%- endif -%}
+                                </span>
                             </td>
                             <td style="width: 7%" class="text-nowrap">
                                 <a class="text-reset" href="{{ url_for('search.advanced.index', query_params = { bpm: similarTrack.bpm }) }}">
                                     {{ similarTrack.bpm }}
                                 </a>
-                                {% if showDeltas %}
-                                    {% include '@track/similarTracks/bpmDelta.twig' with { from: track.bpm, to: similarTrack.bpm } only %}
-                                {% endif %}
+                                <span class="ast-delta-slot">
+                                    {%- if showDeltas -%}
+                                        {% include '@track/similarTracks/bpmDelta.twig' with { from: track.bpm, to: similarTrack.bpm } only %}
+                                    {%- endif -%}
+                                </span>
                             </td>
                             <td style="width: 5%">
                                 {{ similarityValue }}%

@@ -8,6 +8,6 @@
     title="Tryb na żywo (L)"
     aria-pressed="{{ form.isLiveMode ? 'true' : 'false' }}"
 >
-    <span class="ast-live-toggle-dot"></span>
+    <span class="status-dot {% if form.isLiveMode %}status-red status-dot-animated{% else %}status-secondary{% endif %}" data-role="similar-tracks:live-dot"></span>
     Na żywo
 </button>

@@ -1,5 +1,6 @@
 {# AI: tryby grania na żywo w jednym rzędzie, ze skrótami 1–9, aby zmiana kierunku zajmowała jedno naciśnięcie
-   klawisza; pasek jest widoczny tylko w trybie na żywo, więc widok planowania pozostaje bez zmian #}
+   klawisza; pasek leży pod parametrami, więc jego pojawienie się nie przesuwa dostawców, a objaśnienie trybu
+   jest w podpowiedzi, a nie w osobnym wierszu #}
 <div class="ast-live-modes {% if not form.isLiveMode %}d-none{% endif %}" data-role="similar-tracks:live-modes">
     {% for mode in form.liveModes %}
         <button
@@ -13,4 +14,11 @@
             {{ mode.label }}
         </button>
     {% endfor %}
+    <span
+        class="form-help ms-1"
+        data-bs-toggle="popover"
+        data-bs-trigger="hover"
+        data-bs-placement="left"
+        data-bs-content="W trybie na żywo dostawców wybiera tryb; wartości gatunku, roku, BPM i tonacji nadal są uwzględniane."
+    >?</span>
 </div>

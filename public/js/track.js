@@ -314,7 +314,9 @@ $(function () {
 		$container.toggleClass('ast-live', isLive);
 		$liveToggle.toggleClass('is-live', isLive).attr('aria-pressed', isLive ? 'true' : 'false');
 		$liveModes.toggleClass('d-none', !isLive);
-		$form.find('[data-role="similar-tracks:live-hint"]').toggleClass('d-none', !isLive);
+		$liveToggle.find('[data-role="similar-tracks:live-dot"]')
+			.toggleClass('status-red status-dot-animated', isLive)
+			.toggleClass('status-secondary', !isLive);
 
 		$liveModes.find('[data-role="similar-tracks:mode"]').each(function () {
 			$(this).toggleClass('active', $(this).data('mode') === mode);

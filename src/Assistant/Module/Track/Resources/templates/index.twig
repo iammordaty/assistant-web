@@ -91,13 +91,13 @@
                         </div>
                     </div>
                 </div>
-                {% include '@track/similarTracks/liveModes.twig' with { form: form } only %}
-                <div class="card-body d-none" data-role="similar-tracks:parameters-container">
+                <div class="card-body ast-similar-tracks-parameters-container d-none" data-role="similar-tracks:parameters-container">
                     {% include '@track/similarTracks/form.twig' with {
                         form: form,
                         actionUrl: url_for('track.track.index', { guid: track.guid }),
                     } only %}
                 </div>
+                {% include '@track/similarTracks/liveModes.twig' with { form: form } only %}
                 <div class="card-table table-responsive">
                     {% include '@track/similarTracks/list.twig' with {
                         track: track,

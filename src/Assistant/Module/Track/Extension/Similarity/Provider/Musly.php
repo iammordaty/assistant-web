@@ -61,6 +61,8 @@ final class Musly extends AbstractProvider implements CandidateProviderInterface
     /** {@inheritDoc} */
     public function getCandidatePathnames(Track $baseTrack): array
     {
+        return [];
+
         if (!$this->providesCandidates) {
             return [];
         }
@@ -77,6 +79,8 @@ final class Musly extends AbstractProvider implements CandidateProviderInterface
      */
     private function getSimilarTracksFor(Track $baseTrack): ?SimilarTracksResultList
     {
+        return null;
+        
         $pathname = $baseTrack->getPathname();
 
         if (isset($this->failedTracks[$pathname])) {
