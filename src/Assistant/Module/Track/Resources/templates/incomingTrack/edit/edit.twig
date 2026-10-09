@@ -2,6 +2,10 @@
 
 {% block title track.name %}
 
+{% block page_header_avatar %}
+    {% include '@track/common/avatar.twig' with { avatar } only %}
+{% endblock %}
+
 {% block page_header %}
     {% include '@track/common/header.twig' with { track } only %}
 {% endblock %}

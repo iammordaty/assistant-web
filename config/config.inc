@@ -8,6 +8,7 @@ use Assistant\Module\Track\Extension\BeatportTrackMetadataSuggestionsService;
 use Assistant\Module\Track\Extension\Similarity\RelatedTracksMode;
 use Assistant\Module\Track\Extension\Similarity\Similarity;
 use Assistant\Module\Track\Extension\Similarity\Provider\Bpm;
+use Assistant\Module\Track\Extension\Similarity\Provider\Favorite;
 use Assistant\Module\Track\Extension\Similarity\Provider\MusicalKey;
 use Assistant\Module\Track\Extension\Similarity\Provider\Genre;
 use Assistant\Module\Track\Extension\Similarity\Provider\IndexedPeriod;
@@ -102,6 +103,8 @@ return static function (string $baseDir): array {
             ],
             'providers_weights' => [
                 Bpm::NAME => 0.70,
+                // ulubione są wyłącznie filtrem i nie dają wyniku, ale kalkulator wymaga wagi każdego dostawcy
+                Favorite::NAME => 0,
                 Genre::NAME => 0.75,
                 IndexedPeriod::NAME => 0.50,
                 MusicalKey::NAME => 0.90,
@@ -112,16 +115,13 @@ return static function (string $baseDir): array {
             'min_similarity_value' => 60,
             'max_tracks' => 200,
 
-            // Tryby grania na żywo. Włączeni dostawcy to klucze `providers_weights`, a `providers_parameters`
-            // trybu są nakładane na parametry podstawowe. `track_offsets` przesuwa cel wyszukiwania:
-            // `bpm_percent` (tempo w procentach), `bpm_pulse` (half-time / double-time), `musical_key`
-            // (krok w kole Camelota), `musical_key_scale` ('A', 'B' lub 'toggle'). Kandydaci Musly omijają
-            // kryteria metadanych, dlatego tryby przesuwające cel wyłączają ich (`musly_candidates`).
+            // Presety listy powiązanych utworów. Klucze `providers_weights` to dostawcy zaznaczani przez preset,
+            // a ich wagi oraz `providers_parameters` są nakładane na podstawowe. `track_offsets` przesuwa cel
+            // wpisywany do formularza: `bpm_percent` (tempo w procentach), `bpm_pulse` (half-time / double-time),
+            // `musical_key` (krok w kole Camelota), `musical_key_scale` ('A', 'B' lub 'toggle'). Kandydaci Musly
+            // omijają kryteria metadanych, dlatego presety przesuwające cel wyłączają ich (`musly_candidates`).
+            // „Podobne” nie ma wpisu: używa dostawców domyślnych i parametrów podstawowych.
             'modes' => [
-                RelatedTracksMode::KEEP->value => [
-                    'providers_weights' => [ Bpm::NAME => 0.90, IndexedPeriod::NAME => 0.50, MusicalKey::NAME => 0.90, Musly::NAME => 1 ],
-                    'providers_parameters' => [ Bpm::NAME => [ 'tolerance' => 2 ] ],
-                ],
                 RelatedTracksMode::LIFT->value => [
                     'providers_weights' => [ Bpm::NAME => 0.90, MusicalKey::NAME => 0.90, Musly::NAME => 0.50 ],
                     'providers_parameters' => [ Bpm::NAME => [ 'tolerance' => 1 ] ],
@@ -158,11 +158,6 @@ return static function (string $baseDir): array {
                     'providers_weights' => [ Bpm::NAME => 1, MusicalKey::NAME => 0.90 ],
                     'providers_parameters' => [ Bpm::NAME => [ 'tolerance' => 2 ] ],
                     'track_offsets' => [ 'bpm_pulse' => true ],
-                ],
-                RelatedTracksMode::SAFE_BET->value => [
-                    'providers_weights' => [ Bpm::NAME => 0.90, Genre::NAME => 0.75, MusicalKey::NAME => 0.90, Musly::NAME => 0.50 ],
-                    'providers_parameters' => [ Bpm::NAME => [ 'tolerance' => 2 ] ],
-                    'favorites_only' => true,
                 ],
                 RelatedTracksMode::RESET->value => [
                     'providers_weights' => [ Bpm::NAME => 1 ],

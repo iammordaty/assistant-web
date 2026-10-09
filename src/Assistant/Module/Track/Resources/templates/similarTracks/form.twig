@@ -7,40 +7,62 @@
 >
     <input type="hidden" name="{{ constant('NAME_MODE', form) }}" value="{{ form.request.mode.value }}" data-role="similar-tracks:mode-input">
 
-    {# AI: każdy dostawca to jeden zwarty element (przełącznik i opcjonalna wartość) w zawijanym rzędzie;
-       wyłączony dostawca zostaje na miejscu z nieaktywnym polem, aby układ nie przeskakiwał przy przełączaniu #}
-    <div class="ast-similarity-parameters">
-        {% for similarityParameter in form.similarityParameters %}
-            {% set isProviderEnabled = form.isProviderEnabled(similarityParameter.name) %}
+    {# AI: „Kierunek” to presety, a „Szukaj” to dostawcy z wartościami, które preset wpisuje; czytane od góry
+       pokazują, dokąd zmierza kolejny utwór i jak zostanie wyszukany #}
+    <div class="ast-related-panel">
+        <div class="ast-related-panel-row">
+            <span class="ast-related-panel-label">Kierunek</span>
+            {% include '@track/similarTracks/presets.twig' with { presets: presets, activeMode: form.request.mode } only %}
+        </div>
 
-            <div class="ast-similarity-parameter" data-role="similar-tracks:parameter">
-                <label class="ast-similarity-parameter-toggle" for="parameter-{{ similarityParameter.name }}">
-                    <input
-                        type="checkbox"
-                        class="form-check-input m-0"
-                        name="{{ constant('NAME_PROVIDERS', form) }}[]"
-                        value="{{ similarityParameter.name }}"
-                        id="parameter-{{ similarityParameter.name }}"
-                        {% if isProviderEnabled %} checked="checked" {% endif %}
-                    >
-                    {{ similarityParameter.displayName }}
-                </label>
-                {% if similarityParameter.hasInput %}
-                    <input
-                        data-role="similar-tracks:parameter-input"
-                        type="{{ similarityParameter.inputType }}"
-                        name="{{ similarityParameter.name }}"
-                        value="{{ similarityParameter.inputValue }}"
-                        class="ast-similarity-parameter-input"
-                        aria-label="{{ similarityParameter.displayName }}"
-                        {% if not isProviderEnabled %} disabled {% endif %}
-                        {% if similarityParameter.placeholder %} placeholder="{{ similarityParameter.placeholder }}" {% endif %}
-                        {% if similarityParameter.inputMinValue %} min="{{ similarityParameter.inputMinValue }}" {% endif %}
-                        {% if similarityParameter.inputMaxValue %} max="{{ similarityParameter.inputMaxValue }}" {% endif %}
-                        {% if similarityParameter.inputStep %} step="{{ similarityParameter.inputStep }}" {% endif %}
-                    >
-                {% endif %}
+        <div class="ast-related-panel-row">
+            <span class="ast-related-panel-label">Szukaj</span>
+
+            {# AI: każdy dostawca to jeden zwarty element (przełącznik i opcjonalna wartość) w zawijanym rzędzie;
+               wyłączony dostawca zostaje na miejscu z nieaktywnym polem, aby układ nie przeskakiwał przy przełączaniu #}
+            <div class="ast-similarity-parameters">
+                {% for similarityParameter in form.similarityParameters %}
+                    {% set isProviderEnabled = form.isProviderEnabled(similarityParameter.name) %}
+                    {% set suggestionsId = 'parameter-' ~ similarityParameter.name ~ '-suggestions' %}
+
+                    <div class="ast-similarity-parameter" data-role="similar-tracks:parameter">
+                        <label class="ast-similarity-parameter-toggle" for="parameter-{{ similarityParameter.name }}">
+                            <input
+                                type="checkbox"
+                                class="form-check-input m-0"
+                                name="{{ constant('NAME_PROVIDERS', form) }}[]"
+                                value="{{ similarityParameter.name }}"
+                                id="parameter-{{ similarityParameter.name }}"
+                                {% if isProviderEnabled %} checked="checked" {% endif %}
+                            >
+                            {{ similarityParameter.displayName }}
+                        </label>
+                        {% if similarityParameter.hasInput %}
+                            <input
+                                data-role="similar-tracks:parameter-input"
+                                type="{{ similarityParameter.inputType }}"
+                                name="{{ similarityParameter.name }}"
+                                value="{{ similarityParameter.inputValue }}"
+                                class="ast-similarity-parameter-input"
+                                aria-label="{{ similarityParameter.displayName }}"
+                                {% if not isProviderEnabled %} disabled {% endif %}
+                                {% if similarityParameter.inputSuggestions %} list="{{ suggestionsId }}" {% endif %}
+                                {% if similarityParameter.placeholder %} placeholder="{{ similarityParameter.placeholder }}" {% endif %}
+                                {% if similarityParameter.inputMinValue %} min="{{ similarityParameter.inputMinValue }}" {% endif %}
+                                {% if similarityParameter.inputMaxValue %} max="{{ similarityParameter.inputMaxValue }}" {% endif %}
+                                {% if similarityParameter.inputStep %} step="{{ similarityParameter.inputStep }}" {% endif %}
+                            >
+                            {% if similarityParameter.inputSuggestions %}
+                                <datalist id="{{ suggestionsId }}">
+                                    {% for value, description in similarityParameter.inputSuggestions %}
+                                        <option value="{{ value }}">{{ description }}</option>
+                                    {% endfor %}
+                                </datalist>
+                            {% endif %}
+                        {% endif %}
+                    </div>
+                {% endfor %}
             </div>
-        {% endfor %}
+        </div>
     </div>
 </form>

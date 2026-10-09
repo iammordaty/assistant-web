@@ -3,6 +3,7 @@
 namespace Assistant\Module\Track\Extension\Similarity;
 
 use Assistant\Module\Track\Extension\Similarity\Provider\Bpm;
+use Assistant\Module\Track\Extension\Similarity\Provider\Favorite;
 use Assistant\Module\Track\Extension\Similarity\Provider\Genre;
 use Assistant\Module\Track\Extension\Similarity\Provider\IndexedPeriod;
 use Assistant\Module\Track\Extension\Similarity\Provider\MusicalKey;
@@ -17,6 +18,7 @@ final class Similarity
     /** Lista dostępnych dostawców podobieństwa */
     public const array PROVIDERS = [
         Bpm::NAME,
+        Favorite::NAME,
         Genre::NAME,
         IndexedPeriod::NAME,
         MusicalKey::NAME,

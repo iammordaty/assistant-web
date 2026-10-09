@@ -4,6 +4,7 @@ namespace Assistant\Module\Track\Extension\Similarity;
 
 use Assistant\Module\Common\Extension\SimilarTracksCollection\SimilarTracksCollectionService;
 use Assistant\Module\Track\Extension\Similarity\Provider\Bpm;
+use Assistant\Module\Track\Extension\Similarity\Provider\Favorite;
 use Assistant\Module\Track\Extension\Similarity\Provider\Genre;
 use Assistant\Module\Track\Extension\Similarity\Provider\IndexedPeriod;
 use Assistant\Module\Track\Extension\Similarity\Provider\MusicalKey;
@@ -25,10 +26,7 @@ final class SimilarityBuilder
 
     private array $providers = Similarity::DEFAULT_PROVIDERS;
 
-    /** AI: przesunięcie celu wyszukiwania wynikające z trybu (tempo, tonacja) */
-    private array $trackOffsets = [];
     private bool $muslyCandidates = true;
-    private bool $favoritesOnly = false;
 
     private Similarity $similarityService;
 
@@ -72,17 +70,16 @@ final class SimilarityBuilder
     }
 
     /**
-     * AI: tryb grania na żywo sam wyznacza dostawców, więc zaznaczenia dostawców z formularza dotyczą
-     * wyłącznie planowania. Nadpisania BPM, tonacji, gatunku i roku z formularza obowiązują zawsze,
-     * a przesunięcie trybu jest nakładane na nie w getSimilarTracks().
+     * AI: formularz jest jedynym źródłem dostawców i celu wyszukiwania (preset wpisał do niego przesunięte
+     * tempo i tonację), a preset dostarcza wyłącznie swoje wagi i tolerancje
      */
     public function withForm(SimilarityParametersForm $similarityParametersForm): self
     {
         $request = $similarityParametersForm->request;
 
-        if ($request->mode !== RelatedTracksMode::PLANNING) {
-            $this->withMode($request->mode);
-        } elseif ($request->providers) {
+        $this->withMode($request->mode);
+
+        if ($request->providers) {
             $this->setProviders($request->providers);
         }
 
@@ -101,15 +98,14 @@ final class SimilarityBuilder
 
         $this->setProviders(array_keys($modeParameters['providers_weights']));
 
-        $this->providersWeights = $modeParameters['providers_weights'];
+        // wagi presetu nadpisują podstawowe, a dostawca dołączony ręcznie zachowuje wagę podstawową
+        $this->providersWeights = array_replace($this->providersWeights, $modeParameters['providers_weights']);
         $this->providersParameters = array_replace_recursive(
             $this->providersParameters,
             $modeParameters['providers_parameters'] ?? [],
         );
 
-        $this->trackOffsets = $modeParameters['track_offsets'] ?? [];
         $this->muslyCandidates = $modeParameters['musly_candidates'] ?? true;
-        $this->favoritesOnly = $modeParameters['favorites_only'] ?? false;
 
         return $this;
     }
@@ -144,6 +140,10 @@ final class SimilarityBuilder
             $providers[] = new Bpm($this->providersParameters[Bpm::NAME]);
         }
 
+        if ($this->isProviderEnabled(Favorite::NAME)) {
+            $providers[] = new Favorite();
+        }
+
         if ($this->isProviderEnabled(Genre::NAME)) {
             $providers[] = new Genre($this->providersParameters[Genre::NAME]);
         }
@@ -169,7 +169,7 @@ final class SimilarityBuilder
         }
 
         $this->similarityService = new Similarity(
-            new SimilarityCandidatesFinder($this->trackSearchService, $providers, $this->favoritesOnly),
+            new SimilarityCandidatesFinder($this->trackSearchService, $providers),
             new SimilarityCalculator($providers, $this->providersWeights),
             new SimilarityCandidatesSorter(),
             $this->minSimilarityValue,
@@ -212,18 +212,42 @@ final class SimilarityBuilder
             }
         }
 
-        $track = $this->applyTrackOffsets($track);
-
         return $this->similarityService->getSimilarTracks($track);
     }
 
-    /** Przesuwa cel wyszukiwania zgodnie z wybranym trybem */
-    private function applyTrackOffsets(Track $track): Track
+    /**
+     * Zwraca presety z celem wyliczonym dla podanego utworu, w kolejności przycisków
+     *
+     * @return RelatedTracksPreset[]
+     */
+    public function getPresets(Track $track): array
     {
-        $bpmPercent = $this->trackOffsets['bpm_percent'] ?? 0;
-        $bpmPulse = $this->trackOffsets['bpm_pulse'] ?? false;
-        $keyStep = $this->trackOffsets['musical_key'] ?? 0;
-        $keyScale = $this->trackOffsets['musical_key_scale'] ?? null;
+        return array_map(function (RelatedTracksMode $mode) use ($track) {
+            $modeParameters = $this->modesParameters[$mode->value] ?? [];
+            $target = $this->applyTrackOffsets($track, $modeParameters['track_offsets'] ?? []);
+
+            return new RelatedTracksPreset(
+                $mode,
+                isset($modeParameters['providers_weights'])
+                    ? array_keys($modeParameters['providers_weights'])
+                    : Similarity::DEFAULT_PROVIDERS,
+                [
+                    Bpm::NAME => $target->getBpm(),
+                    Genre::NAME => $target->getGenre(),
+                    MusicalKey::NAME => $target->getInitialKey(),
+                    Year::NAME => $target->getYear(),
+                ],
+            );
+        }, RelatedTracksMode::cases());
+    }
+
+    /** Przesuwa cel wyszukiwania zgodnie z presetem */
+    private function applyTrackOffsets(Track $track, array $trackOffsets): Track
+    {
+        $bpmPercent = $trackOffsets['bpm_percent'] ?? 0;
+        $bpmPulse = $trackOffsets['bpm_pulse'] ?? false;
+        $keyStep = $trackOffsets['musical_key'] ?? 0;
+        $keyScale = $trackOffsets['musical_key_scale'] ?? null;
 
         // tempo przesuwane procentowo brzmi tak samo niezależnie od tempa bazowego (90, 128, 174 BPM)
         if ($bpmPercent && $track->getBpm()) {

@@ -1,0 +1,18 @@
+{# AI: preset wpisuje do formularza dostawców i cel wyliczony na serwerze (data-*); skróty klawiszowe 1–8 #}
+<div class="ast-presets" data-role="similar-tracks:presets">
+    {% for preset in presets %}
+        <button
+            type="button"
+            class="ast-preset {% if preset.mode == activeMode %}active{% endif %}"
+            data-role="similar-tracks:preset"
+            data-mode="{{ preset.mode.value }}"
+            data-label="{{ preset.mode.label }}"
+            data-providers="{{ preset.providers|json_encode }}"
+            data-values="{{ preset.values|json_encode }}"
+            title="{{ preset.mode.description }}"
+        >
+            <kbd>{{ loop.index }}</kbd>
+            {{ preset.mode.label }}
+        </button>
+    {% endfor %}
+</div>

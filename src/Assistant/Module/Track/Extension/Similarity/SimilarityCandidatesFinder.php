@@ -8,6 +8,7 @@ use Assistant\Module\Search\Extension\Criteria\SearchCriteria;
 use Assistant\Module\Search\Extension\Service\TrackSearchService;
 use Assistant\Module\Track\Extension\Similarity\Provider\Bpm;
 use Assistant\Module\Track\Extension\Similarity\Provider\CandidateProviderInterface;
+use Assistant\Module\Track\Extension\Similarity\Provider\Favorite;
 use Assistant\Module\Track\Extension\Similarity\Provider\Genre;
 use Assistant\Module\Track\Extension\Similarity\Provider\IndexedPeriod;
 use Assistant\Module\Track\Extension\Similarity\Provider\MusicalKey;
@@ -21,13 +22,10 @@ final class SimilarityCandidatesFinder
     /**
      * @param TrackSearchService $trackSearchService
      * @param ProviderInterface[] $providers
-     * @param bool $favoritesOnly AI: tryb „Pewniak” zawęża kandydatów do ulubionych już w zapytaniu,
-     *        a nie po obcięciu wyników do limitu, i dotyczy to również kandydatów wskazanych przez dostawców
      */
     public function __construct(
         private TrackSearchService $trackSearchService,
         private array $providers,
-        private bool $favoritesOnly = false,
     ) {
     }
 
@@ -71,7 +69,7 @@ final class SimilarityCandidatesFinder
             if ($pathnames) {
                 $criteria[] = new SearchCriteria(
                     guid: Not::equal($baseTrack->getGuid()),
-                    isFavorite: $this->favoritesOnly ?: null,
+                    isFavorite: $this->getFavoriteCriteria($baseTrack),
                     pathname: $pathnames,
                 );
             }
@@ -98,7 +96,7 @@ final class SimilarityCandidatesFinder
             genres: $providerCriteria[Genre::NAME] ?? null,
             initialKeys: $providerCriteria[MusicalKey::NAME] ?? null,
             years: $providerCriteria[Year::NAME] ?? null,
-            isFavorite: $this->favoritesOnly ?: null,
+            isFavorite: $providerCriteria[Favorite::NAME] ?? null,
             indexedDates: $indexedDates,
         );
 
@@ -119,6 +117,21 @@ final class SimilarityCandidatesFinder
         }
 
         return $criteria;
+    }
+
+    /**
+     * AI: dostawca „Ulubione” zawęża kandydatów już w zapytaniu, a nie po obcięciu wyników do limitu,
+     * więc filtr obejmuje również kandydatów wskazanych przez dostawców
+     */
+    private function getFavoriteCriteria(Track $baseTrack): ?true
+    {
+        foreach ($this->providers as $provider) {
+            if ($provider instanceof Favorite) {
+                return $provider->getCriteria($baseTrack);
+            }
+        }
+
+        return null;
     }
 
     private function getIndexedPeriodProvider(): ?IndexedPeriod

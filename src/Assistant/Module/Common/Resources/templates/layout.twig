@@ -24,20 +24,25 @@
                 {% if block('page_header') is not empty %}
                     <div class="page-header">
                         <div class="container-xxl">
-                            <div class="row g-2 align-items-center">
+                            <div class="row g-2 g-sm-3 align-items-center">
+                                {% if block('page_header_avatar') is not empty %}
+                                    <div class="col-auto">
+                                        {% block page_header_avatar %}{% endblock %}
+                                    </div>
+                                {% endif %}
                                 <div class="col">
                                     <h2 class="page-title">
                                         {% block page_header %}{% endblock %}
                                     </h2>
                                     {% if block('page_header_description') is not empty %}
-                                        <p class="text-muted fs-5 mb-0">
+                                        <div class="text-muted fs-5 mb-0">
                                             {% block page_header_description %}{% endblock %}
-                                        </p>
+                                        </div>
                                     {% endif %}
                                 </div>
 
                                 {% if block('page_actions') is not empty %}
-                                    <div class="col-auto ms-auto">
+                                    <div class="col-12 col-sm-auto ms-auto">
                                         <div class="btn-list">
                                             {% block page_actions %}{% endblock %}
                                         </div>

@@ -6,6 +6,7 @@ use Assistant\Module\Common\Extension\Messages;
 use Assistant\Module\Common\Extension\Route;
 use Assistant\Module\Common\Extension\RouteResolver;
 use Assistant\Module\Track\Extension\BeatportTrackMetadataSuggestionsService;
+use Assistant\Module\Track\Extension\TrackAvatar;
 use Assistant\Module\Track\Extension\TrackMetadataWriter;
 use Assistant\Module\Track\Extension\TrackService;
 use Assistant\Module\Track\Extension\UpdateTrackCommand;
@@ -58,6 +59,7 @@ final class EditController
             'pathname' => $pathname,
             'query' => $query,
             'track' => $track,
+            'avatar' => TrackAvatar::fromTrack($track),
             'return_url' => $returnUrl,
         ]);
     }

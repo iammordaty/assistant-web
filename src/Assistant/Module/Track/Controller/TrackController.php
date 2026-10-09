@@ -2,13 +2,16 @@
 
 namespace Assistant\Module\Track\Controller;
 
-use Assistant\Module\Collection\Extension\MusicalKeyInfo;
 use Assistant\Module\Common\Extension\Breadcrumbs\BreadcrumbsBuilder;
 use Assistant\Module\Common\Extension\Breadcrumbs\UrlGenerator\BrowseCollectionRouteGenerator;
+use Assistant\Module\Common\Extension\MusicClassifier\MusicClassifierException;
+use Assistant\Module\Common\Extension\MusicClassifier\MusicClassifierService;
 use Assistant\Module\Common\Extension\Route;
 use Assistant\Module\Common\Extension\RouteResolver;
 use Assistant\Module\Track\Extension\Similarity\SimilarityBuilder;
 use Assistant\Module\Track\Extension\Similarity\SimilarityParametersForm;
+use Assistant\Module\Track\Extension\TrackAvatar;
+use Assistant\Module\Track\Extension\TrackCharacter;
 use Assistant\Module\Track\Extension\TrackService;
 use Assistant\Module\Track\Model\Track;
 use Fig\Http\Message\StatusCodeInterface;
@@ -23,6 +26,7 @@ final class TrackController
 
     public function __construct(
         private BreadcrumbsBuilder $breadcrumbsBuilder,
+        private MusicClassifierService $musicClassifierService,
         private RouteResolver $routeResolver,
         private SimilarityBuilder $similarityBuilder,
         private TrackService $trackService,
@@ -53,7 +57,6 @@ final class TrackController
         if ($request->isXhr()) {
             return $this->view->render($response, '@track/similarTracks/list.twig', [
                 'track' => $track,
-                'showDeltas' => $form->isLiveMode(),
                 'similarTracksList' => $similarTracks,
                 'similarTracksSoftLimit' => self::SIMILAR_TRACKS_SOFT_LIMIT,
             ]);
@@ -67,9 +70,11 @@ final class TrackController
         return $this->view->render($response, '@track/index.twig', [
             'menu' => 'track',
             'track' => $track,
-            'musicalKeyInfo' => $this->getTrackMusicalKeyInfo($track),
+            'avatar' => TrackAvatar::fromTrack($track),
+            'character' => $this->getTrackCharacter($track),
             'breadcrumbs' => $breadcrumbs,
             'form' => $form,
+            'presets' => $this->similarityBuilder->getPresets($track),
             'similarTracksList' => $similarTracks,
             'similarTracksSoftLimit' => self::SIMILAR_TRACKS_SOFT_LIMIT,
         ]);
@@ -94,11 +99,20 @@ final class TrackController
         );
     }
 
-    /** Zwraca klucze podobne do klucza podanego utworu */
-    private function getTrackMusicalKeyInfo(Track $track): ?array
+    /**
+     * AI: brak lub uszkodzony wynik klasyfikatora ukrywa kartę „Charakter”, zamiast blokować stronę utworu
+     *
+     * ponytail: plik wyniku (kilkaset kB JSON) jest parsowany przy każdym wyświetleniu strony; gdy zacznie to
+     * ważyć, cechy warto zapisywać w bazie podczas indeksowania
+     */
+    private function getTrackCharacter(Track $track): ?TrackCharacter
     {
-        $musicalKeyInfo = MusicalKeyInfo::factory();
+        try {
+            $result = $this->musicClassifierService->getResult($track->getFile());
+        } catch (MusicClassifierException) {
+            return null;
+        }
 
-        return $musicalKeyInfo->get($track->getInitialKey());
+        return $result ? TrackCharacter::fromMusicClassifierResult($result) : null;
     }
 }

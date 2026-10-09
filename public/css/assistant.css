@@ -86,31 +86,6 @@
     scrollbar-width: none;
 }
 
-.ast-search-similar {
-    align-items: center;
-    color: var(--tblr-muted);
-    display: inline-flex;
-    font-size: .625rem;
-    font-weight: var(--tblr-font-weight-bold);
-    justify-content: center;
-    line-height: 1;
-    min-height: 2rem;
-    min-width: 2rem;
-    opacity: .5;
-    padding: .25rem .75rem;
-    position: absolute;
-    right: .50rem;
-    text-align: center;
-    text-transform: uppercase;
-    top: .70rem;
-    transition: opacity .2s ease-in;
-    z-index: 1;
-}
-
-.ast-search-similar:hover {
-    opacity: 1;
-}
-
 .base-track-info div {
     line-height: 20px;
 }
@@ -406,46 +381,53 @@ table .ast-track-name span {
     color: var(--tblr-muted);
 }
 
-/* AI: lista powiązanych utworów. Przełącznik „na żywo”, dostawcy i tryby korzystają z wyglądu przycisków Tablera
-   (prostokąt, promień --tblr-border-radius), a wybrany dostawca i aktywny tryb mają ten sam stan zaznaczenia co
-   form-selectgroup, aby całość wyglądała jak jeden komponent. Czerwień zostaje wyłącznie sygnałem trybu na żywo. */
-
-.ast-live-toggle {
-    gap: .5rem;
-}
-
-.card.ast-live {
-    box-shadow: inset 0 2px 0 var(--tblr-red);
-}
+/* AI: lista powiązanych utworów. Presety i dostawcy korzystają z wyglądu przycisków Tablera (prostokąt, promień
+   --tblr-border-radius), a aktywny preset i wybrany dostawca mają ten sam stan zaznaczenia co form-selectgroup,
+   aby panel wyglądał jak jeden komponent. */
 
 .ast-similar-tracks-parameters-container {
     border-bottom: var(--tblr-border-width) solid var(--tblr-border-color);
 }
 
+.ast-related-panel {
+    display: grid;
+    gap: .75rem;
+}
+
+.ast-related-panel-row {
+    align-items: start;
+    display: grid;
+    gap: .75rem;
+    grid-template-columns: 5.5rem 1fr;
+}
+
+.ast-related-panel-label {
+    color: var(--tblr-muted);
+    font-size: .75rem;
+    letter-spacing: .04em;
+    padding-top: .4375rem;
+    text-transform: uppercase;
+}
+
+.ast-active-preset {
+    color: var(--tblr-muted);
+    font-size: .8125rem;
+}
+
+.ast-active-preset strong {
+    color: var(--tblr-primary);
+    font-weight: var(--tblr-font-weight-medium);
+}
+
 .ast-similarity-parameters,
-.ast-live-modes {
+.ast-presets {
     display: flex;
+    flex-wrap: wrap;
     gap: .5rem;
 }
 
-.ast-similarity-parameters {
-    flex-wrap: wrap;
-}
-
-.ast-live-modes {
-    align-items: center;
-    border-bottom: var(--tblr-border-width) solid var(--tblr-border-color);
-    overflow-x: auto;
-    padding: .75rem var(--tblr-card-spacer-x);
-    scrollbar-width: none;
-}
-
-.ast-live-modes::-webkit-scrollbar {
-    display: none;
-}
-
 .ast-similarity-parameter,
-.ast-live-mode {
+.ast-preset {
     align-items: stretch;
     background: var(--tblr-bg-forms);
     border: var(--tblr-border-width) solid var(--tblr-border-color);
@@ -460,30 +442,35 @@ table .ast-track-name span {
 }
 
 .ast-similarity-parameter:hover,
-.ast-live-mode:hover {
+.ast-preset:hover {
     color: var(--tblr-body-color);
 }
 
 .ast-similarity-parameter:has(.form-check-input:checked),
-.ast-live-mode.active {
+.ast-preset.active {
     background: rgba(var(--tblr-primary-rgb), .04);
     border-color: var(--tblr-primary);
     color: var(--tblr-primary);
 }
 
 .ast-similarity-parameter:focus-within,
-.ast-live-mode:focus-visible {
+.ast-preset:focus-visible {
     box-shadow: 0 0 0 .25rem rgba(var(--tblr-primary-rgb), .25);
     outline: 0;
 }
 
-.ast-live-mode {
+.ast-preset {
     align-items: center;
     gap: .5rem;
     padding: 0 .75rem;
 }
 
-.ast-live-mode kbd {
+.ast-preset.is-modified::after {
+    content: '•';
+    margin-left: -.25rem;
+}
+
+.ast-preset kbd {
     background: transparent;
     border: var(--tblr-border-width) solid currentColor;
     box-shadow: none;
@@ -612,7 +599,90 @@ table .ast-track-name span {
         display: none;
     }
 
+    .ast-related-panel-row {
+        gap: .375rem;
+        grid-template-columns: 1fr;
+    }
+
+    .ast-related-panel-label {
+        padding-top: 0;
+    }
+
+    .ast-presets {
+        flex-wrap: nowrap;
+        overflow-x: auto;
+        scrollbar-width: none;
+    }
+
+    .ast-presets::-webkit-scrollbar {
+        display: none;
+    }
+
+    .ast-track-avatar {
+        font-size: 1rem;
+        height: 3.5rem;
+        width: 3.5rem;
+    }
+
     .ast-filter-similar-tracks {
         width: 100%;
     }
+}
+
+/* AI: nagłówek utworu: powiększony awatar (ten sam wzorzec co TrackAvatar w Miksach) oraz dane utworu
+   rozdzielone kropkami, jak w widoku miksu */
+.ast-track-avatar {
+    font-size: 1.375rem;
+    height: 4.5rem;
+    width: 4.5rem;
+}
+
+.ast-track-header-meta {
+    font-size: .875rem;
+    margin: .375rem 0 0;
+}
+
+/* AI: karta danych utworu i cech Essentii; stała wysokość wiersza trzyma sąsiednie kolumny na wspólnych liniach */
+.ast-feature,
+.ast-feature-pair {
+    align-items: center;
+    display: grid;
+    font-size: .8125rem;
+    gap: .75rem;
+    height: 1.875rem;
+}
+
+.ast-feature {
+    grid-template-columns: 5rem 1fr 2rem;
+}
+
+.ast-feature-pair {
+    grid-template-columns: 5.5rem minmax(0, 1fr);
+}
+
+.ast-feature-pair > span:last-child {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.ast-feature-pair .breadcrumb {
+    margin: 0;
+}
+
+@media (min-width: 992px) {
+    .ast-track-details > [class*="col-lg"] + [class*="col-lg"] {
+        border-left: var(--tblr-border-width) solid var(--tblr-border-color);
+        padding-left: 1.25rem;
+    }
+}
+
+.ast-feature-name {
+    color: var(--tblr-muted);
+}
+
+.ast-feature-value {
+    color: var(--tblr-muted);
+    font-variant-numeric: tabular-nums;
+    text-align: right;
 }

@@ -152,20 +152,6 @@ $(function () {
 
 	// --
 
-	$('[data-role="similar-keys:set-key"]').on('click', function () {
-		const $keyInput = $form.find('[data-role="similar-tracks:parameter-input"][name="MusicalKey"]');
-
-		if ($keyInput.length === 0) {
-			return;
-		}
-
-		$keyInput.val(this.dataset.value).trigger('change');
-
-		toggleParameters(true);
-	});
-
-	// --
-
 	// zapobiega skakaniu strony przy filtrowaniu utworów lub zmianie parametrów podobieństwa
 	const $page = $('.page-body');
 
@@ -182,14 +168,12 @@ $(function () {
 
 	const $parametersToggle = $('[data-role="similar-tracks:toggle-visibility"]');
 
-	function toggleParameters(isExpanded) {
-		$parametersToggle.attr('aria-expanded', isExpanded ? 'true' : 'false');
+	$parametersToggle.on('click', function () {
+		const isExpanded = $(this).attr('aria-expanded') !== 'true';
+
+		$(this).attr('aria-expanded', isExpanded ? 'true' : 'false');
 
 		$('[data-role="similar-tracks:parameters-container"]').toggleClass('d-none', !isExpanded);
-	}
-
-	$parametersToggle.on('click', function () {
-		toggleParameters($(this).attr('aria-expanded') !== 'true');
 	});
 
 	let debounceTimerId;
@@ -247,16 +231,11 @@ $(function () {
 			return;
 		}
 
-		if (e.key === 'l') {
-			toggleLiveMode();
-		}
+		// AI: cyfra wybiera preset także przy zwiniętym panelu, żeby zmiana kierunku zajmowała jedno naciśnięcie klawisza
+		const $preset = $presets.eq(Number(e.key) - 1);
 
-		// AI: cyfra od razu wybiera tryb na żywo (także z planowania), żeby zmiana kierunku na parkiecie
-		// zajmowała jedno naciśnięcie klawisza
-		const $mode = $liveModes.find('[data-role="similar-tracks:mode"]').eq(Number(e.key) - 1);
-
-		if (/^[1-9]$/.test(e.key) && $mode.length) {
-			setMode($mode.data('mode'));
+		if (/^[1-9]$/.test(e.key) && $preset.length) {
+			applyPreset($preset);
 		}
 	});
 
@@ -282,62 +261,48 @@ $(function () {
 
 	$form.data('previous-state', $form.serialize());
 
-	// -- tryb na żywo
+	// -- presety
 
-	const PLANNING_MODE = 'planning';
-	const MODE_COOKIE = 'related-tracks-mode';
-
-	const $liveToggle = $container.find('[data-role="similar-tracks:live-toggle"]');
-	const $liveModes = $container.find('[data-role="similar-tracks:live-modes"]');
+	const $presets = $container.find('[data-role="similar-tracks:preset"]');
 	const $modeInput = $form.find('[data-role="similar-tracks:mode-input"]');
+	const $activePresetLabel = $container.find('[data-role="similar-tracks:active-preset"] strong');
 
-	let lastLiveMode = $modeInput.val() !== PLANNING_MODE
-		? $modeInput.val()
-		: $liveModes.find('[data-role="similar-tracks:mode"]').first().data('mode');
+	const markActivePreset = ($preset, isModified) => {
+		$presets.removeClass('active is-modified');
+		$preset.addClass('active').toggleClass('is-modified', isModified);
 
-	const setMode = mode => {
-		if (mode === $modeInput.val()) {
-			return;
-		}
+		$activePresetLabel.text($preset.data('label') + (isModified ? ' •' : ''));
+	};
 
-		const isLive = mode !== PLANNING_MODE;
+	// AI: preset wpisuje do formularza dostawców i cel wyliczony na serwerze, więc JS nie powtarza arytmetyki
+	// koła Camelota; wagi i tolerancje presetu serwer odczytuje z przesłanego trybu
+	const applyPreset = $preset => {
+		const providers = $preset.data('providers');
+		const values = $preset.data('values');
 
-		if (isLive) {
-			lastLiveMode = mode;
-		}
+		$form.find('input[type=checkbox]').each(function () {
+			this.checked = providers.includes(this.value);
 
-		$modeInput.val(mode);
-
-		// tryb jest odczytywany po stronie serwera, więc kolejny utwór od razu wyświetla listę w tym trybie
-		document.cookie = `${MODE_COOKIE}=${mode}; path=/; max-age=31536000; SameSite=Lax`;
-
-		$container.toggleClass('ast-live', isLive);
-		$liveToggle.toggleClass('is-live', isLive).attr('aria-pressed', isLive ? 'true' : 'false');
-		$liveModes.toggleClass('d-none', !isLive);
-		$liveToggle.find('[data-role="similar-tracks:live-dot"]')
-			.toggleClass('status-red status-dot-animated', isLive)
-			.toggleClass('status-secondary', !isLive);
-
-		$liveModes.find('[data-role="similar-tracks:mode"]').each(function () {
-			$(this).toggleClass('active', $(this).data('mode') === mode);
+			$(this)
+				.closest('[data-role="similar-tracks:parameter"]')
+				.find('[data-role="similar-tracks:parameter-input"]')
+				.prop('disabled', !this.checked);
 		});
+
+		Object.entries(values).forEach(([ name, value ]) => {
+			$form.find(`[data-role="similar-tracks:parameter-input"][name="${name}"]`).val(value ?? '');
+		});
+
+		$modeInput.val($preset.data('mode'));
+		markActivePreset($preset, false);
 
 		$form.data('previous-state', $form.serialize());
 
 		debounce(() => reloadSimilarTracks($form), 50);
 	};
 
-	const toggleLiveMode = () => setMode($modeInput.val() === PLANNING_MODE ? lastLiveMode : PLANNING_MODE);
-
-	// nagłówek karty zwija parametry po kliknięciu, więc kliknięcie przełącznika nie może do niego dotrzeć
-	$liveToggle.on('click', function (e) {
-		e.stopPropagation();
-
-		toggleLiveMode();
-	});
-
-	$liveModes.on('click', '[data-role="similar-tracks:mode"]', function () {
-		setMode($(this).data('mode'));
+	$presets.on('click', function () {
+		applyPreset($(this));
 	});
 
 	$form.find('input').on('keyup change', function () {
@@ -356,6 +321,9 @@ $(function () {
 		}
 
 		$form.data('previous-state', currentFormState);
+
+		// ręczna zmiana zachowuje wagi i tolerancje presetu, ale jest oznaczana przy jego nazwie
+		markActivePreset($presets.filter('.active'), true);
 
 		debounce(() => reloadSimilarTracks($form), isCheckbox ? 50 : 400);
 	});

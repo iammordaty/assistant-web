@@ -2,8 +2,20 @@
 
 {% block title track.name %}
 
+{% block page_header_avatar %}
+    {% include '@track/common/avatar.twig' with { avatar } only %}
+{% endblock %}
+
 {% block page_header %}
     {% include '@track/common/header.twig' with { track } only %}
+{% endblock %}
+
+{% block page_header_description %}
+    {% include '@track/track/headerMeta.twig' with { track } only %}
+{% endblock %}
+
+{% block page_actions %}
+    {% include '@track/track/toolbar.twig' with { track } only %}
 {% endblock %}
 
 {% block content %}
@@ -11,38 +23,15 @@
         {% include '@track/common/wave.twig' with { track } only %}
 
         <div class="col-12 mt-1">
-            {% include '@track/track/toolbar.twig' with { track } only %}
-        </div>
-
-        <div class="col-sm-8 col-12 mt-1">
             <div class="card">
-                <a href="{{ url_for('search.advanced.index', query_params = {
-                    bpm: track.bpm,
-                    genre: track.genre,
-                    initial_key: track.initialKey,
-                    year: track.year,
-                    track: track.name,
-                }) }}">
-                    <div class="ast-search-similar">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-search" width="24" height="24" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
-                            <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
-                            <circle cx="10" cy="10" r="7"></circle>
-                            <line x1="21" y1="21" x2="15" y2="15"></line>
-                        </svg>
-                    </div>
-                </a>
-                <div class="card-body">
-                    {% include '@track/track/trackInfo.twig' with { track, breadcrumbs } only %}
+                <div class="card-body py-3">
+                    {% include '@track/track/trackInfo.twig' with { track, breadcrumbs, character } only %}
                 </div>
             </div>
         </div>
 
-        <div class="col-sm-4 d-none d-sm-flex mt-1">
-            {% include '@track/track/musicalKeyInfo.twig' with musicalKeyInfo only %}
-        </div>
-
         <div class="col-12">
-            <div class="card {% if form.isLiveMode %}ast-live{% endif %}" data-role="similar-tracks:container">
+            <div class="card" data-role="similar-tracks:container">
                 <div class="card-header cursor-pointer flex-wrap row-gap-2" data-role="similar-tracks:toggle-visibility" aria-expanded="false">
                     <h3 class="card-title d-flex align-items-center gap-1 text-nowrap">
                         Powiązane utwory
@@ -51,9 +40,10 @@
                             <path d="M6 9l6 6l6 -6"></path>
                         </svg>
                     </h3>
-                    <div class="ms-4">
-                        {% include '@track/similarTracks/liveToggle.twig' with { form: form } only %}
-                    </div>
+                    {# AI: panel jest domyślnie zwinięty, a skróty 1–8 działają także wtedy, więc aktywny preset jest widoczny przy tytule #}
+                    <span class="ast-active-preset ms-2" data-role="similar-tracks:active-preset">
+                        · <strong>{{ form.request.mode.label }}</strong>
+                    </span>
                     <div class="card-actions ast-similar-tracks-actions">
                         <div
                             class="input-group input-group-flat ast-filter-similar-tracks position-relative"
@@ -94,14 +84,13 @@
                 <div class="card-body ast-similar-tracks-parameters-container d-none" data-role="similar-tracks:parameters-container">
                     {% include '@track/similarTracks/form.twig' with {
                         form: form,
+                        presets: presets,
                         actionUrl: url_for('track.track.index', { guid: track.guid }),
                     } only %}
                 </div>
-                {% include '@track/similarTracks/liveModes.twig' with { form: form } only %}
                 <div class="card-table table-responsive">
                     {% include '@track/similarTracks/list.twig' with {
                         track: track,
-                        showDeltas: form.isLiveMode,
                         similarTracksList: similarTracksList,
                         similarTracksSoftLimit: similarTracksSoftLimit,
                     } only %}

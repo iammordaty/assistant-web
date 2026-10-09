@@ -1,74 +1,42 @@
-<div class="ass-track-info">
-    <div class="container-fluid px-0">
-        <div class="row pb-2">
-            <div class="col-4 col-sm-2 fw-bold">Gatunek</div>
-            <div class="col-8 col-sm-10">
-                <a class="text-reset" href="{{ url_for('search.advanced.index', query_params = { genre: track.genre }) }}">
-                    {{ track.genre }}
-                </a>
-            </div>
-        </div>
-
-        <div class="row pb-2">
-            <div class="col-4 col-sm-2 fw-bold">Album</div>
-            <div class="col-8 col-sm-10">{{ track.album }}</div>
-        </div>
-
-        <div class="row pb-2">
-            <div class="col-4 col-sm-2 fw-bold">Wydawca</div>
-            <div class="col-8 col-sm-10">
-                {% if track.publisher %}
-                    <a class="text-reset" href="{{ url_for('search.advanced.index', query_params = { publisher: track.publisher }) }}">
-                        {{ track.publisher }}
-                    </a>
-                {% endif %}
-            </div>
-        </div>
-
-        <div class="row pb-2">
-            <div class="col-4 col-sm-2 fw-bold">Rok</div>
-            <div class="col-8 col-sm-10">
-                {% if track.year %}
-                    <a class="text-reset" href="{{ url_for('search.advanced.index', query_params = { year: track.year }) }}">
-                        {{ track.year }}
-                    </a>
-                {% endif %}
-            </div>
-        </div>
-
-        <div class="row pb-2">
-            <div class="col-4 col-sm-2 fw-bold">Ścieżka</div>
-            <div class="col-8 col-sm-10">{{ track.trackNumber }}</div>
-        </div>
-
-        <div class="row pb-2">
-            <div class="col-4 col-sm-2 fw-bold">Czas trwania</div>
-            <div class="col-8 col-sm-10">{{ track.length|format_duration }}</div>
-        </div>
-
-        <div class="row pb-2">
-            <div class="col-4 col-sm-2 fw-bold">Tonacja</div>
-            <div class="col-8 col-sm-10">
-                <a class="text-reset" href="{{ url_for('search.advanced.index', query_params = { initial_key: track.initialKey }) }}">
-                    {{ track.initialKey }}
-                </a>
-            </div>
-        </div>
-
-        <div class="row pb-2">
-            <div class="col-4 col-sm-2 fw-bold">BPM</div>
-            <div class="col-8 col-sm-10">
-                <a class="text-reset" href="{{ url_for('search.advanced.index', query_params = { bpm: track.bpm }) }}">
-                    {{ track.bpm }}
-                </a>
-            </div>
-        </div>
-
-        <div class="row">
-            <div class="col-4 col-sm-2 fw-bold">Położenie</div>
-            <div class="col-8 col-sm-10">
-                {% include '@common/breadcrumbs.twig' with { breadcrumbs } only %}
-            </div>
+{# @var character \Assistant\Module\Track\Extension\TrackCharacter|null #}
+{# Gatunek, wydawca, rok, czas trwania, tonacja i BPM są w nagłówku strony (headerMeta.twig) #}
+{# AI: dane utworu i cechy z Essentii w jednej karcie; kolumny mają wiersze o stałej wysokości, aby kolejne
+   wiersze sąsiednich kolumn leżały na tej samej linii (Album – Impreza – Barwa, Ścieżka – Agresja – Wokal) #}
+<div class="row g-3 ast-track-details">
+    <div class="{{ character ? 'col-lg-4' : '' }} col-12">
+        <div class="ast-feature-pair"><span class="ast-feature-name">Album</span><span>{{ track.album }}</span></div>
+        <div class="ast-feature-pair"><span class="ast-feature-name">Ścieżka</span><span>{{ track.trackNumber }}</span></div>
+        <div class="ast-feature-pair">
+            <span class="ast-feature-name">Położenie</span>
+            {% include '@common/breadcrumbs.twig' with { breadcrumbs } only %}
         </div>
     </div>
+
+    {% if character.moods ?? false %}
+        <div class="col-lg-5 col-12">
+            {% for label, probability in character.moods %}
+                <div class="ast-feature">
+                    <span class="ast-feature-name">{{ label }}</span>
+                    <div class="progress progress-sm">
+                        <div class="progress-bar" style="width: {{ probability }}%" role="progressbar" aria-valuenow="{{ probability }}" aria-valuemin="0" aria-valuemax="100" aria-label="{{ label }}"></div>
+                    </div>
+                    <span class="ast-feature-value">{{ probability }}</span>
+                </div>
+            {% endfor %}
+        </div>
+    {% endif %}
+
+    {% if character %}
+        <div class="col-lg-3 col-12">
+            {% if character.timbre %}
+                <div class="ast-feature-pair"><span class="ast-feature-name">Barwa</span><span>{{ character.timbre }}</span></div>
+            {% endif %}
+            {% if character.hasVoice is not null %}
+                <div class="ast-feature-pair"><span class="ast-feature-name">Wokal</span><span>{{ character.hasVoice ? 'obecny' : 'brak' }}</span></div>
+            {% endif %}
+            {% if character.loudness is not null %}
+                <div class="ast-feature-pair"><span class="ast-feature-name">Głośność</span><span>{{ character.loudness|number_format(1, ',') }} LUFS</span></div>
+            {% endif %}
+        </div>
+    {% endif %}
 </div>

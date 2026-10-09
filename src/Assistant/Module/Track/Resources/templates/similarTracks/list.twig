@@ -54,9 +54,7 @@
                                     {{ similarTrack.initialKey }}
                                 </a>
                                 <span class="ast-delta-slot">
-                                    {%- if showDeltas -%}
-                                        {% include '@track/similarTracks/keyMove.twig' with { from: track.initialKey, to: similarTrack.initialKey } only %}
-                                    {%- endif -%}
+                                    {%- include '@track/similarTracks/keyMove.twig' with { from: track.initialKey, to: similarTrack.initialKey } only -%}
                                 </span>
                             </td>
                             <td style="width: 7%" class="text-nowrap">
@@ -64,9 +62,7 @@
                                     {{ similarTrack.bpm }}
                                 </a>
                                 <span class="ast-delta-slot">
-                                    {%- if showDeltas -%}
-                                        {% include '@track/similarTracks/bpmDelta.twig' with { from: track.bpm, to: similarTrack.bpm } only %}
-                                    {%- endif -%}
+                                    {%- include '@track/similarTracks/bpmDelta.twig' with { from: track.bpm, to: similarTrack.bpm } only -%}
                                 </span>
                             </td>
                             <td style="width: 5%">

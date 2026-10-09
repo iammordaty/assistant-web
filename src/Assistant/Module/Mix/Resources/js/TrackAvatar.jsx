@@ -1,4 +1,5 @@
 import React, { useMemo } from 'react';
+import { getTrackInitials } from './utils/trackInitials';
 
 const getAvatarClass = track => {
     let intensity = 0;
@@ -41,22 +42,7 @@ const getAvatarClass = track => {
     return `text-${baseColor} bg-transparent`;
 };
 
-const getTrackInitials = track => {
-    const leftWords = track.artists.join(' ').split(' ');
-    const rightWords = track.title.split(' ');
-
-    if (leftWords.length > 1) {
-        return ((leftWords[0][0] ?? '') + (leftWords[1][0] ?? '')).toUpperCase();
-    }
-
-    if (rightWords.length > 1) {
-        return ((rightWords[0][0] ?? '') + (rightWords[1][0] ?? '')).toUpperCase();
-    }
-
-    return ((leftWords[0]?.[0] ?? '') + (rightWords[0]?.[0] ?? '')).toUpperCase();
-};
-
-// fixme: to jest słabe i źle działa, ale getTrackInitials także
+// fixme: to jest słabe i źle działa
 const getGuidInitials = (guid) => {
     const compact = guid.replace(/-/g, '');
 
@@ -79,7 +65,7 @@ const TrackAvatar = React.memo(({ track }) => {
             return getGuidInitials(track.guid);
         }
 
-        return getTrackInitials(track);
+        return getTrackInitials(track.artists, track.title);
     }, [track.found, track.guid, track.artists, track.title]);
 
     return <span className={className}>{initials}</span>;

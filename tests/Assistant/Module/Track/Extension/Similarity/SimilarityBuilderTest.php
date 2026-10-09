@@ -61,18 +61,64 @@ final class SimilarityBuilderTest extends TestCase
     {
         $builder = $this->createBuilder([]);
 
-        $builder->withMode(RelatedTracksMode::PLANNING);
+        $builder->withMode(RelatedTracksMode::SIMILAR);
 
         self::assertSame(Similarity::DEFAULT_PROVIDERS, $this->getProperty($builder, 'providers'));
+    }
+
+    public function testModeWeightsAreMergedWithBaseWeights(): void
+    {
+        $builder = $this->createBuilder([
+            RelatedTracksMode::COOL_DOWN->value => [ 'providers_weights' => [ Bpm::NAME => 0.90 ] ],
+        ]);
+
+        (new \ReflectionProperty(SimilarityBuilder::class, 'providersWeights'))->setValue($builder, [ Bpm::NAME => 0.70, 'Year' => 0.60 ]);
+
+        $builder->withMode(RelatedTracksMode::COOL_DOWN);
+
+        self::assertSame([ Bpm::NAME => 0.90, 'Year' => 0.60 ], $this->getProperty($builder, 'providersWeights'));
+    }
+
+    public function testFormProvidersTakePrecedenceOverPresetProviders(): void
+    {
+        $builder = $this->createBuilder([
+            RelatedTracksMode::COOL_DOWN->value => [ 'providers_weights' => [ Bpm::NAME => 0.90, MusicalKey::NAME => 0.90 ] ],
+        ]);
+
+        $request = new SimilarityParametersRequest(RelatedTracksMode::COOL_DOWN, [ Bpm::NAME, 'Year' ]);
+
+        $builder->withForm(new SimilarityParametersForm([], $request));
+
+        self::assertSame([ Bpm::NAME, 'Year' ], $this->getProperty($builder, 'providers'));
+    }
+
+    public function testPresetsCarryShiftedTarget(): void
+    {
+        $builder = $this->createBuilder([
+            RelatedTracksMode::COOL_DOWN->value => [
+                'providers_weights' => [ Bpm::NAME => 0.90, MusicalKey::NAME => 0.90 ],
+                'track_offsets' => [ 'bpm_percent' => -2.5, 'musical_key' => -1, 'musical_key_scale' => 'A' ],
+            ],
+        ]);
+
+        $presets = $builder->getPresets(SimilarityTestTrack::create());
+        $presetsByMode = array_column(array_map(fn (RelatedTracksPreset $preset) => [ $preset->mode->value, $preset ], $presets), 1, 0);
+
+        self::assertCount(count(RelatedTracksMode::cases()), $presets);
+        self::assertSame(Similarity::DEFAULT_PROVIDERS, $presetsByMode['similar']->providers);
+        self::assertSame(128.0, $presetsByMode['similar']->values[Bpm::NAME]);
+
+        self::assertSame([ Bpm::NAME, MusicalKey::NAME ], $presetsByMode['cool-down']->providers);
+        self::assertSame(124.8, $presetsByMode['cool-down']->values[Bpm::NAME]);
+        self::assertSame('7A', $presetsByMode['cool-down']->values[MusicalKey::NAME]);
+        self::assertSame('House', $presetsByMode['cool-down']->values['Genre']);
     }
 
     private function applyTrackOffsets(array $trackOffsets, Track $track): Track
     {
         $builder = $this->createBuilder([]);
 
-        (new \ReflectionProperty(SimilarityBuilder::class, 'trackOffsets'))->setValue($builder, $trackOffsets);
-
-        return (new \ReflectionMethod(SimilarityBuilder::class, 'applyTrackOffsets'))->invoke($builder, $track);
+        return (new \ReflectionMethod(SimilarityBuilder::class, 'applyTrackOffsets'))->invoke($builder, $track, $trackOffsets);
     }
 
     /** Usługi wyszukiwania nie są potrzebne do konfiguracji buildera, więc konstruktor jest pomijany */

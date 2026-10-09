@@ -2,7 +2,9 @@
 
 namespace Assistant\Module\Track\Extension\Similarity;
 
+use Assistant\Module\Collection\Extension\MusicalKeyInfo;
 use Assistant\Module\Track\Extension\Similarity\Provider\Bpm;
+use Assistant\Module\Track\Extension\Similarity\Provider\Favorite;
 use Assistant\Module\Track\Extension\Similarity\Provider\Genre;
 use Assistant\Module\Track\Extension\Similarity\Provider\IndexedPeriod;
 use Assistant\Module\Track\Extension\Similarity\Provider\MusicalKey;
@@ -20,14 +22,6 @@ final class SimilarityParametersForm
     /** Used in the template */
     public const string NAME_MODE = 'mode';
 
-    /**
-     * AI: tryb jest zapamiętywany w ciasteczku (ustawianym w track.js), aby strona kolejnego utworu
-     * od razu wyświetlała listę w wybranym trybie, bez dodatkowego żądania XHR po załadowaniu.
-     *
-     * Used in the template
-     */
-    public const string COOKIE_MODE = 'related-tracks-mode';
-
     public function __construct(
         /** @var SimilarityParameter[] */
         public readonly array $similarityParameters,
@@ -38,7 +32,6 @@ final class SimilarityParametersForm
     public static function create(TrackDto $trackDto, ServerRequestInterface $request): self
     {
         $queryParams = $request->getQueryParams();
-        $cookieParams = $request->getCookieParams();
 
         $trackBpm = $trackDto->getBpm();
         $trackGenre = $trackDto->getGenre();
@@ -46,7 +39,7 @@ final class SimilarityParametersForm
         $trackYear = $trackDto->getYear();
 
         $request = new SimilarityParametersRequest(
-            self::getMode($queryParams, $cookieParams),
+            self::getMode($queryParams),
             self::getProviders($queryParams) ?? Similarity::DEFAULT_PROVIDERS,
             $queryParams[Bpm::NAME] ?? $trackBpm,
             $queryParams[Genre::NAME] ?? $trackGenre,
@@ -60,10 +53,18 @@ final class SimilarityParametersForm
             new SimilarityParameter(Musly::NAME, 'Musly'),
             new SimilarityParameter(Publisher::NAME, 'Wytwórnia'),
             new SimilarityParameter(IndexedPeriod::NAME, 'Okres'),
+            new SimilarityParameter(Favorite::NAME, 'Ulubione'),
             new SimilarityParameter(Genre::NAME, 'Gatunek', 'text', $request->genre, $trackGenre),
             new SimilarityParameter(Year::NAME, 'Rok', 'number', $request->year, $trackYear, 1980, $trackMaxYear),
             new SimilarityParameter(Bpm::NAME, 'BPM', 'number', $request->bpm, $trackBpm, 50, 200, 0.1),
-            new SimilarityParameter(MusicalKey::NAME, 'Tonacja', 'text', $request->musicalKey, $trackKey),
+            new SimilarityParameter(
+                MusicalKey::NAME,
+                'Tonacja',
+                'text',
+                $request->musicalKey,
+                $trackKey,
+                inputSuggestions: self::getMusicalKeySuggestions($trackKey),
+            ),
         ];
 
         return new self($parameters, $request);
@@ -75,34 +76,36 @@ final class SimilarityParametersForm
         return in_array($providerName, $this->request->providers);
     }
 
-    /** @noinspection PhpUnused, Used in the template */
-    public function isLiveMode(): bool
-    {
-        return $this->request->mode !== RelatedTracksMode::PLANNING;
-    }
-
     /**
-     * @noinspection PhpUnused, Used in the template
-     * @return RelatedTracksMode[]
+     * Parametr pochodzi z adresu, więc nieznany preset, tak jak nieznany dostawca,
+     * oznacza „Podobne”, a nie błąd 500
      */
-    public function getLiveModes(): array
+    private static function getMode(array $queryParams): RelatedTracksMode
     {
-        return RelatedTracksMode::live();
-    }
-
-    /**
-     * Parametry pochodzą z adresu i ciasteczka, więc nieznany tryb, tak jak nieznany dostawca,
-     * oznacza planowanie, a nie błąd 500. Parametr z adresu ma pierwszeństwo przed ciasteczkiem.
-     */
-    private static function getMode(array $queryParams, array $cookieParams): RelatedTracksMode
-    {
-        $mode = $queryParams[self::NAME_MODE] ?? $cookieParams[self::COOKIE_MODE] ?? null;
+        $mode = $queryParams[self::NAME_MODE] ?? null;
 
         if (!is_string($mode)) {
-            return RelatedTracksMode::PLANNING;
+            return RelatedTracksMode::SIMILAR;
         }
 
-        return RelatedTracksMode::tryFrom($mode) ?? RelatedTracksMode::PLANNING;
+        return RelatedTracksMode::tryFrom($mode) ?? RelatedTracksMode::SIMILAR;
+    }
+
+    /**
+     * AI: relacje harmoniczne tonacji utworu jako podpowiedzi pola „Tonacja”; zastępują osobny panel
+     * z relacjami, który dublował kroki presetów
+     *
+     * @return array<string, string>
+     */
+    private static function getMusicalKeySuggestions(?string $trackKey): array
+    {
+        $musicalKeyInfo = $trackKey ? MusicalKeyInfo::factory()->get($trackKey) : null;
+
+        if (!$musicalKeyInfo) {
+            return [];
+        }
+
+        return array_column($musicalKeyInfo['similarKeys'], 'title', 'value');
     }
 
     /**

@@ -1,0 +1,29 @@
+{# Dane utworu rozdzielone kropkami, tak jak w widoku miksu (TrackEntry.jsx) #}
+<ol class="breadcrumb ast-breadcrumb-dotted ast-track-header-meta">
+    {% if track.genre %}
+        <li class="breadcrumb-item">
+            <a class="text-reset" href="{{ url_for('search.advanced.index', query_params = { genre: track.genre }) }}">{{ track.genre }}</a>
+        </li>
+    {% endif %}
+    <li class="breadcrumb-item">{{ track.length|format_duration }}</li>
+    {% if track.bpm %}
+        <li class="breadcrumb-item">
+            <a class="text-reset" href="{{ url_for('search.advanced.index', query_params = { bpm: track.bpm }) }}">{{ track.bpm }} BPM</a>
+        </li>
+    {% endif %}
+    {% if track.initialKey %}
+        <li class="breadcrumb-item">
+            <a class="text-reset" href="{{ url_for('search.advanced.index', query_params = { initial_key: track.initialKey }) }}">{{ track.initialKey }}</a>
+        </li>
+    {% endif %}
+    {% if track.publisher %}
+        <li class="breadcrumb-item">
+            <a class="text-reset" href="{{ url_for('search.advanced.index', query_params = { publisher: track.publisher }) }}">{{ track.publisher }}</a>
+        </li>
+    {% endif %}
+    {% if track.year %}
+        <li class="breadcrumb-item">
+            <a class="text-reset" href="{{ url_for('search.advanced.index', query_params = { year: track.year }) }}">{{ track.year }}</a>
+        </li>
+    {% endif %}
+</ol>

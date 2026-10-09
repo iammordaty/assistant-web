@@ -7,6 +7,7 @@ use Assistant\Module\Common\Extension\Route;
 use Assistant\Module\Common\Extension\RouteResolver;
 use Assistant\Module\Track\Extension\FilenameFormat;
 use Assistant\Module\Track\Extension\FilenameFormatSuggester;
+use Assistant\Module\Track\Extension\TrackAvatar;
 use Assistant\Module\Track\Extension\TrackRenameService;
 use Assistant\Module\Track\Extension\TrackService;
 use Assistant\Module\Track\Extension\TrackUpdateService;
@@ -52,6 +53,7 @@ final class EditController
             ],
             'pathname' => $pathname,
             'track' => $track,
+            'avatar' => TrackAvatar::fromTrack($track),
             'rename' => $this->getRenameData($track),
             'return_url' => $returnUrl,
         ]);

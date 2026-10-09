@@ -2,6 +2,7 @@ services:
     mongo:
         image: mongo:4.4
         container_name: assistant-mongo
+        entrypoint: ["mongod", "--bind_ip_all"]
         restart: always
         networks:
             - assistant

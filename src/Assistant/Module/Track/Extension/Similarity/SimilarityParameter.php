@@ -13,6 +13,8 @@ final readonly class SimilarityParameter
         public ?float $inputMinValue = null,
         public ?float $inputMaxValue = null,
         public ?float $inputStep = null,
+        /** @var array<string, string> wartość => opis, renderowane jako natywny `<datalist>` */
+        public array $inputSuggestions = [],
     ) {
     }
 
