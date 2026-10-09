@@ -381,9 +381,8 @@ table .ast-track-name span {
     color: var(--tblr-muted);
 }
 
-/* AI: lista powiązanych utworów. Presety i dostawcy korzystają z wyglądu przycisków Tablera (prostokąt, promień
-   --tblr-border-radius), a aktywny preset i wybrany dostawca mają ten sam stan zaznaczenia co form-selectgroup,
-   aby panel wyglądał jak jeden komponent. */
+/* AI: presety i dostawcy mają wygląd przycisków Tablera i ten sam stan zaznaczenia co form-selectgroup,
+   aby panel wyglądał jak jeden komponent */
 
 .ast-similar-tracks-parameters-container {
     border-bottom: var(--tblr-border-width) solid var(--tblr-border-color);
@@ -545,8 +544,7 @@ table .ast-track-name span {
     transform: rotate(180deg);
 }
 
-/* AI: miejsce na różnicę tonacji i tempa jest zarezerwowane także w planowaniu, aby przełączenie trybu nie zmieniało
-   szerokości kolumn tabeli */
+/* AI: miejsce na różnicę tonacji i tempa jest zarezerwowane, aby zmiana presetu nie zmieniała szerokości kolumn tabeli */
 .ast-delta-slot {
     display: inline-block;
     min-width: 3rem;
@@ -575,10 +573,9 @@ table .ast-track-name span {
     width: auto;
 }
 
-/* AI: na telefonie filtr przechodzi do osobnego wiersza nagłówka na pełną szerokość, skrót klawiszowy jest ukryty,
-   a nazwa utworu może się zwęzić i różnice są ukryte, aby tonacja, BPM i podobieństwo mieściły się bez przewijania
-   w poziomie */
-@media (max-width: 575.98px) {
+/* AI: na telefonie filtr zajmuje osobny wiersz nagłówka, a różnice są ukryte, aby tonacja, BPM i podobieństwo
+   mieściły się bez przewijania w poziomie */
+@media only screen and (max-width: 575.98px) {
     .ast-similar-tracks-actions {
         flex-basis: 100%;
         margin: 0;
@@ -618,12 +615,6 @@ table .ast-track-name span {
         display: none;
     }
 
-    .ast-track-avatar {
-        font-size: 1rem;
-        height: 3.5rem;
-        width: 3.5rem;
-    }
-
     .ast-filter-similar-tracks {
         width: 100%;
     }
@@ -635,6 +626,14 @@ table .ast-track-name span {
     font-size: 1.375rem;
     height: 4.5rem;
     width: 4.5rem;
+}
+
+@media only screen and (max-width: 575.98px) {
+    .ast-track-avatar {
+        font-size: 1rem;
+        height: 3.5rem;
+        width: 3.5rem;
+    }
 }
 
 .ast-track-header-meta {
@@ -670,7 +669,7 @@ table .ast-track-name span {
     margin: 0;
 }
 
-@media (min-width: 992px) {
+@media only screen and (min-width: 992px) {
     .ast-track-details > [class*="col-lg"] + [class*="col-lg"] {
         border-left: var(--tblr-border-width) solid var(--tblr-border-color);
         padding-left: 1.25rem;

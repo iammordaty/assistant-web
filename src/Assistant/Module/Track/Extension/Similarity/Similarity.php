@@ -29,8 +29,8 @@ final class Similarity
 
     /**
      * AI: dostawcy włączeni, gdy żądanie nie wskazuje żadnego. Okres jest dostępny, ale domyślnie
-     * wyłączony, ponieważ jego kryterium zawęża kandydatów do kilku miesięcy, a planowanie ma
-     * domyślnie przeszukiwać całą kolekcję.
+     * wyłączony, ponieważ jego kryterium zawęża kandydatów do kilku miesięcy, a preset „Podobne”
+     * ma domyślnie przeszukiwać całą kolekcję.
      */
     public const array DEFAULT_PROVIDERS = [
         Bpm::NAME,

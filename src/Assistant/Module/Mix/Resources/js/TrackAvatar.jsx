@@ -65,7 +65,7 @@ const TrackAvatar = React.memo(({ track }) => {
             return getGuidInitials(track.guid);
         }
 
-        return getTrackInitials(track.artists, track.title);
+        return getTrackInitials(track);
     }, [track.found, track.guid, track.artists, track.title]);
 
     return <span className={className}>{initials}</span>;

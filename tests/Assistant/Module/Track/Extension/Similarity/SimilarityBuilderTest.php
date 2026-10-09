@@ -102,7 +102,11 @@ final class SimilarityBuilderTest extends TestCase
         ]);
 
         $presets = $builder->getPresets(SimilarityTestTrack::create());
-        $presetsByMode = array_column(array_map(fn (RelatedTracksPreset $preset) => [ $preset->mode->value, $preset ], $presets), 1, 0);
+        $presetsByMode = [];
+
+        foreach ($presets as $preset) {
+            $presetsByMode[$preset->mode->value] = $preset;
+        }
 
         self::assertCount(count(RelatedTracksMode::cases()), $presets);
         self::assertSame(Similarity::DEFAULT_PROVIDERS, $presetsByMode['similar']->providers);

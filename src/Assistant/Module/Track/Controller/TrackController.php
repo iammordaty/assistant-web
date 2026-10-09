@@ -100,7 +100,7 @@ final class TrackController
     }
 
     /**
-     * AI: brak lub uszkodzony wynik klasyfikatora ukrywa kartę „Charakter”, zamiast blokować stronę utworu
+     * AI: brak lub uszkodzony wynik klasyfikatora ukrywa cechy Essentii, zamiast blokować stronę utworu
      *
      * ponytail: plik wyniku (kilkaset kB JSON) jest parsowany przy każdym wyświetleniu strony; gdy zacznie to
      * ważyć, cechy warto zapisywać w bazie podczas indeksowania

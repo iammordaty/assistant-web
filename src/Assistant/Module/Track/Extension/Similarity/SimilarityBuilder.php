@@ -222,23 +222,26 @@ final class SimilarityBuilder
      */
     public function getPresets(Track $track): array
     {
-        return array_map(function (RelatedTracksMode $mode) use ($track) {
-            $modeParameters = $this->modesParameters[$mode->value] ?? [];
-            $target = $this->applyTrackOffsets($track, $modeParameters['track_offsets'] ?? []);
+        $presets = [];
 
-            return new RelatedTracksPreset(
-                $mode,
-                isset($modeParameters['providers_weights'])
-                    ? array_keys($modeParameters['providers_weights'])
-                    : Similarity::DEFAULT_PROVIDERS,
-                [
-                    Bpm::NAME => $target->getBpm(),
-                    Genre::NAME => $target->getGenre(),
-                    MusicalKey::NAME => $target->getInitialKey(),
-                    Year::NAME => $target->getYear(),
-                ],
-            );
-        }, RelatedTracksMode::cases());
+        foreach (RelatedTracksMode::cases() as $mode) {
+            $modeParameters = $this->modesParameters[$mode->value] ?? null;
+
+            $providers = $modeParameters
+                ? array_keys($modeParameters['providers_weights'])
+                : Similarity::DEFAULT_PROVIDERS;
+
+            $targetTrack = $this->applyTrackOffsets($track, $modeParameters['track_offsets'] ?? []);
+
+            $presets[] = new RelatedTracksPreset($mode, $providers, [
+                Bpm::NAME => $targetTrack->getBpm(),
+                Genre::NAME => $targetTrack->getGenre(),
+                MusicalKey::NAME => $targetTrack->getInitialKey(),
+                Year::NAME => $targetTrack->getYear(),
+            ]);
+        }
+
+        return $presets;
     }
 
     /** Przesuwa cel wyszukiwania zgodnie z presetem */

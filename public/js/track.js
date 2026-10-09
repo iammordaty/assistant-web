@@ -159,21 +159,23 @@ $(function () {
 
 	// -- similarity
 
+	const toggleParameterInput = checkbox => {
+		const $param = $(checkbox).closest('[data-role="similar-tracks:parameter"]');
+		const $input = $param.find('[data-role="similar-tracks:parameter-input"]');
+
+		$input.prop('disabled', !checkbox.checked);
+	};
+
 	$('[data-role="similar-tracks:parameters"] input[type=checkbox]').on('change', function () {
-		$(this)
-			.closest('[data-role="similar-tracks:parameter"]')
-			.find('[data-role="similar-tracks:parameter-input"]')
-			.prop('disabled', !this.checked);
+		toggleParameterInput(this);
 	});
 
-	const $parametersToggle = $('[data-role="similar-tracks:toggle-visibility"]');
+	$('[data-role="similar-tracks:toggle-visibility"]').on('click', function () {
+		const isExpanded = $(this).attr('aria-expanded') === 'true';
 
-	$parametersToggle.on('click', function () {
-		const isExpanded = $(this).attr('aria-expanded') !== 'true';
+		$(this).attr('aria-expanded', isExpanded ? 'false' : 'true');
 
-		$(this).attr('aria-expanded', isExpanded ? 'true' : 'false');
-
-		$('[data-role="similar-tracks:parameters-container"]').toggleClass('d-none', !isExpanded);
+		$('[data-role="similar-tracks:parameters-container"]').toggleClass('d-none', isExpanded);
 	});
 
 	let debounceTimerId;
@@ -231,7 +233,7 @@ $(function () {
 			return;
 		}
 
-		// AI: cyfra wybiera preset także przy zwiniętym panelu, żeby zmiana kierunku zajmowała jedno naciśnięcie klawisza
+		// AI: cyfra wybiera preset także przy zwiniętym panelu
 		const $preset = $presets.eq(Number(e.key) - 1);
 
 		if (/^[1-9]$/.test(e.key) && $preset.length) {
@@ -274,8 +276,8 @@ $(function () {
 		$activePresetLabel.text($preset.data('label') + (isModified ? ' •' : ''));
 	};
 
-	// AI: preset wpisuje do formularza dostawców i cel wyliczony na serwerze, więc JS nie powtarza arytmetyki
-	// koła Camelota; wagi i tolerancje presetu serwer odczytuje z przesłanego trybu
+	// AI: preset wpisuje do formularza dostawców i cel wyliczony na serwerze, a wagi i tolerancje presetu
+	// serwer odczytuje z przesłanego trybu
 	const applyPreset = $preset => {
 		const providers = $preset.data('providers');
 		const values = $preset.data('values');
@@ -283,15 +285,12 @@ $(function () {
 		$form.find('input[type=checkbox]').each(function () {
 			this.checked = providers.includes(this.value);
 
-			$(this)
-				.closest('[data-role="similar-tracks:parameter"]')
-				.find('[data-role="similar-tracks:parameter-input"]')
-				.prop('disabled', !this.checked);
+			toggleParameterInput(this);
 		});
 
-		Object.entries(values).forEach(([ name, value ]) => {
+		for (const [ name, value ] of Object.entries(values)) {
 			$form.find(`[data-role="similar-tracks:parameter-input"][name="${name}"]`).val(value ?? '');
-		});
+		}
 
 		$modeInput.val($preset.data('mode'));
 		markActivePreset($preset, false);

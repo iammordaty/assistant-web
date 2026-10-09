@@ -92,8 +92,7 @@ final class SimilarityParametersForm
     }
 
     /**
-     * AI: relacje harmoniczne tonacji utworu jako podpowiedzi pola „Tonacja”; zastępują osobny panel
-     * z relacjami, który dublował kroki presetów
+     * AI: relacje harmoniczne tonacji utworu jako podpowiedzi pola „Tonacja”
      *
      * @return array<string, string>
      */

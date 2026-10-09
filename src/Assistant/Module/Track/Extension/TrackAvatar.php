@@ -26,14 +26,24 @@ final readonly class TrackAvatar
     }
 
     /**
-     * Pierwsza litera lub cyfra wykonawcy i pierwsza litera lub cyfra tytułu, np. „Sash! - Encore Une Fois” → „SE”,
+     * Zwraca pierwszą literę lub cyfrę wykonawcy i tytułu, np. „Sash! - Encore Une Fois” → „SE”,
      * „Jens - '99 Psycho Strings” → „J9”
+     *
+     * @param string[] $artists
      */
     public static function getInitials(array $artists, string $title): string
     {
-        $firstCharacter = static fn (string $text): string => preg_match('/[\p{L}\p{N}]/u', $text, $match) ? $match[0] : '';
+        $artistInitial = self::getFirstCharacter(implode(' ', $artists));
+        $titleInitial = self::getFirstCharacter($title);
 
-        return mb_strtoupper($firstCharacter(implode(' ', $artists)) . $firstCharacter($title));
+        return mb_strtoupper($artistInitial . $titleInitial);
+    }
+
+    private static function getFirstCharacter(string $text): string
+    {
+        preg_match('/[\p{L}\p{N}]/u', $text, $matches);
+
+        return $matches[0] ?? '';
     }
 
     private static function getCssClass(?float $bpm, ?string $genre, ?string $initialKey): string
