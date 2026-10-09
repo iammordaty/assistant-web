@@ -5,6 +5,7 @@ namespace Assistant\Module\Track\Extension\Similarity;
 use Assistant\Module\Common\Extension\SimilarTracksCollection\SimilarTracksCollectionService;
 use Assistant\Module\Track\Extension\Similarity\Provider\Bpm;
 use Assistant\Module\Track\Extension\Similarity\Provider\Genre;
+use Assistant\Module\Track\Extension\Similarity\Provider\IndexedPeriod;
 use Assistant\Module\Track\Extension\Similarity\Provider\MusicalKey;
 use Assistant\Module\Track\Extension\Similarity\Provider\Musly;
 use Assistant\Module\Track\Extension\Similarity\Provider\ProviderInterface;
@@ -12,10 +13,22 @@ use Assistant\Module\Track\Extension\Similarity\Provider\Publisher;
 use Assistant\Module\Track\Extension\Similarity\Provider\Year;
 use Assistant\Module\Search\Extension\Service\TrackSearchService;
 use Assistant\Module\Track\Model\Track;
+use KeyTools\KeyTools;
 
 final class SimilarityBuilder
 {
-    private array $providers = Similarity::PROVIDERS;
+    /**
+     * AI: granica tempa dla trybu „Zmiana pulsu”: wolniejsze utwory są podwajane (double-time),
+     * szybsze dzielone na pół (half-time). Jedno kryterium BPM nie pozwala szukać w obu kierunkach naraz.
+     */
+    private const float PULSE_SWITCH_BPM = 110;
+
+    private array $providers = Similarity::DEFAULT_PROVIDERS;
+
+    /** AI: przesunięcie celu wyszukiwania wynikające z trybu (tempo, tonacja) */
+    private array $trackOffsets = [];
+    private bool $muslyCandidates = true;
+    private bool $favoritesOnly = false;
 
     private Similarity $similarityService;
 
@@ -29,6 +42,7 @@ final class SimilarityBuilder
         private array $providersWeights,
         private int $minSimilarityValue,
         private int $maxTracks,
+        private array $modesParameters,
     ) {
     }
 
@@ -57,13 +71,45 @@ final class SimilarityBuilder
         return $this;
     }
 
+    /**
+     * AI: tryb grania na żywo sam wyznacza dostawców, więc zaznaczenia dostawców z formularza dotyczą
+     * wyłącznie planowania. Nadpisania BPM, tonacji, gatunku i roku z formularza obowiązują zawsze,
+     * a przesunięcie trybu jest nakładane na nie w getSimilarTracks().
+     */
     public function withForm(SimilarityParametersForm $similarityParametersForm): self
     {
-        if ($similarityParametersForm->request->providers) {
-            $this->setProviders($similarityParametersForm->request->providers);
+        $request = $similarityParametersForm->request;
+
+        if ($request->mode !== RelatedTracksMode::PLANNING) {
+            $this->withMode($request->mode);
+        } elseif ($request->providers) {
+            $this->setProviders($request->providers);
         }
 
         $this->similarityParametersForm = $similarityParametersForm;
+
+        return $this;
+    }
+
+    public function withMode(RelatedTracksMode $mode): self
+    {
+        $modeParameters = $this->modesParameters[$mode->value] ?? null;
+
+        if (!$modeParameters) {
+            return $this;
+        }
+
+        $this->setProviders(array_keys($modeParameters['providers_weights']));
+
+        $this->providersWeights = $modeParameters['providers_weights'];
+        $this->providersParameters = array_replace_recursive(
+            $this->providersParameters,
+            $modeParameters['providers_parameters'] ?? [],
+        );
+
+        $this->trackOffsets = $modeParameters['track_offsets'] ?? [];
+        $this->muslyCandidates = $modeParameters['musly_candidates'] ?? true;
+        $this->favoritesOnly = $modeParameters['favorites_only'] ?? false;
 
         return $this;
     }
@@ -99,7 +145,11 @@ final class SimilarityBuilder
         }
 
         if ($this->isProviderEnabled(Genre::NAME)) {
-            $providers[] = new Genre();
+            $providers[] = new Genre($this->providersParameters[Genre::NAME]);
+        }
+
+        if ($this->isProviderEnabled(IndexedPeriod::NAME)) {
+            $providers[] = new IndexedPeriod($this->providersParameters[IndexedPeriod::NAME]);
         }
 
         if ($this->isProviderEnabled(MusicalKey::NAME)) {
@@ -107,7 +157,7 @@ final class SimilarityBuilder
         }
 
         if ($this->isProviderEnabled(Musly::NAME)) {
-            $providers[] = new Musly($this->service);
+            $providers[] = new Musly($this->service, $this->muslyCandidates);
         }
 
         if ($this->isProviderEnabled(Publisher::NAME)) {
@@ -119,7 +169,7 @@ final class SimilarityBuilder
         }
 
         $this->similarityService = new Similarity(
-            new SimilarityCandidatesFinder($this->trackSearchService, $providers),
+            new SimilarityCandidatesFinder($this->trackSearchService, $providers, $this->favoritesOnly),
             new SimilarityCalculator($providers, $this->providersWeights),
             new SimilarityCandidatesSorter(),
             $this->minSimilarityValue,
@@ -162,7 +212,46 @@ final class SimilarityBuilder
             }
         }
 
+        $track = $this->applyTrackOffsets($track);
+
         return $this->similarityService->getSimilarTracks($track);
+    }
+
+    /** Przesuwa cel wyszukiwania zgodnie z wybranym trybem */
+    private function applyTrackOffsets(Track $track): Track
+    {
+        $bpmPercent = $this->trackOffsets['bpm_percent'] ?? 0;
+        $bpmPulse = $this->trackOffsets['bpm_pulse'] ?? false;
+        $keyStep = $this->trackOffsets['musical_key'] ?? 0;
+        $keyScale = $this->trackOffsets['musical_key_scale'] ?? null;
+
+        // tempo przesuwane procentowo brzmi tak samo niezależnie od tempa bazowego (90, 128, 174 BPM)
+        if ($bpmPercent && $track->getBpm()) {
+            $track = $track->withBpm(round($track->getBpm() * (1 + $bpmPercent / 100), 1));
+        }
+
+        if ($bpmPulse && $track->getBpm()) {
+            $bpm = $track->getBpm();
+
+            $track = $track->withBpm($bpm < self::PULSE_SWITCH_BPM ? $bpm * 2 : $bpm / 2);
+        }
+
+        if (!$keyStep && !$keyScale) {
+            return $track;
+        }
+
+        $keyTools = KeyTools::fromNotation(KeyTools::NOTATION_CAMELOT_KEY);
+        $initialKey = $track->getInitialKey();
+
+        // tonacja może pochodzić z formularza, więc nie musi być poprawna
+        if (!$initialKey || !$keyTools->isValidKey($initialKey)) {
+            return $track;
+        }
+
+        // 'toggle' zawsze zmienia skalę; 'A' lub 'B' wskazuje skalę docelową (przejścia diagonalne, np. 8A → 9B)
+        $toggleScale = $keyScale === 'toggle' || ($keyScale && !str_ends_with($initialKey, $keyScale));
+
+        return $track->withInitialKey($keyTools->calculateKey($initialKey, $keyStep, $toggleScale));
     }
 
     private function isProviderEnabled(string $name): bool

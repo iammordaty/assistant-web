@@ -1,0 +1,13 @@
+{# AI: przełącznik trybu „na żywo” leży w nagłówku karty, który sam reaguje na kliknięcie (zwija parametry);
+   dlatego jest wyraźnie odsunięty od tytułu, a track.js zatrzymuje propagację kliknięcia #}
+<button
+    type="button"
+    class="btn btn-sm ast-live-toggle {% if form.isLiveMode %}is-live{% endif %}"
+    data-role="similar-tracks:live-toggle"
+    data-bs-toggle="tooltip"
+    title="Tryb na żywo (L)"
+    aria-pressed="{{ form.isLiveMode ? 'true' : 'false' }}"
+>
+    <span class="ast-live-toggle-dot"></span>
+    Na żywo
+</button>

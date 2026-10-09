@@ -1,0 +1,8 @@
+{# Różnica tempa względem bieżącego utworu, w procentach, bo tak są zdefiniowane tryby na żywo #}
+{% if from and to %}
+    {% set percent = ((to - from) / from * 100)|round(1) %}
+
+    {% if percent != 0 %}
+        <span class="ast-delta {{ percent > 0 ? 'ast-delta-up' : 'ast-delta-down' }}">{{ percent > 0 ? '+' }}{{ percent }}%</span>
+    {% endif %}
+{% endif %}

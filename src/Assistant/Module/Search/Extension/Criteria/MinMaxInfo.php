@@ -19,7 +19,7 @@ final class MinMaxInfo implements SearchCriteriaField
     public function __construct(private array $minMaxInfo)
     {
         if (($invalid = array_diff(array_keys($minMaxInfo), self::VALID_OPERATORS))) {
-            throw new \InvalidArgumentException('Invalid MinMaxInfo operator: ', implode(',', $invalid));
+            throw new \InvalidArgumentException('Invalid MinMaxInfo operator: ' . implode(',', $invalid));
         }
     }
 

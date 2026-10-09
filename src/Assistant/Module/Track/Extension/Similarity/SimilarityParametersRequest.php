@@ -5,6 +5,7 @@ namespace Assistant\Module\Track\Extension\Similarity;
 final class SimilarityParametersRequest
 {
     public function __construct(
+        public readonly RelatedTracksMode $mode = RelatedTracksMode::PLANNING,
         public readonly ?array $providers = null,
         public readonly ?float $bpm = null,
         public readonly ?string $genre = null,

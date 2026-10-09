@@ -52,6 +52,8 @@ final class TrackController
 
         if ($request->isXhr()) {
             return $this->view->render($response, '@track/similarTracks/list.twig', [
+                'track' => $track,
+                'showDeltas' => $form->isLiveMode(),
                 'similarTracksList' => $similarTracks,
                 'similarTracksSoftLimit' => self::SIMILAR_TRACKS_SOFT_LIMIT,
             ]);

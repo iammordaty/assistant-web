@@ -5,6 +5,12 @@
     method="get"
     name="{{ 'now'|date('U') }}" {# https://stackoverflow.com/a/44504822 #}
 >
+    <input type="hidden" name="{{ constant('NAME_MODE', form) }}" value="{{ form.request.mode.value }}" data-role="similar-tracks:mode-input">
+
+    <p class="text-secondary small mb-2 {% if not form.isLiveMode %}d-none{% endif %}" data-role="similar-tracks:live-hint">
+        W trybie na żywo dostawców wybiera tryb; wartości gatunku, roku, BPM i tonacji nadal są uwzględniane.
+    </p>
+
     <div class="row">
         {% for similarityParameter in form.similarityParameters %}
             {% set isProviderEnabled = form.isProviderEnabled(similarityParameter.name) %}

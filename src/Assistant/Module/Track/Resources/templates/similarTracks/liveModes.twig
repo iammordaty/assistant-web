@@ -1,0 +1,16 @@
+{# AI: tryby grania na żywo w jednym rzędzie, ze skrótami 1–9, aby zmiana kierunku zajmowała jedno naciśnięcie
+   klawisza; pasek jest widoczny tylko w trybie na żywo, więc widok planowania pozostaje bez zmian #}
+<div class="ast-live-modes {% if not form.isLiveMode %}d-none{% endif %}" data-role="similar-tracks:live-modes">
+    {% for mode in form.liveModes %}
+        <button
+            type="button"
+            class="ast-live-mode {% if mode == form.request.mode %}active{% endif %}"
+            data-role="similar-tracks:mode"
+            data-mode="{{ mode.value }}"
+            title="{{ mode.description }}"
+        >
+            <kbd>{{ loop.index }}</kbd>
+            {{ mode.label }}
+        </button>
+    {% endfor %}
+</div>

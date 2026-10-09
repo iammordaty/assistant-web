@@ -5,10 +5,12 @@ use Assistant\Module\Common\Extension\TrackSearch\BeatportSearchTracks;
 use Assistant\Module\Common\Extension\TrackSearch\GoogleBeatportSearchTracks;
 use Assistant\Module\Common\Extension\TrackSearch\GoogleSearchApiClient;
 use Assistant\Module\Track\Extension\BeatportTrackMetadataSuggestionsService;
+use Assistant\Module\Track\Extension\Similarity\RelatedTracksMode;
 use Assistant\Module\Track\Extension\Similarity\Similarity;
 use Assistant\Module\Track\Extension\Similarity\Provider\Bpm;
 use Assistant\Module\Track\Extension\Similarity\Provider\MusicalKey;
 use Assistant\Module\Track\Extension\Similarity\Provider\Genre;
+use Assistant\Module\Track\Extension\Similarity\Provider\IndexedPeriod;
 use Assistant\Module\Track\Extension\Similarity\Provider\Musly;
 use Assistant\Module\Track\Extension\Similarity\Provider\Publisher;
 use Assistant\Module\Track\Extension\Similarity\Provider\Year;
@@ -94,11 +96,14 @@ return static function (string $baseDir): array {
         Similarity::class => [
             'providers_parameters' => [
                 Bpm::NAME => [ 'tolerance' => 5 ],
+                Genre::NAME => [ 'min_similarity' => 0, 'max_similarity' => 100 ],
+                IndexedPeriod::NAME => [ 'tolerance' => 2, 'max_tolerance' => 12, 'min_tracks' => 30 ],
                 Year::NAME => [ 'tolerance' => 5 ],
             ],
             'providers_weights' => [
                 Bpm::NAME => 0.70,
                 Genre::NAME => 0.75,
+                IndexedPeriod::NAME => 0.50,
                 MusicalKey::NAME => 0.90,
                 Musly::NAME => 1,
                 Publisher::NAME => 0.40,
@@ -106,6 +111,64 @@ return static function (string $baseDir): array {
             ],
             'min_similarity_value' => 60,
             'max_tracks' => 200,
+
+            // Tryby grania na żywo. Włączeni dostawcy to klucze `providers_weights`, a `providers_parameters`
+            // trybu są nakładane na parametry podstawowe. `track_offsets` przesuwa cel wyszukiwania:
+            // `bpm_percent` (tempo w procentach), `bpm_pulse` (half-time / double-time), `musical_key`
+            // (krok w kole Camelota), `musical_key_scale` ('A', 'B' lub 'toggle'). Kandydaci Musly omijają
+            // kryteria metadanych, dlatego tryby przesuwające cel wyłączają ich (`musly_candidates`).
+            'modes' => [
+                RelatedTracksMode::KEEP->value => [
+                    'providers_weights' => [ Bpm::NAME => 0.90, IndexedPeriod::NAME => 0.50, MusicalKey::NAME => 0.90, Musly::NAME => 1 ],
+                    'providers_parameters' => [ Bpm::NAME => [ 'tolerance' => 2 ] ],
+                ],
+                RelatedTracksMode::LIFT->value => [
+                    'providers_weights' => [ Bpm::NAME => 0.90, MusicalKey::NAME => 0.90, Musly::NAME => 0.50 ],
+                    'providers_parameters' => [ Bpm::NAME => [ 'tolerance' => 1 ] ],
+                    'track_offsets' => [ 'bpm_percent' => 2.5, 'musical_key' => 1, 'musical_key_scale' => 'B' ],
+                    'musly_candidates' => false,
+                ],
+                RelatedTracksMode::ENERGY_BOOST->value => [
+                    'providers_weights' => [ Bpm::NAME => 0.90, MusicalKey::NAME => 1, Musly::NAME => 0.30 ],
+                    'providers_parameters' => [ Bpm::NAME => [ 'tolerance' => 2 ] ],
+                    'track_offsets' => [ 'bpm_percent' => 4, 'musical_key' => 2 ],
+                    'musly_candidates' => false,
+                ],
+                RelatedTracksMode::COOL_DOWN->value => [
+                    'providers_weights' => [ Bpm::NAME => 0.90, MusicalKey::NAME => 0.90, Musly::NAME => 0.50 ],
+                    'providers_parameters' => [ Bpm::NAME => [ 'tolerance' => 1 ] ],
+                    'track_offsets' => [ 'bpm_percent' => -2.5, 'musical_key' => -1, 'musical_key_scale' => 'A' ],
+                    'musly_candidates' => false,
+                ],
+                RelatedTracksMode::MOOD_SWITCH->value => [
+                    'providers_weights' => [ Bpm::NAME => 0.90, IndexedPeriod::NAME => 0.50, MusicalKey::NAME => 0.90, Musly::NAME => 0.30 ],
+                    'providers_parameters' => [ Bpm::NAME => [ 'tolerance' => 2 ] ],
+                    'track_offsets' => [ 'musical_key_scale' => 'toggle' ],
+                    'musly_candidates' => false,
+                ],
+                RelatedTracksMode::STYLE_SWITCH->value => [
+                    'providers_weights' => [ Bpm::NAME => 1, Genre::NAME => 0.50, IndexedPeriod::NAME => 0.50, MusicalKey::NAME => 1, Musly::NAME => 0.30 ],
+                    'providers_parameters' => [
+                        Bpm::NAME => [ 'tolerance' => 2 ],
+                        Genre::NAME => [ 'min_similarity' => 60, 'max_similarity' => 80 ],
+                    ],
+                    'musly_candidates' => false,
+                ],
+                RelatedTracksMode::PULSE_SWITCH->value => [
+                    'providers_weights' => [ Bpm::NAME => 1, MusicalKey::NAME => 0.90 ],
+                    'providers_parameters' => [ Bpm::NAME => [ 'tolerance' => 2 ] ],
+                    'track_offsets' => [ 'bpm_pulse' => true ],
+                ],
+                RelatedTracksMode::SAFE_BET->value => [
+                    'providers_weights' => [ Bpm::NAME => 0.90, Genre::NAME => 0.75, MusicalKey::NAME => 0.90, Musly::NAME => 0.50 ],
+                    'providers_parameters' => [ Bpm::NAME => [ 'tolerance' => 2 ] ],
+                    'favorites_only' => true,
+                ],
+                RelatedTracksMode::RESET->value => [
+                    'providers_weights' => [ Bpm::NAME => 1 ],
+                    'providers_parameters' => [ Bpm::NAME => [ 'tolerance' => 3 ] ],
+                ],
+            ],
         ],
 
         BeatportApiClient::class => [

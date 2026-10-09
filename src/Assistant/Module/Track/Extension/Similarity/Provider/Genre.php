@@ -71,7 +71,12 @@ final class Genre extends AbstractProvider
         ['Psy-Trance', 'Techno', 60],
     ];
 
-    public function __construct()
+    /**
+     * @param array $parameters `min_similarity` i `max_similarity` zawężają kandydatów do gatunków
+     *        o podobieństwie z tego pasma. AI: tryb „Zmień styl” celuje w ten sposób w gatunki
+     *        sąsiednie, z pominięciem tego samego gatunku (100) i gatunków obcych (poniżej pasma).
+     */
+    public function __construct(private array $parameters)
     {
         $this->setup();
     }
@@ -102,8 +107,6 @@ final class Genre extends AbstractProvider
             }
         }
 
-        // echo $baseTrack->getGenre(), ' vs. ', $comparedTrack->getGenre(), ' = ', $similarity, PHP_EOL;
-
         return $similarity;
     }
 
@@ -113,7 +116,7 @@ final class Genre extends AbstractProvider
         $genres = [];
 
         foreach ($this->similarityMap as $map) {
-            if ($baseTrack->getGenre() === $map[0]) {
+            if ($baseTrack->getGenre() === $map[0] && $this->isWithinSimilarityRange($map[2])) {
                 $genres[] = $map[1];
             }
         }
@@ -125,6 +128,12 @@ final class Genre extends AbstractProvider
         }
 
         return array_values(array_unique($genres));
+    }
+
+    private function isWithinSimilarityRange(int $similarity): bool
+    {
+        return $similarity >= $this->parameters['min_similarity']
+            && $similarity <= $this->parameters['max_similarity'];
     }
 
     /** Przygotowuje dostawcę do użycia */

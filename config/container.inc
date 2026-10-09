@@ -190,6 +190,7 @@ return static fn (string $baseDir, array $config): array => [
             $parameters['providers_weights'],
             $parameters['min_similarity_value'],
             $parameters['max_tracks'],
+            $parameters['modes'],
         );
     },
 

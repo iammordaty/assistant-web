@@ -36,8 +36,6 @@ final class Bpm extends AbstractProvider
 
         $distance = (int) round(abs($baseBpm - $comparedBpm));
 
-        // echo $baseTrack->getBpm(), ' vs. ', $comparedTrack->getBpm(), ' = ', $similarity, " ($distance)", PHP_EOL;
-
         return $this->similarityMap[$distance] ?? 0;
     }
 

@@ -27,8 +27,15 @@ final class Musly extends AbstractProvider implements CandidateProviderInterface
     /** @var array<string, true> Ścieżki, dla których pobranie listy zakończyło się błędem */
     private array $failedTracks = [];
 
-    public function __construct(private SimilarTracksCollectionService $service)
-    {
+    /**
+     * @param bool $providesCandidates AI: czy sąsiedzi utworu bazowego poszerzają zbiór kandydatów.
+     *        Tryby przesuwające tempo lub tonację wyłączają to, ponieważ sąsiedzi brzmieniowi omijają
+     *        kryteria metadanych i ściągaliby wyniki z powrotem do tempa i tonacji utworu wyjściowego.
+     */
+    public function __construct(
+        private SimilarTracksCollectionService $service,
+        private bool $providesCandidates = true,
+    ) {
     }
 
     /** {@inheritDoc} */
@@ -54,6 +61,10 @@ final class Musly extends AbstractProvider implements CandidateProviderInterface
     /** {@inheritDoc} */
     public function getCandidatePathnames(Track $baseTrack): array
     {
+        if (!$this->providesCandidates) {
+            return [];
+        }
+
         $similarTracks = $this->getSimilarTracksFor($baseTrack);
 
         return $similarTracks !== null ? array_keys($similarTracks->getSimilarTracks()) : [];

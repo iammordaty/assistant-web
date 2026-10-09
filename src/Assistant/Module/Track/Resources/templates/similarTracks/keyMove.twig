@@ -1,0 +1,11 @@
+{# Ruch w kole Camelota względem bieżącego utworu: krok (−6…+5) i ewentualna zmiana skali #}
+{% if from and to and from != to %}
+    {% set step = ((to[:-1] - from[:-1] + 18) % 12) - 6 %}
+    {% set fromScale = from|last %}
+    {% set toScale = to|last %}
+
+    <span class="ast-delta {{ step > 0 ? 'ast-delta-up' : (step < 0 ? 'ast-delta-down' : 'ast-delta-scale') }}">
+        {%- if step -%}{{ step > 0 ? '+' }}{{ step }}{%- endif -%}
+        {%- if fromScale != toScale -%}{{ step ? ' ' }}{{ fromScale }}→{{ toScale }}{%- endif -%}
+    </span>
+{% endif %}

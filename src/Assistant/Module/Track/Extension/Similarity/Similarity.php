@@ -4,6 +4,7 @@ namespace Assistant\Module\Track\Extension\Similarity;
 
 use Assistant\Module\Track\Extension\Similarity\Provider\Bpm;
 use Assistant\Module\Track\Extension\Similarity\Provider\Genre;
+use Assistant\Module\Track\Extension\Similarity\Provider\IndexedPeriod;
 use Assistant\Module\Track\Extension\Similarity\Provider\MusicalKey;
 use Assistant\Module\Track\Extension\Similarity\Provider\Musly;
 use Assistant\Module\Track\Extension\Similarity\Provider\Publisher;
@@ -15,6 +16,21 @@ final class Similarity
 {
     /** Lista dostępnych dostawców podobieństwa */
     public const array PROVIDERS = [
+        Bpm::NAME,
+        Genre::NAME,
+        IndexedPeriod::NAME,
+        MusicalKey::NAME,
+        Musly::NAME,
+        Publisher::NAME,
+        Year::NAME,
+    ];
+
+    /**
+     * AI: dostawcy włączeni, gdy żądanie nie wskazuje żadnego. Okres jest dostępny, ale domyślnie
+     * wyłączony, ponieważ jego kryterium zawęża kandydatów do kilku miesięcy, a planowanie ma
+     * domyślnie przeszukiwać całą kolekcję.
+     */
+    public const array DEFAULT_PROVIDERS = [
         Bpm::NAME,
         Genre::NAME,
         MusicalKey::NAME,

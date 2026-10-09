@@ -242,6 +242,22 @@ $(function () {
 
 			$container.find('[data-role="similar-tracks:filter"]')[0].focus();
 		}
+
+		if (e.ctrlKey || e.metaKey || e.altKey) {
+			return;
+		}
+
+		if (e.key === 'l') {
+			toggleLiveMode();
+		}
+
+		// AI: cyfra od razu wybiera tryb na żywo (także z planowania), żeby zmiana kierunku na parkiecie
+		// zajmowała jedno naciśnięcie klawisza
+		const $mode = $liveModes.find('[data-role="similar-tracks:mode"]').eq(Number(e.key) - 1);
+
+		if (/^[1-9]$/.test(e.key) && $mode.length) {
+			setMode($mode.data('mode'));
+		}
 	});
 
 	$container.find('[data-role="similar-tracks:filter"]').on('click keyup change', function (e) {
@@ -265,6 +281,62 @@ $(function () {
 	const $form = $container.find('[data-role="similar-tracks:parameters"]');
 
 	$form.data('previous-state', $form.serialize());
+
+	// -- tryb na żywo
+
+	const PLANNING_MODE = 'planning';
+	const MODE_COOKIE = 'related-tracks-mode';
+
+	const $liveToggle = $container.find('[data-role="similar-tracks:live-toggle"]');
+	const $liveModes = $container.find('[data-role="similar-tracks:live-modes"]');
+	const $modeInput = $form.find('[data-role="similar-tracks:mode-input"]');
+
+	let lastLiveMode = $modeInput.val() !== PLANNING_MODE
+		? $modeInput.val()
+		: $liveModes.find('[data-role="similar-tracks:mode"]').first().data('mode');
+
+	const setMode = mode => {
+		if (mode === $modeInput.val()) {
+			return;
+		}
+
+		const isLive = mode !== PLANNING_MODE;
+
+		if (isLive) {
+			lastLiveMode = mode;
+		}
+
+		$modeInput.val(mode);
+
+		// tryb jest odczytywany po stronie serwera, więc kolejny utwór od razu wyświetla listę w tym trybie
+		document.cookie = `${MODE_COOKIE}=${mode}; path=/; max-age=31536000; SameSite=Lax`;
+
+		$container.toggleClass('ast-live', isLive);
+		$liveToggle.toggleClass('is-live', isLive).attr('aria-pressed', isLive ? 'true' : 'false');
+		$liveModes.toggleClass('d-none', !isLive);
+		$form.find('[data-role="similar-tracks:live-hint"]').toggleClass('d-none', !isLive);
+
+		$liveModes.find('[data-role="similar-tracks:mode"]').each(function () {
+			$(this).toggleClass('active', $(this).data('mode') === mode);
+		});
+
+		$form.data('previous-state', $form.serialize());
+
+		debounce(() => reloadSimilarTracks($form), 50);
+	};
+
+	const toggleLiveMode = () => setMode($modeInput.val() === PLANNING_MODE ? lastLiveMode : PLANNING_MODE);
+
+	// nagłówek karty zwija parametry po kliknięciu, więc kliknięcie przełącznika nie może do niego dotrzeć
+	$liveToggle.on('click', function (e) {
+		e.stopPropagation();
+
+		toggleLiveMode();
+	});
+
+	$liveModes.on('click', '[data-role="similar-tracks:mode"]', function () {
+		setMode($(this).data('mode'));
+	});
 
 	$form.find('input').on('keyup change', function () {
 		const currentFormState = $form.serialize();

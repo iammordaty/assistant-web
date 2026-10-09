@@ -113,6 +113,8 @@ Controller → Service → Repository
 
 Multi-provider system combining Musly audio similarity with metadata matching.
 
+The track page shows it as "Powiązane utwory" with two kinds of modes (`RelatedTracksMode`): planning (plain similarity) and live modes for DJ-ing (keep, lift, energy boost, cool down, mood/style/pulse switch, safe bet, reset). A live mode shifts the search target (tempo in percent, Camelot step, target scale, half/double-time) and swaps provider weights; its parameters live in `config.inc` under `Similarity::class['modes']`. The `IndexedPeriod` provider relates tracks added to the collection in nearby months (both `Singles` and `Other`), widening its window until enough candidates match.
+
 ### Audio Data
 
 Essentia-based BPM, key, and feature extraction.
