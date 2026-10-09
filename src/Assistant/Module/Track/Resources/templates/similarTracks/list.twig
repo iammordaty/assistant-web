@@ -1,13 +1,13 @@
 <div data-role="similar-tracks:list">
     {% if similarTracksList %}
         <div class="table-responsive">
-            <table class="table table-hover table-striped">
+            <table class="table table-hover table-striped ast-similar-tracks-table">
                 <thead>
                     <tr>
                         <th style="width: 43%">Nazwa utworu</th>
-                        <th style="width: 14%">Gatunek</th>
-                        <th style="width: 17%">Wydawca</th>
-                        <th style="width: 7%">Rok</th>
+                        <th style="width: 14%" class="d-none d-md-table-cell">Gatunek</th>
+                        <th style="width: 17%" class="d-none d-lg-table-cell">Wydawca</th>
+                        <th style="width: 7%" class="d-none d-sm-table-cell">Rok</th>
                         <th style="width: 7%">Tonacja</th>
                         <th style="width: 7%">BPM</th>
                         <th style="width: 5%">%</th>
@@ -34,17 +34,17 @@
                                     </a>
                                 </span>
                             </td>
-                            <td style="width: 14%" class="text-nowrap">
+                            <td style="width: 14%" class="text-nowrap d-none d-md-table-cell">
                                 <a class="text-reset" href="{{ url_for('search.advanced.index', query_params = { genre: similarTrack.genre }) }}">
                                     {{ similarTrack.genre }}
                                 </a>
                             </td>
-                            <td style="width: 17%" class="text-nowrap">
+                            <td style="width: 17%" class="text-nowrap d-none d-lg-table-cell">
                                 <a class="text-reset" href="{{ url_for('search.advanced.index', query_params = { publisher: similarTrack.publisher }) }}">
                                     {{ similarTrack.publisher }}
                                 </a>
                             </td>
-                            <td style="width: 7%">
+                            <td style="width: 7%" class="d-none d-sm-table-cell">
                                 <a class="text-reset" href="{{ url_for('search.advanced.index', query_params = { year: similarTrack.year }) }}">
                                     {{ similarTrack.year }}
                                 </a>

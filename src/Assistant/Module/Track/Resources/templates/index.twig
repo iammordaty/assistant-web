@@ -43,16 +43,20 @@
 
         <div class="col-12">
             <div class="card {% if form.isLiveMode %}ast-live{% endif %}" data-role="similar-tracks:container">
-                <div class="card-header cursor-pointer" data-role="similar-tracks:toggle-visibility">
-                    <h3 class="card-title">
+                <div class="card-header cursor-pointer flex-wrap row-gap-2" data-role="similar-tracks:toggle-visibility" aria-expanded="false">
+                    <h3 class="card-title d-flex align-items-center gap-1 text-nowrap">
                         Powiązane utwory
+                        <svg xmlns="http://www.w3.org/2000/svg" class="icon ast-collapse-chevron text-secondary" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+                            <path d="M6 9l6 6l6 -6"></path>
+                        </svg>
                     </h3>
                     <div class="ms-4">
                         {% include '@track/similarTracks/liveToggle.twig' with { form: form } only %}
                     </div>
-                    <div class="card-actions">
+                    <div class="card-actions ast-similar-tracks-actions">
                         <div
-                            class="input-group input-group-flat w-auto ast-filter-similar-tracks position-relative"
+                            class="input-group input-group-flat ast-filter-similar-tracks position-relative"
                             data-bs-toggle="tooltip"
                             title="Filtruj utwory"
                         >
@@ -81,7 +85,7 @@
                                 class="form-control"
                                 value=""
                             >
-                            <span class="input-group-text user-select-none ast-filter-similar-tracks-shortcut">
+                            <span class="input-group-text user-select-none ast-filter-similar-tracks-shortcut d-none d-sm-flex">
                                 <kbd data-key="ctrlCmd">ctrl</kbd>&nbsp;+&nbsp;<kbd>k</kbd>
                             </span>
                         </div>

@@ -161,7 +161,7 @@ $(function () {
 
 		$keyInput.val(this.dataset.value).trigger('change');
 
-		$('[data-role="similar-tracks:parameters-container"]').removeClass('d-none');
+		toggleParameters(true);
 	});
 
 	// --
@@ -174,22 +174,22 @@ $(function () {
 	// -- similarity
 
 	$('[data-role="similar-tracks:parameters"] input[type=checkbox]').on('change', function () {
-		const $param = $(this).closest('[data-role="similar-tracks:parameter"]');
-		const $input = $param.find('[data-role="similar-tracks:parameter-input"]');
-
-		const isUnchecked = !$(this).is(':checked');
-
-		$input
-			.toggleClass('visible', !isUnchecked)
-			.toggleClass('invisible', isUnchecked);
-
-		$input.prop('disabled', isUnchecked);
+		$(this)
+			.closest('[data-role="similar-tracks:parameter"]')
+			.find('[data-role="similar-tracks:parameter-input"]')
+			.prop('disabled', !this.checked);
 	});
 
-	$('[data-role="similar-tracks:toggle-visibility"]').on('click', function () {
-		$(this).toggleClass('card-header-light');
+	const $parametersToggle = $('[data-role="similar-tracks:toggle-visibility"]');
 
-		$('[data-role="similar-tracks:parameters-container"]').toggleClass('d-none');
+	function toggleParameters(isExpanded) {
+		$parametersToggle.attr('aria-expanded', isExpanded ? 'true' : 'false');
+
+		$('[data-role="similar-tracks:parameters-container"]').toggleClass('d-none', !isExpanded);
+	}
+
+	$parametersToggle.on('click', function () {
+		toggleParameters($(this).attr('aria-expanded') !== 'true');
 	});
 
 	let debounceTimerId;

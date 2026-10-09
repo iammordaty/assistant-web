@@ -78,16 +78,6 @@
     right: 4px;
 }
 
-@media only screen and (max-width: 768px) {
-    .ast-similar-tracks-parameters .form-label {
-        width: 33%;
-    }
-
-    .ast-similar-tracks-parameters .form-control {
-        width: auto;
-    }
-}
-
 .ast-track-tag-list::-webkit-scrollbar {
     display: none;
 }
@@ -534,4 +524,129 @@ table .ast-track-name span {
 
 .ast-delta-scale {
     color: var(--tblr-purple);
+}
+
+/* AI: parametry podobieństwa jako zawijany rząd „pigułek”: przełącznik dostawcy i jego wartość tworzą jedną
+   całość, więc całość mieści się w jednym–dwóch rzędach także na wąskim ekranie, a stan widać po kolorze */
+
+.ast-collapse-chevron {
+    transition: transform .2s ease;
+}
+
+[aria-expanded="true"] .ast-collapse-chevron {
+    transform: rotate(180deg);
+}
+
+.ast-similarity-parameters {
+    display: flex;
+    flex-wrap: wrap;
+    gap: .5rem;
+}
+
+.ast-similarity-parameter {
+    align-items: stretch;
+    background: var(--tblr-bg-surface);
+    border: var(--tblr-border-width) solid var(--tblr-border-color);
+    border-radius: var(--tblr-border-radius-pill);
+    display: inline-flex;
+    font-size: .8125rem;
+    height: 2rem;
+    overflow: hidden;
+    transition: border-color .15s ease, background-color .15s ease;
+}
+
+.ast-similarity-parameter:has(.form-check-input:checked) {
+    background: rgba(var(--tblr-primary-rgb), .04);
+    border-color: rgba(var(--tblr-primary-rgb), .4);
+}
+
+.ast-similarity-parameter:focus-within {
+    box-shadow: 0 0 0 .2rem rgba(var(--tblr-primary-rgb), .15);
+}
+
+.ast-similarity-parameter-toggle {
+    align-items: center;
+    color: var(--tblr-secondary);
+    cursor: pointer;
+    display: inline-flex;
+    gap: .5rem;
+    padding: 0 .75rem;
+    user-select: none;
+    white-space: nowrap;
+}
+
+.ast-similarity-parameter:has(.form-check-input:checked) .ast-similarity-parameter-toggle {
+    color: var(--tblr-body-color);
+    font-weight: var(--tblr-font-weight-medium);
+}
+
+.ast-similarity-parameter-toggle .form-check-input {
+    height: .875rem;
+    width: .875rem;
+}
+
+.ast-similarity-parameter-input {
+    background: transparent;
+    border: 0;
+    border-left: var(--tblr-border-width) solid var(--tblr-border-color);
+    color: var(--tblr-body-color);
+    font-variant-numeric: tabular-nums;
+    outline: 0;
+    padding: 0 .75rem;
+    width: 7.5rem;
+}
+
+.ast-similarity-parameter-input[type="number"] {
+    -moz-appearance: textfield;
+    appearance: textfield;
+    width: 4.5rem;
+}
+
+.ast-similarity-parameter-input::-webkit-inner-spin-button,
+.ast-similarity-parameter-input::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+.ast-similarity-parameter-input:disabled {
+    color: var(--tblr-disabled-color, var(--tblr-gray-400));
+    cursor: not-allowed;
+}
+
+@supports (field-sizing: content) {
+    .ast-similarity-parameter-input,
+    .ast-similarity-parameter-input[type="number"] {
+        field-sizing: content;
+        max-width: 10rem;
+        min-width: 3.5rem;
+        width: auto;
+    }
+}
+
+.ast-filter-similar-tracks {
+    width: auto;
+}
+
+/* AI: na telefonie filtr przechodzi do osobnego wiersza nagłówka na pełną szerokość, skrót klawiszowy jest ukryty,
+   a nazwa utworu może się zwęzić, aby tonacja, BPM i podobieństwo mieściły się bez przewijania w poziomie */
+@media (max-width: 575.98px) {
+    .ast-similar-tracks-actions {
+        flex-basis: 100%;
+        margin: 0;
+        padding-left: 0;
+    }
+
+    .ast-filter-similar-tracks .form-control:not(:last-child) {
+        border-bottom-right-radius: var(--tblr-border-radius);
+        border-right: var(--tblr-border-width) solid var(--tblr-border-color);
+        border-top-right-radius: var(--tblr-border-radius);
+    }
+
+    .ast-similar-tracks-table .ast-track-name {
+        min-width: 8rem;
+    }
+
+    .ast-filter-similar-tracks {
+        width: 100%;
+    }
 }
