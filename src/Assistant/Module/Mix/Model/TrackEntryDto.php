@@ -2,6 +2,7 @@
 
 namespace Assistant\Module\Mix\Model;
 
+use Assistant\Module\Track\Extension\TrackAvatar;
 use Assistant\Module\Track\Model\Track;
 use MongoDB\Model\BSONDocument;
 
@@ -73,6 +74,7 @@ final class TrackEntryDto
                     'found' => false,
                     'guid' => $trackGuid,
                     'name' => str_replace('-', ' ', $trackGuid),
+                    'avatar' => TrackAvatar::fromGuid($trackGuid)->toJson(),
                 ];
             }
 
@@ -96,6 +98,7 @@ final class TrackEntryDto
                 'metadataMd5' => $this->track->getMetadataMd5(),
                 'parent' => $this->track->getParent(),
                 'pathname' => $this->track->getPathname(),
+                'avatar' => TrackAvatar::fromTrack($this->track)->toJson(),
             ];
         };
 

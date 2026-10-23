@@ -620,6 +620,21 @@ table .ast-track-name span {
     }
 }
 
+/* AI: awatar utworu (nagłówek strony utworu i Miksy). Kolor (--ast-avatar-color) i nasycenie tła (--ast-avatar-tint)
+   wylicza TrackAvatar.php; skala tonacji przyciemnia litery utworów molowych (A) i rozjaśnia durowych (B) */
+.ast-avatar {
+    background: color-mix(in srgb, var(--ast-avatar-color) var(--ast-avatar-tint), var(--tblr-bg-surface));
+    color: var(--ast-avatar-color);
+}
+
+.ast-avatar[data-scale="A"] {
+    color: color-mix(in srgb, var(--ast-avatar-color) 62%, #000);
+}
+
+.ast-avatar[data-scale="B"] {
+    color: color-mix(in srgb, var(--ast-avatar-color) 85%, #fff);
+}
+
 /* AI: nagłówek utworu: powiększony awatar (ten sam wzorzec co TrackAvatar w Miksach) oraz dane utworu
    rozdzielone kropkami, jak w widoku miksu. Awatar jest przyciskiem odtwarzania: najechanie zamienia inicjały
    na ikonę odtwarzania lub pauzy, a po zjechaniu kursorem wracają inicjały, także podczas odtwarzania.

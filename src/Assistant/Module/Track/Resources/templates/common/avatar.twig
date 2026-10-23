@@ -2,7 +2,9 @@
 {# AI: wspólny dla stron utworu w kolekcji i w Incoming; awatar jest też przyciskiem odtwarzania, aktywnym po załadowaniu fali #}
 <button
     type="button"
-    class="avatar avatar-initials rounded-2 ast-track-avatar {{ avatar.cssClass }}"
+    class="avatar avatar-initials rounded-2 ast-avatar ast-track-avatar"
+    style="--ast-avatar-color: var(--tblr-{{ avatar.color }}); --ast-avatar-tint: {{ avatar.tint }}%"
+    {% if avatar.scale %} data-scale="{{ avatar.scale }}" {% endif %}
     data-role="track:play-pause"
     aria-label="Odtwórz lub wstrzymaj"
     disabled
