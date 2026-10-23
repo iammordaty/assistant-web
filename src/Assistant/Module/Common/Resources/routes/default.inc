@@ -12,6 +12,10 @@ return static function (App $app): void {
             ->setName('common.task.calculate');
 
         $group
+            ->post('/task/calculate-music-classifier-metadata', [ TaskController::class, 'calculateMusicClassifierMetadata' ])
+            ->setName('common.task.calculate-music-classifier-metadata');
+
+        $group
             ->post('/task/remove-metadata', [ TaskController::class, 'removeMetadata' ])
             ->setName('common.task.remove-metadata');
 

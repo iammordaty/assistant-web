@@ -11,6 +11,7 @@ use Assistant\Module\Track\Extension\DateDirectory;
 use Assistant\Module\Track\Extension\FilenameFormat;
 use Assistant\Module\Track\Task\RenameTrackTask;
 use Cocur\BackgroundProcess\BackgroundProcess;
+use Fig\Http\Message\StatusCodeInterface;
 use Psr\Http\Message\ResponseInterface;
 use Slim\Http\Response;
 use Slim\Http\ServerRequest;
@@ -41,6 +42,22 @@ final readonly class TaskController
             'command' => $command,
             'pid' => $backgroundProcess->getPid(),
         ]);
+    }
+
+    /**
+     * Analiza Essentii trwa do kilku minut, więc wynik pojawi się na stronie utworu po jej odświeżeniu
+     *
+     * ponytail: wynik jest zapisywany pod ścieżką pliku, więc zmiana nazwy w incoming wymaga ponownej analizy;
+     * gdy zacznie to przeszkadzać, zmiana nazwy powinna przenosić również plik wyniku
+     */
+    public function calculateMusicClassifierMetadata(ServerRequest $request, Response $response): ResponseInterface
+    {
+        $this->consoleCommandRunner->runAsync([
+            'track:calculate-music-classifier-metadata',
+            $request->getParsedBodyParam('pathname'),
+        ]);
+
+        return $response->withStatus(StatusCodeInterface::STATUS_ACCEPTED);
     }
 
     public function removeMetadata(ServerRequest $request, Response $response): ResponseInterface

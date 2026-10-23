@@ -1,0 +1,80 @@
+# Strona utworu — problemy i rekomendacje UX/UI
+
+## 1. Główne problemy projektowe
+
+- **Hierarchia informacji:** nagłówek powinien eksponować przede wszystkim tytuł oraz dane istotne przy miksowaniu: BPM, tonację i gatunek.
+- **Lokalizacja utworu:** pełna ścieżka katalogów jest przydatna nawigacyjnie i jako przypomnienie okresu dodania utworu do kolekcji, ale może niepotrzebnie rozbudowywać nagłówek.
+- **Semantyka komponentów:** umieszczenie lokalizacji i albumu w stopce karty Essentii łączy metadane organizacyjne z wynikami analizy audio.
+- **Rozbudowa interfejsu:** przyszłe tagi zwiększą ilość informacji na stronie i wymagają zachowania czytelnej hierarchii.
+- **Responsywność:** na telefonie długi tytuł, parametry miksu, okruszki i album mogą konkurować o ograniczoną przestrzeń.
+- **Niekompletne metadane:** album, numer ścieżki i analiza Essentii mogą być nieobecne. Układ powinien zachowywać spójność niezależnie od dostępności tych danych.
+
+## 2. Odpowiedzi na pytania projektowe
+
+### Który wariant wybrać: V3 czy V4?
+
+**Rekomendacja: V4 jako baza.**
+
+- Ma prostszy nagłówek i lepiej eksponuje tytuł oraz parametry miksu.
+- Nie wymaga przeznaczania dodatkowej linii nagłówka na pełną ścieżkę katalogów.
+- Wymaga jednak przeniesienia lokalizacji poza stopkę karty Essentii.
+
+### Czy lokalizacja nad tytułem pomaga orientacji?
+
+- Tak, ponieważ zapewnia szybki dostęp do katalogu i przypomina, kiedy utwór trafił do kolekcji.
+- Pełna ścieżka jest jednak informacją pomocniczą, a nie główną informacją identyfikującą utwór.
+- Warto zachować ją w nawigacji, ale ograniczyć ilość prezentowanego tekstu.
+
+### Czy stopka karty Essentii to dobre miejsce na lokalizację i album?
+
+- Nie jest to optymalne rozwiązanie semantyczne.
+- Karta Essentii powinna grupować informacje o charakterze i właściwościach audio.
+- Lokalizacja i album powinny być niezależne od analizy, aby pozostały dostępne również wtedy, gdy analiza nie istnieje.
+
+### Jak rozwiązać problemy mobilne i brakujące dane?
+
+- Stosować krótszą lokalizację w okruszkach.
+- Pozwalać parametrom miksu i pozostałym metadanym zawijać się na mniejszych ekranach.
+- Pomijać nieobecne metadane zamiast wyświetlać puste pola i separatory.
+- Nie uzależniać wyświetlania lokalizacji ani albumu od obecności analizy Essentii.
+
+## 3. Rekomendowany układ
+
+1. **Nagłówek:** awatar, tytuł i podstawowe dane utworu.
+2. **Okruszki nawigacyjne:** skrócona lokalizacja katalogu, np. `Other / lipiec 2026`, z możliwością przejścia do katalogu.
+3. **Album i numer ścieżki:** opcjonalne metadane, poza kartą Essentii.
+4. **Tagi:** osobna strefa umożliwiająca szybkie rozpoznawanie i klasyfikowanie utworu.
+5. **Fala audio:** zachowana jako istotny element strony.
+6. **Analiza Essentii:** osobna sekcja grupująca nastroje, barwę, wokal i głośność.
+7. **Powiązane utwory:** sekcja wspierająca główny cel strony, czyli wybór kolejnego utworu do seta.
+
+Kolejność elementów 2–5 można dostosować do istniejącego układu i rzeczywistej częstotliwości korzystania z poszczególnych informacji.
+
+## 4. Format lokalizacji
+
+Preferowany zapis: **`lipiec 2026`**.
+
+- Jest naturalny językowo i szybko przypomina okres dodania utworu do kolekcji.
+- Jest nieco dłuższy niż zapis numeryczny, ale bardziej czytelny dla człowieka.
+- Alternatywa `07.2026` jest odpowiednia, jeśli priorytetem jest kompaktowy, techniczny wygląd.
+
+Pełną ścieżkę katalogów należy zachować w strukturze danych i udostępniać w odpowiednim widoku katalogu. Skrócona forma w okruszkach nie powinna sugerować nieistniejącej relacji hierarchicznej.
+
+## 5. Szczegółowe rekomendacje
+
+- Zachować V4 jako punkt wyjścia.
+- Umieścić skróconą lokalizację w osobnym wierszu nawigacyjnym, najlepiej bezpośrednio pod nagłówkiem.
+- Utrzymać hierarchię wizualną: tytuł > dane miksu > nawigacja i metadane pomocnicze.
+- Pozostawić album poza kartą Essentii; wyświetlać go tylko wtedy, gdy dostępne są odpowiednie dane.
+- Zaprojektować osobną strefę tagów, bez dokładania kolejnych informacji do nagłówka.
+- Na telefonie priorytetowo traktować tytuł, BPM, tonację i gatunek.
+- Zapewnić poprawne wyświetlanie strony bez albumu, numeru ścieżki lub analizy Essentii.
+- Nie rozbudowywać nadmiernie interfejsu o dodatkowe karty, jeśli wystarczą odstępy, subtelne separatory i spójna typografia.
+
+## 6. Podsumowanie decyzji
+
+**V4 + skrócone okruszki nawigacyjne + oddzielone metadane albumu** to rekomendowany kierunek.
+
+Rozwiązanie zachowuje kontekst kolekcji, nie obciąża nadmiernie nagłówka i utrzymuje logiczny podział między informacjami o utworze, jego organizacją w kolekcji oraz analizą audio.
+
+Ostatecznym kryterium sukcesu powinno być to, czy interfejs pozwala szybko ocenić utwór i wybrać kolejny element seta, bez utraty dostępu do informacji organizacyjnych.

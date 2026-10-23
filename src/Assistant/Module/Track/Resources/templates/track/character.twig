@@ -1,0 +1,63 @@
+{# @var character \Assistant\Module\Track\Extension\TrackCharacter|null #}
+{# @var pathname string ścieżka pliku, dla którego można zlecić analizę Essentii #}
+{% if character %}
+    {% set traits = [] %}
+
+    {% if character.timbre %}
+        {% set traits = traits|merge([ { label: 'Barwa', value: character.timbre } ]) %}
+    {% endif %}
+
+    {% if character.hasVoice is not null %}
+        {% set traits = traits|merge([ { label: 'Wokal', value: character.hasVoice ? 'obecny' : 'brak' } ]) %}
+    {% endif %}
+
+    {% if character.loudness is not null %}
+        {% set traits = traits|merge([ { label: 'Głośność', value: character.loudness|number_format(1, ',') ~ ' LUFS' } ]) %}
+    {% endif %}
+{% endif %}
+
+{% if not character %}
+    <span class="text-secondary small" data-role="track:character-missing">
+        Brak analizy Essentii: nastrój, barwa, wokal i głośność pojawią się po przeliczeniu utworu.
+        <button
+            type="button"
+            class="btn btn-link btn-sm p-0 align-baseline"
+            data-action="track:calculate-music-classifier-metadata"
+            data-url="{{ url_for('common.task.calculate-music-classifier-metadata') }}"
+            data-pathname="{{ pathname }}"
+        >
+            Przelicz teraz
+        </button>
+    </span>
+{% else %}
+    {# AI: wszystkie cechy w jednym wierszu o dwóch liniach: w pierwszej nazwy (nastroje z wartością), w drugiej
+       paski nastrojów i wartości barwy, wokalu i głośności, które stoją za kreską #}
+    <div class="ast-character-strip">
+        {% for label, probability in character.moods %}
+            <div class="ast-character-cell">
+                <div class="ast-character-cell-head">
+                    <span class="ast-feature-name">{{ label }}</span>
+                    <span class="ast-feature-value">{{ probability }}</span>
+                </div>
+                <div class="progress progress-sm">
+                    <div
+                        class="progress-bar"
+                        style="width: {{ probability }}%"
+                        role="progressbar"
+                        aria-valuenow="{{ probability }}"
+                        aria-valuemin="0"
+                        aria-valuemax="100"
+                        aria-label="{{ label }}"
+                    ></div>
+                </div>
+            </div>
+        {% endfor %}
+
+        {% for trait in traits %}
+            <div class="ast-character-cell {{ loop.first ? 'ast-character-cell-trait' : '' }}">
+                <span class="ast-feature-name">{{ trait.label }}</span>
+                <span>{{ trait.value }}</span>
+            </div>
+        {% endfor %}
+    </div>
+{% endif %}

@@ -749,43 +749,72 @@ table .ast-track-name span {
     margin: .5rem 0 0;
 }
 
-/* AI: karta danych utworu i cech Essentii; stała wysokość wiersza trzyma sąsiednie kolumny na wspólnych liniach */
-.ast-feature,
-.ast-feature-pair {
-    align-items: center;
+/* AI: na telefonie linia danych zawija się na kilka wierszy, a kropka na początku wiersza wygląda jak błąd,
+   więc pozycje oddziela sam odstęp */
+@media only screen and (max-width: 575.98px) {
+    .ast-track-header-meta {
+        column-gap: .75rem;
+    }
+
+    .ast-track-header-meta .breadcrumb-item + .breadcrumb-item {
+        padding-left: 0;
+    }
+
+    .ast-track-header-meta .breadcrumb-item + .breadcrumb-item::before {
+        content: none;
+    }
+}
+
+/* AI: cechy Essentii w jednym wierszu o dwóch liniach tej samej wysokości: nazwy wszystkich cech leżą w pierwszej,
+   a paski nastrojów (wyśrodkowane w linii) i wartości pozostałych cech w drugiej. Kreska oddzielająca cechy
+   od nastrojów stoi w środku odstępu między kolumnami, dzięki czemu wszystkie kolumny mają tę samą szerokość. */
+.ast-character-strip {
     display: grid;
     font-size: .8125rem;
-    gap: .75rem;
-    height: 1.875rem;
+    gap: .75rem 1.5rem;
+    grid-template-columns: repeat(8, minmax(0, 1fr));
 }
 
-.ast-feature {
-    grid-template-columns: 5.5rem 1fr 2rem;
+.ast-character-cell {
+    align-items: center;
+    display: grid;
+    grid-template-rows: 1.25rem 1.25rem;
+    line-height: 1.25rem;
+    min-width: 0;
+    row-gap: .25rem;
 }
 
-/* wypełnienie paska rośnie od środka, więc wartości różnych nastrojów porównuje się wokół jednej osi */
-.ast-feature .progress {
-    justify-content: center;
+.ast-character-cell-head {
+    display: flex;
+    justify-content: space-between;
 }
 
-.ast-feature-pair {
-    grid-template-columns: 5.5rem minmax(0, 1fr);
+.ast-character-cell-trait {
+    position: relative;
 }
 
-.ast-feature-pair > span:last-child {
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
+.ast-character-cell-trait::before {
+    border-left: var(--tblr-border-width) solid var(--tblr-border-color);
+    bottom: 0;
+    content: '';
+    left: -.75rem;
+    position: absolute;
+    top: 0;
 }
 
-.ast-feature-pair .breadcrumb {
-    margin: 0;
+@media only screen and (max-width: 991.98px) {
+    .ast-character-strip {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+
+    .ast-character-cell-trait::before {
+        content: none;
+    }
 }
 
-@media only screen and (min-width: 992px) {
-    .ast-track-details > [class*="col-lg"] + [class*="col-lg"] {
-        border-left: var(--tblr-border-width) solid var(--tblr-border-color);
-        padding-left: 1.25rem;
+@media only screen and (max-width: 575.98px) {
+    .ast-character-strip {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
     }
 }
 

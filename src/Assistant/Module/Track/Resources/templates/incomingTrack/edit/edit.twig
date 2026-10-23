@@ -10,6 +10,15 @@
     {% include '@track/common/header.twig' with { track } only %}
 {% endblock %}
 
+{% block page_header_description %}
+    {% include '@track/common/headerMeta.twig' with { track, indexedMonth: null } only %}
+{% endblock %}
+
+{% block page_actions %}
+    {% include '@track/common/searchSimilarButton.twig' with { track } only %}
+    {% include '@track/common/musicClassifierMetadataButton.twig' only %}
+{% endblock %}
+
 {% block content %}
     <div
         class="d-none"
@@ -19,6 +28,14 @@
 
     <div class="row row-deck row-cards">
         {% include '@track/common/wave.twig' with { track } only %}
+
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body py-3">
+                    {% include '@track/track/character.twig' with { character, pathname } only %}
+                </div>
+            </div>
+        </div>
 
         <div class="col-12">
             <form method="GET" action="{{ url_for('incoming-track.edit.edit', { pathname: pathname|url_encode }) }}" class="card" role="form">
@@ -147,6 +164,11 @@
             </form>
         </div>
     </div>
+
+    {% include '@track/common/modal-music-classifier-metadata.twig' with {
+        track,
+        url: url_for('incoming-track.music-classifier-metadata.get', { pathname: pathname|url_encode }),
+    } only %}
 
     <script src="/vendor/wavesurfer.min.js" type="text/javascript"></script>
     <script src="/js/track.js" type="module"></script>

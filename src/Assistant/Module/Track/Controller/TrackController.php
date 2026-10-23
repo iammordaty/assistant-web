@@ -2,18 +2,13 @@
 
 namespace Assistant\Module\Track\Controller;
 
-use Assistant\Module\Common\Extension\Breadcrumbs\BreadcrumbsBuilder;
-use Assistant\Module\Common\Extension\Breadcrumbs\UrlGenerator\BrowseCollectionRouteGenerator;
-use Assistant\Module\Common\Extension\MusicClassifier\MusicClassifierException;
-use Assistant\Module\Common\Extension\MusicClassifier\MusicClassifierService;
 use Assistant\Module\Common\Extension\Route;
 use Assistant\Module\Common\Extension\RouteResolver;
 use Assistant\Module\Track\Extension\Similarity\SimilarityBuilder;
 use Assistant\Module\Track\Extension\Similarity\SimilarityParametersForm;
+use Assistant\Module\Track\Extension\DateDirectory;
 use Assistant\Module\Track\Extension\TrackAvatar;
-use Assistant\Module\Track\Extension\TrackCharacter;
 use Assistant\Module\Track\Extension\TrackService;
-use Assistant\Module\Track\Model\Track;
 use Fig\Http\Message\StatusCodeInterface;
 use Psr\Http\Message\ResponseInterface;
 use Slim\Http\Response;
@@ -25,8 +20,6 @@ final class TrackController
     private const int SIMILAR_TRACKS_SOFT_LIMIT = 50;
 
     public function __construct(
-        private BreadcrumbsBuilder $breadcrumbsBuilder,
-        private MusicClassifierService $musicClassifierService,
         private RouteResolver $routeResolver,
         private SimilarityBuilder $similarityBuilder,
         private TrackService $trackService,
@@ -62,17 +55,12 @@ final class TrackController
             ]);
         }
 
-        $breadcrumbs = $this->breadcrumbsBuilder
-            ->withPath($track->getFile()->getPath())
-            ->withRouteGenerator(new BrowseCollectionRouteGenerator())
-            ->createBreadcrumbs();
-
         return $this->view->render($response, '@track/index.twig', [
             'menu' => 'track',
             'track' => $track,
             'avatar' => TrackAvatar::fromTrack($track),
-            'character' => $this->getTrackCharacter($track),
-            'breadcrumbs' => $breadcrumbs,
+            'character' => $this->trackService->getCharacter($track),
+            'indexedMonth' => $track->getIndexedDate() ? DateDirectory::formatMonth($track->getIndexedDate()) : null,
             'form' => $form,
             'presets' => $this->similarityBuilder->getPresets($track),
             'similarTracksList' => $similarTracks,
@@ -97,22 +85,5 @@ final class TrackController
                 ? StatusCodeInterface::STATUS_NO_CONTENT
                 : StatusCodeInterface::STATUS_INTERNAL_SERVER_ERROR
         );
-    }
-
-    /**
-     * AI: brak lub uszkodzony wynik klasyfikatora ukrywa cechy Essentii, zamiast blokować stronę utworu
-     *
-     * ponytail: plik wyniku (kilkaset kB JSON) jest parsowany przy każdym wyświetleniu strony; gdy zacznie to
-     * ważyć, cechy warto zapisywać w bazie podczas indeksowania
-     */
-    private function getTrackCharacter(Track $track): ?TrackCharacter
-    {
-        try {
-            $result = $this->musicClassifierService->getResult($track->getFile());
-        } catch (MusicClassifierException) {
-            return null;
-        }
-
-        return $result ? TrackCharacter::fromMusicClassifierResult($result) : null;
     }
 }

@@ -40,5 +40,9 @@ return static function (App $app): void {
         $group
             ->post('/{pathname:.*}/save', [ IncomingTrackEditController::class, 'save' ])
             ->setName('incoming-track.edit.save');
+
+        $group
+            ->get('/{pathname:.*}/music-classifier-metadata', [ MusicClassifierMetadataController::class, 'getIncoming' ])
+            ->setName('incoming-track.music-classifier-metadata.get');
     });
 };

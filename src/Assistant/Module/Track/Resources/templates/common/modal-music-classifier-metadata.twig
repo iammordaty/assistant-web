@@ -1,10 +1,11 @@
+{# @var url string adres metadanych: utworu z kolekcji (po guid) albo pliku z incoming (po ścieżce) #}
 <div
     class="modal"
     id="modal-music-classifier-metadata"
     tabindex="-1"
     aria-modal="true"
     role="dialog"
-    data-url="{{ url_for('track.music-classifier-metadata.get', { guid: track.guid }) }}"
+    data-url="{{ url }}"
     data-filename="{{ track.guid }}.json"
 >
     <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable" role="document">

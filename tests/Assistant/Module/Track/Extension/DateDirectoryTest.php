@@ -25,6 +25,12 @@ final class DateDirectoryTest extends TestCase
         ];
     }
 
+    public function testFormatMonth(): void
+    {
+        self::assertSame('lipiec 2026', DateDirectory::formatMonth(new \DateTime('2026-07-01')));
+        self::assertSame('styczeń 2009', DateDirectory::formatMonth(new DateTimeImmutable('2009-01-31')));
+    }
+
     /** @dataProvider dataTryParseYear */
     public function testTryParseYear(?string $input, ?string $expected): void
     {

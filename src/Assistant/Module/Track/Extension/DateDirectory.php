@@ -3,6 +3,7 @@
 namespace Assistant\Module\Track\Extension;
 
 use DateTimeImmutable;
+use DateTimeInterface;
 use IntlDateFormatter;
 use SplFileInfo;
 
@@ -58,6 +59,12 @@ final class DateDirectory
         return sprintf('%s/%s', $date->format('Y'), self::monthSegment($date));
     }
 
+    /** Miesiąc i rok dodania utworu do kolekcji, np. "lipiec 2026" */
+    public static function formatMonth(DateTimeInterface $date): string
+    {
+        return sprintf('%s %s', self::monthName($date), $date->format('Y'));
+    }
+
     private static function monthSegment(DateTimeImmutable $date): string
     {
         return sprintf('%s. %s', $date->format('m'), self::monthName($date));
@@ -75,7 +82,7 @@ final class DateDirectory
     }
 
     /** AI: duplikat konfiguracji IntlDateFormatter z RecentTracksController - świadomy, do scalenia przy refaktorze */
-    private static function monthName(DateTimeImmutable $date): string
+    private static function monthName(DateTimeInterface $date): string
     {
         $formatter = new IntlDateFormatter(
             locale: 'pl_PL',

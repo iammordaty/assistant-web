@@ -11,7 +11,7 @@
 {% endblock %}
 
 {% block page_header_description %}
-    {% include '@track/track/headerMeta.twig' with { track } only %}
+    {% include '@track/common/headerMeta.twig' with { track, indexedMonth } only %}
 {% endblock %}
 
 {% block page_actions %}
@@ -25,7 +25,7 @@
         <div class="col-12">
             <div class="card">
                 <div class="card-body py-3">
-                    {% include '@track/track/trackInfo.twig' with { track, breadcrumbs, character } only %}
+                    {% include '@track/track/character.twig' with { character, pathname: track.pathname } only %}
                 </div>
             </div>
         </div>
@@ -40,7 +40,6 @@
                             <path d="M6 9l6 6l6 -6"></path>
                         </svg>
                     </h3>
-                    {# AI: panel jest domyślnie zwinięty, a skróty 1–8 działają także wtedy, więc aktywny preset jest widoczny przy tytule #}
                     <span class="ast-active-preset ms-2" data-role="similar-tracks:active-preset">
                         · <strong>{{ form.request.mode.label }}</strong>
                     </span>
@@ -107,7 +106,10 @@
         </div>
     </div>
 
-    {% include '@track/track/modal-music-classifier-metadata.twig' with { track } only %}
+    {% include '@track/common/modal-music-classifier-metadata.twig' with {
+        track,
+        url: url_for('track.music-classifier-metadata.get', { guid: track.guid }),
+    } only %}
 
     <script src="/vendor/wavesurfer.min.js" type="text/javascript"></script>
     <script type="module" src="/js/track.js"></script>
