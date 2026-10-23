@@ -760,7 +760,12 @@ table .ast-track-name span {
 }
 
 .ast-feature {
-    grid-template-columns: 5rem 1fr 2rem;
+    grid-template-columns: 5.5rem 1fr 2rem;
+}
+
+/* wypełnienie paska rośnie od środka, więc wartości różnych nastrojów porównuje się wokół jednej osi */
+.ast-feature .progress {
+    justify-content: center;
 }
 
 .ast-feature-pair {

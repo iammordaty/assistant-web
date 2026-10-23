@@ -1,8 +1,8 @@
 {# @var character \Assistant\Module\Track\Extension\TrackCharacter|null #}
 {# AI: wiersze kolumn mają stałą wysokość, aby sąsiednie kolumny leżały na wspólnych liniach
-   (Album – Impreza – Barwa, Ścieżka – Agresja – Wokal) #}
+   (Album – Impreza – Barwa, Ścieżka – Agresja – Wokal); dane utworu mają tę samą szerokość także bez analizy Essentii #}
 <div class="row g-3 ast-track-details">
-    <div class="{{ character ? 'col-lg-4' : '' }} col-12">
+    <div class="col-lg-5 col-12">
         <div class="ast-feature-pair">
             <span class="ast-feature-name">Album</span>
             <span>{{ track.album }}</span>
@@ -21,7 +21,7 @@
 
     {% if character %}
         {% if character.moods %}
-            <div class="col-lg-5 col-12">
+            <div class="col-lg-4 col-12">
                 {% for label, probability in character.moods %}
                     <div class="ast-feature">
                         <span class="ast-feature-name">{{ label }}</span>
@@ -63,6 +63,12 @@
                     <span>{{ character.loudness|number_format(1, ',') }} LUFS</span>
                 </div>
             {% endif %}
+        </div>
+    {% else %}
+        <div class="col-lg-7 col-12 d-flex align-items-center">
+            <span class="text-secondary small">
+                Dodatkowe danem takie jak barwa, wokal i głośność pojawią się po przeliczeniu utworu
+            </span>
         </div>
     {% endif %}
 </div>
