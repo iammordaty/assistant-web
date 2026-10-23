@@ -2,6 +2,7 @@
 
 namespace Assistant\Module\Track\Extension;
 
+use Assistant\Module\Track\Model\IncomingTrack;
 use Assistant\Module\Track\Model\Track;
 
 /**
@@ -17,7 +18,7 @@ final readonly class TrackAvatar
     ) {
     }
 
-    public static function fromTrack(Track $track): self
+    public static function fromTrack(Track|IncomingTrack $track): self
     {
         return new self(
             self::getInitials($track->getArtists(), $track->getTitle()),
