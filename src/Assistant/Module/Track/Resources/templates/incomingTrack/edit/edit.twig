@@ -17,6 +17,7 @@
 {% block page_actions %}
     {% include '@track/common/searchSimilarButton.twig' with { track } only %}
     {% include '@track/common/musicClassifierMetadataButton.twig' only %}
+    {% include '@track/common/settingsMenu.twig' with { pathname, editUrl: null } only %}
 {% endblock %}
 
 {% block content %}
@@ -29,13 +30,15 @@
     <div class="row row-deck row-cards">
         {% include '@track/common/wave.twig' with { track } only %}
 
-        <div class="col-12">
-            <div class="card">
-                <div class="card-body py-3">
-                    {% include '@track/track/character.twig' with { character, pathname } only %}
+        {% if audioProfile %}
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-body py-3">
+                        {% include '@track/common/audioProfile.twig' with { audioProfile } only %}
+                    </div>
                 </div>
             </div>
-        </div>
+        {% endif %}
 
         <div class="col-12">
             <form method="GET" action="{{ url_for('incoming-track.edit.edit', { pathname: pathname|url_encode }) }}" class="card" role="form">

@@ -45,7 +45,8 @@ final readonly class TaskController
     }
 
     /**
-     * Analiza Essentii trwa do kilku minut, więc wynik pojawi się na stronie utworu po jej odświeżeniu
+     * Analiza Essentii trwa do kilku minut, więc wynik pojawi się na stronie utworu po jej odświeżeniu.
+     * Istniejący wynik jest liczony od nowa (--force), bo akcja jest dostępna zawsze, także do ponownej analizy.
      *
      * ponytail: wynik jest zapisywany pod ścieżką pliku, więc zmiana nazwy w incoming wymaga ponownej analizy;
      * gdy zacznie to przeszkadzać, zmiana nazwy powinna przenosić również plik wyniku
@@ -54,6 +55,7 @@ final readonly class TaskController
     {
         $this->consoleCommandRunner->runAsync([
             'track:calculate-music-classifier-metadata',
+            '--force',
             $request->getParsedBodyParam('pathname'),
         ]);
 

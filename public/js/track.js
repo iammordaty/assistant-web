@@ -330,11 +330,11 @@ $(function () {
 	$('[data-action="track:toggle-favorite"]').on('click', e => toggleFavorite(e.currentTarget));
 
 	$('[data-action="track:calculate-music-classifier-metadata"]').on('click', function () {
-		const $message = $('[data-role="track:character-missing"]');
+		const $action = $(this).prop('disabled', true);
 
-		$.post($(this).data('url'), { pathname: $(this).data('pathname') })
-			.done(() => $message.text('Trwa analiza Essentii. Wyniki pojawią się po odświeżeniu strony za kilka minut.'))
-			.fail(() => $message.text('Nie udało się zlecić analizy Essentii.'));
+		$.post($action.data('url'), { pathname: $action.data('pathname') })
+			.done(() => $action.text('Trwa analiza, odśwież stronę za kilka minut'))
+			.fail(() => $action.text('Nie udało się zlecić analizy').prop('disabled', false));
 	});
 
 	initMusicClassifierMetadataModal();

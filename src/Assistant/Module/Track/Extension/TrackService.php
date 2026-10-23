@@ -65,7 +65,7 @@ class TrackService
      * ponytail: plik wyniku (kilkaset kB JSON) jest parsowany przy każdym wyświetleniu strony; gdy zacznie to
      * ważyć, cechy warto zapisywać w bazie podczas indeksowania
      */
-    public function getCharacter(Track|IncomingTrack $track): ?TrackCharacter
+    public function getAudioProfile(Track|IncomingTrack $track): ?TrackAudioProfile
     {
         try {
             $result = $this->musicClassifierService->getResult($track->getFile());
@@ -73,6 +73,6 @@ class TrackService
             return null;
         }
 
-        return $result ? TrackCharacter::fromMusicClassifierResult($result) : null;
+        return $result ? TrackAudioProfile::fromMusicClassifierResult($result) : null;
     }
 }

@@ -8,7 +8,7 @@ use Assistant\Module\Common\Extension\MusicClassifier\MusicClassifierResult;
  * AI: wybrane cechy z wyniku klasyfikatora Essentia, czytelne przy doborze utworów: nastroje jako
  * prawdopodobieństwo w procentach oraz barwa, wokal i głośność. Pozostałe dane są dostępne w modalu metadanych.
  */
-final readonly class TrackCharacter
+final readonly class TrackAudioProfile
 {
     /** Klasyfikator => [ klasa pozytywna, etykieta ], w kolejności wyświetlania */
     private const array MOODS = [

@@ -1,0 +1,45 @@
+{# @var audioProfile \Assistant\Module\Track\Extension\TrackAudioProfile #}
+{% set traits = [] %}
+
+{% if audioProfile.timbre %}
+    {% set traits = traits|merge([ { label: 'Barwa', value: audioProfile.timbre } ]) %}
+{% endif %}
+
+{% if audioProfile.hasVoice is not null %}
+    {% set traits = traits|merge([ { label: 'Wokal', value: audioProfile.hasVoice ? 'obecny' : 'brak' } ]) %}
+{% endif %}
+
+{% if audioProfile.loudness is not null %}
+    {% set traits = traits|merge([ { label: 'Głośność', value: audioProfile.loudness|number_format(1, ',') ~ ' LUFS' } ]) %}
+{% endif %}
+
+{# AI: wszystkie cechy w jednym wierszu o dwóch liniach: w pierwszej nazwy (nastroje z wartością), w drugiej
+   paski nastrojów i wartości barwy, wokalu i głośności, które stoją za kreską #}
+<div class="ast-audio-profile-strip">
+    {% for label, probability in audioProfile.moods %}
+        <div class="ast-audio-profile-cell">
+            <div class="ast-audio-profile-cell-head">
+                <span class="ast-feature-name">{{ label }}</span>
+                <span class="ast-feature-value">{{ probability }}</span>
+            </div>
+            <div class="progress progress-sm">
+                <div
+                    class="progress-bar"
+                    style="width: {{ probability }}%"
+                    role="progressbar"
+                    aria-valuenow="{{ probability }}"
+                    aria-valuemin="0"
+                    aria-valuemax="100"
+                    aria-label="{{ label }}"
+                ></div>
+            </div>
+        </div>
+    {% endfor %}
+
+    {% for trait in traits %}
+        <div class="ast-audio-profile-cell {{ loop.first ? 'ast-audio-profile-cell-trait' : '' }}">
+            <span class="ast-feature-name">{{ trait.label }}</span>
+            <span>{{ trait.value }}</span>
+        </div>
+    {% endfor %}
+</div>

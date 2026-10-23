@@ -768,14 +768,14 @@ table .ast-track-name span {
 /* AI: cechy Essentii w jednym wierszu o dwóch liniach tej samej wysokości: nazwy wszystkich cech leżą w pierwszej,
    a paski nastrojów (wyśrodkowane w linii) i wartości pozostałych cech w drugiej. Kreska oddzielająca cechy
    od nastrojów stoi w środku odstępu między kolumnami, dzięki czemu wszystkie kolumny mają tę samą szerokość. */
-.ast-character-strip {
+.ast-audio-profile-strip {
     display: grid;
     font-size: .8125rem;
     gap: .75rem 1.5rem;
     grid-template-columns: repeat(8, minmax(0, 1fr));
 }
 
-.ast-character-cell {
+.ast-audio-profile-cell {
     align-items: center;
     display: grid;
     grid-template-rows: 1.25rem 1.25rem;
@@ -784,16 +784,16 @@ table .ast-track-name span {
     row-gap: .25rem;
 }
 
-.ast-character-cell-head {
+.ast-audio-profile-cell-head {
     display: flex;
     justify-content: space-between;
 }
 
-.ast-character-cell-trait {
+.ast-audio-profile-cell-trait {
     position: relative;
 }
 
-.ast-character-cell-trait::before {
+.ast-audio-profile-cell-trait::before {
     border-left: var(--tblr-border-width) solid var(--tblr-border-color);
     bottom: 0;
     content: '';
@@ -803,17 +803,17 @@ table .ast-track-name span {
 }
 
 @media only screen and (max-width: 991.98px) {
-    .ast-character-strip {
+    .ast-audio-profile-strip {
         grid-template-columns: repeat(4, minmax(0, 1fr));
     }
 
-    .ast-character-cell-trait::before {
+    .ast-audio-profile-cell-trait::before {
         content: none;
     }
 }
 
 @media only screen and (max-width: 575.98px) {
-    .ast-character-strip {
+    .ast-audio-profile-strip {
         grid-template-columns: repeat(2, minmax(0, 1fr));
     }
 }
