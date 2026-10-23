@@ -622,8 +622,9 @@ table .ast-track-name span {
 
 /* AI: nagłówek utworu: powiększony awatar (ten sam wzorzec co TrackAvatar w Miksach) oraz dane utworu
    rozdzielone kropkami, jak w widoku miksu. Awatar jest przyciskiem odtwarzania: najechanie zamienia inicjały
-   na ikonę odtwarzania, a podczas odtwarzania awatar pokazuje pauzę i postęp utworu. Na urządzeniach bez
-   najechania ikona pojawia się na chwilę po załadowaniu fali, aby było widać, że awatar jest przyciskiem. */
+   na ikonę odtwarzania lub pauzy, a po zjechaniu kursorem wracają inicjały, także podczas odtwarzania.
+   Na urządzeniach bez najechania podczas odtwarzania awatar pokazuje pauzę, a ikona odtwarzania pojawia się
+   na chwilę po załadowaniu fali, aby było widać, że awatar jest przyciskiem. */
 .ast-track-avatar {
     border: 0;
     font-family: inherit;
@@ -677,30 +678,6 @@ table .ast-track-name span {
     transform: none;
 }
 
-.ast-track-avatar.active .ast-track-avatar-initials {
-    opacity: 0;
-}
-
-.ast-track-avatar.active .ast-track-avatar-icon {
-    opacity: 1;
-    transform: none;
-}
-
-.ast-track-avatar-progress {
-    background: currentColor;
-    bottom: 0;
-    height: 3px;
-    left: 0;
-    opacity: 0;
-    position: absolute;
-    transition: opacity .2s ease;
-    width: 0;
-}
-
-.ast-track-avatar.active .ast-track-avatar-progress {
-    opacity: .6;
-}
-
 @media (hover: hover) {
     .ast-track-avatar:not(:disabled):hover .ast-track-avatar-initials {
         opacity: 0;
@@ -713,6 +690,15 @@ table .ast-track-name span {
 }
 
 @media (hover: none) {
+    .ast-track-avatar.active .ast-track-avatar-initials {
+        opacity: 0;
+    }
+
+    .ast-track-avatar.active .ast-track-avatar-icon {
+        opacity: 1;
+        transform: none;
+    }
+
     .ast-track-avatar:not(:disabled) .ast-track-avatar-initials {
         animation: ast-track-avatar-hint-initials 1.4s ease .3s;
     }

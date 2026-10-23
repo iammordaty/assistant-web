@@ -39,7 +39,6 @@ $(function () {
 	});
 
 	const $currentTimeIndicator = $('#wave-time-current-time');
-	const $trackProgress = $('[data-role="track:progress"]');
 
 	wavesurfer.on('timeupdate', (currentTime) => {
 		const trackDuration = wavesurfer.getDuration();
@@ -55,7 +54,6 @@ $(function () {
 		}
 
 		$currentTimeIndicator.html(prefix + formatSeconds(time));
-		$trackProgress.css('width', `${currentTime / trackDuration * 100}%`);
 	});
 
 	wavesurfer.on('play', function () {
