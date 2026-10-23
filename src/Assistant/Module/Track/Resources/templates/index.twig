@@ -22,7 +22,7 @@
     <div class="row row-deck row-cards" data-role="track:container" data-track-edit-url="{{ url_for('track.edit.edit', { pathname: track.pathname }) }}">
         {% include '@track/common/wave.twig' with { track } only %}
 
-        <div class="col-12 mt-1">
+        <div class="col-12">
             <div class="card">
                 <div class="card-body py-3">
                     {% include '@track/track/trackInfo.twig' with { track, breadcrumbs, character } only %}
