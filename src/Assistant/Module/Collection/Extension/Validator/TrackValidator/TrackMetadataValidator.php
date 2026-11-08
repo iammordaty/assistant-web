@@ -11,7 +11,11 @@ final class TrackMetadataValidator
     {
     }
 
-    private const REMIX_NOTATIONS = [
+    private const array TITLE_CASE_EXCEPTIONS = [
+
+    ];
+
+    private const array REMIX_NOTATIONS = [
         'Bootleg',
         'Dub',
         'Edit',
@@ -31,24 +35,22 @@ final class TrackMetadataValidator
         'Vision',
     ];
 
-    private const MIN_BPM = 65;
-    private const MIN_YEAR = 1980;
+    private const int MIN_BPM = 65;
+    private const int MIN_YEAR = 1980;
 
     public function __invoke(IncomingTrack|Track $track): TrackValidationResult
     {
-        // tu pewnie da się [ ...$this->x(), ...$this->y() ], ale do sprawdzenia
-
-        $errors = array_merge(
-            $this->validateRequiredFields($track),
-            $this->validateTitleConsistency($track),
-            $this->validateTrailingWhitespaces($track),
-            $this->validateRemixNotation($track),
-            $this->validateAlbumTrackConsistency($track),
-            $this->validateYear($track),
-            $this->validateInitialKey($track),
-            $this->validateBpm($track),
-            $this->validateTrackNumber($track),
-        );
+        $errors = [
+            ...$this->validateRequiredFields($track),
+            ...$this->validateTitleConsistency($track),
+            ...$this->validateTrailingWhitespaces($track),
+            ...$this->validateRemixNotation($track),
+            ...$this->validateAlbumTrackConsistency($track),
+            ...$this->validateYear($track),
+            ...$this->validateInitialKey($track),
+            ...$this->validateBpm($track),
+            ...$this->validateTrackNumber($track),
+        ];
 
         $isValid = count($errors) === 0;
 
@@ -90,7 +92,11 @@ final class TrackMetadataValidator
     {
         $errors = [];
 
-        preg_match_all('/(?<!\p{L})(\p{L}\p{M}*[\p{L}\p{M}\d\p{P}\p{S}\']*)/u', $track->getTitle(), $wordMatches);
+        preg_match_all(
+            '/(?<![\p{L}\d])(\p{L}\p{M}*[\p{L}\p{M}\d\p{P}\p{S}\']*)/u',
+            $track->getTitle(),
+            $wordMatches
+        );
 
         $words = $wordMatches[1] ?? [];
 
@@ -102,9 +108,11 @@ final class TrackMetadataValidator
         $nonCapitalizedWords = [];
 
         foreach ($words as $word) {
-            $firstChar = $word[0];
+            if (in_array($word, self::TITLE_CASE_EXCEPTIONS, true)) {
+                continue;
+            }
 
-            if (mb_strtoupper($firstChar) === $firstChar && $firstChar !== mb_strtolower($firstChar)) {
+            if (preg_match('/^\p{Lu}/u', $word) === 1) {
                 $hasUppercase = true;
             } else {
                 $nonCapitalizedWords[] = $word;
@@ -194,7 +202,7 @@ final class TrackMetadataValidator
     {
         $errors = [];
 
-        if (!in_array($track->getInitialKey(), $this->validInitialKeys)) {
+        if (!in_array($track->getInitialKey(), $this->validInitialKeys, true)) {
             $errors[] = sprintf('Nieprawidłowa tonacja (%s).', $track->getInitialKey());
         }
 
