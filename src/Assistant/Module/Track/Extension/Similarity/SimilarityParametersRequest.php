@@ -2,15 +2,15 @@
 
 namespace Assistant\Module\Track\Extension\Similarity;
 
-final class SimilarityParametersRequest
+final readonly class SimilarityParametersRequest
 {
     public function __construct(
-        public readonly RelatedTracksMode $mode = RelatedTracksMode::SIMILAR,
-        public readonly ?array $providers = null,
-        public readonly ?float $bpm = null,
-        public readonly ?string $genre = null,
-        public readonly ?string $musicalKey = null,
-        public readonly ?int $year = null,
+        public RelatedTracksMode $mode = RelatedTracksMode::SIMILAR,
+        public ?array $providers = null,
+        public ?float $bpm = null,
+        public ?string $genre = null,
+        public ?string $musicalKey = null,
+        public ?int $year = null,
     ) {
     }
 }
