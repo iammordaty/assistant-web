@@ -395,17 +395,7 @@ table .ast-track-name span {
 
 .ast-related-panel-row {
     align-items: start;
-    display: grid;
     gap: .75rem;
-    grid-template-columns: 5.5rem 1fr;
-}
-
-.ast-related-panel-label {
-    color: var(--tblr-muted);
-    font-size: .75rem;
-    letter-spacing: .04em;
-    padding-top: .4375rem;
-    text-transform: uppercase;
 }
 
 .ast-active-preset {
@@ -464,9 +454,8 @@ table .ast-track-name span {
     padding: 0 .75rem;
 }
 
-.ast-preset.is-modified::after {
-    content: '•';
-    margin-left: -.25rem;
+.ast-preset.is-modified {
+    background: rgba(var(--tblr-primary-rgb), .02)
 }
 
 .ast-preset kbd {
@@ -575,7 +564,7 @@ table .ast-track-name span {
 
 /* AI: na telefonie filtr zajmuje osobny wiersz nagłówka, a różnice są ukryte, aby tonacja, BPM i podobieństwo
    mieściły się bez przewijania w poziomie */
-@media only screen and (max-width: 575.98px) {
+@media only screen and (max-width: 576px) {
     .ast-similar-tracks-actions {
         flex-basis: 100%;
         margin: 0;
@@ -598,11 +587,6 @@ table .ast-track-name span {
 
     .ast-related-panel-row {
         gap: .375rem;
-        grid-template-columns: 1fr;
-    }
-
-    .ast-related-panel-label {
-        padding-top: 0;
     }
 
     .ast-presets {

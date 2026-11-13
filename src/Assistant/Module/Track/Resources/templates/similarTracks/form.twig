@@ -7,38 +7,34 @@
 >
     <input type="hidden" name="{{ constant('NAME_MODE', form) }}" value="{{ form.request.mode.value }}" data-role="similar-tracks:mode-input">
 
-    {# AI: „Kierunek” to presety, a „Szukaj” to dostawcy z wartościami, które preset wpisuje; czytane od góry
-       pokazują, dokąd zmierza kolejny utwór i jak zostanie wyszukany #}
     <div class="ast-related-panel">
         <div class="ast-related-panel-row">
-            <span class="ast-related-panel-label">Kierunek</span>
             {% include '@track/similarTracks/presets.twig' with { presets: presets, activeMode: form.request.mode } only %}
         </div>
 
         <div class="ast-related-panel-row">
-            <span class="ast-related-panel-label">Szukaj</span>
-
-            {# AI: każdy dostawca to jeden zwarty element (przełącznik i opcjonalna wartość) w zawijanym rzędzie;
-               wyłączony dostawca zostaje na miejscu z nieaktywnym polem, aby układ nie przeskakiwał przy przełączaniu #}
             <div class="ast-similarity-parameters">
                 {% for similarityParameter in form.similarityParameters %}
                     {% set isProviderEnabled = form.isProviderEnabled(similarityParameter.name) %}
-                    {% set suggestionsId = 'parameter-' ~ similarityParameter.name ~ '-suggestions' %}
+                    {% set parameterId = 'parameter-' ~ similarityParameter.name %}
+                    {% set suggestionsId = parameterId ~ '-suggestions' %}
 
                     <div class="ast-similarity-parameter" data-role="similar-tracks:parameter">
-                        <label class="ast-similarity-parameter-toggle" for="parameter-{{ similarityParameter.name }}">
+                        <label class="ast-similarity-parameter-toggle" for="{{ parameterId }}">
                             <input
                                 type="checkbox"
                                 class="form-check-input m-0"
                                 name="{{ constant('NAME_PROVIDERS', form) }}[]"
                                 value="{{ similarityParameter.name }}"
-                                id="parameter-{{ similarityParameter.name }}"
+                                id="{{ parameterId }}"
                                 {% if isProviderEnabled %} checked="checked" {% endif %}
                             >
                             {{ similarityParameter.displayName }}
                         </label>
+
                         {% if similarityParameter.hasInput %}
                             <input
+                                id="{{ parameterId }}-input"
                                 data-role="similar-tracks:parameter-input"
                                 type="{{ similarityParameter.inputType }}"
                                 name="{{ similarityParameter.name }}"
@@ -52,6 +48,7 @@
                                 {% if similarityParameter.inputMaxValue %} max="{{ similarityParameter.inputMaxValue }}" {% endif %}
                                 {% if similarityParameter.inputStep %} step="{{ similarityParameter.inputStep }}" {% endif %}
                             >
+
                             {% if similarityParameter.inputSuggestions %}
                                 <datalist id="{{ suggestionsId }}">
                                     {% for value, description in similarityParameter.inputSuggestions %}
@@ -66,3 +63,4 @@
         </div>
     </div>
 </form>
+

@@ -104,7 +104,16 @@ final class SimilarityParametersForm
             return [];
         }
 
-        return array_column($musicalKeyInfo['similarKeys'], 'title', 'value');
+        $suggestions = array_column($musicalKeyInfo['similarKeys'], 'title', 'value');
+        $keys = array_keys($suggestions);
+
+        $suggestions = array_map(
+            fn($title, $value) => 'To ' . strtolower($title) . ' (' . $value . ')',
+            $suggestions,
+            array_keys($suggestions)
+        );
+
+        return array_combine($keys, $suggestions);
     }
 
     /**

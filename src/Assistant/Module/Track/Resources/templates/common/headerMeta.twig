@@ -1,9 +1,6 @@
 {# Dane utworu rozdzielone kropkami, tak jak w widoku miksu (TrackEntry.jsx) #}
 {# @var indexedMonth string|null miesiąc dodania do kolekcji, np. "lipiec 2026" #}
 
-{# Album pokrywający się z tytułem (single) niczego nie dodaje, więc jest pomijany #}
-{% set isAlbumShown = track.album and not (track.title starts with track.album) %}
-
 <ol class="breadcrumb ast-breadcrumb-dotted ast-track-header-meta">
     {% if track.genre %}
         <li class="breadcrumb-item">
@@ -39,6 +36,15 @@
         </li>
     {% endif %}
 
+    {# Album pokrywający się z tytułem (single) niczego nie dodaje, więc jest pomijany #}
+    {% set showAlbum = track.album and not (track.title starts with track.album) %}
+
+    {% if showAlbum %}
+        <li class="breadcrumb-item">
+            {{ track.album }}{% if track.trackNumber %} #{{ track.trackNumber }}{% endif %}
+        </li>
+    {% endif %}
+
     {% if track.year %}
         <li class="breadcrumb-item">
             <a class="text-reset" href="{{ url_for('search.advanced.index', query_params = { year: track.year }) }}">
@@ -47,13 +53,6 @@
         </li>
     {% endif %}
 
-    {% if isAlbumShown %}
-        <li class="breadcrumb-item">
-            {{ track.album }}{% if track.trackNumber %}, ścieżka {{ track.trackNumber }}{% endif %}
-        </li>
-    {% endif %}
-
-    {# AI: miesiąc dodania prowadzi do utworów dodanych w tym samym miesiącu (katalogi Singles i Other razem) #}
     {% if indexedMonth %}
         <li class="breadcrumb-item">
             <a class="text-reset" href="{{ url_for('search.advanced.index', query_params = { indexed_date: track.indexedDate|date('m.Y') }) }}">
