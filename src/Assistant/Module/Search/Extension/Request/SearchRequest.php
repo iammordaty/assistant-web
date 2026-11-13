@@ -12,9 +12,6 @@ use Assistant\Module\Search\Extension\Request\ExpressionParser\NumberMinMaxExpre
 use Assistant\Module\Search\Extension\Request\ExpressionParser\YearMinMaxExpressionParser;
 use Slim\Http\ServerRequest;
 
-// przed usunięciem 'artist' i 'title' trzeba pozmieniać wywołania routingu
-// - src/Assistant/Module/Track/Resources/templates/common/header.twig
-// - src/Assistant/Module/Dashboard/Resources/templates/index.twig
 final readonly class SearchRequest
 {
     // pomyśleć o wyciągnięciu tego do klasy Form i zamiana array $form na SearchForm $form, ale bez spiny
@@ -83,27 +80,34 @@ final readonly class SearchRequest
         $name = $this->name;
         $artist = null;
         $title = null;
+        $anyOf = null;
 
         if ($this->name) {
-            $parsedName = NameParser::parse($this->name);
-            $modifiers = $parsedName?->getModifiers() ?? [];
-            $name = $parsedName?->getFreeText();
+            $freeTexts = [];
+            $clauses = [];
 
-            if ($modifiers !== []) {
-                if (isset($modifiers['artist'])) {
-                    $artist = Regex::contains($modifiers['artist']);
+            // AI: " or " przed modyfikatorem rozdziela grupy, które trafiają do MongoDB jako $or; warunek
+            // modyfikatora chroni wartości takie jak "t: Now or Never". Tekst wolny pozostaje wspólnym $text,
+            // bo MongoDB nie pozwala łączyć $text w $or z polami bez indeksu
+            foreach (preg_split('/\s+or\s+(?=(?:a|artist|t|title|r|remix)\s*:)/i', $this->name) as $part) {
+                $parsedName = NameParser::parse($part);
+
+                if ($parsedName?->getFreeText() !== null) {
+                    $freeTexts[] = $parsedName->getFreeText();
                 }
 
-                $titleTerm = $modifiers['title'] ?? null;
-                $remixTerm = $modifiers['remix'] ?? null;
-
-                if ($titleTerm && $remixTerm) {
-                    $title = NameParser::titleAndRemixRegex($titleTerm, $remixTerm);
-                } elseif ($titleTerm) {
-                    $title = NameParser::titleOnlyRegex($titleTerm);
-                } elseif ($remixTerm) {
-                    $title = NameParser::remixRegex($remixTerm);
+                if ($parsedName?->getModifiers()) {
+                    $clauses[] = self::modifiersToCriteria($parsedName->getModifiers());
                 }
+            }
+
+            $name = $freeTexts !== [] ? implode(' ', $freeTexts) : null;
+
+            if (count($clauses) === 1) {
+                $artist = $clauses[0]->getArtist();
+                $title = $clauses[0]->getTitle();
+            } elseif ($clauses !== []) {
+                $anyOf = $clauses;
             }
         } else {
             $artist = $this->artist ? Regex::contains($this->artist) : null;
@@ -123,7 +127,30 @@ final readonly class SearchRequest
             isFavorite: $this->isFavorite ?: null,
             indexedDates: $this->indexedDates,
             pathname: $this->pathname,
+            anyOf: $anyOf,
         );
+    }
+
+    /**
+     * @param array<string,string> $modifiers
+     */
+    private static function modifiersToCriteria(array $modifiers): SearchCriteria
+    {
+        $artist = isset($modifiers['artist']) ? Regex::contains($modifiers['artist']) : null;
+        $title = null;
+
+        $titleTerm = $modifiers['title'] ?? null;
+        $remixTerm = $modifiers['remix'] ?? null;
+
+        if ($titleTerm && $remixTerm) {
+            $title = NameParser::titleAndRemixRegex($titleTerm, $remixTerm);
+        } elseif ($titleTerm) {
+            $title = NameParser::titleOnlyRegex($titleTerm);
+        } elseif ($remixTerm) {
+            $title = NameParser::remixRegex($remixTerm);
+        }
+
+        return new SearchCriteria(artist: $artist, title: $title);
     }
 
     private static function parseCommaSeparated(?string $value): ?array

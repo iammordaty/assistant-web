@@ -18,6 +18,7 @@ final class SearchCriteria
      * @param MinMaxInfo|\DateTimeInterface[]|null $indexedDates
      * @param SearchCriteriaField|string|null $parent
      * @param SearchCriteriaField[]|string[]|null $pathname
+     * @param SearchCriteria[]|null $anyOf co najmniej jedno z kryteriów musi być spełnione
      */
     public function __construct(
         private ?string $name = null,
@@ -33,7 +34,14 @@ final class SearchCriteria
         private MinMaxInfo|array|null $indexedDates = null,
         private SearchCriteriaField|string|null $parent = null,
         private ?array $pathname = null,
+        private ?array $anyOf = null,
     ) {
+    }
+
+    /** @return SearchCriteria[]|null */
+    public function getAnyOf(): ?array
+    {
+        return $this->anyOf;
     }
 
     public function getName(): ?string

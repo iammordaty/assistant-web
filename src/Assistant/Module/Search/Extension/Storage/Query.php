@@ -37,6 +37,7 @@ final class Query
      * @param MinMaxInfo|\DateTimeInterface[]|null $indexedDates
      * @param string|null $parent
      * @param SearchCriteriaField[]|string[]|null $pathname
+     * @param SearchCriteria[]|null $anyOf
      */
     public function __construct(
         private ?string $name,
@@ -52,6 +53,7 @@ final class Query
         private MinMaxInfo|array|null $indexedDates,
         private ?string $parent,
         private ?array $pathname,
+        private ?array $anyOf,
     ) {
     }
 
@@ -71,6 +73,7 @@ final class Query
             $criteria->getIndexedDates(),
             $criteria->getParent(),
             $criteria->getPathname(),
+            $criteria->getAnyOf(),
         );
 
         return $query;
@@ -130,6 +133,10 @@ final class Query
 
         if ($this->pathname) {
             $criteria['pathname'] = self::fieldToStorageQuery($this->pathname, transform: true);
+        }
+
+        if ($this->anyOf) {
+            $criteria['$or'] = array_map(fn ($clause) => self::fromSearchCriteria($clause)->toStorage(), $this->anyOf);
         }
 
         return $criteria;
