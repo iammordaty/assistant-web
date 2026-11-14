@@ -1,6 +1,7 @@
 <?php
 
 use Assistant\Module\Common\Extension\BeatportApiClient;
+use Assistant\Module\Common\Extension\MusicClassifier\MusicClassifierService;
 use Assistant\Module\Common\Extension\TrackSearch\BeatportSearchTracks;
 use Assistant\Module\Common\Extension\TrackSearch\GoogleBeatportSearchTracks;
 use Assistant\Module\Common\Extension\TrackSearch\GoogleSearchApiClient;
@@ -40,7 +41,6 @@ return static function (string $baseDir): array {
             'ready_dir' => '/collection/_new/_zrobione',
             'metadata_dirs' => [
                 'music_similarity' => '/metadata/musly',
-                'music_classifier' => '/metadata/essentia',
             ],
         ],
 
@@ -164,6 +164,10 @@ return static function (string $baseDir): array {
                     'providers_parameters' => [ Bpm::NAME => [ 'tolerance' => 3 ] ],
                 ],
             ],
+        ],
+
+        MusicClassifierService::class => [
+            'api_url' => 'http://assistant-music-classifier/',
         ],
 
         BeatportApiClient::class => [

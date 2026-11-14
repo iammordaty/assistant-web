@@ -60,7 +60,6 @@ final class EditController
             'query' => $query,
             'track' => $track,
             'avatar' => TrackAvatar::fromTrack($track),
-            'audioProfile' => $this->trackService->getAudioProfile($track),
             'return_url' => $returnUrl,
         ]);
     }

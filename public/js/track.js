@@ -1,6 +1,7 @@
 /* global $ */
 
 import formatSeconds from './modules/format-seconds.js';
+import initMusicClassifierHashtags from './modules/music-classifier-hashtags.js';
 import initMusicClassifierMetadataModal from './modules/music-classifier-metadata-modal.js';
 import renderWaveform from './modules/render-waveform.js';
 import toggleFavorite from './modules/toggle-favorite.js';
@@ -329,13 +330,6 @@ $(function () {
 
 	$('[data-action="track:toggle-favorite"]').on('click', e => toggleFavorite(e.currentTarget));
 
-	$('[data-action="track:calculate-music-classifier-metadata"]').on('click', function () {
-		const $action = $(this).prop('disabled', true);
-
-		$.post($action.data('url'), { pathname: $action.data('pathname') })
-			.done(() => $action.text('Trwa analiza, odśwież stronę za kilka minut'))
-			.fail(() => $action.text('Nie udało się zlecić analizy').prop('disabled', false));
-	});
-
+	initMusicClassifierHashtags();
 	initMusicClassifierMetadataModal();
 });

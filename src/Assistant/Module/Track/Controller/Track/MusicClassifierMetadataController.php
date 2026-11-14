@@ -10,12 +10,14 @@ use Psr\Http\Message\ResponseInterface;
 use SplFileInfo;
 use Slim\Http\Response;
 use Slim\Http\ServerRequest;
+use Slim\Views\Twig;
 
 final readonly class MusicClassifierMetadataController
 {
     public function __construct(
         private MusicClassifierService $musicClassifierService,
         private TrackService $trackService,
+        private Twig $view,
     ) {
     }
 
@@ -25,9 +27,7 @@ final readonly class MusicClassifierMetadataController
         $track = $this->trackService->getByGuid($guid);
 
         if (!$track) {
-            return $response
-                ->withJson([ 'message' => sprintf('Track "%s" does not exist.', $guid) ])
-                ->withStatus(StatusCodeInterface::STATUS_NOT_FOUND);
+            return $this->getTrackNotFoundResponse($response, $guid);
         }
 
         return $this->getResultResponse($response, $track->getFile(), $guid);
@@ -39,38 +39,75 @@ final readonly class MusicClassifierMetadataController
         $track = $this->trackService->createFromFile($pathname);
 
         if (!$track) {
-            return $response
-                ->withJson([ 'message' => sprintf('Track "%s" does not exist.', $pathname) ])
-                ->withStatus(StatusCodeInterface::STATUS_NOT_FOUND);
+            return $this->getTrackNotFoundResponse($response, $pathname);
         }
 
         return $this->getResultResponse($response, $track->getFile(), $track->getGuid());
     }
 
+    public function getHashtags(ServerRequest $request, Response $response): ResponseInterface
+    {
+        $guid = $request->getAttribute('guid');
+        $track = $this->trackService->getByGuid($guid);
+
+        if (!$track) {
+            return $this->getTrackNotFoundResponse($response, $guid);
+        }
+
+        return $this->getHashtagsResponse($response, $track->getFile());
+    }
+
+    public function getIncomingHashtags(ServerRequest $request, Response $response): ResponseInterface
+    {
+        $pathname = $request->getAttribute('pathname');
+        $track = $this->trackService->createFromFile($pathname);
+
+        if (!$track) {
+            return $this->getTrackNotFoundResponse($response, $pathname);
+        }
+
+        return $this->getHashtagsResponse($response, $track->getFile());
+    }
+
     private function getResultResponse(Response $response, SplFileInfo $file, string $name): ResponseInterface
     {
         try {
-            $result = $this->musicClassifierService->getResult($file);
+            $result = $this->musicClassifierService->analyze($file);
         } catch (MusicClassifierException $e) {
-            return $response
-                ->withJson([ 'message' => $e->getMessage() ])
-                ->withStatus(StatusCodeInterface::STATUS_INTERNAL_SERVER_ERROR);
+            return $this->getClassifierErrorResponse($response, $e);
         }
 
-        if (!$result) {
-            return $response
-                ->withJson([ 'message' => sprintf('Music classifier metadata for "%s" does not exist.', $name) ])
-                ->withStatus(StatusCodeInterface::STATUS_NOT_FOUND);
-        }
-
-        $filename = str_replace(
-            [ '"', "\r", "\n" ],
-            '',
-            $result->getFile()?->getBasename() ?? sprintf('%s.json', $name),
-        );
+        $filename = str_replace([ '"', "\r", "\n" ], '', sprintf('%s.json', $name));
 
         return $response
             ->withHeader('Content-Disposition', sprintf('inline; filename="%s"', $filename))
             ->withJson($result->getRawResult());
+    }
+
+    private function getHashtagsResponse(Response $response, SplFileInfo $file): ResponseInterface
+    {
+        try {
+            $result = $this->musicClassifierService->analyze($file);
+        } catch (MusicClassifierException $e) {
+            return $this->getClassifierErrorResponse($response, $e);
+        }
+
+        return $this->view->render($response, '@track/common/musicClassifierHashtags.twig', [
+            'hashtags' => $result->getHashtags(),
+        ]);
+    }
+
+    private function getTrackNotFoundResponse(Response $response, string $name): ResponseInterface
+    {
+        return $response
+            ->withJson([ 'message' => sprintf('Track "%s" does not exist.', $name) ])
+            ->withStatus(StatusCodeInterface::STATUS_NOT_FOUND);
+    }
+
+    private function getClassifierErrorResponse(Response $response, MusicClassifierException $e): ResponseInterface
+    {
+        return $response
+            ->withJson([ 'message' => $e->getMessage() ])
+            ->withStatus(StatusCodeInterface::STATUS_INTERNAL_SERVER_ERROR);
     }
 }

@@ -2,169 +2,104 @@
 
 namespace Assistant\Module\Common\Extension\MusicClassifier;
 
-use Assistant\Module\Common\Extension\Config;
-use Assistant\Module\Common\Extension\SlugifyService;
+use GuzzleHttp\Client;
+use GuzzleHttp\Handler\MockHandler;
+use GuzzleHttp\HandlerStack;
+use GuzzleHttp\Psr7\Request;
+use GuzzleHttp\Psr7\Response;
 use PHPUnit\Framework\TestCase;
 use SplFileInfo;
 
 final class MusicClassifierServiceTest extends TestCase
 {
-    private string $root;
+    private const string TRACK_PATHNAME = '/collection/Singles/2026/01. styczeń/Artist/Release/Artist - 01 - Title.mp3';
+
+    private MockHandler $mockHandler;
     private MusicClassifierService $service;
 
     protected function setUp(): void
     {
-        $this->root = sys_get_temp_dir() . '/classifier-' . bin2hex(random_bytes(6));
+        $this->mockHandler = new MockHandler();
 
-        mkdir($this->root . '/collection/Other', recursive: true);
-        mkdir($this->root . '/metadata/essentia', recursive: true);
+        $client = new Client([
+            'base_uri' => 'http://music-classifier/',
+            'handler' => HandlerStack::create($this->mockHandler),
+        ]);
 
-        $this->service = new MusicClassifierService(
-            new Config([
-                'collection' => [
-                    'root_dir' => $this->root . '/collection',
-                    'metadata_dirs' => [
-                        'music_classifier' => $this->root . '/metadata/essentia',
-                    ],
-                ],
-            ]),
-            new MusicClassifierAudioMd5Calculator(),
-            new SlugifyService(),
-        );
+        $this->service = new MusicClassifierService($client);
     }
 
-    protected function tearDown(): void
+    public function testAnalyzeMapsApiResponse(): void
     {
-        exec('rm -rf ' . escapeshellarg($this->root));
+        $this->mockHandler->append(new Response(200, body: json_encode([
+            'audio_md5' => '0ea476e3977df9c064003ab22927828e',
+            'bpm' => [ 'value' => 135.97, 'confidence' => 2.7273 ],
+            'key' => [ 'value' => 'F# minor', 'confidence' => 0.6188 ],
+            'genre' => [],
+            'tags' => [],
+        ])));
+
+        $result = $this->service->analyze(new SplFileInfo(self::TRACK_PATHNAME));
+
+        self::assertSame('0ea476e3977df9c064003ab22927828e', $result->getAudioMd5());
+        self::assertSame(136.0, $result->getBpm());
+        self::assertSame('F# minor', $result->getMusicalKey());
     }
 
-    public function testIndexedResultPathnameMirrorsCollectionLayout(): void
+    public function testAnalyzeRequestsTrackPathname(): void
     {
-        $track = new SplFileInfo($this->root . '/collection/Other/Artist - Title.mp3');
+        $this->mockHandler->append(function (Request $request): Response {
+            self::assertSame('/process', $request->getUri()->getPath());
+            self::assertSame('pathname=' . rawurlencode(self::TRACK_PATHNAME), $request->getUri()->getQuery());
 
-        self::assertSame(
-            $this->root . '/metadata/essentia/Other/Artist - Title.json',
-            $this->service->getIndexedResultPathname($track),
-        );
+            return new Response(200, body: json_encode([
+                'audio_md5' => 'md5',
+                'bpm' => [ 'value' => 128.0, 'confidence' => 3.0 ],
+                'key' => [ 'value' => 'C minor', 'confidence' => 0.8 ],
+                'genre' => [],
+                'tags' => [],
+            ]));
+        });
+
+        $this->service->analyze(new SplFileInfo(self::TRACK_PATHNAME));
     }
 
-    public function testIndexedResultPathnameForNestedSinglesTrack(): void
+    public function testAnalyzerErrorRejectsWholeResult(): void
     {
-        $track = new SplFileInfo(
-            $this->root . '/collection/Singles/2009/08. sierpień/Deadmau5/Ghosts/Deadmau5 - 01 - Ghosts.mp3',
-        );
-
-        self::assertSame(
-            $this->root . '/metadata/essentia/Singles/2009/08. sierpień/Deadmau5/Ghosts/Deadmau5 - 01 - Ghosts.json',
-            $this->service->getIndexedResultPathname($track),
-        );
-    }
-
-    public function testGetResultReturnsNullWhenFileIsMissing(): void
-    {
-        $track = new SplFileInfo($this->root . '/collection/Other/Artist - Title.mp3');
-
-        self::assertNull($this->service->getResult($track));
-    }
-
-    public function testGetResultReadsIndexedClassifierFile(): void
-    {
-        $trackPath = $this->root . '/collection/Other/Artist - Title.mp3';
-        $resultPath = $this->root . '/metadata/essentia/Other/Artist - Title.json';
-
-        mkdir(dirname($resultPath), recursive: true);
-        file_put_contents($resultPath, json_encode($this->minimalResult([
-            'rhythm' => [ 'bpm' => 128.4 ],
-            'tonal' => [
-                'chords_key' => 'C',
-                'chords_scale' => 'minor',
+        $this->mockHandler->append(new Response(200, body: json_encode([
+            'audio_md5' => 'md5',
+            'bpm' => [ 'value' => 128.0, 'confidence' => 3.0 ],
+            'key' => null,
+            'genre' => [],
+            'tags' => [],
+            'errors' => [
+                [ 'analyzer' => 'key', 'message' => 'Essentia exception' ],
             ],
         ])));
 
-        $result = $this->service->getResult(new SplFileInfo($trackPath));
+        $this->expectException(MusicClassifierException::class);
+        $this->expectExceptionMessage('Music classifier failed: key');
 
-        self::assertInstanceOf(MusicClassifierResult::class, $result);
-        self::assertSame(128.4, $result->getBpm());
-        self::assertSame('C minor', $result->getMusicalKey());
-        self::assertSame('md5-encoded', $result->getMd5());
-        self::assertSame($resultPath, $result->getFile()?->getPathname());
+        $this->service->analyze(new SplFileInfo(self::TRACK_PATHNAME));
     }
 
-    /**
-     * Ekstraktor zapisuje wynik pod płaską nazwą w katalogu głównym metadanych, a odczytywany jest
-     * z lokalizacji odpowiadającej ścieżce utworu — przeniesienie zamyka tę różnicę.
-     */
-    public function testResultIsMovedToIndexedLocation(): void
+    public function testApiErrorIsReportedAsMusicClassifierException(): void
     {
-        $track = new SplFileInfo($this->root . '/collection/Other/Artist - Title.mp3');
-        $flatResultPath = $this->root . '/metadata/essentia/basename:artist-title,md5:md5-encoded.json';
+        $this->mockHandler->append(new Response(404, body: json_encode([
+            'error' => [ 'message' => 'File not found: ' . self::TRACK_PATHNAME ],
+        ])));
 
-        file_put_contents($flatResultPath, json_encode($this->minimalResult()));
+        $this->expectException(MusicClassifierException::class);
 
-        $this->service->moveResultToIndexedLocation(
-            $track,
-            MusicClassifierResult::fromResultFile($flatResultPath),
-        );
-
-        self::assertFileDoesNotExist($flatResultPath);
-        self::assertFileExists($this->root . '/metadata/essentia/Other/Artist - Title.json');
+        $this->service->analyze(new SplFileInfo(self::TRACK_PATHNAME));
     }
 
-    /** Katalogi docelowe nie istnieją przed przeniesieniem pierwszego wyniku z danej gałęzi */
-    public function testMissingDirectoriesAreCreatedWhileMovingResult(): void
+    public function testMalformedResponseIsReportedAsMusicClassifierException(): void
     {
-        $track = new SplFileInfo(
-            $this->root . '/collection/Singles/2009/08. sierpień/Deadmau5/Ghosts/Deadmau5 - 01 - Ghosts.mp3',
-        );
-        $flatResultPath = $this->root . '/metadata/essentia/basename:deadmau5-ghosts,md5:md5-encoded.json';
+        $this->mockHandler->append(new Response(200, body: 'Internal Server Error'));
 
-        file_put_contents($flatResultPath, json_encode($this->minimalResult()));
+        $this->expectException(MusicClassifierException::class);
 
-        $this->service->moveResultToIndexedLocation(
-            $track,
-            MusicClassifierResult::fromResultFile($flatResultPath),
-        );
-
-        self::assertFileExists(
-            $this->root . '/metadata/essentia/Singles/2009/08. sierpień/Deadmau5/Ghosts/Deadmau5 - 01 - Ghosts.json',
-        );
-    }
-
-    private function minimalResult(array $overrides = []): array
-    {
-        $highlevel = [
-            'value' => 'yes',
-            'probability' => 0.9,
-        ];
-
-        return array_replace_recursive([
-            'chromaprint' => [
-                'string' => [ 'fingerprint' ],
-            ],
-            'metadata' => [
-                'audio_properties' => [
-                    'md5_encoded' => 'md5-encoded',
-                ],
-            ],
-            'rhythm' => [
-                'bpm' => 120.0,
-            ],
-            'tonal' => [
-                'chords_key' => 'A',
-                'chords_scale' => 'minor',
-            ],
-            'highlevel' => [
-                'genre_electronic' => $highlevel,
-                'mood_aggressive' => [ 'value' => 'not_aggressive', 'probability' => 0.1 ],
-                'mood_happy' => [ 'value' => 'not_happy', 'probability' => 0.1 ],
-                'mood_party' => [ 'value' => 'not_party', 'probability' => 0.1 ],
-                'mood_relaxed' => [ 'value' => 'not_relaxed', 'probability' => 0.1 ],
-                'mood_sad' => [ 'value' => 'not_sad', 'probability' => 0.1 ],
-                'moods_mirex' => [ 'value' => 'Cluster1', 'probability' => 0.5 ],
-                'timbre' => [ 'value' => 'dark', 'probability' => 0.5 ],
-                'tonal_atonal' => [ 'value' => 'tonal', 'probability' => 0.5 ],
-                'voice_instrumental' => [ 'value' => 'instrumental', 'probability' => 0.5 ],
-            ],
-        ], $overrides);
+        $this->service->analyze(new SplFileInfo(self::TRACK_PATHNAME));
     }
 }

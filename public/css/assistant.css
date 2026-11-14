@@ -749,65 +749,31 @@ table .ast-track-name span {
     }
 }
 
-/* AI: cechy Essentii w jednym wierszu o dwóch liniach tej samej wysokości: nazwy wszystkich cech leżą w pierwszej,
-   a paski nastrojów (wyśrodkowane w linii) i wartości pozostałych cech w drugiej. Kreska oddzielająca cechy
-   od nastrojów stoi w środku odstępu między kolumnami, dzięki czemu wszystkie kolumny mają tę samą szerokość. */
-.ast-audio-profile-strip {
-    display: grid;
-    font-size: .8125rem;
-    gap: .75rem 1.5rem;
-    grid-template-columns: repeat(8, minmax(0, 1fr));
-}
-
-.ast-audio-profile-cell {
+/* AI: hashtagi Music Classifier w jednym zawijanym wierszu. Gatunek jest wyróżniony kolorem tekstu i grubością,
+   a instrumenty, nastroje i tagi są wyciszone, dzięki czemu przy szybkim przeglądaniu najpierw widać styl utworu. */
+.ast-hashtags {
     align-items: center;
-    display: grid;
-    grid-template-rows: 1.25rem 1.25rem;
-    line-height: 1.25rem;
-    min-width: 0;
-    row-gap: .25rem;
-}
-
-.ast-audio-profile-cell-head {
     display: flex;
-    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: .25rem 1rem;
 }
 
-.ast-audio-profile-cell-trait {
-    position: relative;
+.ast-hashtags-progress {
+    flex-basis: 100%;
 }
 
-.ast-audio-profile-cell-trait::before {
-    border-left: var(--tblr-border-width) solid var(--tblr-border-color);
-    bottom: 0;
-    content: '';
-    left: -.75rem;
-    position: absolute;
-    top: 0;
+.ast-hashtag {
+    color: var(--tblr-secondary);
 }
 
-@media only screen and (max-width: 991.98px) {
-    .ast-audio-profile-strip {
-        grid-template-columns: repeat(4, minmax(0, 1fr));
+.ast-hashtag-genre {
+    color: var(--tblr-body-color);
+    font-weight: var(--tblr-font-weight-medium);
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .ast-hashtags-progress .progress-bar-indeterminate::after,
+    .ast-hashtags-progress .progress-bar-indeterminate::before {
+        animation: none;
     }
-
-    .ast-audio-profile-cell-trait::before {
-        content: none;
-    }
-}
-
-@media only screen and (max-width: 575.98px) {
-    .ast-audio-profile-strip {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-    }
-}
-
-.ast-feature-name {
-    color: var(--tblr-muted);
-}
-
-.ast-feature-value {
-    color: var(--tblr-muted);
-    font-variant-numeric: tabular-nums;
-    text-align: right;
 }

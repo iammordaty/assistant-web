@@ -1,0 +1,11 @@
+{# @var url string adres hashtagów: utworu z kolekcji (po guid) albo pliku z incoming (po ścieżce) #}
+<div class="col-12">
+    <div class="card">
+        <div class="card-body py-3 ast-hashtags" data-role="track:music-classifier-hashtags" data-url="{{ url }}">
+            <span class="text-secondary">Trwa analiza w Music Classifier, pierwsza analiza utworu zajmuje kilka minut</span>
+            <div class="progress progress-sm ast-hashtags-progress">
+                <div class="progress-bar progress-bar-indeterminate"></div>
+            </div>
+        </div>
+    </div>
+</div>

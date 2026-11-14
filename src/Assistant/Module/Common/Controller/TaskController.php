@@ -44,24 +44,6 @@ final readonly class TaskController
         ]);
     }
 
-    /**
-     * Analiza Essentii trwa do kilku minut, więc wynik pojawi się na stronie utworu po jej odświeżeniu.
-     * Istniejący wynik jest liczony od nowa (--force), bo akcja jest dostępna zawsze, także do ponownej analizy.
-     *
-     * ponytail: wynik jest zapisywany pod ścieżką pliku, więc zmiana nazwy w incoming wymaga ponownej analizy;
-     * gdy zacznie to przeszkadzać, zmiana nazwy powinna przenosić również plik wyniku
-     */
-    public function calculateMusicClassifierMetadata(ServerRequest $request, Response $response): ResponseInterface
-    {
-        $this->consoleCommandRunner->runAsync([
-            'track:calculate-music-classifier-metadata',
-            '--force',
-            $request->getParsedBodyParam('pathname'),
-        ]);
-
-        return $response->withStatus(StatusCodeInterface::STATUS_ACCEPTED);
-    }
-
     public function removeMetadata(ServerRequest $request, Response $response): ResponseInterface
     {
         $pathname = $request->getParsedBodyParam('pathname');

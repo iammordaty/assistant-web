@@ -1,0 +1,11 @@
+{# @var hashtags array<string, {type: string, confidence: float}> hashtag => typ cechy (genre, instrument, mood, tag) i jej pewność #}
+{% set typeNames = { genre: 'gatunek', instrument: 'instrument', mood: 'nastrój', tag: 'tag' } %}
+
+{% for hashtag, feature in hashtags %}
+    <span
+        class="ast-hashtag ast-hashtag-{{ feature.type }}"
+        title="{{ typeNames[feature.type] ?? feature.type }}, pewność {{ feature.confidence|number_format(2, ',') }}"
+    >{{ hashtag }}</span>
+{% else %}
+    <span class="text-secondary">Brak wyraźnych cech</span>
+{% endfor %}

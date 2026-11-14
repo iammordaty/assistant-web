@@ -59,7 +59,6 @@ final class TrackController
             'menu' => 'track',
             'track' => $track,
             'avatar' => TrackAvatar::fromTrack($track),
-            'audioProfile' => $this->trackService->getAudioProfile($track),
             'indexedMonth' => $track->getIndexedDate() ? DateDirectory::formatMonth($track->getIndexedDate()) : null,
             'form' => $form,
             'presets' => $this->similarityBuilder->getPresets($track),

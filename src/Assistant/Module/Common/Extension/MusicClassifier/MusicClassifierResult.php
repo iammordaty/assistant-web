@@ -2,62 +2,53 @@
 
 namespace Assistant\Module\Common\Extension\MusicClassifier;
 
-use SplFileInfo;
-
-/**
- * @link https://essentia.upf.edu/streaming_extractor_music.html#high-level-classifier-models
- * @link https://essentia.upf.edu/streaming_extractor_music.html#music-descriptors
- */
-final class MusicClassifierResult
+/** @see /Volumes/web/music-classifier/README.md */
+final readonly class MusicClassifierResult
 {
+    /** Minimalna pewność cechy pokazywanej jako hashtag */
+    private const float HASHTAG_MIN_CONFIDENCE = 0.3;
+
+    /** Maksymalna liczba hashtagów, żeby wiersz pozostał czytelny */
+    private const int HASHTAG_LIMIT = 8;
+
     /**
-     * @param string $musicalKey
-     * @param float $bpm
-     * @param string $chromaprint
-     * @param string $md5
-     * @param MusicClassifierFeature[] $features
-     * @param array $rawResult
-     * @param SplFileInfo|null $file
+     * AI: cechy wykrywane w ponad 80% utworów kolekcji (116 utworów z 2026 r.), które nie odróżniają
+     * jednego utworu od drugiego, a zajmowałyby miejsce w limicie hashtagów
      */
+    private const array SKIPPED_HASHTAGS = [ '#bass', '#dance', '#electronic', '#synthesizer' ];
+
     private function __construct(
-        private string $musicalKey,
+        private string $audioMd5,
         private float $bpm,
-        private string $chromaprint,
-        private string $md5,
-        private array $features,
+        private string $musicalKey,
         private array $rawResult,
-        private ?SplFileInfo $file = null,
     ) {
     }
 
-    public static function fromResultFile(SplFileInfo|string $filename): self
+    /**
+     * AI: wynik z błędem któregokolwiek analizatora jest odrzucany w całości, bo częściowy wynik byłby
+     * nieodróżnialny od kompletnego; klasyfikator nie zapisuje błędów w cache, więc kolejne wywołanie
+     * ponowi obliczenia.
+     */
+    public static function fromResponse(array $rawResult): self
     {
-        if (is_string($filename)) {
-            $filename = new SplFileInfo($filename);
+        if (!empty($rawResult['errors'])) {
+            $analyzers = array_column($rawResult['errors'], 'analyzer');
+
+            throw new MusicClassifierException(sprintf('Music classifier failed: %s', implode(', ', $analyzers)));
         }
 
-        if (!is_readable($filename)) {
-            throw new MusicClassifierResultFileNotFoundException($filename);
-        }
-
-        $rawResult = json_decode(file_get_contents($filename), true);
-
-        if (!$rawResult) {
-            throw new MusicClassifierResultFileMalformedException($filename, json_last_error_msg());
-        }
-
-        $musicalKey = $rawResult['tonal']['chords_key'] . ' ' . $rawResult['tonal']['chords_scale'];
-        $bpm = round($rawResult['rhythm']['bpm'], 1);
-        $chromaprint = $rawResult['chromaprint']['string'][0];
-        $audioMd5 = $rawResult['metadata']['audio_properties']['md5_encoded'];
-        $audioCharacteristics = self::createFeatures($rawResult['highlevel']);
-
-        return new self($musicalKey, $bpm, $chromaprint, $audioMd5, $audioCharacteristics, $rawResult, $filename);
+        return new self(
+            $rawResult['audio_md5'],
+            round($rawResult['bpm']['value'], 1),
+            $rawResult['key']['value'],
+            $rawResult,
+        );
     }
 
-    public function getMusicalKey(): string
+    public function getAudioMd5(): string
     {
-        return $this->musicalKey;
+        return $this->audioMd5;
     }
 
     public function getBpm(): float
@@ -65,19 +56,9 @@ final class MusicClassifierResult
         return $this->bpm;
     }
 
-    public function getChromaprint(): string
+    public function getMusicalKey(): string
     {
-        return $this->chromaprint;
-    }
-
-    public function getMd5(): string
-    {
-        return $this->md5;
-    }
-
-    public function getFeatures(): array
-    {
-        return $this->features;
+        return $this->musicalKey;
     }
 
     public function getRawResult(): array
@@ -85,122 +66,59 @@ final class MusicClassifierResult
         return $this->rawResult;
     }
 
-    public function getFile(): ?SplFileInfo
+    /**
+     * AI: hashtagi pokazują tylko cechy, których model jest wyraźnie pewny. Wartości confidence są względne
+     * i w większości bliskie zeru, więc bez progu lista byłaby szumem.
+     *
+     * Pomijane są cechy z SKIPPED_HASHTAGS. Gatunki i tagi są sortowane razem według pewności, a powtórzenia
+     * (np. gatunek „House” i tag „house”) scalane do pierwszego, czyli najpewniejszego, wystąpienia.
+     *
+     * @return array<string, array{type: string, confidence: float}> hashtag => typ cechy (genre, instrument,
+     *     mood, tag) i jej pewność
+     */
+    public function getHashtags(): array
     {
-        return $this->file;
+        $hashtags = [];
+
+        foreach ($this->getFeaturesByConfidence() as $feature) {
+            if ($feature['confidence'] < self::HASHTAG_MIN_CONFIDENCE) {
+                break;
+            }
+
+            $hashtag = '#' . preg_replace('/[^\p{L}\p{N}]/u', '', mb_strtolower($feature['label']));
+
+            if (in_array($hashtag, self::SKIPPED_HASHTAGS, true)) {
+                continue;
+            }
+
+            $hashtags[$hashtag] ??= [
+                'type' => $feature['type'],
+                'confidence' => $feature['confidence'],
+            ];
+
+            if (count($hashtags) === self::HASHTAG_LIMIT) {
+                break;
+            }
+        }
+
+        return $hashtags;
     }
 
-    /** @return MusicClassifierFeature[] */
-    private static function createFeatures(array $rawFeatures): array
+    /** @return array<array{label: string, type: string, confidence: float}> */
+    private function getFeaturesByConfidence(): array
     {
-        $features = [];
-
-        if (isset($rawFeatures['danceable']) && $rawFeatures['danceable']['value'] === 'danceable') {
-            $features[] = MusicClassifierFeature::create(
-                'danceable',
-                $rawFeatures['danceability']['probability']
-            );
-        }
-
-        // gender (male, female); (wartość opcjonalna)
-
-        if (isset($rawFeatures['gender'])) {
-            $features[] = MusicClassifierFeature::create(
-                $rawFeatures['gender']['value'],
-                $rawFeatures['gender']['probability']
-            );
-        }
-
-        // genre_electronic (ambient, dnb, house, techno, trance)
-
-        $features[] = MusicClassifierFeature::create(
-            $rawFeatures['genre_electronic']['value'],
-            $rawFeatures['genre_electronic']['probability']
+        $genres = array_map(
+            static fn (array $genre): array => [
+                'label' => $genre['genre'],
+                'type' => 'genre',
+                'confidence' => $genre['confidence'],
+            ],
+            $this->rawResult['genre'],
         );
 
-        // mood_acoustic (acoustic, not_acoustic); (wartość opcjonalna)
+        $features = [ ...$genres, ...$this->rawResult['tags'] ];
 
-        if (isset($rawFeatures['mood_acoustic']) && $rawFeatures['mood_acoustic']['value'] === 'acoustic') {
-            $features[] = MusicClassifierFeature::create(
-                'acoustic',
-                $rawFeatures['mood_acoustic']['probability']
-            );
-        }
-
-        // mood_aggressive (aggressive, not_aggressive)
-
-        if ($rawFeatures['mood_aggressive']['value'] === 'aggressive') {
-            $features[] = MusicClassifierFeature::create(
-                'aggressive',
-                $rawFeatures['mood_aggressive']['probability']
-            );
-        }
-
-        // mood_happy (happy, not_happy)
-
-        if ($rawFeatures['mood_happy']['value'] === 'happy') {
-            $features[] = MusicClassifierFeature::create(
-                'happy',
-                $rawFeatures['mood_happy']['probability']
-            );
-        }
-
-        // mood_party (party, not_party)
-
-        if ($rawFeatures['mood_party']['value'] === 'party') {
-            $features[] = MusicClassifierFeature::create(
-                'party',
-                $rawFeatures['mood_party']['probability']
-            );
-        }
-
-        // mood_relaxed (relaxed, not_relaxed)
-
-        if ($rawFeatures['mood_relaxed']['value'] === 'relaxed') {
-            $features[] = MusicClassifierFeature::create(
-                'relaxed',
-                $rawFeatures['mood_relaxed']['probability']
-            );
-        }
-
-        // mood_sad (sad, not_sad)
-
-        if ($rawFeatures['mood_sad']['value'] === 'sad') {
-            $features[] = MusicClassifierFeature::create(
-                'sad',
-                $rawFeatures['mood_sad']['probability']
-            );
-        }
-
-        // moods_mirex (Cluster1, Cluster2, Cluster3, Cluster4, Cluster5)
-
-        $features[] = MusicClassifierFeature::create(
-            strtolower($rawFeatures['moods_mirex']['value']),
-            $rawFeatures['moods_mirex']['probability']
-        );
-
-        // timbre (dark, bright)
-        // https://en.wikipedia.org/wiki/Timbre
-
-        $features[] = MusicClassifierFeature::create(
-            $rawFeatures['timbre']['value'],
-            $rawFeatures['timbre']['probability']
-        );
-
-        // tonal_atonal (tonal, atonal)
-        // https://en.wikipedia.org/wiki/Tonality
-
-        $features[] = MusicClassifierFeature::create(
-            $rawFeatures['tonal_atonal']['value'],
-            $rawFeatures['tonal_atonal']['probability']
-        );
-
-        // voice_instrumental (voice, instrumental)
-
-        $features[] = MusicClassifierFeature::create(
-            $rawFeatures['voice_instrumental']['value'],
-            $rawFeatures['voice_instrumental']['probability']
-        );
+        usort($features, static fn (array $a, array $b): int => $b['confidence'] <=> $a['confidence']);
 
         return $features;
     }

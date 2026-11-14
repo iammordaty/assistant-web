@@ -16,6 +16,7 @@ use Assistant\Module\Common\Extension\Config;
 use Assistant\Module\Common\Extension\GetId3\Adapter as Id3Adapter;
 use Assistant\Module\Common\Extension\LogView;
 use Assistant\Module\Common\Extension\Messages;
+use Assistant\Module\Common\Extension\MusicClassifier\MusicClassifierService;
 use Assistant\Module\Common\Extension\Pagerfanta\PagerfantaTwigRuntimeLoaderFactory;
 use Assistant\Module\Common\Extension\RouteResolver;
 use Assistant\Module\Common\Extension\SimilarTracksCollection\SimilarTracksCollectionService;
@@ -36,7 +37,6 @@ use Assistant\Module\Track\Extension\Similarity\SimilarityBuilder;
 use Assistant\Module\Track\Extension\TrackFilenameSuggestion;
 use Assistant\Module\Track\Extension\TrackLocationArbiter;
 use Assistant\Module\Track\Extension\TrackService;
-use Assistant\Module\Track\Repository\MusicClassifierMetadataRepository;
 use Assistant\Module\Track\Repository\TrackRepository;
 use Assistant\Module\Track\Repository\TrackStatsRepository;
 use gfaugere\Monolog\Formatter\ColoredLineFormatter;
@@ -206,17 +206,10 @@ return static fn (string $baseDir, array $config): array => [
 
     BeatportTrackMetadataSuggestionsService::class => autowire(),
 
-    MusicClassifierMetadataRepository::class => function (
-        Container $container,
-    ): MusicClassifierMetadataRepository {
-        $storage = $container->get(Config::class)->get('storage');
+    MusicClassifierService::class => function (Container $container): MusicClassifierService {
+        $musicClassifierService = MusicClassifierService::create($container->get(Config::class));
 
-        $client = new MongoDBClient($storage['connection_uri']);
-        $database = $client->selectDatabase($storage['database']);
-
-        $repository = MusicClassifierMetadataRepository::factory($database);
-
-        return $repository;
+        return $musicClassifierService;
     },
 
     TrackRepository::class => function (Container $container): TrackRepository {

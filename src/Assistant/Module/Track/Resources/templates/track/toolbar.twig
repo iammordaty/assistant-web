@@ -46,7 +46,6 @@
 </div>
 {% include '@track/common/musicClassifierMetadataButton.twig' only %}
 {% include '@track/common/settingsMenu.twig' with {
-    pathname: track.pathname,
     editUrl: url_for('track.edit.edit', { pathname: track.pathname }),
 } only %}
 

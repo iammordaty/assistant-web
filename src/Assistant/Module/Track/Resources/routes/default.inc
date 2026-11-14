@@ -21,6 +21,10 @@ return static function (App $app): void {
             ->get('/{guid}/music-classifier-metadata', [ MusicClassifierMetadataController::class, 'get' ])
             ->setName('track.music-classifier-metadata.get');
 
+        $group
+            ->get('/{guid}/music-classifier-hashtags', [ MusicClassifierMetadataController::class, 'getHashtags' ])
+            ->setName('track.music-classifier-hashtags.get');
+
         $group->get('/{pathname:.*}/contents', [ ContentsController::class, 'get' ])->setName('track.contents.get');
 
         $group->get('/{pathname:.*}/edit', [ TrackEditController::class, 'edit' ])->setName('track.edit.edit');
@@ -44,5 +48,9 @@ return static function (App $app): void {
         $group
             ->get('/{pathname:.*}/music-classifier-metadata', [ MusicClassifierMetadataController::class, 'getIncoming' ])
             ->setName('incoming-track.music-classifier-metadata.get');
+
+        $group
+            ->get('/{pathname:.*}/music-classifier-hashtags', [ MusicClassifierMetadataController::class, 'getIncomingHashtags' ])
+            ->setName('incoming-track.music-classifier-hashtags.get');
     });
 };

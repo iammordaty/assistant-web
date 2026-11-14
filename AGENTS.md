@@ -4,7 +4,7 @@ This file provides guidance to AI agents when working with code in this reposito
 
 ## Project Overview
 
-"Assistant" — a private, self-hosted web-based music collection management tool for personal home DJ-ing and music library management. It is used exclusively for individual home use and allows browsing, searching, and organizing a personal music library; finding similar tracks via audio similarity (Musly) and metadata analysis (BPM, key, genre, year); editing ID3 tags; extracting audio features (Essentia); retrieving track information from Beatport; and building and rearranging DJ mixes.
+"Assistant" — a private, self-hosted web-based music collection management tool for personal home DJ-ing and music library management. It is used exclusively for individual home use and allows browsing, searching, and organizing a personal music library; finding similar tracks via audio similarity (Musly) and metadata analysis (BPM, key, genre, year); editing ID3 tags; extracting audio features (Music Classifier API); retrieving track information from Beatport; and building and rearranging DJ mixes.
 
 The project is developed and maintained as a personal application, not as a commercial product or multi-user service. Solutions should prioritize clarity, maintainability, and modern software engineering practices. Code should be clean, elegant, easy to understand, and structured in a way that supports future development and experimentation.
 
@@ -117,7 +117,7 @@ The track page shows it as "Powiązane utwory". The panel has presets (`RelatedT
 
 ### Audio Data
 
-Essentia-based BPM, key, and feature extraction.
+BPM, key, genre and tag extraction by the Music Classifier API (`GET /process?pathname=`, the `music-classifier` service). `MusicClassifierService` calls it on demand; results live only in the classifier's cache (keyed by audio MD5), never in MongoDB or on disk. The track page loads the hashtags asynchronously, filtered by `MusicClassifierResult::getHashtags()` (confidence threshold and limit).
 
 ### Mix Frontend
 

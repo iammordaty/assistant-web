@@ -18,7 +18,7 @@ export default function initMusicClassifierMetadataModal() {
     const originalCopyLabel = copyLabel.textContent;
 
     let data = null;
-    let filename = modalEl.dataset.filename || 'essentia.json';
+    let filename = modalEl.dataset.filename || 'music-classifier.json';
     let copyResetTimer;
 
     const setActionButtonsDisabled = (disabled) => {
@@ -49,12 +49,12 @@ export default function initMusicClassifierMetadataModal() {
 
             if (!response.ok) {
                 if (response.status === 404) {
-                    throw new Error('Nie znaleziono metadanych Essentia dla tego utworu.');
+                    throw new Error('Nie znaleziono utworu.');
                 }
 
                 const payload = await response.json().catch(() => null);
 
-                throw new Error(payload?.message || 'Nie udało się pobrać metadanych Essentia.');
+                throw new Error(payload?.message || 'Nie udało się pobrać metadanych Music Classifier.');
             }
 
             const disposition = response.headers.get('Content-Disposition');

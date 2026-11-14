@@ -13,8 +13,8 @@ a lot of TODOs, and weird commit messages. :sweat_smile:
 - Retrieve information about tracks from the Beatport API
 - Rearrange your mix by similarity using the track similarity module
 
-Track similarity is powered by [Musly - Music Similarity Library](https://github.com/dominikschnitzer/musly); audio feature extraction is done using [Essentia](https://github.com/MTG/essentia)
-through the [music extractor](https://github.com/MTG/essentia/blob/master/doc/sphinxdoc/streaming_extractor_music.rst).
+Track similarity is powered by [Musly - Music Similarity Library](https://github.com/dominikschnitzer/musly); audio feature extraction
+(BPM, key, genre and tags) is done by the Music Classifier API, a separate service.
 
 ## stack
 

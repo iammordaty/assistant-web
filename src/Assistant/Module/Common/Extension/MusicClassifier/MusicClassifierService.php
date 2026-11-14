@@ -2,168 +2,52 @@
 
 namespace Assistant\Module\Common\Extension\MusicClassifier;
 
-use Assistant\Module\Collection\Extension\Finder;
 use Assistant\Module\Common\Extension\Config;
-use Assistant\Module\Common\Extension\SlugifyService;
+use GuzzleHttp\Client;
+use GuzzleHttp\ClientInterface;
+use GuzzleHttp\Exception\GuzzleException;
+use JsonException;
 use SplFileInfo;
-use Symfony\Component\Process\Process;
 
-class MusicClassifierService
+/**
+ * AI: klient API Music Classifier. Wyniki przechowuje wyłącznie cache klasyfikatora (klucz: MD5 audio),
+ * dlatego assistant nie zapisuje ich ani na dysku, ani w bazie danych.
+ *
+ * @see /Volumes/web/music-classifier/README.md
+ */
+final readonly class MusicClassifierService
 {
-    /**
-     * Uwaga, plik wykonywalny znajduje się w innym kontenerze.
-     *
-     * @see .docker/php-fpm/Dockerfile
-     * @see .docker/php-fpm/bin/essentia_streaming_extractor_music
-     * @link https://essentia.upf.edu/streaming_extractor_music.html
-     */
-    private const EXTRACTOR_BINARY = 'essentia_streaming_extractor_music';
+    public function __construct(private ClientInterface $client)
+    {
+    }
 
-    /**
-     * Konfiguracja essentia_streaming_extractor_music. Uwaga, konfiguracja znajduje się w innym kontenerze.
-     *
-     * @link https://essentia.upf.edu/streaming_extractor_music.html#configuration
-     */
-    private const EXTRACTOR_CONFIGURATION_PROFILE = '/essentia/profile.yaml';
+    public static function create(Config $config): self
+    {
+        $musicClassifierConfig = $config->get(self::class);
 
-    public function __construct(
-        private readonly Config $config,
-        private readonly MusicClassifierAudioMd5Calculator $audioMd5Calculator,
-        private readonly SlugifyService $slugify,
-    ) {
+        $client = new Client([
+            'base_uri' => $musicClassifierConfig['api_url'],
+            // analiza utworu nieobecnego w cache klasyfikatora trwa do kilku minut
+            'timeout' => 0,
+        ]);
+
+        return new self($client);
     }
 
     public function analyze(SplFileInfo $track): MusicClassifierResult
     {
-        $resultFile = $this->findResultFile($track);
-
-        if (!file_exists($resultFile)) {
-            $process = new Process([
-                self::EXTRACTOR_BINARY,
-                $track->getPathname(),
-                $resultFile,
-                self::EXTRACTOR_CONFIGURATION_PROFILE
+        try {
+            $response = $this->client->request('GET', 'process', [
+                'query' => [ 'pathname' => $track->getPathname() ],
             ]);
 
-            $process
-                ->setIdleTimeout(null)
-                ->setTimeout(null)
-                ->run();
-
-            if (!$process->isSuccessful()) {
-                if (file_exists($resultFile)) {
-                    // Music classifier exception:
-                    // YamlOutput: error when double-checking the output file; it doesn't match the expected output
-
-                    unlink($resultFile);
-                }
-
-                throw new MusicClassifierProcessException($process);
-            }
+            $rawResult = json_decode($response->getBody()->getContents(), true, flags: JSON_THROW_ON_ERROR);
+        } catch (GuzzleException|JsonException $e) {
+            throw new MusicClassifierException($e->getMessage(), previous: $e);
         }
 
-        $result = MusicClassifierResult::fromResultFile($resultFile);
+        $result = MusicClassifierResult::fromResponse($rawResult);
 
         return $result;
-    }
-
-    /**
-     * Zwraca istniejący wynik klasyfikacji bez uruchamiania ekstraktora.
-     * Szuka pliku w kanonicznej lokalizacji po indeksacji:
-     * /collection/a/b/c/track.mp3 -> /metadata/essentia/a/b/c/track.json
-     */
-    public function getResult(SplFileInfo $track): ?MusicClassifierResult
-    {
-        $pathname = $this->getIndexedResultPathname($track);
-
-        if (!is_readable($pathname)) {
-            return null;
-        }
-
-        return MusicClassifierResult::fromResultFile($pathname);
-    }
-
-    /**
-     * Ścieżka wyniku klasyfikacji po przeniesieniu do katalogu metadanych.
-     *
-     * @see \Assistant\Module\Collection\Extension\Writer\TrackWriter::moveClassificationResultFile()
-     */
-    public function getIndexedResultPathname(SplFileInfo $track): string
-    {
-        return str_replace(
-            [
-                $this->config->get('collection.root_dir'),
-                $track->getExtension(),
-            ],
-            [
-                $this->config->get('collection.metadata_dirs.music_classifier'),
-                'json',
-            ],
-            $track->getPathname(),
-        );
-    }
-
-    /**
-     * Przenosi plik z wynikiem klasyfikacji do lokalizacji odzwierciedlającej układ kolekcji,
-     * wg poniższego schematu
-     * /collection/a/b/c/track.mp3 -> /metadata/essentia/a/b/c/track.json
-     *
-     * analyze() zapisuje wynik pod nazwą zawierającą md5 audio, w katalogu głównym metadanych,
-     * a getResult() czyta go już z lokalizacji odpowiadającej ścieżce utworu.
-     */
-    public function moveResultToIndexedLocation(SplFileInfo $track, MusicClassifierResult $result): void
-    {
-        $indexedResultPathname = $this->getIndexedResultPathname($track);
-
-        $parent = dirname($indexedResultPathname);
-
-        if (!file_exists($parent)) {
-            mkdir($parent, recursive: true);
-        }
-
-        rename(
-            from: $result->getFile()->getPathname(),
-            to: $indexedResultPathname,
-        );
-    }
-
-    private function findResultFile(SplFileInfo $track): ?string
-    {
-        $audioMd5 = $this->audioMd5Calculator->calculate($track);
-        $resultPathname = $this->generateResultFilename($track, $audioMd5);
-
-        if (file_exists($resultPathname)) {
-            return $resultPathname;
-        }
-
-        $filter = static fn (SplFileInfo $node): bool => (
-            str_ends_with($node->getBasename('.' . $node->getExtension()), 'md5:' . $audioMd5)
-        );
-
-        $finder = Finder::create([
-            'filter' => $filter,
-            'mode' => Finder::MODE_FILES_ONLY,
-            'pathname' => $this->config->get('collection.metadata_dirs.music_classifier'),
-        ]);
-
-        if ($finder->count() === 0) {
-            return $resultPathname;
-        }
-
-        /** @var SplFileInfo $node */
-        $node = array_values(iterator_to_array($finder))[0];
-        $resultFile = $node->getPathname();
-
-        return $resultFile;
-    }
-
-    private function generateResultFilename(SplFileInfo $track, string $audioMd5): string
-    {
-        $basename = $this->slugify->slugify($track->getBasename('.' . $track->getExtension()));
-
-        $filename = sprintf('basename:%s,md5:%s.json', $basename, $audioMd5);
-        $pathname = $this->config->get('collection.metadata_dirs.music_classifier') . '/' . $filename;
-
-        return $pathname;
     }
 }

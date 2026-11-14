@@ -146,7 +146,7 @@ final class AudioDataCalculatorTask extends AbstractTask
                         'pathname' => $file->getPathname(),
                         'bpm' => $metadata['bpm'],
                         'initial_key' => $metadata['initial_key'],
-                        'classificationResultFilename' => $classificationResult->getFile()?->getBasename(),
+                        'audioMd5' => $classificationResult->getAudioMd5(),
                     ]);
 
                     unset($file, $track, $metadata, $classificationResult, $audioData);
