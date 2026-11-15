@@ -12,10 +12,10 @@ final readonly class MusicClassifierResult
     private const int HASHTAG_LIMIT = 8;
 
     /**
-     * AI: cechy wykrywane w ponad 80% utworów kolekcji (116 utworów z 2026 r.), które nie odróżniają
+     * AI: cechy wykrywane w blisko 80% lub więcej utworów kolekcji (116 utworów z 2026 r.), które nie odróżniają
      * jednego utworu od drugiego, a zajmowałyby miejsce w limicie hashtagów
      */
-    private const array SKIPPED_HASHTAGS = [ '#bass', '#dance', '#electronic', '#synthesizer' ];
+    private const array SKIPPED_HASHTAGS = [ '#bass', '#dance', '#electronic', '#house', '#synthesizer' ];
 
     private function __construct(
         private string $audioMd5,
@@ -71,7 +71,7 @@ final readonly class MusicClassifierResult
      * i w większości bliskie zeru, więc bez progu lista byłaby szumem.
      *
      * Pomijane są cechy z SKIPPED_HASHTAGS. Gatunki i tagi są sortowane razem według pewności, a powtórzenia
-     * (np. gatunek „House” i tag „house”) scalane do pierwszego, czyli najpewniejszego, wystąpienia.
+     * (np. gatunek „Techno” i tag „techno”) scalane do pierwszego, czyli najpewniejszego, wystąpienia.
      *
      * @return array<string, array{type: string, confidence: float}> hashtag => typ cechy (genre, instrument,
      *     mood, tag) i jej pewność

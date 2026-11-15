@@ -31,15 +31,15 @@ final class MusicClassifierResultTest extends TestCase
         self::assertSame(0.3281, $result->getHashtags()['#speedgarage']['confidence']);
     }
 
-    /** Gatunek „House” i tag „house” to ta sama cecha, więc zostaje tylko pewniejsze wystąpienie */
+    /** Gatunek „Techno” i tag „techno” to ta sama cecha, więc zostaje tylko pewniejsze wystąpienie */
     public function testGenreAndTagWithTheSameLabelAreMerged(): void
     {
         $result = MusicClassifierResult::fromResponse($this->response(
-            genres: [ [ 'genre' => 'House', 'confidence' => 0.4 ] ],
-            tags: [ [ 'label' => 'house', 'type' => 'tag', 'confidence' => 0.6 ] ],
+            genres: [ [ 'genre' => 'Techno', 'confidence' => 0.4 ] ],
+            tags: [ [ 'label' => 'techno', 'type' => 'tag', 'confidence' => 0.6 ] ],
         ));
 
-        self::assertSame([ '#house' => [ 'type' => 'tag', 'confidence' => 0.6 ] ], $result->getHashtags());
+        self::assertSame([ '#techno' => [ 'type' => 'tag', 'confidence' => 0.6 ] ], $result->getHashtags());
     }
 
     /** Pomijane hashtagi nie zajmują miejsca w limicie */
