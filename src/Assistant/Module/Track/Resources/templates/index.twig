@@ -22,9 +22,9 @@
     <div class="row row-deck row-cards" data-role="track:container" data-track-edit-url="{{ url_for('track.edit.edit', { pathname: track.pathname }) }}">
         {% include '@track/common/wave.twig' with { track } only %}
 
-        {% include '@track/common/musicClassifierHashtagsCard.twig' with {
-            url: url_for('track.music-classifier-hashtags.get', { guid: track.guid }),
-        } only %}
+        {% if tags %}
+            {% include '@track/common/tags.twig' with { tags } only %}
+        {% endif %}
 
         <div class="col-12">
             <div class="card" data-role="similar-tracks:container">

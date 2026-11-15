@@ -3,6 +3,9 @@
 namespace Assistant\Module\Track\Extension;
 
 use Assistant\Module\Collection\Extension\Reader\FileReaderFacade;
+use Assistant\Module\Common\Extension\MusicClassifier\MusicClassifierException;
+use Assistant\Module\Common\Extension\MusicClassifier\MusicClassifierService;
+use Assistant\Module\Common\Extension\MusicClassifier\MusicClassifierTag;
 use Assistant\Module\Search\Extension\Criteria\SearchCriteriaFacade;
 use Assistant\Module\Track\Model\IncomingTrack;
 use Assistant\Module\Track\Model\Track;
@@ -15,6 +18,7 @@ class TrackService
         private readonly FileReaderFacade $fileReader,
         private readonly TrackLocationArbiter $arbiter,
         private readonly TrackRepository $trackRepository,
+        private readonly MusicClassifierService $musicClassifierService,
     ) {
     }
 
@@ -54,5 +58,22 @@ class TrackService
         }
 
         return $this->fileReader->read(new SplFileInfo($pathname));
+    }
+
+    /**
+     * AI: jedyne miejsce, z którego strony utworu biorą tagi. Dziś wynik pochodzi z cache Music Classifier;
+     * docelowo tagi utworów z kolekcji będą czytane z Track::getTags() i zmieni się tylko ta metoda.
+     *
+     * @return MusicClassifierTag[]|null null, gdy klasyfikator nie zwrócił wyniku
+     */
+    public function getTags(Track|IncomingTrack $track): ?array
+    {
+        try {
+            $result = $this->musicClassifierService->analyze($track->getFile());
+        } catch (MusicClassifierException) {
+            return null;
+        }
+
+        return $result->getTags();
     }
 }

@@ -749,31 +749,49 @@ table .ast-track-name span {
     }
 }
 
-/* AI: hashtagi Music Classifier w jednym zawijanym wierszu. Gatunek jest wyróżniony kolorem tekstu i grubością,
-   a instrumenty, nastroje i tagi są wyciszone, dzięki czemu przy szybkim przeglądaniu najpierw widać styl utworu. */
-.ast-hashtags {
-    align-items: center;
+/* AI: tagi jako osobne wyspy na tle strony, w stylu presetów (.ast-preset); pewność oddaje gradient
+   koloru głównego, mocniejszy przy pewniejszym tagu. Pewność (0–1) przychodzi z szablonu w zmiennej. */
+.ast-tags {
     display: flex;
     flex-wrap: wrap;
-    gap: .25rem 1rem;
+    gap: .5rem;
 }
 
-.ast-hashtags-progress {
-    flex-basis: 100%;
-}
+.ast-tag {
+    --ast-tag-alpha: calc(.04 + var(--ast-tag-confidence) * .36);
 
-.ast-hashtag {
-    color: var(--tblr-secondary);
-}
-
-.ast-hashtag-genre {
+    align-items: center;
+    background:
+        linear-gradient(
+            90deg,
+            rgba(var(--tblr-primary-rgb), var(--ast-tag-alpha)),
+            rgba(var(--tblr-primary-rgb), calc(var(--ast-tag-alpha) * .25))
+        ),
+        var(--tblr-bg-forms);
+    border: var(--tblr-border-width) solid var(--tblr-border-color);
+    border-radius: var(--tblr-border-radius);
     color: var(--tblr-body-color);
-    font-weight: var(--tblr-font-weight-medium);
+    display: inline-flex;
+    font-size: .8125rem;
+    height: 2rem;
+    padding: 0 .75rem;
+    transition: border-color .15s ease, color .15s ease;
+    white-space: nowrap;
 }
 
-@media (prefers-reduced-motion: reduce) {
-    .ast-hashtags-progress .progress-bar-indeterminate::after,
-    .ast-hashtags-progress .progress-bar-indeterminate::before {
-        animation: none;
-    }
+/* wariant W3a: gradient od lewej, sięga dalej przy pewniejszym tagu; aby go użyć, zastąp nim regułę background powyżej
+.ast-tag {
+    background:
+        linear-gradient(
+            90deg,
+            rgba(var(--tblr-primary-rgb), .16),
+            rgba(var(--tblr-primary-rgb), 0) calc(25% + var(--ast-tag-confidence) * 170%)
+        ),
+        var(--tblr-bg-forms);
+}
+*/
+
+.ast-tag:hover {
+    border-color: var(--tblr-primary);
+    color: var(--tblr-primary);
 }

@@ -1,0 +1,12 @@
+{# @var tags \Assistant\Module\Common\Extension\MusicClassifier\MusicClassifierTag[] tagi według malejącej pewności #}
+<div class="col-12">
+    <div class="ast-tags">
+        {% for tag in tags %}
+            <span
+                class="ast-tag"
+                style="--ast-tag-confidence: {{ tag.confidence }}"
+                title="pewność {{ tag.confidence|number_format(2, ',') }}"
+            >{{ tag.name }}</span>
+        {% endfor %}
+    </div>
+</div>

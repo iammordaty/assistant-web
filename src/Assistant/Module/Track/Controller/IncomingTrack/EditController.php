@@ -60,6 +60,7 @@ final class EditController
             'query' => $query,
             'track' => $track,
             'avatar' => TrackAvatar::fromTrack($track),
+            'tags' => $this->trackService->getTags($track),
             'return_url' => $returnUrl,
         ]);
     }

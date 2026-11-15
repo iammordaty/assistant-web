@@ -5,17 +5,14 @@ namespace Assistant\Module\Common\Extension\MusicClassifier;
 /** @see /Volumes/web/music-classifier/README.md */
 final readonly class MusicClassifierResult
 {
-    /** Minimalna pewność cechy pokazywanej jako hashtag */
-    private const float HASHTAG_MIN_CONFIDENCE = 0.3;
-
-    /** Maksymalna liczba hashtagów, żeby wiersz pozostał czytelny */
-    private const int HASHTAG_LIMIT = 8;
+    /** Minimalna pewność tagu pokazywanego na stronie utworu */
+    private const float TAG_MIN_CONFIDENCE = 0.1;
 
     /**
      * AI: cechy wykrywane w blisko 80% lub więcej utworów kolekcji (116 utworów z 2026 r.), które nie odróżniają
-     * jednego utworu od drugiego, a zajmowałyby miejsce w limicie hashtagów
+     * jednego utworu od drugiego
      */
-    private const array SKIPPED_HASHTAGS = [ '#bass', '#dance', '#electronic', '#house', '#synthesizer' ];
+    private const array SKIPPED_TAGS = [ 'bass', 'dance', 'electronic', 'house', 'synthesizer' ];
 
     private function __construct(
         private string $audioMd5,
@@ -67,59 +64,56 @@ final readonly class MusicClassifierResult
     }
 
     /**
-     * AI: hashtagi pokazują tylko cechy, których model jest wyraźnie pewny. Wartości confidence są względne
-     * i w większości bliskie zeru, więc bez progu lista byłaby szumem.
+     * AI: na stronę utworu trafiają tylko tagi, których model jest wyraźnie pewny. Wartości confidence są
+     * względne i w większości bliskie zeru, więc bez progu lista byłaby szumem.
      *
-     * Pomijane są cechy z SKIPPED_HASHTAGS. Gatunki i tagi są sortowane razem według pewności, a powtórzenia
-     * (np. gatunek „Techno” i tag „techno”) scalane do pierwszego, czyli najpewniejszego, wystąpienia.
+     * Pomijane są tagi z SKIPPED_TAGS. Gatunki i tagi z API są sortowane razem według pewności,
+     * a powtórzenia (np. gatunek „Techno” i tag „techno”) scalane do pierwszego, czyli najpewniejszego, wystąpienia.
+     * Nazwy są zapisywane małymi literami, bo API zwraca gatunki wielką literą, a pozostałe tagi małą.
      *
-     * @return array<string, array{type: string, confidence: float}> hashtag => typ cechy (genre, instrument,
-     *     mood, tag) i jej pewność
+     * @return MusicClassifierTag[]
      */
-    public function getHashtags(): array
+    public function getTags(): array
     {
-        $hashtags = [];
+        $tags = [];
 
-        foreach ($this->getFeaturesByConfidence() as $feature) {
-            if ($feature['confidence'] < self::HASHTAG_MIN_CONFIDENCE) {
+        foreach ($this->getRawTagsByConfidence() as $rawTag) {
+            if ($rawTag['confidence'] < self::TAG_MIN_CONFIDENCE) {
                 break;
             }
 
-            $hashtag = '#' . preg_replace('/[^\p{L}\p{N}]/u', '', mb_strtolower($feature['label']));
+            $normalizedName = preg_replace('/[^\p{L}\p{N}]/u', '', mb_strtolower($rawTag['label']));
 
-            if (in_array($hashtag, self::SKIPPED_HASHTAGS, true)) {
+            if (in_array($normalizedName, self::SKIPPED_TAGS, true)) {
                 continue;
             }
 
-            $hashtags[$hashtag] ??= [
-                'type' => $feature['type'],
-                'confidence' => $feature['confidence'],
-            ];
-
-            if (count($hashtags) === self::HASHTAG_LIMIT) {
-                break;
-            }
+            $tags[$normalizedName] ??= new MusicClassifierTag(
+                mb_strtolower($rawTag['label']),
+                $rawTag['type'],
+                $rawTag['confidence'],
+            );
         }
 
-        return $hashtags;
+        return array_values($tags);
     }
 
     /** @return array<array{label: string, type: string, confidence: float}> */
-    private function getFeaturesByConfidence(): array
+    private function getRawTagsByConfidence(): array
     {
         $genres = array_map(
             static fn (array $genre): array => [
                 'label' => $genre['genre'],
-                'type' => 'genre',
+                'type' => MusicClassifierTag::TYPE_GENRE,
                 'confidence' => $genre['confidence'],
             ],
             $this->rawResult['genre'],
         );
 
-        $features = [ ...$genres, ...$this->rawResult['tags'] ];
+        $rawTags = [ ...$genres, ...$this->rawResult['tags'] ];
 
-        usort($features, static fn (array $a, array $b): int => $b['confidence'] <=> $a['confidence']);
+        usort($rawTags, static fn (array $a, array $b): int => $b['confidence'] <=> $a['confidence']);
 
-        return $features;
+        return $rawTags;
     }
 }

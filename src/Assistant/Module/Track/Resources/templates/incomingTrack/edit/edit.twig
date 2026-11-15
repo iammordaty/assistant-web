@@ -29,9 +29,9 @@
     <div class="row row-deck row-cards">
         {% include '@track/common/wave.twig' with { track } only %}
 
-        {% include '@track/common/musicClassifierHashtagsCard.twig' with {
-            url: url_for('incoming-track.music-classifier-hashtags.get', { pathname: pathname|url_encode }),
-        } only %}
+        {% if tags %}
+            {% include '@track/common/tags.twig' with { tags } only %}
+        {% endif %}
 
         <div class="col-12">
             <form method="GET" action="{{ url_for('incoming-track.edit.edit', { pathname: pathname|url_encode }) }}" class="card" role="form">

@@ -117,7 +117,7 @@ The track page shows it as "Powiązane utwory". The panel has presets (`RelatedT
 
 ### Audio Data
 
-BPM, key, genre and tag extraction by the Music Classifier API (`GET /process?pathname=`, the `music-classifier` service). `MusicClassifierService` calls it on demand; results live only in the classifier's cache (keyed by audio MD5), never in MongoDB or on disk. The track page loads the hashtags asynchronously, filtered by `MusicClassifierResult::getHashtags()` (confidence threshold and limit).
+BPM, key, genre and tag extraction by the Music Classifier API (`GET /process?pathname=`, the `music-classifier` service). `MusicClassifierService` calls it on demand; results live only in the classifier's cache (keyed by audio MD5), never in MongoDB or on disk. Track pages render the tags synchronously from `TrackService::getTags()`, filtered by `MusicClassifierResult::getTags()` (confidence threshold and a list of skipped tags). Target state: tags of collection tracks stored in `Track::tags` and read from MongoDB, and the first analysis triggered by an inotify-driven Symfony task that also fills the Beatport suggestions cache for incoming tracks.
 
 ### Mix Frontend
 

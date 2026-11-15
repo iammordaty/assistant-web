@@ -8,27 +8,34 @@ final class MusicClassifierResultTest extends TestCase
 {
     /**
      * Odpowiedź API dla „Gorgon City & Interplanetary Criminal - Contact [Extended]”
-     * (rescan-log-singles-2026.txt), skrócona do cech istotnych dla hashtagów.
+     * (rescan-log-singles-2026.txt), skrócona do cech istotnych dla tagów.
      */
-    public function testHashtagsContainOnlyConfidentFeaturesByConfidence(): void
+    public function testTagsContainOnlyConfidentTagsByConfidence(): void
     {
         $result = MusicClassifierResult::fromResponse($this->contactResponse());
 
         self::assertSame(
             [
-                '#speedgarage' => 'genre',
-                '#energetic' => 'mood',
-                '#sampler' => 'instrument',
+                [ 'speed garage', 'genre' ],
+                [ 'energetic', 'mood' ],
+                [ 'sampler', 'instrument' ],
+                [ 'drummachine', 'instrument' ],
+                [ 'trance', 'genre' ],
+                [ 'tech trance', 'genre' ],
+                [ 'uk garage', 'genre' ],
             ],
-            array_map(static fn (array $feature): string => $feature['type'], $result->getHashtags()),
+            array_map(
+                static fn (MusicClassifierTag $tag): array => [ $tag->getName(), $tag->getType() ],
+                $result->getTags(),
+            ),
         );
     }
 
-    public function testHashtagKeepsConfidence(): void
+    public function testTagKeepsConfidence(): void
     {
         $result = MusicClassifierResult::fromResponse($this->contactResponse());
 
-        self::assertSame(0.3281, $result->getHashtags()['#speedgarage']['confidence']);
+        self::assertSame(0.3281, $result->getTags()[0]->getConfidence());
     }
 
     /** Gatunek „Techno” i tag „techno” to ta sama cecha, więc zostaje tylko pewniejsze wystąpienie */
@@ -39,47 +46,30 @@ final class MusicClassifierResultTest extends TestCase
             tags: [ [ 'label' => 'techno', 'type' => 'tag', 'confidence' => 0.6 ] ],
         ));
 
-        self::assertSame([ '#techno' => [ 'type' => 'tag', 'confidence' => 0.6 ] ], $result->getHashtags());
+        self::assertEquals([ new MusicClassifierTag('techno', 'tag', 0.6) ], $result->getTags());
     }
 
-    /** Pomijane hashtagi nie zajmują miejsca w limicie */
-    public function testSkippedHashtagsAreNotCountedInLimit(): void
-    {
-        $tags = array_map(
-            static fn (int $number): array => [ 'label' => 'tag ' . $number, 'type' => 'tag', 'confidence' => 0.8 ],
-            range(1, 8),
-        );
-
-        $result = MusicClassifierResult::fromResponse($this->response(
-            tags: [ [ 'label' => 'synthesizer', 'type' => 'instrument', 'confidence' => 0.9 ], ...$tags ],
-        ));
-
-        self::assertSame(
-            [ '#tag1', '#tag2', '#tag3', '#tag4', '#tag5', '#tag6', '#tag7', '#tag8' ],
-            array_keys($result->getHashtags()),
-        );
-    }
-
-    public function testHashtagsAreLimited(): void
-    {
-        $tags = array_map(
-            static fn (int $number): array => [ 'label' => 'tag ' . $number, 'type' => 'tag', 'confidence' => 0.9 ],
-            range(1, 10),
-        );
-
-        $result = MusicClassifierResult::fromResponse($this->response(tags: $tags));
-
-        self::assertCount(8, $result->getHashtags());
-    }
-
-    public function testNoHashtagsWhenNothingIsConfident(): void
+    /** Tagi wykrywane w większości utworów kolekcji nie trafiają na stronę utworu */
+    public function testSkippedTagsAreOmitted(): void
     {
         $result = MusicClassifierResult::fromResponse($this->response(
-            genres: [ [ 'genre' => 'Techno', 'confidence' => 0.1 ] ],
-            tags: [ [ 'label' => 'piano', 'type' => 'instrument', 'confidence' => 0.29 ] ],
+            tags: [
+                [ 'label' => 'synthesizer', 'type' => 'instrument', 'confidence' => 0.9 ],
+                [ 'label' => 'piano', 'type' => 'instrument', 'confidence' => 0.5 ],
+            ],
         ));
 
-        self::assertSame([], $result->getHashtags());
+        self::assertEquals([ new MusicClassifierTag('piano', 'instrument', 0.5) ], $result->getTags());
+    }
+
+    public function testNoTagsWhenNothingIsConfident(): void
+    {
+        $result = MusicClassifierResult::fromResponse($this->response(
+            genres: [ [ 'genre' => 'Techno', 'confidence' => 0.05 ] ],
+            tags: [ [ 'label' => 'piano', 'type' => 'instrument', 'confidence' => 0.09 ] ],
+        ));
+
+        self::assertSame([], $result->getTags());
     }
 
     private function contactResponse(): array

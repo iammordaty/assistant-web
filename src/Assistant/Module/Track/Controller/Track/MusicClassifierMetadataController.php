@@ -10,14 +10,12 @@ use Psr\Http\Message\ResponseInterface;
 use SplFileInfo;
 use Slim\Http\Response;
 use Slim\Http\ServerRequest;
-use Slim\Views\Twig;
 
 final readonly class MusicClassifierMetadataController
 {
     public function __construct(
         private MusicClassifierService $musicClassifierService,
         private TrackService $trackService,
-        private Twig $view,
     ) {
     }
 
@@ -45,30 +43,6 @@ final readonly class MusicClassifierMetadataController
         return $this->getResultResponse($response, $track->getFile(), $track->getGuid());
     }
 
-    public function getHashtags(ServerRequest $request, Response $response): ResponseInterface
-    {
-        $guid = $request->getAttribute('guid');
-        $track = $this->trackService->getByGuid($guid);
-
-        if (!$track) {
-            return $this->getTrackNotFoundResponse($response, $guid);
-        }
-
-        return $this->getHashtagsResponse($response, $track->getFile());
-    }
-
-    public function getIncomingHashtags(ServerRequest $request, Response $response): ResponseInterface
-    {
-        $pathname = $request->getAttribute('pathname');
-        $track = $this->trackService->createFromFile($pathname);
-
-        if (!$track) {
-            return $this->getTrackNotFoundResponse($response, $pathname);
-        }
-
-        return $this->getHashtagsResponse($response, $track->getFile());
-    }
-
     private function getResultResponse(Response $response, SplFileInfo $file, string $name): ResponseInterface
     {
         try {
@@ -82,19 +56,6 @@ final readonly class MusicClassifierMetadataController
         return $response
             ->withHeader('Content-Disposition', sprintf('inline; filename="%s"', $filename))
             ->withJson($result->getRawResult());
-    }
-
-    private function getHashtagsResponse(Response $response, SplFileInfo $file): ResponseInterface
-    {
-        try {
-            $result = $this->musicClassifierService->analyze($file);
-        } catch (MusicClassifierException $e) {
-            return $this->getClassifierErrorResponse($response, $e);
-        }
-
-        return $this->view->render($response, '@track/common/musicClassifierHashtags.twig', [
-            'hashtags' => $result->getHashtags(),
-        ]);
     }
 
     private function getTrackNotFoundResponse(Response $response, string $name): ResponseInterface
