@@ -34,7 +34,6 @@ final readonly class TrackWriter implements WriterInterface
 
             $this->addToSimilarTracksCollection($collectionItem);
 
-            // AI: analiza podczas indeksowania wypełnia cache klasyfikatora, dzięki czemu strona utworu nie czeka na obliczenia
             $this->musicClassifierService->analyze($collectionItem->getFile());
         } else {
             $collectionItem = $collectionItem

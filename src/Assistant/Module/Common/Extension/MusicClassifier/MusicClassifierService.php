@@ -9,12 +9,6 @@ use GuzzleHttp\Exception\GuzzleException;
 use JsonException;
 use SplFileInfo;
 
-/**
- * AI: klient API Music Classifier. Wyniki przechowuje wyłącznie cache klasyfikatora (klucz: MD5 audio),
- * dlatego assistant nie zapisuje ich ani na dysku, ani w bazie danych.
- *
- * @see /Volumes/web/music-classifier/README.md
- */
 final readonly class MusicClassifierService
 {
     public function __construct(private ClientInterface $client)
@@ -27,8 +21,7 @@ final readonly class MusicClassifierService
 
         $client = new Client([
             'base_uri' => $musicClassifierConfig['api_url'],
-            // analiza utworu nieobecnego w cache klasyfikatora trwa do kilku minut
-            'timeout' => 0,
+            'timeout' => 2,
         ]);
 
         return new self($client);

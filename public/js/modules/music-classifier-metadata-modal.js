@@ -18,7 +18,7 @@ export default function initMusicClassifierMetadataModal() {
     const originalCopyLabel = copyLabel.textContent;
 
     let data = null;
-    let filename = modalEl.dataset.filename || 'music-classifier.json';
+    let filename = modalEl.dataset.filename;
     let copyResetTimer;
 
     const setActionButtonsDisabled = (disabled) => {

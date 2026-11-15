@@ -8,11 +8,13 @@ final readonly class MusicClassifierResult
     /** Minimalna pewność tagu pokazywanego na stronie utworu */
     private const float TAG_MIN_CONFIDENCE = 0.1;
 
-    /**
-     * AI: cechy wykrywane w blisko 80% lub więcej utworów kolekcji (116 utworów z 2026 r.), które nie odróżniają
-     * jednego utworu od drugiego
-     */
-    private const array SKIPPED_TAGS = [ 'bass', 'dance', 'electronic', 'house', 'synthesizer' ];
+    private const array SKIPPED_TAGS = [
+        'bass',
+        'dance',
+        'electronic',
+        'house',
+        'synthesizer',
+    ];
 
     private function __construct(
         private string $audioMd5,
@@ -22,11 +24,6 @@ final readonly class MusicClassifierResult
     ) {
     }
 
-    /**
-     * AI: wynik z błędem któregokolwiek analizatora jest odrzucany w całości, bo częściowy wynik byłby
-     * nieodróżnialny od kompletnego; klasyfikator nie zapisuje błędów w cache, więc kolejne wywołanie
-     * ponowi obliczenia.
-     */
     public static function fromResponse(array $rawResult): self
     {
         if (!empty($rawResult['errors'])) {
@@ -63,16 +60,7 @@ final readonly class MusicClassifierResult
         return $this->rawResult;
     }
 
-    /**
-     * AI: na stronę utworu trafiają tylko tagi, których model jest wyraźnie pewny. Wartości confidence są
-     * względne i w większości bliskie zeru, więc bez progu lista byłaby szumem.
-     *
-     * Pomijane są tagi z SKIPPED_TAGS. Gatunki i tagi z API są sortowane razem według pewności,
-     * a powtórzenia (np. gatunek „Techno” i tag „techno”) scalane do pierwszego, czyli najpewniejszego, wystąpienia.
-     * Nazwy są zapisywane małymi literami, bo API zwraca gatunki wielką literą, a pozostałe tagi małą.
-     *
-     * @return MusicClassifierTag[]
-     */
+    /** @return MusicClassifierTag[] */
     public function getTags(): array
     {
         $tags = [];

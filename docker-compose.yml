@@ -61,24 +61,6 @@ services:
         working_dir: /data
         command: bash -c "corepack enable && yarn install && yarn watch"
 
-    music-classifier:
-        build: ${ASSISTANT_MUSIC_CLASSIFIER_DIR}
-        # essentia-tensorflow jest publikowana wyłącznie dla linux/x86_64
-        platform: linux/amd64
-        image: assistant-music-classifier
-        container_name: assistant-music-classifier
-        restart: always
-        networks:
-            - assistant
-        hostname: assistant-music-classifier
-        expose:
-            - 80
-        environment:
-            - CLASSIFIER_CACHE_DIR=/cache
-        volumes:
-            - ${ASSISTANT_COLLECTION_VOLUME}:/collection
-            - ${ASSISTANT_METADATA_VOLUME}/music-classifier:/cache
-
     music-similarity:
         build: ./.docker/music-similarity
         image: assistant-music-similarity

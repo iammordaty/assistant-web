@@ -81,8 +81,8 @@
 
                                                     {{ track.name }}
                                                     {%- if track.release -%}
-                                                        [
-                                                            {{- track.release.date|date('d.m.Y') -}},&nbsp
+                                                        &nbsp;[
+                                                            {{- track.release.date|date('d.m.Y') -}},&nbsp;
                                                             {{- track.release.label -}}
                                                         ]
                                                     {%- endif -%}
