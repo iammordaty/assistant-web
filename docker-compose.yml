@@ -61,6 +61,25 @@ services:
         working_dir: /data
         command: bash -c "corepack enable && yarn install && yarn watch"
 
+    music-classifier:
+        build:
+            context: ${MUSIC_CLASSIFIER_VOLUME}
+        image: music-classifier
+        container_name: music-classifier
+        restart: always
+        networks:
+            - assistant
+        ports:
+            - "9020:80"
+        volumes:
+            - ${MUSIC_CLASSIFIER_VOLUME}:/app
+            - ${ASSISTANT_METADATA_VOLUME}/music-classifier:/cache
+            - ${ASSISTANT_COLLECTION_VOLUME}:/collection
+            - ${ASSISTANT_METADATA_VOLUME}:/metadata
+        working_dir: /app
+        environment:
+            CLASSIFIER_CACHE_DIR: /cache
+
     music-similarity:
         build: ./.docker/music-similarity
         image: assistant-music-similarity
