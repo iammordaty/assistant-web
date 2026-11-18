@@ -2,7 +2,6 @@
 
 namespace Assistant\Module\Common\Extension\MusicClassifier;
 
-/** @see /Volumes/web/music-classifier/README.md */
 final readonly class MusicClassifierResult
 {
     /** Minimalna pewność tagu pokazywanego na stronie utworu */

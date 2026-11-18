@@ -14,7 +14,8 @@ a lot of TODOs, and weird commit messages. :sweat_smile:
 - Rearrange your mix by similarity using the track similarity module
 
 Track similarity is powered by [Musly - Music Similarity Library](https://github.com/dominikschnitzer/musly); audio feature extraction
-(BPM, key, genre and tags) is done by the Music Classifier API, a separate service.
+(BPM, key, mood, genre and tags) is performed by the Music Classifier, which consists of the [Essentia](https://github.com/MTG/essentia) 
+and [musicnn](https://github.com/jordipons/musicnn) libraries.
 
 ## stack
 

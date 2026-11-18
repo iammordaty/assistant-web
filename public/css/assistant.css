@@ -749,8 +749,6 @@ table .ast-track-name span {
     }
 }
 
-/* AI: tagi jako osobne wyspy na tle strony, w stylu presetów (.ast-preset); pewność oddaje gradient
-   koloru głównego, mocniejszy przy pewniejszym tagu. Pewność (0–1) przychodzi z szablonu w zmiennej. */
 .ast-tags {
     display: flex;
     flex-wrap: wrap;

@@ -30,6 +30,7 @@ final readonly class TaskController
         $this->baseDir = $config->get('base_dir');
     }
 
+    /** Tu prawdopodobnie przydałoby się zmienić nazwę na calculateMusicClassifierMetadata */
     public function calculateAudioData(ServerRequest $request, Response $response): ResponseInterface
     {
         $pathname = $request->getParsedBodyParam('pathname');
