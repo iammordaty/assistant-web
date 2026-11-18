@@ -5,7 +5,8 @@
             <span
                 class="ast-tag"
                 style="--ast-tag-confidence: {{ tag.confidence }}"
-                title="pewność {{ tag.confidence|number_format(2, ',') }}"
+                data-bs-toggle="tooltip"
+                title="{{ tag.type }}; pewność {{ tag.confidence|number_format(2, ',') }}"
             >{{ tag.name }}</span>
         {% endfor %}
     </div>

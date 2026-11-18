@@ -769,6 +769,7 @@ table .ast-track-name span {
     border: var(--tblr-border-width) solid var(--tblr-border-color);
     border-radius: var(--tblr-border-radius);
     color: var(--tblr-body-color);
+    cursor: default;
     display: inline-flex;
     font-size: .8125rem;
     height: 2rem;
