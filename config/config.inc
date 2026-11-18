@@ -167,7 +167,7 @@ return static function (string $baseDir): array {
         ],
 
         MusicClassifierService::class => [
-            'api_url' => 'http://music-classifier-v2/',
+            'api_url' => 'http://music-classifier/',
         ],
 
         BeatportApiClient::class => [
