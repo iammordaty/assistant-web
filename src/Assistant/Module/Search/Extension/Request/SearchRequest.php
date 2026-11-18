@@ -12,9 +12,6 @@ use Assistant\Module\Search\Extension\Request\ExpressionParser\NumberMinMaxExpre
 use Assistant\Module\Search\Extension\Request\ExpressionParser\YearMinMaxExpressionParser;
 use Slim\Http\ServerRequest;
 
-// przed usunięciem 'artist' i 'title' trzeba pozmieniać wywołania routingu
-// - src/Assistant/Module/Track/Resources/templates/common/header.twig
-// - src/Assistant/Module/Dashboard/Resources/templates/index.twig
 final readonly class SearchRequest
 {
     // pomyśleć o wyciągnięciu tego do klasy Form i zamiana array $form na SearchForm $form, ale bez spiny
